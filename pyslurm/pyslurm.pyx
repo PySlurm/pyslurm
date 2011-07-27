@@ -1,13 +1,9 @@
-"""
-
-slurpy : Pyrex module for interfacing to slurm API
-
-"""
 
 import string
 
 cdef extern from "stdlib.h":
     ctypedef long long size_t
+    ctypedef unsigned char uint8_t
     ctypedef unsigned short int uint16_t
     ctypedef unsigned int uint32_t
     ctypedef signed long long int64_t
@@ -88,9 +84,9 @@ cdef long* pyLongSeqToLongArray(seq):
 
     return intArray
 
-cdef extern from "slurm/spank.h":
-
-    cdef extern void slurm_verbose (char *, ...)
+#cdef extern from "slurm/spank.h":
+#
+#    cdef extern void slurm_verbose (char *, ...)
 
 cdef extern from "slurm/slurm_errno.h":
 
@@ -111,10 +107,17 @@ cdef extern from "slurm/slurm.h":
         WAIT_RESOURCES
         WAIT_PART_NODE_LIMIT
         WAIT_PART_TIME_LIMIT
-        WAIT_PART_STATE
+        WAIT_PART_DOWN
+        WAIT_PART_INACTIVE
         WAIT_HELD
         WAIT_TIME
-        WAIT_TBD1
+        WAIT_LICENSES
+        WAIT_ASSOC_JOB_LIMIT
+        WAIT_ASSOC_RESOURCE_LIMIT
+        WAIT_ASSOC_TIME_LIMIT
+        WAIT_RESERVATION
+        WAIT_NODE_NOT_AVAIL
+        WAIT_HELD_USER
         WAIT_TBD2
         FAIL_DOWN_PARTITION
         FAIL_DOWN_NODE
@@ -124,185 +127,323 @@ cdef extern from "slurm/slurm.h":
         FAIL_EXIT_CODE
         FAIL_TIMEOUT
         FAIL_INACTIVE_LIMIT
+        FAIL_ACCOUNT
+        FAIL_QOS
+        WAIT_QOS_THRES
 
     cdef enum node_states:
         NODE_STATE_UNKNOWN
         NODE_STATE_DOWN
         NODE_STATE_IDLE
         NODE_STATE_ALLOCATED
+        NODE_STATE_ERROR
+        NODE_STATE_MIXED
+        NODE_STATE_FUTURE
         NODE_STATE_END
 
     cdef struct job_descriptor:
+        char *account
+        uint16_t acctg_freq
+        char *alloc_node
+        uint16_t alloc_resp_port
+        uint32_t alloc_sid
+        uint32_t argc
+        char **argv
+        time_t begin_time
+        uint16_t ckpt_interval
+        char *ckpt_dir
+        char *comment
         uint16_t contiguous
-        uint16_t kill_on_node_fail
+        char *cpu_bind
+        uint16_t cpu_bind_type
+        char *dependency
+        time_t end_time
         char **environment
-        uint16_t env_size
+        uint32_t env_size
+        char *exc_nodes
         char *features
+        char *gres
+        uint32_t group_id
         uint16_t immediate
         uint32_t job_id
+        uint16_t kill_on_node_fail
+        char *licenses
+        uint16_t mail_type
+        char *mail_user
+        char *mem_bind
+        uint16_t mem_bind_type
         char *name
-        uint16_t job_min_procs
-        uint16_t job_min_sockets
-        uint16_t job_min_cores
-        uint16_t job_min_threads
-        uint32_t job_min_memory
-        uint32_t job_max_memory
-        uint32_t job_min_tmp_disk
+        char *network
+        uint16_t nice
+        uint32_t num_tasks
+        uint8_t open_mode
+        uint16_t other_port
+        uint8_t overcommit
         char *partition
+        uint16_t plane_size
         uint32_t priority
+        char *qos
+        char *resp_host
         char *req_nodes
-        char *exc_nodes
+        uint16_t requeue
+        char *reservation
+        char *script
         uint16_t shared
+        char **spank_job_env
+        uint32_t spank_job_env_size
+        uint16_t task_dist
         uint32_t time_limit
-        uint32_t num_procs
+        uint32_t time_min
+        uint32_t user_id
+        uint16_t wait_all_nodes
+        uint16_t warn_signal
+        uint16_t warn_time
+        char *work_dir
+        uint16_t cpus_per_task
+        uint32_t min_cpus
+        uint32_t max_cpus
         uint32_t min_nodes
         uint32_t max_nodes
-        uint16_t min_sockets
-        uint16_t max_sockets
-        uint16_t min_cores
-        uint16_t max_cores
-        uint16_t min_threads
-        uint16_t max_threads
-        uint16_t cpus_per_task
+        uint16_t sockets_per_node
+        uint16_t cores_per_socket
+        uint16_t threads_per_core
         uint16_t ntasks_per_node
         uint16_t ntasks_per_socket
         uint16_t ntasks_per_core
-        char *script
-        char **argv
-        uint16_t argc
-        char *error
-        char *input
-        char *output
-        uint32_t user_id
-        uint32_t group_id
-        char *work_dir
-        char *alloc_node
-        uint32_t alloc_sid
-        char    *alloc_resp_hostname
-        uint16_t alloc_resp_port
-        char    *other_hostname
-        uint16_t other_port
-        uint32_t dependency
-        uint16_t overcommit
-        uint32_t num_tasks
-        uint16_t nice
-        char *account
-        char *network
-        char *comment
-        uint16_t task_dist
-        uint16_t plane_size
-        time_t begin_time
-        uint16_t mail_type
-        char *mail_user
-        uint16_t no_requeue
-        #select_jobinfo_t select_jobinfo
+        uint16_t pn_min_cpus
+        uint32_t pn_min_memory
+        uint32_t pn_min_tmp_disk
+        #uint16_t geometry[HIGHEST_DIMENSIONS] # FIXME
+        uint16_t conn_type
+        uint16_t reboot
+        uint16_t rotate
+        char *blrtsimage
+        char *linuximage
+        char *mloaderimage
+        char *ramdiskimage
+        #dynamic_plugin_data_t *select_jobinfo # FIXME
+        char *std_err
+        char *std_in
+        char *std_out
+        char *wckey
 
     ctypedef job_descriptor job_desc_msg_t
 
     ctypedef struct slurm_ctl_conf:
         time_t last_update
+        uint16_t accounting_storage_enforce
+        char *accounting_storage_backup_host
+        char *accounting_storage_host
+        char *accounting_storage_loc
+        char *accounting_storage_pass
+        uint32_t accounting_storage_port
+        char *accounting_storage_type
+        char *accounting_storage_user
         char *authtype
         char *backup_addr
         char *backup_controller
-        uint16_t cache_groups
+        uint16_t batch_start_timeout
+        time_t boot_time
         char *checkpoint_type
+        char *cluster_name
+        uint16_t complete_wait
         char *control_addr
         char *control_machine
+        char *crypto_type
+        uint32_t debug_flags
+        uint32_t def_mem_per_cpu
+        uint16_t disable_root_jobs
+        uint16_t enforce_part_limits
         char *epilog
-        uint32_t first_job_id
+        uint32_t epilog_msg_time
+        char *epilog_slurmctld
         uint16_t fast_schedule
+        uint32_t first_job_id
+        uint16_t get_env_timeout
+        char * gres_plugins
+        uint16_t group_info
+        uint32_t hash_val
+        uint16_t health_check_interval
+        char * health_check_program
         uint16_t inactive_limit
-        char *job_acct_logfile
-        uint16_t job_acct_freq
-        char *job_acct_type
-        char *job_comp_type
+        uint16_t job_acct_gather_freq
+        char *job_acct_gather_type
+        char *job_ckpt_dir
+        char *job_comp_host
         char *job_comp_loc
+        char *job_comp_pass
+        uint32_t job_comp_port
+        char *job_comp_type
+        char *job_comp_user
+        char *job_credential_private_key
+        char *job_credential_public_certificate
+        uint16_t job_file_append
+        uint16_t job_requeue
+        char *job_submit_plugins
+        uint16_t kill_on_bad_exit
         uint16_t kill_wait
-        uint16_t max_job_cnt
+        char *licenses
+        char *mail_prog
+        uint32_t max_job_cnt
+        uint32_t max_mem_per_cpu
+        uint16_t max_tasks_per_node
         uint16_t min_job_age
         char *mpi_default
+        char *mpi_params
+        uint16_t msg_timeout
+        uint32_t next_job_id
+        char *node_prefix
+        uint16_t over_time_limit
         char *plugindir
         char *plugstack
+        uint16_t preempt_mode
+        char *preempt_type
+        uint32_t priority_decay_hl
+        uint32_t priority_calc_period
+        uint16_t priority_favor_small
+        uint32_t priority_max_age
+        uint16_t priority_reset_period
+        char *priority_type
+        uint32_t priority_weight_age
+        uint32_t priority_weight_fs
+        uint32_t priority_weight_js
+        uint32_t priority_weight_part
+        uint32_t priority_weight_qos
+        uint16_t private_data
         char *proctrack_type
         char *prolog
+        char *prolog_slurmctld
         uint16_t propagate_prio_process
         char *propagate_rlimits
         char *propagate_rlimits_except
+        char *resume_program
+        uint16_t resume_rate
+        uint16_t resume_timeout
+        uint16_t resv_over_run
         uint16_t ret2service
+        char *salloc_default_command
+        char *sched_logfile
+        uint16_t sched_log_level
+        char *sched_params
+        uint16_t sched_time_slice
         char *schedtype
-        char *schedauth
         uint16_t schedport
         uint16_t schedrootfltr
         char *select_type
+        void *select_conf_key_pairs
+        uint16_t select_type_param
+        char *slurm_conf
         uint32_t slurm_user_id
         char *slurm_user_name
+        uint32_t slurmd_user_id
+        char *slurmd_user_name
         uint16_t slurmctld_debug
         char *slurmctld_logfile
         char *slurmctld_pidfile
         uint32_t slurmctld_port
+        uint16_t slurmctld_port_count
         uint16_t slurmctld_timeout
         uint16_t slurmd_debug
         char *slurmd_logfile
+        char *slurmd_pidfile
         uint32_t slurmd_port
         char *slurmd_spooldir
-        char *slurmd_pidfile
         uint16_t slurmd_timeout
-        char *slurm_conf
+        char *srun_epilog
+        char *srun_prolog
         char *state_save_location
+        char *suspend_exc_nodes
+        char *suspend_exc_parts
+        char *suspend_program
+        uint16_t suspend_rate
+        uint32_t suspend_time
+        uint16_t suspend_timeout
         char *switch_type
         char *task_epilog
         char *task_plugin
+        uint16_t task_plugin_param
         char *task_prolog
         char *tmp_fs
-        uint16_t wait_time
-        char *job_credential_private_key
-        char *job_credential_public_certificate
-        char *srun_prolog
-        char *srun_epilog
-        char *node_prefix
+        char *topology_plugin
+        uint16_t track_wckey
         uint16_t tree_width
+        char *unkillable_program
+        uint16_t unkillable_timeout
         uint16_t use_pam
+        char *version
+        uint16_t vsize_factor
+        uint16_t wait_time
+        uint16_t z_16
+        uint32_t z_32
+        char *z_char
 
     ctypedef slurm_ctl_conf slurm_ctl_conf_t
 
     ctypedef struct job_info_t:
-        uint32_t job_id
-        char *name
-        uint16_t batch_flag
-        uint32_t alloc_sid
+        char *account
         char    *alloc_node
-        uint32_t user_id
-        uint32_t group_id
-        uint16_t job_state
-        uint32_t time_limit
-        time_t submit_time
-        time_t start_time
-        time_t end_time
-        time_t suspend_time
-        time_t pre_sus_time
-        uint32_t priority
-        char *nodes
-        int *node_inx
-        char *partition
-        uint32_t num_procs
-        uint32_t num_nodes
-        uint16_t shared
+        uint32_t alloc_sid
+        uint32_t assoc_id
+        uint16_t batch_flag
+        char *command
+        char *comment
         uint16_t contiguous
         uint16_t cpus_per_task
-        uint32_t min_procs
-        uint32_t min_memory
-        uint32_t min_tmp_disk
-        char *req_nodes
-        int *req_node_inx
+        char *dependency
+        uint32_t derived_ec
+        time_t eligible_time
+        time_t end_time
         char *exc_nodes
         int *exc_node_inx
+        uint32_t exit_code
         char *features
-        uint32_t dependency
-        char *account
-        uint16_t state_reason
+        char *gres
+        uint32_t group_id
+        uint32_t job_id
+        uint16_t job_state
+        char *licenses
+        uint32_t max_cpus
+        uint32_t max_nodes
+        uint16_t sockets_per_node
+        uint16_t cores_per_socket
+        uint16_t threads_per_core
+        char *name
         char *network
-        char *comment
-        #select_jobinfo_t select_jobinfo
+        char *nodes
+        uint16_t nice
+        int *node_inx
+        uint16_t ntasks_per_core
+        uint16_t ntasks_per_node
+        uint16_t ntasks_per_socket
+        uint32_t num_nodes
+        uint32_t num_cpus
+        char *partition
+        uint32_t pn_min_memory
+        uint16_t pn_min_cpus
+        uint32_t pn_min_tmp_disk
+        time_t pre_sus_time
+        uint32_t priority
+        char *qos
+        char *req_nodes
+        int *req_node_inx
+        uint16_t requeue
+        time_t resize_time
+        uint16_t restart_cnt
+        char *resv_name
+        #dynamic_plugin_data_t *select_jobinfo #FIXME
+        #job_resources_t *job_resrcs #FIXME
+        uint16_t shared
+        uint16_t show_flags
+        time_t start_time
+        char *state_desc
+        uint16_t state_reason
+        time_t submit_time
+        time_t suspend_time
+        uint32_t time_limit
+        uint32_t time_min
+        uint32_t user_id
+        char *wckey
+        char *work_dir
 
     cdef struct job_info_msg:
         time_t last_update
@@ -312,21 +453,23 @@ cdef extern from "slurm/slurm.h":
     ctypedef job_info_msg job_info_msg_t
 
     ctypedef struct partition_info:
-        char *name
-        uint32_t max_time
-        uint32_t max_nodes
-        uint32_t min_nodes
-        uint32_t total_nodes
-        uint32_t total_cpus
-        uint32_t node_scaling
-        uint16_t default_part
-        uint16_t hidden
-        uint16_t root_only
-        uint16_t disable_root_jobs
-        uint16_t state_up
-        char *nodes
-        int *node_inx
+        char *allow_alloc_nodes
         char *allow_groups
+        char *alternate
+        uint32_t default_time
+        uint16_t flags
+        uint32_t max_nodes
+        uint16_t max_share
+        uint32_t max_time
+        uint32_t min_nodes
+        char *name
+        int *node_inx
+        char *nodes
+        uint16_t preempt_mode
+        uint16_t priority
+        uint16_t state_up
+        uint32_t total_cpus
+        uint32_t total_nodes
 
     ctypedef partition_info partition_info_t
 
@@ -338,22 +481,31 @@ cdef extern from "slurm/slurm.h":
     ctypedef partition_info update_part_msg_t
 
     ctypedef struct node_info:
+        char *arch
+        time_t boot_time
+        uint16_t cores
+        uint16_t cpus
+        char *features
+        char *gres
         char *name
         uint16_t node_state
-        uint16_t cpus
-        uint16_t sockets
-        uint16_t cores
-        uint16_t threads
+        char *os
         uint32_t real_memory
+        char *reason
+        time_t reason_time
+        uint32_t reason_uid
+        time_t slurmd_start_time
+        uint16_t sockets
+        uint16_t threads
         uint32_t tmp_disk
         uint32_t weight
-        char *features
-        char *reason
+        #dynamic_plugin_data_t *select_nodeinfo #FIXME
 
     ctypedef node_info node_info_t
 
     ctypedef struct node_info_msg:
         time_t last_update
+        uint32_t node_scaling
         uint32_t record_count
         node_info_t *node_array
 
@@ -378,17 +530,23 @@ cdef extern from "slurm/slurm.h":
     ctypedef slurmd_status_msg slurmd_status_t
 
     ctypedef struct job_step_info_t:
+        char *ckpt_dir
+        uint16_t ckpt_interval
+        char *gres
         uint32_t job_id
-        uint16_t step_id
-        uint32_t user_id
-        uint32_t num_tasks
-        time_t start_time
-        time_t run_time
-        char *partition
-        char *nodes
         char *name
         char *network
+        char *nodes
         int *node_inx
+        uint32_t num_cpus
+        uint32_t num_tasks
+        char *partition
+        char *resv_ports
+        time_t run_time
+        time_t start_time
+        uint32_t step_id
+        uint32_t time_limit
+        uint32_t user_id
 
     ctypedef struct job_step_info_response_msg:
         time_t last_update
@@ -398,13 +556,13 @@ cdef extern from "slurm/slurm.h":
     ctypedef job_step_info_response_msg job_step_info_response_msg_t
 
     ctypedef struct slurm_step_layout:
-        uint16_t node_cnt
-        uint32_t task_cnt
+        uint32_t node_cnt
         char *node_list
-        uint16_t *tasks
-        uint32_t **tids
-        uint16_t task_dist
         uint16_t plane_size
+        uint16_t *tasks
+        uint32_t task_cnt
+        uint16_t task_dist
+        uint32_t **tids
 
     ctypedef slurm_step_layout slurm_step_layout_t
 
@@ -462,7 +620,7 @@ cdef extern from "slurm/slurm.h":
 
     cdef extern int c_slurm_signal_job "slurm_signal_job" (uint32_t , uint16_t)
 
-    cdef extern int c_slurm_pid2jobid "slurm_pid2jobid" (uint32_t, uint32_t *)
+    #cdef extern int c_slurm_pid2jobid "slurm_pid2jobid" (uint32_t, uint32_t *) # pid_t ? FIXME or COMMENTME
 
     cdef extern int c_slurm_kill_job "slurm_kill_job" (uint32_t, uint16_t, uint16_t)
 
@@ -472,19 +630,19 @@ cdef extern from "slurm/slurm.h":
 
     cdef extern int c_slurm_terminate_job_step "slurm_terminate_job_step" (uint32_t, uint32_t)
 
-    cdef extern int c_slurm_checkpoint_able "slurm_checkpoint_able" (uint32_t, uint32_t, int)
+    #cdef extern int c_slurm_checkpoint_able "slurm_checkpoint_able" (uint32_t, uint32_t, int) #time_t *start_time FIXME or COMMENTME
 
     cdef extern int c_slurm_checkpoint_enable "slurm_checkpoint_enable" (uint32_t, uint32_t)
 
     cdef extern int c_slurm_checkpoint_disable "slurm_checkpoint_disable" (uint32_t, uint32_t)
 
-    cdef extern int c_slurm_checkpoint_create "slurm_checkpoint_create" (uint32_t, uint32_t, uint16_t)
+    #cdef extern int c_slurm_checkpoint_create "slurm_checkpoint_create" (uint32_t, uint32_t, uint16_t) # FIXME wrong number of argument
 
-    cdef extern int c_slurm_checkpoint_vacate "slurm_checkpoint_vacate" (uint32_t, uint32_t, uint16_t)
+    #cdef extern int c_slurm_checkpoint_vacate "slurm_checkpoint_vacate" (uint32_t, uint32_t, uint16_t) # FIXME wrong number of argument
 
-    cdef extern int c_slurm_checkpoint_restart "slurm_checkpoint_restart" (uint32_t, uint32_t)
+    #cdef extern int c_slurm_checkpoint_restart "slurm_checkpoint_restart" (uint32_t, uint32_t) # FIXME wrong number of argument
 
-    cdef extern int c_slurm_checkpoint_complete "slurm_checkpoint_complete" (uint32_t, uint32_t, int, uint32_t, char *)
+    #cdef extern int c_slurm_checkpoint_complete "slurm_checkpoint_complete" (uint32_t, uint32_t, int, uint32_t, char *) # FIXME wrong number of argument
 
     cdef extern int c_slurm_checkpoint_error "slurm_checkpoint_error" (uint32_t, uint32_t, uint32_t *, char **)
 
@@ -494,7 +652,7 @@ cdef extern from "slurm/slurm.h":
 
     cdef extern void c_slurm_print_node_info_msg "slurm_print_node_info_msg" (FILE *, node_info_msg_t *, int)
 
-    cdef extern void c_slurm_print_node_table "slurm_print_node_table" (FILE *, node_info_t *, int)
+    #cdef extern void c_slurm_print_node_table "slurm_print_node_table" (FILE *, node_info_t *, int) # FIXME wrong number of argument
 
     cdef extern int c_slurm_load_slurmd_status "slurm_load_slurmd_status" (slurmd_status_t **)
 
@@ -507,6 +665,7 @@ cdef extern from "slurm/slurm.h":
     cdef extern slurm_step_layout_t *c_slurm_job_step_layout_get "slurm_job_step_layout_get" (uint32_t, uint32_t)
 
     cdef void c_slurm_job_step_layout_free "slurm_job_step_layout_free" (slurm_step_layout *)
+
 
 def slurm_api_version():
 
@@ -682,23 +841,6 @@ def get_partition_data(ptr):
       min_nodes = old_part_ptr.partition_array[i].min_nodes
       total_nodes = old_part_ptr.partition_array[i].total_nodes
       total_cpus = old_part_ptr.partition_array[i].total_cpus
-      node_scaling = old_part_ptr.partition_array[i].node_scaling
-
-      default_part = "True"
-      if old_part_ptr.partition_array[i].default_part == 0:
-        default_part = "False"
-
-      hidden = "True"
-      if old_part_ptr.partition_array[i].hidden == 0:
-        hidden = "False"
-
-      root_only = "True"
-      if old_part_ptr.partition_array[i].root_only == 0:
-        root_only = "False"
-
-      disable_root_jobs = "True"
-      if old_part_ptr.partition_array[i].disable_root_jobs == 0:
-        shared = "False"
 
       state_up = "True"
       if old_part_ptr.partition_array[i].state_up == 0:
@@ -713,8 +855,7 @@ def get_partition_data(ptr):
          allow_grps = old_part_ptr.partition_array[i].allow_groups
 
       Partition[name] = [ old_part_ptr.last_update, max_time, max_nodes, min_nodes,
-                          total_nodes, total_cpus, node_scaling, default_part, hidden,
-                          root_only, shared, state_up, nodes, allow_grps ]
+                          total_nodes, total_cpus, state_up, nodes, allow_grps ]
 
    return Partition
 
@@ -851,21 +992,21 @@ def slurm_kill_job(jobid, signal, batch_flag):
 
    return retval
 
-def slurm_kill_job_step(jobid, jobstep, signal, batch_flag):
-
-   cdef uint32_t JobID
-   cdef uint32_t JobStep
-   cdef uint16_t Signal
-   cdef uint16_t BatchFlag
-
-   JobID = jobid
-   JobStep = jobstep
-   Signal = signal
-   BatchFlag = batch_flag
-
-   retval = c_slurm_kill_job_step(JobID, JobStep, Signal, BatchFlag)
-
-   return retval
+#def slurm_kill_job_step(jobid, jobstep, signal, batch_flag):
+#
+#   cdef uint32_t JobID
+#   cdef uint32_t JobStep
+#   cdef uint16_t Signal
+#   cdef uint16_t BatchFlag
+#
+#   JobID = jobid
+#   JobStep = jobstep
+#   Signal = signal
+#   BatchFlag = batch_flag
+#
+#   retval = c_slurm_kill_job_step(JobID, JobStep, Signal, BatchFlag)
+#
+#   return retval
 
 def slurm_complete_job(jobid, ret_code):
 
@@ -901,99 +1042,99 @@ def slurm_terminate_job_step(jobid, jobstep):
 
    return retval
 
-def slurm_checkpoint_able(jobid, step_id, start_time):
-
-   cdef uint32_t JobID
-   cdef uint32_t JobStep
-   cdef time_t Time
-
-   JobID = jobid
-   JobStep = jobstep
-
-   Time = <time_t>NULL
-
-   retval = c_slurm_checkpoint_able(JobID, JobStep, Time)
-
-   return retval
-
-def slurm_checkpoint_enable(jobid, jobstep):
-
-   cdef uint32_t JobID
-   cdef uint32_t JobStep
-
-   JobID = jobid
-   JobStep = jobstep
-
-   retval = c_slurm_checkpoint_enable(JobID, JobStep)
-
-   return retval
-
-def slurm_checkpoint_disable(jobid, jobstep):
-
-   cdef uint32_t JobID
-   cdef uint32_t JobStep
-
-   JobID = jobid
-   JobStep = jobstep
-
-   retval = c_slurm_checkpoint_disable(JobID, JobStep)
-
-   return retval
-
-def slurm_checkpoint_create(jobid, jobstep, maxwait):
-
-   cdef uint32_t JobID
-   cdef uint32_t JobStep
-   cdef uint16_t MaxWait
-
-   JobID = jobid
-   JobStep = jobstep
-   MaxWait = maxwait
-
-   retval = c_slurm_checkpoint_create(JobID, JobStep, MaxWait)
-
-   return retval
-
-def slurm_checkpoint_vacate(jobid, jobstep, maxwait):
-
-   cdef uint32_t JobID
-   cdef uint32_t JobStep
-   cdef uint16_t MaxWait
-
-   JobID = jobid
-   JobStep = jobstep
-   MaxWait = maxwait
-
-   retval = c_slurm_checkpoint_vacate(JobID, JobStep, MaxWait)
-
-   return retval
-
-def slurm_checkpoint_restart(jobid, jobstep):
-
-   cdef uint32_t JobID
-   cdef uint32_t JobStep
-
-   JobID = jobid
-   JobStep = jobstep
-
-   retval = c_slurm_checkpoint_restart(JobID, JobStep)
-
-   return retval
-
-def slurm_checkpoint_complete(jobid, jobstep, begin_time, error_code, msg):
-
-   cdef uint32_t JobID
-   cdef uint32_t JobStep
-   cdef uint16_t MaxWait
-   cdef char *Msg
-
-   JobID = jobid
-   JobStep = jobstep
-   BeginTime = begin_time
-   ErrorCode = error_code
-   Msg = msg
-
-   return
+#def slurm_checkpoint_able(jobid, step_id, start_time):
+#
+#   cdef uint32_t JobID
+#   cdef uint32_t JobStep
+#   cdef time_t Time
+#
+#   JobID = jobid
+#   JobStep = jobstep
+#
+#   Time = <time_t>NULL
+#
+#   retval = c_slurm_checkpoint_able(JobID, JobStep, Time)
+#
+#   return retval
+#
+#def slurm_checkpoint_enable(jobid, jobstep):
+#
+#   cdef uint32_t JobID
+#   cdef uint32_t JobStep
+#
+#   JobID = jobid
+#   JobStep = jobstep
+#
+#   retval = c_slurm_checkpoint_enable(JobID, JobStep)
+#
+#   return retval
+#
+#def slurm_checkpoint_disable(jobid, jobstep):
+#
+#   cdef uint32_t JobID
+#   cdef uint32_t JobStep
+#
+#   JobID = jobid
+#   JobStep = jobstep
+#
+#   retval = c_slurm_checkpoint_disable(JobID, JobStep)
+#
+#   return retval
+#
+#def slurm_checkpoint_create(jobid, jobstep, maxwait):
+#
+#   cdef uint32_t JobID
+#   cdef uint32_t JobStep
+#   cdef uint16_t MaxWait
+#
+#   JobID = jobid
+#   JobStep = jobstep
+#   MaxWait = maxwait
+#
+#   retval = c_slurm_checkpoint_create(JobID, JobStep, MaxWait)
+#
+#   return retval
+#
+#def slurm_checkpoint_vacate(jobid, jobstep, maxwait):
+#
+#   cdef uint32_t JobID
+#   cdef uint32_t JobStep
+#   cdef uint16_t MaxWait
+#
+#   JobID = jobid
+#   JobStep = jobstep
+#   MaxWait = maxwait
+#
+#   retval = c_slurm_checkpoint_vacate(JobID, JobStep, MaxWait)
+#
+#   return retval
+#
+#def slurm_checkpoint_restart(jobid, jobstep):
+#
+#   cdef uint32_t JobID
+#   cdef uint32_t JobStep
+#
+#   JobID = jobid
+#   JobStep = jobstep
+#
+#   retval = c_slurm_checkpoint_restart(JobID, JobStep)
+#
+#   return retval
+#
+#def slurm_checkpoint_complete(jobid, jobstep, begin_time, error_code, msg):
+#
+#   cdef uint32_t JobID
+#   cdef uint32_t JobStep
+#   cdef uint16_t MaxWait
+#   cdef char *Msg
+#
+#   JobID = jobid
+#   JobStep = jobstep
+#   BeginTime = begin_time
+#   ErrorCode = error_code
+#   Msg = msg
+#
+#   return
 
 def slurm_load_jobs(old_ptr="", show_flags=0):
 
@@ -1102,7 +1243,7 @@ def get_job_data(ptr):
       pre_sus_time = old_job_ptr.job_array[i].pre_sus_time
       priority = old_job_ptr.job_array[i].priority
       partition = old_job_ptr.job_array[i].partition
-      num_procs = old_job_ptr.job_array[i].num_procs
+      num_cpus = old_job_ptr.job_array[i].num_cpus
       num_nodes = old_job_ptr.job_array[i].num_nodes
 
       nodes = ""
@@ -1134,7 +1275,7 @@ def get_job_data(ptr):
 
       Jobs[job_id] = [ old_job_ptr.last_update, job_id , name, batch_flag, user_id, group_id,
                      job_state, time_limit, submit_time, start_time, end_time, suspend_time, pre_sus_time,
-                     priority, nodes, partition, num_procs, num_nodes, exec_nodes, shared, contiguous, 
+                     priority, nodes, partition, num_cpus, num_nodes, exec_nodes, shared, contiguous, 
                      cpus_per_task, account, comment, reason ]
 
    return Jobs
@@ -1171,17 +1312,17 @@ def slurm_sprint_job_info(Job_ptr):
 
    return
 
-def slurm_pid2jobid(job_pid):
-
-   cdef uint32_t Job_Pid
-   cdef uint32_t job_id
-
-   JobPID = job_pid
-   retval = c_slurm_pid2jobid(JobPID, &job_id)
-
-   JobID = int(job_id)
-
-   return retval, JobID
+#def slurm_pid2jobid(job_pid):
+#
+#   cdef uint32_t Job_Pid
+#   cdef uint32_t job_id
+#
+#   JobPID = job_pid
+#   retval = c_slurm_pid2jobid(JobPID, &job_id)
+#
+#   JobID = int(job_id)
+#
+#   return retval, JobID
 
 def slurm_get_errno():
 

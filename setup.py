@@ -8,28 +8,19 @@ from distutils.core import setup
 from distutils.extension import Extension
 from distutils.command import clean
 from distutils.sysconfig import get_python_lib
-from Pyrex.Distutils import build_ext
+from Cython.Distutils import build_ext
 
 import os, re
-import sys, platform, popen2
+import sys, platform
 from string import *
 from stat import *
 
-# Mininmum of Python 2.2.3 required because that's what I've tested
-
-if not hasattr(sys, 'version_info') or sys.version_info < (2,2,3,'final'):
-   raise SystemExit, "Python 2.2.3 or later required to build slurpy."
-
-include_dirs = ['/opt/include/slurm', '/opt/include', '/usr/include']
-library_dirs = ['/opt/lib']
+include_dirs = ['/home/sgorget/pyslurm/include','/home/sgorget/src/slurm-2.2.1','/usr/include/slurm','/usr/include']
+library_dirs = ['/usr/lib/slurm', '/usr/lib']
 libraries = ['slurm']
-runtime_library_dirs = ['/opt/lib/slurm']
-extra_compile_args = ['']
-extra_objects = ['']
-
-compiler_dir = os.path.join(get_python_lib(prefix=''), 'pyslurm/')
-
-# Trove classifiers
+runtime_library_dirs = ['/usr/lib/slurm', '/usr/lib']
+#extra_link_args = [ '/usr/lib/slurm/auth_none.so']
+extra_objects = [ '/usr/lib/slurm/auth_none.so']
 
 classifiers = """\
 Development Status :: 4 - Beta
@@ -40,17 +31,6 @@ Operating System :: POSIX :: Linux
 rogramming Language :: Python
 Topic :: Software Development :: Libraries :: Python Modules
 """
-
-# Disutils fix for Python versions < 2.3 that didn't
-# support classifiers as listed at
-# http://www.python.org/~jeremy/weblog/030924.html
-
-if sys.version_info < (2, 3):
-    _setup = setup
-    def setup(**kwargs):
-       if kwargs.has_key("classifiers"):
-          del kwargs["classifiers"]
-       _setup(**kwargs)
 
 doclines = __doc__.split("\n")
 
@@ -67,10 +47,11 @@ setup(
     keywords = ["Batch Scheduler", "slurm"],
     packages = ["pyslurm"],
     ext_modules = [
-        Extension( "pyslurm/pyslurm",["pyslurm/pyslurm.pyx"],
+        Extension( "pyslurm.pyslurm",["pyslurm/pyslurm.pyx"],
                    library_dirs = library_dirs,
                    libraries = libraries,
                    runtime_library_dirs = runtime_library_dirs,
+                   extra_objects = extra_objects,
                    include_dirs = include_dirs)
     ],
     cmdclass = {"build_ext": build_ext}
