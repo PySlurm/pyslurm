@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<node>
+	<name>makalu</name>
+	<lastUpdate>1315414273</lastUpdate>
+	<loadAvg>0.0,0.02,0.05</loadAvg>
+	<upTime>2076198.25,16258658.77</upTime>
+	<memTotal>6122436</memTotal>
+	<memFree>1811200</memFree>
+	<cached>2220256</cached>
+	<buffers>404012</buffers>
+	<slurmd>

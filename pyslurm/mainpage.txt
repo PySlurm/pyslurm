@@ -1,0 +1,39 @@
+/*!
+
+<br>
+@mainpage Python extension module for the SLURM 2.1 API 
+
+@image html pyslurm.png
+
+@section  Introduction 
+
+@b Pyslurm is a Python extension module written in Cython to allow access to the low level C functions of the <a href="http://www.llnl.gov/linux/slurm/"> Simple Linux Utility for Resource Management (SLURM) </a>2.1 API. It was not designed to be a complete port but initially as a flexible rapidly developed scripted interface to return native data types instead of screen scraping command output or writing C code.
+
+@section Example Usage
+
+A simple interactive python example of calling the SLURM API functions.
+
+@code
+>>> import pyslurm
+>>> import datetime
+>>> a, b = pyslurm.slurm_load_reservations()
+>>> c = pyslurm.get_reservation_data(b)
+>>> print c
+{'root_10': {'name': 'root_10', 'start_time': 4294967295, 
+'partition': 'debug', 'node_list': 'makalu', 'accounts': '', 
+'end_time': 4295015295, 'licenses': '', 'flags': 0, 
+'users': 'root', 'node_cnt': 1L, 'features': ''}}
+>>> print "Start Time %s" % datetime.datetime.fromtimestamp(c['root_10']['start_time'])
+Start Time 2106-02-07 06:28:15
+@endcode
+
+@section Links
+<ul>
+  <li><a href="http://www.cython.org"> Cython : C-extensions for Python </a></li>
+  <li><a href="http://www.python.org"> Python Programming Language </a></li>
+  <li><a href="http://www.llnl.gov/linux/slurm/"> SLURM - Simple Linux Utility for Resource Management </a></li>
+</ul>
+
+@authors Mark Roberts mark@gingergeeks.co.uk
+  
+*/
