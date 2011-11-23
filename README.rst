@@ -24,6 +24,7 @@ Installation
 You will need to instruct the setup.py script where the SLURM install root is :
 
 	python setup.py build --slurm=PATH_TO_SLURM_DIR
+
 	python setup.py install
 
 If you still have issues then you can code this directly into the setup.py
