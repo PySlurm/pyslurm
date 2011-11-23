@@ -33,5 +33,5 @@ Documentation
 
 Prebuilt documentation for the module can be reviewed `online
 <http://www.gingergeeks.co.uk/pyslurm>`_, and the source code 
-is available on `GitHub <http://github.com/mroberts/pyslurm>`_.
+is available on `GitHub <http://github.com/gingergeeks/pyslurm>`_.
 
