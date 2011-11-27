@@ -21,12 +21,20 @@ This version has been tested with SLURM 2.2.7, Cython 0.15.1 and Python 2.7.2
 Installation
 ============
 
-You will need to instruct the setup.py script where the SLURM install root is :
+You will need to instruct the setup.py script where either the SLURM install root 
+directory or where the SLURM libraries and SLURM include files are :
+
+Slurm root directory (Common installation directory):
 
 	python setup.py build --slurm=PATH_TO_SLURM_DIR
 	python setup.py install
 
-If you still have issues then you can code this directly into the setup.py
+Separate Slurm library and include directory paths:
+
+	python setup.py build --slurm-lib=PATH_TO_SLURM_LIB --slurm-inc=PATH_TO_SLURM_INC
+	python setup.py install
+
+If you still have issues then you could code this directly into the setup.py
 
 Documentation
 =============
