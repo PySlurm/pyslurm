@@ -27,6 +27,7 @@ directory or where the SLURM libraries and SLURM include files are :
 Slurm root directory (Common installation directory):
 
 	python setup.py build --slurm=PATH_TO_SLURM_DIR
+
 	python setup.py install
 
 Separate Slurm library and include directory paths:
@@ -41,5 +42,5 @@ Documentation
 
 Prebuilt documentation for the module can be reviewed `online
 <http://www.gingergeeks.co.uk/pyslurm>`_, and the source code 
-is available on `GitHub <http://github.com/mroberts/pyslurm>`_.
+is available on `GitHub <http://github.com/gingergeeks/pyslurm>`_.
 
