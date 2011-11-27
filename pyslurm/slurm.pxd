@@ -1,3 +1,4 @@
+# cython: embedsignature=True
 
 from libc.string cimport strlen 
 
@@ -17,7 +18,6 @@ cdef extern from 'stdio.h':
 	cdef FILE *stdout
 
 cdef extern from 'string.h':
-	ctypedef extern int strlen(char *)
 	void* memset(void *s, int c, size_t n)
 	void *memcpy(void *dest, void *src, size_t count)
 
@@ -50,7 +50,7 @@ cdef inline stringOrNone(char* value, value2):
 	return value
 
 cdef inline boolToString(int value):
-	if value == 0:	return 'False'
+	if value == 0: return 'False'
 	return 'True'
 
 #
@@ -68,7 +68,6 @@ cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
 
 cdef extern void slurm_api_set_conf_file(char *)
 cdef extern void slurm_api_clear_config()
-#cdef extern void slurm_list_iterator_destroy(ListIterator itr)
 
 #
 # SLURM spank API - Love the name !
@@ -86,6 +85,10 @@ cdef extern from "slurm/slurm_errno.h":
 	cdef void slurm_seterrno (int)
 	cdef int slurm_get_errno ()
 	cdef void slurm_perror (char *)
+
+#
+# Main SLURM API
+#
 
 cdef extern from "slurm/slurm.h":
 
@@ -222,6 +225,21 @@ cdef extern from "slurm/slurm.h":
 
 	ctypedef mem_bind_type mem_bind_type_t
 	
+	ctypedef enum connection_type:
+		SELECT_MESH
+		SELECT_TORUS
+		SELECT_NAV
+		SELECT_SMALL
+		SELECT_HTC_S
+		SELECT_HTC_D
+		SELECT_HTC_V
+		SELECT_HTC_L 
+
+	ctypedef enum node_use_type:
+		SELECT_COPROCESSOR_MODE
+		SELECT_VIRTUAL_NODE_MODE
+		SELECT_NAV_MODE
+
 	#
 	# Place holders for opaque data types
 	#
@@ -229,7 +247,20 @@ cdef extern from "slurm/slurm.h":
 	ctypedef struct list:
 		pass
 
-	ctypedef list *List
+	ctypedef list* List
+
+	ctypedef struct listIterator:
+		pass
+
+	ctypedef listIterator*  ListIterator
+
+	ctypedef void (*ListDelF) (void *x)
+
+	ctypedef int (*ListCmpF) (void *x, void *y)
+
+	ctypedef int (*ListFindF) (void *x, void *key)
+
+	ctypedef int (*ListForF) (void *x, void *arg)
 
 	ctypedef struct job_resources:
 		pass
@@ -254,7 +285,7 @@ cdef extern from "slurm/slurm.h":
 	ctypedef struct hostlist:
 		pass
 
-	ctypedef hostlist hostlist_t
+	ctypedef hostlist *hostlist_t
 	
 	ctypedef struct dynamic_plugin_data:
 		void *data
@@ -579,7 +610,7 @@ cdef extern from "slurm/slurm.h":
 		char     *node_name
 		uint32_t *pid
 		uint32_t pid_cnt
-		
+
 	ctypedef struct job_step_pids_reponse_msg_t:
 		uint32_t job_id
 		List     pid_list
@@ -833,6 +864,51 @@ cdef extern from "slurm/slurm.h":
 	ctypedef int64_t bitstr_t
 	ctypedef bitstr_t bitoff_t
 
+	ctypedef struct block_info_t:
+		char *bg_block_id
+		char *blrtsimage
+		int *bp_inx
+		uint16_t conn_type
+		char *ionodes
+		int *ionode_inx
+		uint32_t job_running
+		char *linuximage
+		char *mloaderimage
+		char *nodes
+		uint32_t node_cnt
+		uint16_t node_use
+		char *owner_name
+		char *ramdiskimage
+		char *reason
+		uint16_t state
+
+	ctypedef struct block_info_msg_t:
+		block_info_t *block_array
+		time_t    last_update
+		uint32_t  record_count
+
+	ctypedef block_info_t update_block_msg_t
+	
+	ctypedef struct config_key_pair_t:
+		char *name
+		char *value
+
+	#
+	# List
+	#
+	
+	cdef extern void * slurm_list_append (List l, void *x)
+	cdef extern int slurm_list_count (List l)
+	cdef extern List slurm_list_create (ListDelF f)
+	cdef extern void slurm_list_destroy (List l)
+	cdef extern void * slurm_list_find (ListIterator i, ListFindF f, void *key)
+	cdef extern int slurm_list_is_empty (List l)
+	cdef extern ListIterator slurm_list_iterator_create (List l)
+	cdef extern void slurm_list_iterator_reset (ListIterator i)
+	cdef extern void slurm_list_iterator_destroy (ListIterator i)
+	cdef extern void * slurm_list_next (ListIterator i)
+	cdef extern void slurm_list_sort (List l, ListCmpF f)
+
 	#
 	# Control Config Read/Print/Update
 	#
@@ -935,9 +1011,9 @@ cdef extern from "slurm/slurm.h":
 	cdef extern int slurm_terminate_job_step (uint32_t, uint32_t)
 
 	#
-	# Job Suspend
+	# Job Suspend/Resume/Requeue
 	#
-	
+
 	cdef extern int slurm_suspend (uint32_t)
 	cdef extern int slurm_resume (uint32_t)
 	cdef extern int slurm_requeue (uint32_t)
@@ -964,13 +1040,13 @@ cdef extern from "slurm/slurm.h":
 	cdef extern int slurm_load_node (time_t, node_info_msg_t **, uint16_t)
 	cdef extern void slurm_free_node_info_msg (node_info_msg_t *)
 	cdef extern void slurm_print_node_info_msg (FILE *, node_info_msg_t *, int)
-	cdef extern void slurm_print_node_table (FILE *, node_info_t *, int)
-	cdef extern char *slurm_sprint_node_table (node_info_t *, int)
+	#cdef extern void slurm_print_node_table (FILE *, node_info_t *, int)
+	#cdef extern char *slurm_sprint_node_table (node_info_t *, int)
 	cdef extern void slurm_init_update_node_msg (update_node_msg_t *)
 	cdef extern int slurm_update_node (update_node_msg_t *)
 
 	#
-	# SlurmD Status Calls
+	# SlurmD
 	#
 
 	cdef extern void slurm_free_slurmd_status (slurmd_status_t *)
@@ -990,15 +1066,20 @@ cdef extern from "slurm/slurm.h":
 	cdef extern void slurm_free_trigger_msg (trigger_info_msg_t *)
 
 	#
-	# Hostlist Helper Calls
+	# Hostlists
 	#
 
 	cdef extern hostlist_t slurm_hostlist_create (char *)
-	cdef extern void slurm_hostlist_destroy (hostlist hl)
+	cdef extern void slurm_hostlist_destroy (hostlist_t hl)
 	cdef extern int slurm_hostlist_count (hostlist_t hl)
 	cdef extern int slurm_hostlist_find (hostlist_t hl, char *)
 	cdef extern int slurm_hostlist_push (hostlist_t hl, char *)
 	cdef extern int slurm_hostlist_push_host (hostlist_t hl, char *)
+	cdef extern ssize_t slurm_hostlist_ranged_string (hostlist_t hl, size_t, char *)
+	cdef extern char *slurm_hostlist_ranged_string_malloc (hostlist_t hl)
+	cdef extern char *slurm_hostlist_ranged_string_xmalloc (hostlist_t hl)
+	cdef extern char *slurm_hostlist_shift (hostlist_t hl)
+	cdef extern void slurm_hostlist_uniq (hostlist_t hl)
 
 	#
 	# Topologly
@@ -1008,35 +1089,10 @@ cdef extern from "slurm/slurm.h":
 	cdef extern void slurm_free_topo_info_msg (topo_info_response_msg_t *)
 	cdef extern void slurm_print_topo_info_msg (FILE *, topo_info_response_msg_t *, int)
 	cdef extern void slurm_print_topo_record (FILE * out, topo_info_t *, int one_liner)
-	
+
 	#
-	# Blue Gene Specific
+	# Blue Gene
 	#
-
-	ctypedef struct block_info_t:
-		char *bg_block_id
-		char *blrtsimage
-		int *bp_inx
-		uint16_t conn_type
-		char *ionodes
-		int *ionode_inx
-		uint32_t job_running
-		char *linuximage
-		char *mloaderimage
-		char *nodes
-		uint32_t node_cnt
-		uint16_t node_use
-		char *owner_name
-		char *ramdiskimage
-		char *reason
-		uint16_t state
-
-	ctypedef struct block_info_msg_t:
-		block_info_t *block_array
-		time_t    last_update
-		uint32_t  record_count
-
-	ctypedef block_info_t update_block_msg_t
 
 	cdef extern void slurm_print_block_info_msg (FILE *out, block_info_msg_t *info_ptr, int)
 	cdef extern void slurm_print_block_info (FILE *out, block_info_t *bg_info_ptr, int)

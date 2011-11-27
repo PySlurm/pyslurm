@@ -1,13 +1,16 @@
 import pyslurm
 from time import gmtime, strftime
 
-a, b = pyslurm.slurm_load_jobs("", 2)
+a, b = pyslurm.slurm_load_jobs("", 1)
+print a
 jobs =  pyslurm.get_job_data(b)
 
 if jobs:
 
+	time_fields = [ 'time_limit'
+			]
+
 	date_fields = [ 'start_time', 
-			'suspend_time',
 			'submit_time',
 			'end_time',
 			'eligible_time',
@@ -18,6 +21,10 @@ if jobs:
 
 		print "JobID %s :" % key
 		for part_key in sorted(value.iterkeys()):
+
+			if part_key in time_fields:
+				print "\t%-20s : Infinite" % (part_key)
+				continue
 
 			if part_key in date_fields:
 

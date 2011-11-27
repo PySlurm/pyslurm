@@ -1,6 +1,7 @@
 import pyslurm
 
 a, ptr = pyslurm.slurm_load_ctl_conf()
+pyslurm.slurm_print_ctl_conf(ptr)
 ctl_dict = pyslurm.get_ctl_data(ptr)
 pyslurm.slurm_free_ctl_conf(ptr)
 

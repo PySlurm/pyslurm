@@ -48,14 +48,16 @@ ctypedef struct trigger_info:
 
 trigDict = {
 		'res_type':  'node' ,
-		'res_id':    'makalu',
+		'res_id':    'lhotse',
 		'offset':    0,
-		'trig_type': 'down',
+		'event': 'down',
 		'program':   '/tmp/test.sh'
 	}
 
-rc = pyslurm.slurm_set_trigger(trigger_dict)
+rc = pyslurm.slurm_set_trigger(trigDict)
 if rc != 0:
+	print rc
+	rc = pyslurm.slurm_get_errno()
 	print "Unable to set trigger : %s" % pyslurm.slurm_strerror(rc)
 else:
 	print "Trigger (%s) set !" % rc

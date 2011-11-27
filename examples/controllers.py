@@ -15,13 +15,15 @@ def controller_up(controller=1):
 
 if __name__ == "__main__":
 
-	print "SLURM API %s-%s-%s\n" % (pyslurm.slurm_api_version())
+	print "\n"
+	print "PySLURM\t%s" % (pyslurm.version())
+	print "SLURM\t%s-%s-%s\n" % (pyslurm.slurm_api_version())
 
 	host = socket.gethostname()
 	print "Checking host.....%s\n" % host
 
 	a = pyslurm.is_controller(host)
-	print "\tHost is controller = %s\n" % a
+	print "\tHost is controller (%s)\n" % a
 
 	print "Querying SLURM controllers\n"
 	primary, backup = pyslurm.get_controllers()
