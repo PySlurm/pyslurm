@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-'''
+u'''
 
 	PySlurm: Python/Cython interface for SLURM
 
@@ -50,27 +50,47 @@ except:
 	sys.exit(-1)
 
 # Handle flags but only on build section
-#    --slurm=[ROOT_PATH]
-# Handle Blue Gene specifics
-#    --bg --bgl --bgp
+#
+#    --slurm=[ROOT_PATH] | --slurm-lib=[LIB_PATH] && --slurm-inc=[INC_PATH]
 
-SLURM_DIR = ''
+SLURM_DIR = SLURM_LIB = SLURM_INC = ''
 args = sys.argv[:]
-for arg in args:
-	if arg.find('--slurm=') == 0:
-		SLURM_DIR = arg.split('=')[1]
-		sys.argv.remove(arg)
+if args[1] == 'build':
+	for arg in args:
+		if arg.find('--slurm=') == 0:
+			SLURM_DIR = arg.split('=')[1]
+			sys.argv.remove(arg)
+		if arg.find('--slurm-lib=') == 0:
+			SLURM_LIB = arg.split('=')[1]
+			sys.argv.remove(arg)
+		if arg.find('--slurm-inc=') == 0:
+			SLURM_INC = arg.split('=')[1]
+			sys.argv.remove(arg)
 
-# Slurm installation directory
+	# Slurm installation directory
 
-if not SLURM_DIR:
-	print "Error - Need to provide the SLURM dir location, please use --slurm=PATH"
-	sys.exit(-1)
+	if SLURM_DIR and (SLURM_LIB or SLURM_INC):
+		usage()
 
-print "\n"
+	if SLURM_DIR and not (SLURM_LIB or SLURM_INC):
+		SLURM_LIB = SLURM_DIR
+		SLURM_INC = SLURM_DIR
+	elif SLURM_LIB and not SLURM_INC:
+		usage()
+	elif SLURM_INC and not SLURM_LIB:
+		usage()
+	else:
+		usage()
+	
+
+def usage():
+		print "Error - Need to provide either SLURM dir location, please use --slurm=PATH"
+		print "        or --slurm-lib=PATH and --slurm-inc=PATH"
+		sys.exit(-1)
+
 def scandir(dir, files=[]):
 
-	'''
+	u'''
 	Scan the directory for extension files, converting
 	them to extension names in dotted notation
 	'''
@@ -85,7 +105,7 @@ def scandir(dir, files=[]):
 
 def makeExtension(extName):
 
-	'''
+	u'''
 	Generate an Extension object from its dotted name
 	'''
 
@@ -93,10 +113,10 @@ def makeExtension(extName):
 	return Extension(
 		extName,
 		[extPath],
-		include_dirs = [ '%s/include' % SLURM_DIR, '.' ],   # adding the '.' to include_dirs is CRUCIAL!!
-		library_dirs = [ '%s/lib' % SLURM_DIR], 
+		include_dirs = [ '%s/include' % SLURM_INC, '.' ],   # adding the '.' to include_dirs is CRUCIAL!!
+		library_dirs = [ '%s/lib' % SLURM_LIB], 
 		libraries = [ 'slurm' ],
-		runtime_library_dirs = [ '%s/lib' % SLURM_DIR],
+		runtime_library_dirs = [ '%s/lib' % SLURM_LIB],
 		extra_objects = [],
 		extra_compile_args = [],
 		extra_link_args = [],
@@ -106,7 +126,7 @@ def makeExtension(extName):
 
 def read(fname):
 
-	'''
+	u'''
 	Read the README.rst file for long description
 	'''
 
@@ -143,6 +163,7 @@ setup(
 		'Operating System :: Linux',
 		'Programming Language :: Python',
 		'Programming Language :: Python :: 2',
+		'Programming Language :: Python :: 2.5',
 		'Programming Language :: Python :: 2.6',
 		'Programming Language :: Python :: 2.7',
 		'Topic :: Software Development :: Libraries',
