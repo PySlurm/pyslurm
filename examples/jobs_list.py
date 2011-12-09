@@ -2,6 +2,7 @@
 
 import pyslurm
 import sys
+
 from time import gmtime, strftime, sleep
 
 def display(job_dict):
@@ -37,10 +38,12 @@ def display(job_dict):
 			print "-" * 80
 
 
-if __name__ == "__main_":
+if __name__ == "__main__":
 
 	a = pyslurm.job()
-	jobs =  a.get()
+	jobs = a.get()
+
+	print jobs
 
 	if len(jobs) > 0:
 
