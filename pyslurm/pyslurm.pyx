@@ -269,6 +269,27 @@ TRIGGER_TYPE_PRI_DBD_RES_OP = 0x00020000
 TRIGGER_TYPE_PRI_DB_FAIL = 0x00040000
 TRIGGER_TYPE_PRI_DB_RES_OP = 0x00080000
 
+# Need to code in BG type detection below :
+# 
+#	FREE 0
+#	RECREATE 1
+#	HAVE_BGL
+#		READY, 2
+#		BUSY, 3
+#	else
+#		REBOOTING, 2
+#		READY, 3
+#	RESUME 4
+#	ERROR 5
+#	REMOVE 6
+
+BLOCK_FREE = 0
+BLOCK_RECREATE = 1
+BLOCK_READY = 2
+BLOCK_BUSY = 3
+BLOCK_RESUME = 4
+BLOCK_ERROR = 5
+BLOCK_REMOVE = 6
 #
 # SLURM Macros as Cython inline functions
 #
@@ -432,8 +453,8 @@ cdef class config:
 
 	cdef slurm.slurm_ctl_conf_t *slurm_ctl_conf_ptr
 	cdef slurm.slurm_ctl_conf_t *__Config_ptr
-	cdef slurm.time_t Time
 
+	cdef slurm.time_t Time
 	cdef slurm.time_t __lastUpdate
 
 	cdef dict __ConfigDict
@@ -795,7 +816,7 @@ cdef class partition:
 		"""
 		return self._lastUpdate
 
-	def id(self):
+	def ids(self):
 
 		u"""Return the partition IDs from retrieved data.
 		"""
@@ -1712,7 +1733,7 @@ cdef class job:
 
 		return self._lastUpdate
 
-	def id(self):
+	def ids(self):
 
 		u"""Return the job IDs from retrieved data.
 		"""
@@ -1856,18 +1877,18 @@ cdef class job:
 			Job_dict['resv_name'] = slurm.stringOrNone(self._job_ptr.job_array[i].resv_name, '')
 
 			#Job_dict['nodes'] = self.get_select_jobinfo(SELECT_JOBDATA_NODES)
-			Job_dict['ionodes'] = self.get_select_jobinfo(SELECT_JOBDATA_IONODES)
-			Job_dict['block_id'] = self.get_select_jobinfo(SELECT_JOBDATA_BLOCK_ID)
-			Job_dict['blrts_image'] = self.get_select_jobinfo(SELECT_JOBDATA_BLRTS_IMAGE)
-			Job_dict['linux_image'] = self.get_select_jobinfo(SELECT_JOBDATA_LINUX_IMAGE)
-			Job_dict['mloader_image'] = self.get_select_jobinfo(SELECT_JOBDATA_MLOADER_IMAGE)
-			Job_dict['ramdisk_image'] = self.get_select_jobinfo(SELECT_JOBDATA_RAMDISK_IMAGE)
+			Job_dict['ionodes'] = self.__get_select_jobinfo(SELECT_JOBDATA_IONODES)
+			Job_dict['block_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_BLOCK_ID)
+			Job_dict['blrts_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_BLRTS_IMAGE)
+			Job_dict['linux_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_LINUX_IMAGE)
+			Job_dict['mloader_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_MLOADER_IMAGE)
+			Job_dict['ramdisk_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_RAMDISK_IMAGE)
 			#Job_dict['node_cnt'] = self.get_select_jobinfo(SELECT_JOBDATA_NODE_CNT)
-			Job_dict['resv_id'] = self.get_select_jobinfo(SELECT_JOBDATA_RESV_ID)
-			Job_dict['rotate'] = self.get_select_jobinfo(SELECT_JOBDATA_ROTATE)
-			Job_dict['conn_type'] = self.get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE)
-			Job_dict['altered'] = self.get_select_jobinfo(SELECT_JOBDATA_ALTERED)
-			Job_dict['reboot'] = self.get_select_jobinfo(SELECT_JOBDATA_REBOOT)
+			Job_dict['resv_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_RESV_ID)
+			Job_dict['rotate'] = self.__get_select_jobinfo(SELECT_JOBDATA_ROTATE)
+			Job_dict['conn_type'] = self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE)
+			Job_dict['altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
+			Job_dict['reboot'] = self.__get_select_jobinfo(SELECT_JOBDATA_REBOOT)
 
 			Job_dict['cpus_allocated'] = {}
 			for node_name in Job_dict['nodes']:
@@ -1890,11 +1911,11 @@ cdef class job:
 
 		self._JobDict = Jobs
 
-	cpdef get_select_jobinfo(self, uint32_t dataType):
+	cpdef __get_select_jobinfo(self, uint32_t dataType):
 
-		u"""Decode opaque data type *jobinfo
+		u"""Decode opaque data type jobinfo
 
-		** INCOMPLETE PORT **
+		INCOMPLETE PORT 
 		"""
 
 		cdef slurm.dynamic_plugin_data_t *jobinfo = <slurm.dynamic_plugin_data_t*>self._record.select_jobinfo
@@ -2299,7 +2320,7 @@ cdef class node:
 
 		self._NodeDict = Hosts
 
-	cpdef slurm_get_select_nodeinfo(Node_Ptr, uint32_t dataType, uint32_t State):
+	cpdef __get_select_nodeinfo(Node_Ptr, uint32_t dataType, uint32_t State):
 
 		u"""
 			WORK IN PROGRESS
@@ -2827,9 +2848,9 @@ cdef class reservation:
 		"""
 		return self._lastUpdate
 
-	def id(self):
+	def ids(self):
 
-		u"""Return the reservation IDs from retrieved data.
+		u"""Return a list of reservation IDs from retrieved data.
 		"""
 
 		return self._ResDict.keys()
@@ -2846,6 +2867,8 @@ cdef class reservation:
 	def find(self, char *name='', char *val=''):
 
 		u"""Search for a property and associated value in the retrieved reservation data
+
+		Return a list of reservation IDs that match
 		"""
 
 		# [ key for key, value in self._ResDict.iteritems() if self._ResDict[key]['state'] == 'error']
@@ -3161,7 +3184,7 @@ cdef class block:
 		"""
 		return self._lastUpdate
 
-	def id(self):
+	def ids(self):
 
 		u"""Return the block IDs from retrieved data.
 		"""
@@ -3191,12 +3214,13 @@ cdef class block:
 		return retList
 
 	def load(self):
-		self.__load()
-
-	cpdef int __load(self):
 
 		u"""Load slurm block information.
 		"""
+
+		self.__load()
+
+	cpdef int __load(self):
 
 		cdef slurm.block_info_msg_t *new_block_info_ptr = NULL
 		cdef slurm.time_t last_time = <slurm.time_t>NULL
@@ -3232,12 +3256,6 @@ cdef class block:
 		return self._BlockDict
 
 	cpdef __get(self):
-
-		u"""Get slurm block information method.
-
-		:returns: Data whose key is the Block ID
-		:rtype: `dict`
-		"""
 
 		cdef int i
 		cdef dict Block = {}, Block_dict
@@ -3294,73 +3312,75 @@ cdef class block:
 			self._ShowFlags = 0
 			self._BlockDict = {}
 
-	cpdef error(self, char *blockID=''):
+	cpdef update_error(self, char *blockID=''):
 
 		u"""Set block ID to ERROR state.
 		"""
 
-		return self.update(blockID, 'ERROR')
+		return self.update(blockID, BLOCK_ERROR)
 
-	cpdef free(self, char *blockID=''):
+	cpdef update_free(self, char *blockID=''):
 
 		u"""Set block ID to FREE state.
 		"""
 
-		return self.update(blockID, 'FREE')
+		return self.update(blockID, BLOCK_FREE)
 
-	cpdef recreate(self, char *blockID=''):
+	cpdef update_recreate(self, char *blockID=''):
 
 		u"""Set block ID to RECREATE state.
 		"""
 
-		return self.update(blockID, 'RECREATE')
+		return self.update(blockID, BLOCK_RECREATE)
 
-	cpdef remove(self, char *blockID=''):
+	cpdef update_remove(self, char *blockID=''):
 
 		u"""Set block ID to REMOVE state.
 		"""
 
-		return self.update(blockID, 'REMOVE')
+		return self.update(blockID, BLOCK_REMOVE)
 
-	cpdef resume(self, char *blockID=''):
+	cpdef update_resume(self, char *blockID=''):
 
 		u"""Set block ID to RESUME state.
 		"""
 
-		return self.update(blockID, 'RESUME')
+		return self.update(blockID, BLOCK_RESUME)
 
-	cpdef update(self, char *blockID='', char *blockOP=''):
+	cpdef update(self, char *blockID='', int blockOP=0):
 
 		u"""Update slurm blockID to a given state
 
-		Need to code in BG detection here :
+		Need to code in BG type detection :
  
-			#ifdef HAVE_BGL
-				#RM_PARTITION_READY, 2
-				#RM_PARTITION_BUSY, 3
-			#else
-				#RM_PARTITION_REBOOTING, 2
-				#RM_PARTITION_READY, 3
-			#endif
+			FREE 0
+			RECREATE 1
+			HAVE_BGL
+				READY, 2
+				BUSY, 3
+			else
+				REBOOTING, 2
+				READY, 3
+			RESUME 4
+			ERROR 5
+			REMOVE 6
 		"""
 
 		cdef int i, dictlen
-		cdef dict blockOPS = {'ERROR': 5, 'FREE': 0, 'RECREATE': 1, 'REMOVE': 6, 'RESUME': 4}
 
 		cdef slurm.update_block_msg_t block_msg
 
 		if not blockID:
 			return
 
-		if blockOP in blockOPS.keys():
-			slurm.slurm_init_update_block_msg(&block_msg)
-			block_msg.bg_block_id = blockID
-			block_msg.state = blockOPS[blockOP]
+		slurm.slurm_init_update_block_msg(&block_msg)
+		block_msg.bg_block_id = blockID
+		block_msg.state = blockOP
 
-			if slurm.slurm_update_block(&block_msg):
-				return slurm.slurm_get_errno()
-			else:
-				return 0
+		if slurm.slurm_update_block(&block_msg):
+			return slurm.slurm_get_errno()
+		else:
+			return 0
 		return -1
 
 #
@@ -3619,7 +3639,7 @@ def __get_partition_state2(int inx, int extended=0):
 	cdef char* state = '?'
 
 	if (drain_flag):
-		if (comp_flag or (inx == 4) ):
+		if (comp_flag or (inx == 4)):
 			state = 'DRAINING'
 			if (no_resp_flag and extended):
 				state = 'DRAINING*'
@@ -3743,49 +3763,49 @@ cdef inline list get_debug_flags(int flags=0):
 
 	cdef list debugFlags = []
 
-	if ( flags & DEBUG_FLAG_BG_ALGO ):
+	if (flags & DEBUG_FLAG_BG_ALGO):
 		debugFlags.append('BGBlockAlgo')
 
-	if ( flags & DEBUG_FLAG_BG_ALGO_DEEP ):
+	if (flags & DEBUG_FLAG_BG_ALGO_DEEP):
 		debugFlags.append('BGBlockAlgoDeep')
 
-	if ( flags & DEBUG_FLAG_BACKFILL ):
+	if (flags & DEBUG_FLAG_BACKFILL):
 		debugFlags.append('Backfill')
 
-	if ( flags & DEBUG_FLAG_BG_PICK ):
+	if (flags & DEBUG_FLAG_BG_PICK):
 		debugFlags.append('BGBlockPick')
 
-	if ( flags & DEBUG_FLAG_BG_WIRES ):
+	if (flags & DEBUG_FLAG_BG_WIRES):
 		debugFlags.append('BGBlockWires')
 
-	if ( flags & DEBUG_FLAG_CPU_BIND ):
+	if (flags & DEBUG_FLAG_CPU_BIND):
 		debugFlags.append('CPU_Bind')
 
-	if ( flags & DEBUG_FLAG_GANG ):
+	if (flags & DEBUG_FLAG_GANG):
 		debugFlags.append('Gang')
 
-	if ( flags & DEBUG_FLAG_GRES ):
+	if (flags & DEBUG_FLAG_GRES):
 		debugFlags.append('Gres')
 
-	if ( flags & DEBUG_FLAG_NO_CONF_HASH ):
+	if (flags & DEBUG_FLAG_NO_CONF_HASH):
 		debugFlags.append('NO_CONF_HASH')
 
-	if ( flags & DEBUG_FLAG_PRIO ):
+	if (flags & DEBUG_FLAG_PRIO ):
 		debugFlags.append('Priority')
                
-	if ( flags & DEBUG_FLAG_RESERVATION ):
+	if (flags & DEBUG_FLAG_RESERVATION):
 		debugFlags.append('Reservation')
 
-	if ( flags & DEBUG_FLAG_SELECT_TYPE ):
+	if (flags & DEBUG_FLAG_SELECT_TYPE):
 		debugFlags.append('SelectType')
 
-	if ( flags & DEBUG_FLAG_STEPS ):
+	if (flags & DEBUG_FLAG_STEPS):
 			debugFlags.append('Steps')
 
-	if ( flags & DEBUG_FLAG_TRIGGERS ):
+	if (flags & DEBUG_FLAG_TRIGGERS):
 		debugFlags.append('Triggers')
 
-	if ( flags & DEBUG_FLAG_WIKI ):
+	if (flags & DEBUG_FLAG_WIKI ):
 		debugFlags.append('Wiki')
 
 	return debugFlags
@@ -3896,13 +3916,13 @@ cdef inline list __get_preempt_mode(uint16_t index):
 		modeFlags.append('GANG')
 		inx &= (~ PREEMPT_MODE_GANG)
 
-	if ( inx == PREEMPT_MODE_CANCEL ):
+	if (inx == PREEMPT_MODE_CANCEL):
 		modeFlags.append('CANCEL')
-	elif ( inx == PREEMPT_MODE_CHECKPOINT ):
+	elif (inx == PREEMPT_MODE_CHECKPOINT):
 		modeFlags.append('CHECKPOINT')
-	elif ( inx == PREEMPT_MODE_REQUEUE ):
+	elif (inx == PREEMPT_MODE_REQUEUE):
 		modeFlags.append('REQUEUE')
-	elif ( inx == PREEMPT_MODE_SUSPEND ):
+	elif (inx == PREEMPT_MODE_SUSPEND):
 		modeFlags.append('SUSPEND')
 	else:
 		modeFlags.append('UNKNOWN')
