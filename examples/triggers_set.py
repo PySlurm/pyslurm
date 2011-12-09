@@ -1,4 +1,4 @@
-import pyslurm
+#!/usr/bin/env python
 
 """
 Trigger ID                : 3
@@ -46,17 +46,19 @@ ctypedef struct trigger_info:
 	char *   program
 """
 
+import pyslurm
+
 trigDict = {
 		'res_type':  'node' ,
-		'res_id':    'lhotse',
+		'res_id':    'bps000',
 		'offset':    0,
 		'event': 'down',
 		'program':   '/tmp/test.sh'
 	}
 
-rc = pyslurm.slurm_set_trigger(trigDict)
+a = pyslurm.trigger()
+rc = a.set(trigDict)
 if rc != 0:
-	print rc
 	rc = pyslurm.slurm_get_errno()
 	print "Unable to set trigger : %s" % pyslurm.slurm_strerror(rc)
 else:

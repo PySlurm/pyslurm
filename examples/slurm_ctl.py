@@ -1,9 +1,9 @@
+#!/usr/bin/env python
+
 import pyslurm
 
-a, ptr = pyslurm.slurm_load_ctl_conf()
-pyslurm.slurm_print_ctl_conf(ptr)
-ctl_dict = pyslurm.get_ctl_data(ptr)
-pyslurm.slurm_free_ctl_conf(ptr)
+a = pyslurm.config()
+ctl_dict = a.get()
 
 # Process the sorted SLURM configuration dictionary
 
@@ -19,5 +19,17 @@ for key in sorted(ctl_dict.iterkeys()):
 			print "\t%-35s : %s" % (key, ddate)
 
 	else:
-		print "\t%-35s : %s" % (key, ctl_dict[key])
+		if 'key_pairs' not in key:
+			print "\t%-35s : %s" % (key, ctl_dict[key])
 
+if ctl_dict.has_key('key_pairs'):
+
+	print ""
+	print "Additional Information :"
+	print "------------------------"
+	print ""
+
+	for key in sorted(ctl_dict['key_pairs'].iterkeys()):
+		print "\t%-35s : %s" % (key, ctl_dict['key_pairs'][key])
+
+#print a.key_pairs()

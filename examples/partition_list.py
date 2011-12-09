@@ -1,4 +1,6 @@
-def display_dict(part_dict):
+#!/usr/bin/env python
+
+def display(part_dict):
 
 	if len(part_dict) > 0:
 
@@ -28,21 +30,24 @@ def display_dict(part_dict):
 
 			print "-" * 80
 
+if __name__ == "__main__":
+
+	import pyslurm
+	import time
+	from time import gmtime, strftime
+
+	a = pyslurm.partition()
+	part_dict = a.get()
+
+	if len(part_dict) > 0:
+
+		display(part_dict)
+
+		print
+		print "Partition IDs - %s" % a.id()
+		print
 	else:
 	
 		print "No partitions found !"
 
-
-if __name__ == "__main__":
-
-	import pyslurm
-	from time import gmtime, strftime
-
-	partition = pyslurm.partition()
-	partition.load()
-	partition.display_all()
-	print "-" * 80
-
-	part_dict = partition.get()
-	display_dict(part_dict)
 

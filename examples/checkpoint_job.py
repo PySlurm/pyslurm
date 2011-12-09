@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import pyslurm
 
 rc, Time = pyslurm.slurm_checkpoint_able(6,0,0)

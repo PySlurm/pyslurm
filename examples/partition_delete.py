@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import pyslurm
 
 rc = pyslurm.slurm_delete_partition(2)

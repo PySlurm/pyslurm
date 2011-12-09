@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
-def display(node_dict):
+import pyslurm
+from time import gmtime, strftime
 
-	if node_dict:
+def display(block_dict):
 
-		date_fields = [ 'boot_time', 'slurmd_start_time' ]
+	if block_dict:
 
+     
+		date_fields = [ ]
+      
 		print "-" * 80
-		for key, value in node_dict.iteritems():
+      
+		for key, value in block_dict.iteritems():
 
 			print "%s :" % (key)
 			for part_key in sorted(value.iterkeys()):
@@ -19,8 +24,8 @@ def display(node_dict):
 					else:
 						ddate = pyslurm.epoch2date(ddate)
 						print "\t%-17s : %s" % (part_key, ddate)
-				elif ('reason_uid' in part_key and value['reason'] is None):
-					print "\t%-17s :" % part_key
+					elif ('reason_uid' in part_key and value['reason'] is None):
+						print "\t%-17s :" % part_key
 				else: 
 					print "\t%-17s : %s" % (part_key, value[part_key])
 
@@ -29,20 +34,17 @@ def display(node_dict):
 
 if __name__ == "__main__":
 
-	import pyslurm
+	a = pyslurm.block()
+	a.load()
+	block_dict = a.get()
 
-	Nodes = pyslurm.node()
-	node_dict = Nodes.get()
+	if len(block_dict) > 0:
 
-	if len(node_dict) > 0:
-
-		display(node_dict)
-
+		display(block_dict)
 		print
-		print "Node IDs - %s" % a.id()
+		print "Block IDs - %s" % a.id()
+		print
 
 	else:
-	
-		print "No Nodes found !"
+		print "No Blocks found !"
 
-	

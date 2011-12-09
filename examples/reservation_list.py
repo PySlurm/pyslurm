@@ -1,31 +1,43 @@
+#!/usr/bin/env python
+
 import pyslurm
 import datetime
 
-a, b = pyslurm.slurm_load_reservations()
-res_dict =  pyslurm.get_reservation_data(b)
+def display(res_dict):
 
-if len(res_dict) > 0:
+	if len(res_dict) > 0:
 
-	date_fields = [ 'end_time', 'start_time' ]
+		date_fields = ['end_time', 'start_time']
 
-	for key, value in res_dict.iteritems():
+		for key, value in res_dict.iteritems():
 
-		print "Res ID : %s" % (key)
-		for res_key in sorted(value.iterkeys()):
+			print "Res ID : %s" % (key)
+			for res_key in sorted(value.iterkeys()):
 
-			if res_key in date_fields:
+				if res_key in date_fields:
 
-				if value[res_key] == 0:
-					print "\t%-20s : N/A" % (res_key)
+					if value[res_key] == 0:
+						print "\t%-20s : N/A" % (res_key)
+					else:
+						ddate = pyslurm.epoch2date(value[res_key])
+						print "\t%-20s : %s" % (res_key, ddate)
 				else:
-					ddate = pyslurm.epoch2date(value[res_key])
-					print "\t%-20s : %s" % (res_key, ddate)
+						print "\t%-20s : %s" % (res_key, value[res_key])
 
-			else:
-					print "\t%-20s : %s" % (res_key, value[res_key])
-
-	print "-" * 80
+		print "-" * 80
 		
-else:
-	print "No reservations found !"
+
+if __name__ == "__main__":
+
+	a = pyslurm.reservation()
+	res_dict = a.get()
+
+	if len(res_dict) > 0:
+
+		display(res_dict)
+
+		print "Res IDs - %s" % a.id()
+
+	else:
+		print "No reservations found !"
 

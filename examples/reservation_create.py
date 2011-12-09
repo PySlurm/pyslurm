@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import pyslurm
 import sys
 import string
@@ -8,24 +10,22 @@ dstring = "2013-12-31T18:00:00"
 dpattern = "%Y-%m-%dT%H:%M:%S"
 start_epoch = int(time.mktime(time.strptime(dstring, dpattern)))
 
+a = pyslurm.reservation()
 res_dict = pyslurm.create_reservation_dict()
-
 res_dict["node_cnt"] = 1
 res_dict["users"] = "root"
 res_dict["start_time"] = start_epoch
 res_dict["duration"] = 600
 
-resid = pyslurm.slurm_create_reservation(res_dict)
+resid = a.create(res_dict)
 rc = pyslurm.slurm_get_errno()
 if rc != 0:
 	print "Failed - Error : %s" % pyslurm.slurm_strerror(pyslurm.slurm_get_errno())
-	sys.exit(-1)
+	#sys.exit(-1)
 else:
 	print "Success - Created reservation %s\n" % resid
 
-a, b = pyslurm.slurm_load_reservations()
-res_dict =  pyslurm.get_reservation_data(b)
-
+res_dict = a.get()
 if res_dict.has_key(resid):
 
 	date_fields = [ 'end_time', 'start_time' ]
@@ -52,5 +52,5 @@ else:
 
 print "\n"
 print "%s" % ' All Reservations '.center(80, '-')
-pyslurm.slurm_print_reservation_info_msg(b, False)
+a.print_reservation_info_msg()
 print "-" * 80

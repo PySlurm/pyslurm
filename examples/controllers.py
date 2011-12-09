@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import pyslurm
 import socket
 import sys
@@ -40,5 +42,4 @@ if __name__ == "__main__":
 	if backup:
 		print "\tBackup .....\r"
 		controller_up(2)
-
 

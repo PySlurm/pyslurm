@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import pyslurm
 
 rc = pyslurm.slurm_kill_job(51, 9, 0)

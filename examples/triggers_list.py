@@ -1,10 +1,14 @@
+#!/usr/bin/env python
+
 import pyslurm
 
-triggers = pyslurm.slurm_get_triggers()
-if len(triggers) > 0:
+a = pyslurm.trigger()
+trig_dict = a.get()
+
+if len(trig_dict) > 0:
 
 	print "-" * 80
-	for key, value in triggers.iteritems():
+	for key, value in trig_dict.iteritems():
 		print "Trigger ID                : %s" % (key)
 		for part_key in sorted(value.iterkeys()):
 			print "%-25s : %s" % (part_key, value[part_key])
