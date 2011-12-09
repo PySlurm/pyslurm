@@ -1871,7 +1871,7 @@ cdef class job:
 
 			Job_dict['cpus_allocated'] = {}
 			for node_name in Job_dict['nodes']:
-				Job_dict['cpus_allocated'][node_name] = self.cpus_allocated_on_node(node_name)
+				Job_dict['cpus_allocated'][node_name] = self.__cpus_allocated_on_node(node_name)
 
 			Job_dict['shared'] = self._job_ptr.job_array[i].shared
 			Job_dict['show_flags'] = self._job_ptr.job_array[i].show_flags
@@ -1949,7 +1949,7 @@ cdef class job:
 
 		return None
 
-	cpdef int cpus_allocated_on_node_id(self, int nodeID=0):
+	cpdef int __cpus_allocated_on_node_id(self, int nodeID=0):
 
 		u"""Get the number of cpus allocated to a slurm job on a node by node name.
 
@@ -1963,7 +1963,7 @@ cdef class job:
 
 		return retval
 
-	cpdef int cpus_allocated_on_node(self, char* nodeName=''):
+	cpdef int __cpus_allocated_on_node(self, char* nodeName=''):
 
 		u"""Get the number of cpus allocated to a slurm job on a node by node name.
 
