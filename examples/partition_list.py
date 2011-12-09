@@ -44,7 +44,7 @@ if __name__ == "__main__":
 		display(part_dict)
 
 		print
-		print "Partition IDs - %s" % a.id()
+		print "Partition IDs - %s" % a.ids()
 		print
 	else:
 	

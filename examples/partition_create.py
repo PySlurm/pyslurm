@@ -14,4 +14,4 @@ elif rc == 0:
 
 	a.get()
 	print 
-	print "Partition IDs - %s" % a.id() 
+	print "Partition IDs - %s" % a.ids() 

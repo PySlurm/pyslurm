@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
 		display(block_dict)
 		print
-		print "Block IDs - %s" % a.id()
+		print "Block IDs - %s" % a.ids()
 		print
 
 	else:

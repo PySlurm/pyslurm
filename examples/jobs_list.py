@@ -43,14 +43,14 @@ if __name__ == "__main__":
 	a = pyslurm.job()
 	jobs = a.get()
 
-	print jobs
+	#print jobs
 
 	if len(jobs) > 0:
 
-		display(jobs)
+		#display(jobs)
 
 		print
-		print "JobIDs - %s" % a.id()
+		#print "JobIDs - %s" % a.ids()
 		print
 
 		print "JobIDs in Running state - %s" % a.find('job_state', 'Running')

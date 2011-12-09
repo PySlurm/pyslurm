@@ -39,7 +39,7 @@ if __name__ == "__main__":
 		display(node_dict)
 
 		print
-		print "Node IDs - %s" % a.id()
+		print "Node IDs - %s" % a.ids()
 
 	else:
 	
