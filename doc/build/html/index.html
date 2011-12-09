@@ -54,7 +54,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Mark Roberts, Stephan Gorget</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Date:</th><td class="field-body">October 25, 2011</td>
+<tr class="field-even field"><th class="field-name">Date:</th><td class="field-body">December 09, 2011</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Version:</th><td class="field-body">2.2.7</td>
 </tr>
@@ -68,16 +68,39 @@
 <ul class="simple">
 </ul>
 </div>
-<span class="target" id="module-pyslurm.pyslurm"></span><dl class="function">
-<dt id="pyslurm.pyslurm.create_partition_dict">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">create_partition_dict</tt><big>(</big><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.create_partition_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dictionary that can be populated by the user
-and used for the update_partition and create_partition calls.</p>
+<dl class="class">
+<dt id="pyslurm.block">
+<em class="property">class </em><tt class="descclassname">pyslurm.</tt><tt class="descname">block</tt><a class="headerlink" href="#pyslurm.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to access/update slurm block Information.</p>
+<dl class="method">
+<dt id="pyslurm.block.error">
+<tt class="descname">error</tt><big>(</big><em>self</em>, <em>char *blockID=''</em><big>)</big><a class="headerlink" href="#pyslurm.block.error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.find">
+<tt class="descname">find</tt><big>(</big><em>self</em>, <em>char *name=''</em>, <em>char *val=''</em><big>)</big><a class="headerlink" href="#pyslurm.block.find" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.find_id">
+<tt class="descname">find_id</tt><big>(</big><em>self</em>, <em>char *blockID=''</em><big>)</big><a class="headerlink" href="#pyslurm.block.find_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.free">
+<tt class="descname">free</tt><big>(</big><em>self</em>, <em>char *blockID=''</em><big>)</big><a class="headerlink" href="#pyslurm.block.free" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.get">
+<tt class="descname">get</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.block.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get slurm block information.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Empty reservation dictionary</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Data whose key is the Block ID</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
 </tr>
@@ -85,514 +108,494 @@ and used for the update_partition and create_partition calls.</p>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.create_reservation_dict">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">create_reservation_dict</tt><big>(</big><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.create_reservation_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dictionary that can be populated by the user an used for 
-the update_reservation and create_reservation calls.</p>
+<dl class="method">
+<dt id="pyslurm.block.id">
+<tt class="descname">id</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.block.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.lastUpdate">
+<tt class="descname">lastUpdate</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.block.lastUpdate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.load">
+<tt class="descname">load</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.block.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.print_info_msg">
+<tt class="descname">print_info_msg</tt><big>(</big><em>self</em>, <em>int oneLiner=False</em><big>)</big><a class="headerlink" href="#pyslurm.block.print_info_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output information about all Bluegene blocks based upon message as loaded using slurm_load_block.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Empty Reservation dictionary</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Flags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Print on one line - False (Default), True</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.epoch2date">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">epoch2date</tt><big>(</big><em>int epochSecs=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.epoch2date" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert epoch secs to a python time string</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Date</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>string</cite></td>
-</tr>
-</tbody>
-</table>
+<dl class="method">
+<dt id="pyslurm.block.recreate">
+<tt class="descname">recreate</tt><big>(</big><em>self</em>, <em>char *blockID=''</em><big>)</big><a class="headerlink" href="#pyslurm.block.recreate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.remove">
+<tt class="descname">remove</tt><big>(</big><em>self</em>, <em>char *blockID=''</em><big>)</big><a class="headerlink" href="#pyslurm.block.remove" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.resume">
+<tt class="descname">resume</tt><big>(</big><em>self</em>, <em>char *blockID=''</em><big>)</big><a class="headerlink" href="#pyslurm.block.resume" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.block.update">
+<tt class="descname">update</tt><big>(</big><em>self</em>, <em>char *blockID=''</em>, <em>char *blockOP=''</em><big>)</big><a class="headerlink" href="#pyslurm.block.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Need to code in BG detection here 
+#ifdef HAVE_BGL</p>
+<blockquote>
+<div>#RM_PARTITION_READY, 2
+#RM_PARTITION_BUSY, 3</div></blockquote>
+<dl class="docutils">
+<dt>#else</dt>
+<dd>#RM_PARTITION_REBOOTING, 2
+#RM_PARTITION_READY, 3</dd>
+</dl>
+<p>#endif</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.get_controllers">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">get_controllers</tt><big>(</big><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.get_controllers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get information about the slurm controllers.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Name of primary controller, Name of backup controller</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>tuple</cite></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.get_ctl_data">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">get_ctl_data</tt><big>(</big><em>Conf_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.get_ctl_data" title="Permalink to this definition">¶</a></dt>
+<dl class="class">
+<dt id="pyslurm.config">
+<em class="property">class </em><tt class="descclassname">pyslurm.</tt><tt class="descname">config</tt><a class="headerlink" href="#pyslurm.config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to access slurm config Information.</p>
+<dl class="method">
+<dt id="pyslurm.config.display_all">
+<tt class="descname">display_all</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.config.display_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints the contents of the data structure loaded by the slurm_load_ctl_conf function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.config.find_id">
+<tt class="descname">find_id</tt><big>(</big><em>self</em>, <em>char *keyID=''</em><big>)</big><a class="headerlink" href="#pyslurm.config.find_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.config.get">
+<tt class="descname">get</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.config.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the slurm control configuration information.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Conf_ptr</strong> (<em>pointer</em>) &#8211; Configuration pointer</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Configuration data</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Wrapped pointer from the slurm_load_ctl_conf call</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>pointer</cite></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Configuration data</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.get_debug_flags">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">get_debug_flags</tt><big>(</big><em>int flags</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.get_debug_flags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a string that represents the slurm debug flags</p>
+<dl class="method">
+<dt id="pyslurm.config.ids">
+<tt class="descname">ids</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.config.ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.config.key_pairs">
+<tt class="descname">key_pairs</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.config.key_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dict of the slurm control data as key pairs.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Debug flags</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">slurm error code</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>string</cite></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>integer</cite></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.get_job_data">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">get_job_data</tt><big>(</big><em>Job_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.get_job_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the slurm job information.</p>
+<dl class="method">
+<dt id="pyslurm.config.lastUpdate">
+<tt class="descname">lastUpdate</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.config.lastUpdate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyslurm.job">
+<em class="property">class </em><tt class="descclassname">pyslurm.</tt><tt class="descname">job</tt><a class="headerlink" href="#pyslurm.job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to access/modify Slurm Job Information.</p>
+<dl class="method">
+<dt id="pyslurm.job.cpus_allocated_on_node">
+<tt class="descname">cpus_allocated_on_node</tt><big>(</big><em>self</em>, <em>char *nodeName=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.job.cpus_allocated_on_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of cpus allocated to a slurm job on a node by node name.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Job_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned a by previous slurm_load_jobs call</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nodeName</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of node</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Data where key is the job name, each entry contains a dictionary of job attributes</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Num of CPUs allocated to job on this node or -1 on error</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.get_node_data">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">get_node_data</tt><big>(</big><em>Node_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.get_node_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get slurm node information.</p>
+<dl class="method">
+<dt id="pyslurm.job.cpus_allocated_on_node_id">
+<tt class="descname">cpus_allocated_on_node_id</tt><big>(</big><em>self</em>, <em>int nodeID=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.job.cpus_allocated_on_node_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of cpus allocated to a slurm job on a node by node name.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Node_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned by slurm_load_node call</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nodeID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Numerical node ID</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Data whose key is the node name.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Num of CPUs allocated to job on this node or -1 on error</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.get_partition_data">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">get_partition_data</tt><big>(</big><em>Partition_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.get_partition_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the slurm partition data.</p>
+<dl class="method">
+<dt id="pyslurm.job.find">
+<tt class="descname">find</tt><big>(</big><em>self</em>, <em>char *name=''</em>, <em>char *val=''</em><big>)</big><a class="headerlink" href="#pyslurm.job.find" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.job.find_id">
+<tt class="descname">find_id</tt><big>(</big><em>self</em>, <em>char *jobID=''</em><big>)</big><a class="headerlink" href="#pyslurm.job.find_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.job.get">
+<tt class="descname">get</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.job.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.job.get_select_jobinfo">
+<tt class="descname">get_select_jobinfo</tt><big>(</big><em>self</em>, <em>uint32_t dataType</em><big>)</big><a class="headerlink" href="#pyslurm.job.get_select_jobinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode opaque data type <a href="#id1"><span class="problematic" id="id2">*</span></a>jobinfo</p>
+<p>** INCOMPLETE PORT **</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.job.id">
+<tt class="descname">id</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.job.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.job.lastUpdate">
+<tt class="descname">lastUpdate</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.job.lastUpdate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.job.load">
+<tt class="descname">load</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.job.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load slurm job information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.job.print_job_info_msg">
+<tt class="descname">print_job_info_msg</tt><big>(</big><em>self</em>, <em>int oneLiner=0</em><big>)</big><a class="headerlink" href="#pyslurm.job.print_job_info_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints the contents of the data structure describing all job step records loaded by the slurm_get_job_steps function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Partition_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned by a previous call to slurm_load_partitions</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Partition data, key is the partition ID</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Flag</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Default=0</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.get_res_state">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">get_res_state</tt><big>(</big><em>int flags</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.get_res_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a string that represents the state of the slurm reservation</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyslurm.node">
+<em class="property">class </em><tt class="descclassname">pyslurm.</tt><tt class="descname">node</tt><a class="headerlink" href="#pyslurm.node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to access/modify/update Slurm Node Information.</p>
+<dl class="method">
+<dt id="pyslurm.node.find">
+<tt class="descname">find</tt><big>(</big><em>self</em>, <em>char *name=''</em>, <em>char *val=''</em><big>)</big><a class="headerlink" href="#pyslurm.node.find" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.node.find_id">
+<tt class="descname">find_id</tt><big>(</big><em>self</em>, <em>char *nodeID=''</em><big>)</big><a class="headerlink" href="#pyslurm.node.find_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.node.get">
+<tt class="descname">get</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.node.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.node.id">
+<tt class="descname">id</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.node.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.node.lastUpdate">
+<tt class="descname">lastUpdate</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.node.lastUpdate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the last time node data was updated.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.node.load">
+<tt class="descname">load</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.node.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load node method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.node.print_node_info_msg">
+<tt class="descname">print_node_info_msg</tt><big>(</big><em>self</em>, <em>int oneLiner=False</em><big>)</big><a class="headerlink" href="#pyslurm.node.print_node_info_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output information about all slurm nodes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Reservation state</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>list</cite></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>oneLiner</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Print on one line - False (Default) or True</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.get_reservation_data">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">get_reservation_data</tt><big>(</big><em>Reservation_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.get_reservation_data" title="Permalink to this definition">¶</a></dt>
+<dl class="method">
+<dt id="pyslurm.node.slurm_get_select_nodeinfo">
+<tt class="descname">slurm_get_select_nodeinfo</tt><big>(</big><em>Node_Ptr</em>, <em>uint32_t dataType</em>, <em>uint32_t State</em><big>)</big><a class="headerlink" href="#pyslurm.node.slurm_get_select_nodeinfo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.node.update">
+<tt class="descname">update</tt><big>(</big><em>self</em>, <em>dict node_dict={}</em><big>)</big><a class="headerlink" href="#pyslurm.node.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update slurm node information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node_dict</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A populated node dictionary, an empty one is created by create_node_dict</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error, and the slurm error code is set appropriately.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyslurm.partition">
+<em class="property">class </em><tt class="descclassname">pyslurm.</tt><tt class="descname">partition</tt><a class="headerlink" href="#pyslurm.partition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to access/modify Slurm Partition Information.</p>
+<dl class="method">
+<dt id="pyslurm.partition.create">
+<tt class="descname">create</tt><big>(</big><em>self</em>, <em>dict Partition_dict={}</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.partition.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a slurm partition.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>partition_dict</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A populated partition dictionary, an empty one can be created by create_partition_dict</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error, and the slurm error code is set appropriately.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.delete">
+<tt class="descname">delete</tt><big>(</big><em>self</em>, <em>char *PartID=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.partition.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a give slurm partition.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>PartID</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of slurm partition</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success else set the slurm error code as appropriately.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.find">
+<tt class="descname">find</tt><big>(</big><em>self</em>, <em>char *name=''</em>, <em>char *val=''</em><big>)</big><a class="headerlink" href="#pyslurm.partition.find" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.find_id">
+<tt class="descname">find_id</tt><big>(</big><em>self</em>, <em>char *partID=''</em><big>)</big><a class="headerlink" href="#pyslurm.partition.find_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.get">
+<tt class="descname">get</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.partition.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the slurm partition data from a previous load partition method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Partition data, key is the partition ID</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.id">
+<tt class="descname">id</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.partition.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.lastUpdate">
+<tt class="descname">lastUpdate</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.partition.lastUpdate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.load">
+<tt class="descname">load</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.partition.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load slurm partition information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.print_info_msg">
+<tt class="descname">print_info_msg</tt><big>(</big><em>self</em>, <em>int oneLiner=False</em><big>)</big><a class="headerlink" href="#pyslurm.partition.print_info_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the partition information from previous load partition method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Flag</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Display on one line (default=0)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.partition.update">
+<tt class="descname">update</tt><big>(</big><em>self</em>, <em>dict Partition_dict={}</em><big>)</big><a class="headerlink" href="#pyslurm.partition.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a slurm partition.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>partition_dict</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A populated partition dictionary, an empty one is created by create_partition_dict</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success, -1 for error, and the slurm error code is set appropriately.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyslurm.reservation">
+<em class="property">class </em><tt class="descclassname">pyslurm.</tt><tt class="descname">reservation</tt><a class="headerlink" href="#pyslurm.reservation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to access/update slurm reservation Information.</p>
+<dl class="method">
+<dt id="pyslurm.reservation.create">
+<tt class="descname">create</tt><big>(</big><em>self</em>, <em>dict reservation_dict={}</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.reservation.delete">
+<tt class="descname">delete</tt><big>(</big><em>self</em>, <em>char *ResID=''</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.reservation.find">
+<tt class="descname">find</tt><big>(</big><em>self</em>, <em>char *name=''</em>, <em>char *val=''</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.find" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.reservation.find_id">
+<tt class="descname">find_id</tt><big>(</big><em>self</em>, <em>char *resID=''</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.find_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.reservation.get">
+<tt class="descname">get</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get slurm reservation information.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Reservation_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned by slurm_load_reservation call</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Data whose key is the Reservation ID</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Data whose key is the Reservation ID</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.is_controller">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">is_controller</tt><big>(</big><em>Host=''</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.is_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return slurm controller status for host.</p>
+<dl class="method">
+<dt id="pyslurm.reservation.id">
+<tt class="descname">id</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.reservation.lastUpdate">
+<tt class="descname">lastUpdate</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.lastUpdate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.reservation.load">
+<tt class="descname">load</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyslurm.reservation.print_reservation_info_msg">
+<tt class="descname">print_reservation_info_msg</tt><big>(</big><em>self</em>, <em>int oneLiner=False</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.print_reservation_info_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output information about all slurm reservations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Host</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of host to check</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None, primary, backup</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>string</cite></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Flags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Print on one line - False (Default) or True</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_api_version">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_api_version</tt><big>(</big><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_api_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the slurm API version number.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">version_major, version_minor, version_micro</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>tuple</cite></td>
-</tr>
-</tbody>
-</table>
+<dl class="method">
+<dt id="pyslurm.reservation.update">
+<tt class="descname">update</tt><big>(</big><em>self</em>, <em>dict reservation_dict={}</em><big>)</big><a class="headerlink" href="#pyslurm.reservation.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_able">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_able</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em>, <em>time_t StartTime=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_able" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report if checkpoint operations can presently be issued for the specified slurm job step.</p>
-<p>If yes, returns SLURM_SUCCESS and sets start_time if checkpoint operation is presently active. Returns ESLURM_DISABLED if checkpoint operation is disabled.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>StartTime</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Checkpoint start time</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 can be checkpointed or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_complete">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_complete</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em>, <em>time_t BeginTime=0</em>, <em>uint32_t ErrorCode=0</em>, <em>char *ErrMsg=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_complete" title="Permalink to this definition">¶</a></dt>
-<dd><p>Note that a requested checkpoint has been completed.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>BeginTime</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Begin time of checkpoint</li>
-<li><strong>ErrorCode</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Error code, highest value fore all complete calls is preserved</li>
-<li><strong>ErrMsg</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Error message, preserved for highest error code</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_create">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_create</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em>, <em>uint16_t MaxWait=60</em>, <em>char *ImageDir=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_create" title="Permalink to this definition">¶</a></dt>
-<dd><p>Request a checkpoint for the identified slurm job step and continue its execution upon completion of the checkpoint.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>MaxWait</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Maximum time to wait</li>
-<li><strong>ImageDir</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Directory to write checkpoint files</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_disable">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_disable</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_disable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Disable checkpoint requests for a given slurm job step.</p>
-<p>This can be issued as needed to prevent checkpointing while a job step is in a critical section or for other reasons.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_enable">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_enable</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_enable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Enable checkpoint requests for a given slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_error">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_error</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_error" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get error information about the last checkpoint operation for a given slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">tuple</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Slurm error message</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>string</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_requeue">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_requeue</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint16_t MaxWait=60</em>, <em>char *ImageDir=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_requeue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initiate a checkpoint request for identified slurm job step, the job will be requeued after the checkpoint operation completes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>MaxWait</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Maximum time in seconds to wait for operation to complete</li>
-<li><strong>ImageDir</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Directory to write checkpoint files</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_restart">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_restart</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em>, <em>uint16_t Stick=0</em>, <em>char *ImageDir=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_restart" title="Permalink to this definition">¶</a></dt>
-<dd><p>Request that a previously checkpointed slurm job resume execution.</p>
-<p>It may continue execution on different nodes than were originally used. Execution may be delayed if resources are not immediately available.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>Stick</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Stick to nodes previously running om</li>
-<li><strong>ImageDir</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Directory to find checkpoint image files</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_task_complete">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_task_complete</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em>, <em>uint32_t TaskID=0</em>, <em>time_t BeginTime=0</em>, <em>uint32_t ErrorCode=0</em>, <em>char *ErrMsg=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_task_complete" title="Permalink to this definition">¶</a></dt>
-<dd><p>Note that a requested checkpoint has been completed.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>TaskID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Task identifier</li>
-<li><strong>BeginTime</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Begin time of checkpoint</li>
-<li><strong>ErrorCode</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Error code, highest value fore all complete calls is preserved</li>
-<li><strong>ErrMsg</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Error message, preserved for highest error code</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_tasks">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_tasks</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint16_t JobStep=0</em>, <em>uint16_t MaxWait=60</em>, <em>char *NodeList=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_tasks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Send checkpoint request to tasks of specified slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>MaxWait</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Seconds to wait for the operation to complete</li>
-<li><strong>NodeList</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; String of nodelist</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success, non zero on failure and with errno set</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">tuple</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Error message</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>string</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_checkpoint_vacate">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_checkpoint_vacate</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em>, <em>uint16_t MaxWait=60</em>, <em>char *ImageDir=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_checkpoint_vacate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Request a checkpoint for the identified slurm Job Step. Terminate its execution upon completion of the checkpoint.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>MaxWait</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Maximum time to wait</li>
-<li><strong>ImageDir</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Directory to store checkpoint files</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_clear_trigger">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_clear_trigger</tt><big>(</big><em>uint32_t TriggerID=-1</em>, <em>uint32_t UserID=-1</em>, <em>char *ID=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_clear_trigger" title="Permalink to this definition">¶</a></dt>
+<dl class="class">
+<dt id="pyslurm.trigger">
+<em class="property">class </em><tt class="descclassname">pyslurm.</tt><tt class="descname">trigger</tt><a class="headerlink" href="#pyslurm.trigger" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="pyslurm.trigger.clear">
+<tt class="descname">clear</tt><big>(</big><em>self</em>, <em>uint32_t TriggerID=-1</em>, <em>uint32_t UserID=-1</em>, <em>char *ID=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.trigger.clear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear or remove a slurm trigger.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -615,257 +618,9 @@ the update_reservation and create_reservation calls.</p>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_complete_job">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_complete_job</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobCode=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_complete_job" title="Permalink to this definition">¶</a></dt>
-<dd><p>Complete a running slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobCode</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Return code (default=0)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or -1 for error and set slurm errno</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_create_partition">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_create_partition</tt><big>(</big><em>dict partition_dict={}</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_create_partition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a slurm partition.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>partition_dict</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A populated partition dictionary, an empty one is created by create_partition_dict</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error, and the slurm error code is set appropriately.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_create_reservation">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_create_reservation</tt><big>(</big><em>dict reservation_dict={}</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_create_reservation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a slurm reservation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>reservation_dict</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A populated reservation dictionary, an empty one is created by create_reservation_dict</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error, and the slurm error code is set appropriately.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_delete_partition">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_delete_partition</tt><big>(</big><em>char *PartID</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_delete_partition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete a slurm partition.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>PartID</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of slurm partition</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success else set the slurm error code as appropriately.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_delete_reservation">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_delete_reservation</tt><big>(</big><em>char *ResID</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_delete_reservation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete a slurm reservation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ResID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Reservation Identifier</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error, and the slurm error code is set appropriately.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_free_ctl_conf">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_free_ctl_conf</tt><big>(</big><em>Conf_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_free_ctl_conf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Free the slurm control configuration pointer returned from a previous slurm_load_ctl_conf call.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Conf_ptr</strong> (<em>pointer</em>) &#8211; Wrapped pointer from the slurm_load_ctl_conf call</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_free_job_info_msg">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_free_job_info_msg</tt><big>(</big><em>Ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_free_job_info_msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Release the storage generated by the slurm_get_job_steps function.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Job_ptr</strong> (<em>pointer</em>) &#8211; Record pointer returned a by previous slurm_load_jobs call</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_free_job_step_info_response_msg">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_free_job_step_info_response_msg</tt><big>(</big><em>ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_free_job_step_info_response_msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Free the slurm job step info pointer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Ptr</strong> (<em>pointer</em>) &#8211; A wrapped job step info pointer</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_free_node_info_msg">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_free_node_info_msg</tt><big>(</big><em>Node_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_free_node_info_msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Free slurm node information message.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Node_ptr</strong> (<em>pointer</em>) &#8211; Wrapped node info record pointer</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_free_partition_info_msg">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_free_partition_info_msg</tt><big>(</big><em>Partition_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_free_partition_info_msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Free partition pointer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Partition_ptr</strong> (<em>pointer</em>) &#8211; Wrapped partition pointer returned by a previous call to slurm_load_partitions</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_free_reservation_info_msg">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_free_reservation_info_msg</tt><big>(</big><em>Reservation_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_free_reservation_info_msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Free slurm reservation pointer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Reservation_ptr</strong> (<em>pointer</em>) &#8211; Wrapped reservation pointer returned by a previous call to slurm_load_reservations</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_get_errno">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_get_errno</tt><big>(</big><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_get_errno" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the slurm error as set by a slurm API call.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">slurm error number</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_get_job_steps">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_get_job_steps</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t StepID=0</em>, <em>uint16_t ShowFlags=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_get_job_steps" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Loads into details about job steps that satisfy the job_id </dt>
-<dd>and/or step_id specifications provided if the data has been 
-updated since the update_time specified.</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job Identifier</li>
-<li><strong>StepID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Jobstep Identifier</li>
-<li><strong>ShowFlags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Display flags (Default=0)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Data whose key is the job and step ID</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>dict</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_get_rem_time">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_get_rem_time</tt><big>(</big><em>uint32_t JobID=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_get_rem_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the remaining time in seconds for a slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Remaining time in seconds or -1 on error</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_get_select_nodeinfo">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_get_select_nodeinfo</tt><big>(</big><em>Node_Ptr</em>, <em>uint32_t dataType</em>, <em>uint32_t State</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_get_select_nodeinfo" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_get_triggers">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_get_triggers</tt><big>(</big><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_get_triggers" title="Permalink to this definition">¶</a></dt>
+<dl class="method">
+<dt id="pyslurm.trigger.get">
+<tt class="descname">get</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pyslurm.trigger.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the information on slurm triggers.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -879,583 +634,9 @@ updated since the update_time specified.</dd>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_hostlist_count">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_hostlist_count</tt><big>(</big><em>Ptr</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_hostlist_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Count the number of hosts in slurm hostlist.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Ptr</strong> (<em>pointer</em>) &#8211; A wrapped hostlist pointer</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error, and the slurm error code is set appropriately.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_hostlist_create">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_hostlist_create</tt><big>(</big><em>char *HostList=''</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_hostlist_create" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a slurm hostlist.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>HostList</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; A string of hosts</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_hostlist_destroy">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_hostlist_destroy</tt><big>(</big><em>Ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_hostlist_destroy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Destroy a slurm hostlist.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Ptr</strong> (<em>pointer</em>) &#8211; A wrapped hostlist pointer</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_hostlist_find">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_hostlist_find</tt><big>(</big><em>Ptr</em>, <em>char *HostString=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_hostlist_find" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find host in slurm hostlist.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Ptr</strong> (<em>pointer</em>) &#8211; Wrapped slurm hostlist pointer</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for failure</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_job_cpus_allocated_on_node">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_job_cpus_allocated_on_node</tt><big>(</big><em>Ptr</em>, <em>char *nodeName=''</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_job_cpus_allocated_on_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the number of cpus allocated to a slurm job on a node by node name.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Ptr</strong> (<em>pointer</em>) &#8211; Wrapped pointer to job_resources structure</li>
-<li><strong>nodeName</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Name of node</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Num of CPUs allocated to job on this node or -1 on error</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_job_cpus_allocated_on_node_id">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_job_cpus_allocated_on_node_id</tt><big>(</big><em>Ptr</em>, <em>int nodeID=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_job_cpus_allocated_on_node_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the number of cpus allocated to a slurm job on a node by node name.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Ptr</strong> (<em>pointer</em>) &#8211; Wrapped pointer to job_resources structure</li>
-<li><strong>nodeID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Numerical node ID</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Num of CPUs allocated to job on this node or -1 on error</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_job_node_ready">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_job_node_ready</tt><big>(</big><em>uint32_t JobID=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_job_node_ready" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return if a node could run a slurm job now if despatched.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Node Ready code</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_job_step_layout_free">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_job_step_layout_free</tt><big>(</big><em>Ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_job_step_layout_free" title="Permalink to this definition">¶</a></dt>
-<dd><p>Free the slurm job step layout pointer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Ptr</strong> (<em>pointer</em>) &#8211; A wrapped job step layout pointer</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_job_step_layout_get">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_job_step_layout_get</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t StepID=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_job_step_layout_get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the slurm job step layout from a given job and step id.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; slurm job id (Default=0)</li>
-<li><strong>StepID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; slurm step id (Default=0)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of job step layout.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>list</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_kill_job">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_kill_job</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint16_t Signal=0</em>, <em>uint16_t BatchFlag=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_kill_job" title="Permalink to this definition">¶</a></dt>
-<dd><p>Terminate a running slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>Signal</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Signal to send</li>
-<li><strong>BatchFlag</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job batch flag (default=0)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or -1 for error and set slurm errno</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_kill_job_step">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_kill_job_step</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em>, <em>uint16_t Signal=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_kill_job_step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Terminate a running slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>Signal</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Signal to send (default=0)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or -1 for error, and the slurm error code is set appropriately.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_load_ctl_conf">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_load_ctl_conf</tt><big>(</big><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_load_ctl_conf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load the slurm control configuration information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">slurm error code</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>integer</cite></td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Wrapped pointer of configuration data</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>pointer</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_load_jobs">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_load_jobs</tt><big>(</big><em>old_ptr=''</em>, <em>uint16_t ShowFlags=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_load_jobs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load the slurm job information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>old_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned a by previous slurm_load_jobs call</li>
-<li><strong>ShowFlags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Type of jobs to show, default is 0</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or a slurm error code</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Wrapped job pointer</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_load_node">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_load_node</tt><big>(</big><em>old_ptr=''</em>, <em>uint16_t ShowFlags=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_load_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load slurm node information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>old_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned a by previous slurm_load_node call</li>
-<li><strong>ShowFlags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Default is 0</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Error value</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><cite>int</cite></p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Wrapped pointer that can be passed to get_node_data</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_load_partitions">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_load_partitions</tt><big>(</big><em>Partition_ptr=''</em>, <em>int ShowFlags=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_load_partitions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load the slurm partition information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Partition_ptr</strong> (<em>pointer</em>) &#8211; Wrapped partition record pointer returned a by previous call to slurm_load_partitions</li>
-<li><strong>ShowFlags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; flags, default=0</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Error value</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><cite>int</cite></p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Wrapped pointer that can be passed to the get_partition_data function</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>pointer</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_load_reservations">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_load_reservations</tt><big>(</big><em>Reservation_ptr=''</em>, <em>int Flags=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_load_reservations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load slurm reservation information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Reservation_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned a by previous slurm_load_reservatione call</li>
-<li><strong>Flags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Reservation Flag, default is 0</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Error value</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><cite>int</cite></p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Wrapped pointer that can be passed to get_reservation_data</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_load_slurmd_status">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_load_slurmd_status</tt><big>(</big><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_load_slurmd_status" title="Permalink to this definition">¶</a></dt>
-<dd><p>Issue RPC to get and load the status of Slurmd daemon.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Slurmd information</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>dict</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_notify_job">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_notify_job</tt><big>(</big><em>uint32_t JobID=0</em>, <em>char *Msg=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_notify_job" title="Permalink to this definition">¶</a></dt>
-<dd><p>Notify a message to a running slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Job identifier (default=0)</li>
-<li><strong>Msg</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Message to send to job</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or -1 on error</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_perror">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_perror</tt><big>(</big><em>char *Msg=''</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_perror" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print to standard error the supplied header followed by a colon followed  by a text description of the last Slurm error code generated.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Msg</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; slurm program error String</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_pid2jobid">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_pid2jobid</tt><big>(</big><em>uint32_t JobPID=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_pid2jobid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the slurm job id from a process id.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>JobPID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job process id</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or a slurm error code</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Job Identifier</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_ping">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_ping</tt><big>(</big><em>int Controller=1</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_ping" title="Permalink to this definition">¶</a></dt>
-<dd><p>Issue RPC to check if slurmctld is responsive.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Controller</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; 1 for primary (Default=1), 2 for backup</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or slurm error code</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_print_ctl_conf">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_print_ctl_conf</tt><big>(</big><em>Conf_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_print_ctl_conf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints the contents of the data structure loaded by the slurm_load_ctl_conf function.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Conf_ptr</strong> (<em>pointer</em>) &#8211; Wrapped pointer from the slurm_load_ctl_conf call</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_print_job_info">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_print_job_info</tt><big>(</big><em>Job_ptr</em>, <em>int Flag=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_print_job_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints the contents of the data structure describing all job step records loaded by the slurm_load_job function.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Job_ptr</strong> (<em>pointer</em>) &#8211; Wrapped job pointer returned by a previous call to slurm_load_jobs</li>
-<li><strong>Flag</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Output to single line if True (Default=0)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_print_job_info_msg">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_print_job_info_msg</tt><big>(</big><em>Job_ptr</em>, <em>int Flag=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_print_job_info_msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints the contents of the data structure describing all job step records loaded by the slurm_get_job_steps function.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Job_ptr</strong> (<em>pointer</em>) &#8211; Wrapped job pointer returned by a previous call to slurm_load_jobs</li>
-<li><strong>Flag</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Default=0</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_print_partition_info">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_print_partition_info</tt><big>(</big><em>Partition_ptr</em>, <em>int Flag=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_print_partition_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print the slurm partition information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Partition_ptr</strong> (<em>pointer</em>) &#8211; Wrapped partition pointer returned by a previous call to slurm_load_partitions</li>
-<li><strong>Flag</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Partition flags (Default=0)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_print_partition_info_msg">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_print_partition_info_msg</tt><big>(</big><em>Partition_ptr</em>, <em>int Flag=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_print_partition_info_msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print the partition information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Partition_ptr</strong> (<em>pointer</em>) &#8211; Wrapped partition pointer returned by a previous call to slurm_load_partitons</li>
-<li><strong>Flag</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Partition flags (default=0)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_print_reservation_info">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_print_reservation_info</tt><big>(</big><em>Reservation_ptr</em>, <em>int Flags=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_print_reservation_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Output information about slurm reservations.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Reservation_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned by slurm_load_reservation call</li>
-<li><strong>Flags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Reservation flags (default=0)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_print_reservation_info_msg">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_print_reservation_info_msg</tt><big>(</big><em>Reservation_ptr</em>, <em>int Flags=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_print_reservation_info_msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Output information about all slurm reservations.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Reservation_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned by slurm_load_reservation call</li>
-<li><strong>Flags</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Reservation flags, 1 - print to a single line, 0 - multi lines (default)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_pull_trigger">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_pull_trigger</tt><big>(</big><em>uint32_t TriggerID=0</em>, <em>uint32_t UserID=0</em>, <em>char *ID=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_pull_trigger" title="Permalink to this definition">¶</a></dt>
+<dl class="method">
+<dt id="pyslurm.trigger.pull">
+<tt class="descname">pull</tt><big>(</big><em>self</em>, <em>uint32_t TriggerID=0</em>, <em>uint32_t UserID=0</em>, <em>char *ID=''</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.trigger.pull" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pull a slurm trigger.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1478,97 +659,9 @@ updated since the update_time specified.</dd>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_reconfigure">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_reconfigure</tt><big>(</big><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_reconfigure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Issue RPC to have slurmctld reload its configuration file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">0 for success or a slurm error code</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_requeue">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_requeue</tt><big>(</big><em>uint32_t JobID=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_requeue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Requeue a running slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or a slurm error code</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_resume">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_resume</tt><big>(</big><em>uint32_t JobID=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_resume" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resume a running slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or a slurm error code</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_set_debug_level">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_set_debug_level</tt><big>(</big><em>uint32_t DebugLevel=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_set_debug_level" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the slurm controller debug level.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>DebugLevel</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; 0 (default) to 6</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success, -1 for error and set slurm error number</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_set_schedlog_level">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_set_schedlog_level</tt><big>(</big><em>uint32_t Enable=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_set_schedlog_level" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the slurm scheduler debug level.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Enable</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; True = 0, False = 1</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success, -1 for error and set slurm error number</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_set_trigger">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_set_trigger</tt><big>(</big><em>dict trigger_dict={}</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_set_trigger" title="Permalink to this definition">¶</a></dt>
+<dl class="method">
+<dt id="pyslurm.trigger.set">
+<tt class="descname">set</tt><big>(</big><em>self</em>, <em>dict trigger_dict={}</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.trigger.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set or create a slurm trigger.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1584,269 +677,11 @@ updated since the update_time specified.</dd>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_seterrno">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_seterrno</tt><big>(</big><em>int Errno=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_seterrno" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the slurm error number.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Errno</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; slurm error number</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_shutdown">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_shutdown</tt><big>(</big><em>uint16_t Options=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_shutdown" title="Permalink to this definition">¶</a></dt>
-<dd><p>Issue RPC to have slurmctld cease operations, both the primary and backup controller are shutdown.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Options</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; 0 - All slurm daemons (default)
-1 - slurmctld generates a core file
-2 - slurmctld is shutdown (no core file)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or a slurm error code</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_signal_job">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_signal_job</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint16_t Signal=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_signal_job" title="Permalink to this definition">¶</a></dt>
-<dd><p>Send a signal to a slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>Signal</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Signal to send (default=0)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or -1 for error and the set Slurm errno</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_signal_job_step">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_signal_job_step</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em>, <em>uint16_t Signal=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_signal_job_step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Send a signal to a slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier</li>
-<li><strong>Signal</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Signal to send (default=0)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Error code - 0 for success or -1 for error and set slurm errno</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_sprint_job_info">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_sprint_job_info</tt><big>(</big><em>Job_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_sprint_job_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print the job information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Job_ptr</strong> (<em>pointer</em>) &#8211; Wrapped job pointer returned by a previous call to slurm_load_jobs</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_sprint_reservation_info">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_sprint_reservation_info</tt><big>(</big><em>Reservation_ptr</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_sprint_reservation_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Output information about all slurm reservations.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Reservation_ptr</strong> (<em>pointer</em>) &#8211; Wrapped record pointer returned by slurm_load_reservation call</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Reservation information string</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>char</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_strerror">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_strerror</tt><big>(</big><em>int Errno=0</em><big>)</big><a class="headerlink" href="#pyslurm.pyslurm.slurm_strerror" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return slurm error message represented by slurm error number</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Errno</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; slurm error number.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">slurm error string</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>string</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_suspend">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_suspend</tt><big>(</big><em>uint32_t JobID=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_suspend" title="Permalink to this definition">¶</a></dt>
-<dd><p>Suspend a running slurm job.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or a slurm error code</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_takeover">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_takeover</tt><big>(</big><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_takeover" title="Permalink to this definition">¶</a></dt>
-<dd><p>Issue a RPC to have slurmctld backup controller take over the primary controller.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">0 for success or a slurm error code</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_terminate_job">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_terminate_job</tt><big>(</big><em>uint32_t JobID=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_terminate_job" title="Permalink to this definition">¶</a></dt>
-<dd><p>Terminate a running slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier (default=0)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error and set slurm errno</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_terminate_job_step">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_terminate_job_step</tt><big>(</big><em>uint32_t JobID=0</em>, <em>uint32_t JobStep=0</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_terminate_job_step" title="Permalink to this definition">¶</a></dt>
-<dd><p>Terminate a running slurm job step.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>JobID</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job identifier (default=0)</li>
-<li><strong>JobStep</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Job step identifier (default=0)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">0 for success or -1 for error, and the slurm error code is set appropriately.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><cite>int</cite></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_update_node">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_update_node</tt><big>(</big><em>dict node_dict={}</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_update_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update slurm node information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node_dict</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A populated node dictionary, an empty one is created by create_node_dict</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error, and the slurm error code is set appropriately.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_update_partition">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_update_partition</tt><big>(</big><em>dict partition_dict={}</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_update_partition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update a slurm partition.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>partition_dict</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A populated partition dictionary, an empty one is created by create_partition_dict</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success, -1 for error, and the slurm error code is set appropriately.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyslurm.pyslurm.slurm_update_reservation">
-<tt class="descclassname">pyslurm.pyslurm.</tt><tt class="descname">slurm_update_reservation</tt><big>(</big><em>dict reservation_dict={}</em><big>)</big> &rarr; int<a class="headerlink" href="#pyslurm.pyslurm.slurm_update_reservation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update a slurm reservation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>reservation_dict</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A populated reservation dictionary, an empty one is created by create_reservation_dict</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for success or -1 for error, and the slurm error code is set appropriately.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>int</cite></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
+<span class="target" id="module-pyslurm"></span><p>PySLURM</p>
+<p>Here we modify the dlopen settings to RTLD_GLOBAL
+otherwise we cannot see the symbols correctly.</p>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -1911,8 +746,8 @@ updated since the update_time specified.</dd>
     </div>
     <div class="footer">
         &copy; Copyright 2011, PySLURM Developers.
-      Last updated on Oct 25, 2011.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.
+      Last updated on Dec 09, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
     </div>
   </body>
 </html>

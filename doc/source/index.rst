@@ -19,7 +19,22 @@ Contents
    :maxdepth: 2
    :numbered:
 
-.. automodule:: pyslurm.pyslurm
+.. autoclass:: pyslurm.block
+    :members:
+.. autoclass:: pyslurm.config
+    :members:
+.. autoclass:: pyslurm.job
+    :members:
+.. autoclass:: pyslurm.node
+    :members:
+.. autoclass:: pyslurm.partition
+    :members:
+.. autoclass:: pyslurm.reservation
+    :members:
+.. autoclass:: pyslurm.trigger
+    :members:
+
+.. automodule:: pyslurm
     :members:
 
 Indices and tables

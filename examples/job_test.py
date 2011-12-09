@@ -1,7 +1,9 @@
+#!/usr/bin/env python
+
 import pyslurm
 
-a, b = pyslurm.slurm_load_jobs()
-print pyslurm.slurm_job_cpus_allocated_on_node_id(b,5)
+a = pyslurm.job()
+print pyslurm.slurm_job_cpus_allocated_on_node("shivling")
 
-jobs =  pyslurm.get_job_data(b)
+jobs =  a.get()
 print jobs

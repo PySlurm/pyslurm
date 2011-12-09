@@ -443,7 +443,7 @@ cdef class config:
 		self.__lastUpdate = 0
 		self.__ConfigDict = {}
 
-		#self.__load()
+		self.__load()
 
 	def __dealloc__(self):
 		self.__free()

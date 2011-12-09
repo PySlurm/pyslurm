@@ -113,10 +113,10 @@ def makeExtension(extName):
 	return Extension(
 		extName,
 		[extPath],
-		include_dirs = [ '%s/include' % SLURM_INC, '.' ],   # adding the '.' to include_dirs is CRUCIAL!!
-		library_dirs = [ '%s/lib' % SLURM_LIB], 
-		libraries = [ 'slurm' ],
-		runtime_library_dirs = [ '%s/lib' % SLURM_LIB],
+		include_dirs = ['%s/include' % SLURM_INC, '.'],   # adding the '.' to include_dirs is CRUCIAL!!
+		library_dirs = ['%s/lib' % SLURM_LIB], 
+		libraries = ['slurm'],
+		runtime_library_dirs = ['%s/lib' % SLURM_LIB],
 		extra_objects = [],
 		extra_compile_args = [],
 		extra_link_args = [],
@@ -138,7 +138,7 @@ extNames = scandir("pyslurm/")
 
 # Build up the set of Extension objects
 
-extensions = [ makeExtension(name) for name in extNames ]
+extensions = [makeExtension(name) for name in extNames]
 
 setup(
 	name = "pyslurm",
@@ -149,11 +149,11 @@ setup(
 	author = "Mark Roberts",
 	author_email = "mark@gingergeeks co uk",
 	url = "http://www.gingergeeks.co.uk/pyslurm/",
-	platforms = [ "Linux" ],
-	keywords = [ "Batch Scheduler", "Resource Manager", "SLURM", "Cython" ],
-	packages = [ "pyslurm" ],
+	platforms = ["Linux"],
+	keywords = ["Batch Scheduler", "Resource Manager", "SLURM", "Cython"],
+	packages = ["pyslurm"],
 	ext_modules = extensions,
-	cmdclass = { "build_ext": build_ext },
+	cmdclass = {"build_ext": build_ext },
 	classifiers = [
 		'Development Status :: 4 - Beta',
 		'Environment :: Console',

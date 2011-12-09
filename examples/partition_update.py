@@ -1,5 +1,15 @@
+#!/usr/bin/env python
+
 import pyslurm
 
-partition_dict = { 'NodeName': 'makalu', 'State': 0x0200, 'Reason':'API test' }
+part_dict = pyslurm.create_partition_dict()
 
-c = pyslurm.slurm_update_partition(partition_dict)
+part_dict['Name'] = 'compute'
+part_dict['State'] = 'DOWN'
+part_dict['Reason'] = 'API test'
+
+a = pyslurm.slurm_update_partition(part_dict)
+if a == -1:
+	print "Failed %s" % pyslurm.slurm_strerror(pyslurm.slurm_get_errno())
+else:
+	print "Successful !"
