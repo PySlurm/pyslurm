@@ -1,5 +1,5 @@
 # cython: embedsignature=True
-# cython: profile=False
+# cython: profile=True
 
 import time
 import os
@@ -348,7 +348,7 @@ ctypedef struct config_key_pair_t:
 
 cpdef get_controllers():
 
-	u"""Get information about slurm controllers.
+	r"""Get information about slurm controllers.
 
 	:return: Name of primary controller, Name of backup controller
 	:rtype: `tuple`
@@ -374,7 +374,7 @@ cpdef get_controllers():
 
 def is_controller(Host=''):
 
-	u"""Return slurm controller status for host.
+	r"""Return slurm controller status for host.
  
 	:param string Host: Name of host to check
 
@@ -395,7 +395,7 @@ def is_controller(Host=''):
 
 def slurm_api_version():
 
-	u"""Return the slurm API version number.
+	r"""Return the slurm API version number.
 
 	:returns: version_major, version_minor, version_micro
 	:rtype: `tuple`
@@ -407,7 +407,7 @@ def slurm_api_version():
 
 cpdef slurm_load_slurmd_status():
 
-	u"""Issue RPC to get and load the status of Slurmd daemon.
+	r"""Issue RPC to get and load the status of Slurmd daemon.
 
 	:returns: Slurmd information
 	:rtype: `dict`
@@ -448,7 +448,7 @@ cpdef slurm_load_slurmd_status():
 
 cdef class config:
 
-	u"""Class to access slurm config Information. 
+	r"""Class to access slurm config Information. 
 	"""
 
 	cdef slurm.slurm_ctl_conf_t *slurm_ctl_conf_ptr
@@ -471,29 +471,39 @@ cdef class config:
 
 	def lastUpdate(self):
 
-		u"""Get the time (epoch seconds) the retrieved data was updated.
+		r"""Get the time (epoch seconds) the retrieved data was updated.
+
+		:returns: epoch seconds
+		:rtype: `integer`
 		"""
 		return self._lastUpdate
 
 	def ids(self):
 
-		u"""Return the config IDs from retrieved data.
+		r"""Return the config IDs from retrieved data.
+
+		:returns: Dictionary of config key IDs
+		:rtype: `dict`
 		"""
 
 		return self.__ConfigDict.keys()
 
 	def find_id(self, char *keyID=''):
 
-		u"""Retrieve config ID data if it exists else return None
+		r"""Retrieve config ID data.
+
+		:param int str: Config key string to search
+		:returns: Dictionary of values for given config key
+		:rtype: `dict`
 		"""
 
 		if keyID in self._JobDict.keys():
 			return self.__JobDict[keyID]
-		return None
+		return {}
 
 	cpdef __free(self):
 
-		u"""Free the slurm control configuration pointer returned from a previous slurm_load_ctl_conf call.
+		r"""Free the slurm control configuration pointer returned from a previous slurm_load_ctl_conf call.
 		"""
 
 		if self.__Config_ptr is not NULL:
@@ -504,14 +514,14 @@ cdef class config:
 
 	def display_all(self):
 
-		u"""Prints the contents of the data structure loaded by the slurm_load_ctl_conf function.
+		r"""Prints the contents of the data structure loaded by the slurm_load_ctl_conf function.
 		"""
 
 		slurm.slurm_print_ctl_conf(slurm.stdout, self.__Config_ptr)
 
 	cpdef int __load(self):
 
-		u"""Load the slurm control configuration information.
+		r"""Load the slurm control configuration information.
 
 		:returns: slurm error code
 		:rtype: `integer`
@@ -528,10 +538,10 @@ cdef class config:
 
 	def key_pairs(self):
 
-		u"""Return a dict of the slurm control data as key pairs.
+		r"""Return a dict of the slurm control data as key pairs.
 
-		:returns: slurm error code
-		:rtype: `integer`
+		:returns: Dictionary of slurm key-pair values
+		:rtype: `dict`
 		"""
 
 		cdef void *ret_list = NULL
@@ -568,7 +578,7 @@ cdef class config:
 
 	def get(self):
 
-		u"""Return the slurm control configuration information.
+		r"""Return the slurm control configuration information.
 
 		:returns: Configuration data
 		:rtype: `dict`
@@ -580,7 +590,7 @@ cdef class config:
 
 	cpdef __get(self):
 
-		u"""Get the slurm control configuration information.
+		r"""Get the slurm control configuration information.
 
 		:returns: Configuration data
 		:rtype: `dict`
@@ -776,7 +786,7 @@ cdef class config:
 
 cdef class partition:
 
-	u"""Class to access/modify Slurm Partition Information. 
+	r"""Class to access/modify Slurm Partition Information. 
 	"""
 
 	cdef slurm.partition_info_msg_t *_Partition_ptr
@@ -800,7 +810,7 @@ cdef class partition:
 
 	cpdef __destroy(self):
 
-		u"""Free the slurm partition memory allocated by load partition method. 
+		r"""Free the slurm partition memory allocated by load partition method. 
 		"""
 
 		if self._Partition_ptr is not NULL:
@@ -812,29 +822,44 @@ cdef class partition:
 
 	def lastUpdate(self):
 
-		u"""Get the time (epoch seconds) the retrieved data was updated.
+		r"""Get the time (epoch seconds) the retrieved data was updated.
+
+		:returns: epoch seconds
+		:rtype: `integer`
 		"""
 		return self._lastUpdate
 
 	def ids(self):
 
-		u"""Return the partition IDs from retrieved data.
+		r"""Return the partition IDs from retrieved data.
+
+		:returns: Dictionary of partition IDs
+		:rtype: `dict`
 		"""
 
 		return self._PartDict.keys()
 
 	def find_id(self, char *partID=''):
 
-		u"""Retrieve partition ID data if it exists else return None
+		r"""Retrieve partition ID data.
+
+		:param int str: Partition key to search
+		:returns: Dictionary of values for given partition key
+		:rtype: `dict`
 		"""
 
 		if partID in self._PartDict.keys():
 			return self._PartDict[partID]
-		return None
+		return {}
 
 	def find(self, char *name='', char *val=''):
 
-		u"""Search for a property and associated value in the retrieved partition data
+		r"""Search for a property and associated value in the retrieved partition data.
+
+		:param str name: key string to search
+		:param str value: value string to match
+		:returns: List of IDs that match
+		:rtype: `list`
 		"""
 
 		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
@@ -847,14 +872,14 @@ cdef class partition:
 
 	def load(self):
 
-		u"""Load slurm partition information.
+		r"""Load slurm partition information.
 		"""
 
 		self.__load()
 
 	cpdef int __load(self):
 
-		u"""Load slurm partition information.
+		r"""Load slurm partition information.
 		"""
 
 		cdef slurm.partition_info_msg_t *new_Partition_ptr = NULL
@@ -879,7 +904,7 @@ cdef class partition:
 
 	cpdef print_info_msg(self, int oneLiner=False):
 
-		u"""Display the partition information from previous load partition method.
+		r"""Display the partition information from previous load partition method.
 
 		:param int Flag: Display on one line (default=0)
 		"""
@@ -889,7 +914,7 @@ cdef class partition:
 
 	cpdef int delete(self, char *PartID=''):
 
-		u"""Delete a give slurm partition.
+		r"""Delete a give slurm partition.
 
 		:param string PartID: Name of slurm partition
 
@@ -908,7 +933,7 @@ cdef class partition:
 
 	cpdef get(self):
 
-		u"""Get the slurm partition data from a previous load partition method.
+		r"""Get the slurm partition data from a previous load partition method.
 
 		:returns: Partition data, key is the partition ID
 		:rtype: `dict`
@@ -920,7 +945,7 @@ cdef class partition:
 
 	cpdef __get(self):
 
-		u"""Get the slurm partition data from a previous load partition method.
+		r"""Get the slurm partition data from a previous load partition method.
 		"""
 
 		cdef int i = 0
@@ -958,7 +983,7 @@ cdef class partition:
 
 	cpdef update(self, dict Partition_dict = {}):
 
-		u"""Update a slurm partition.
+		r"""Update a slurm partition.
 
 		:param dict partition_dict: A populated partition dictionary, an empty one is created by create_partition_dict
 
@@ -970,7 +995,7 @@ cdef class partition:
 
 	cpdef int create(self, dict Partition_dict = {}):
 
-		u"""Create a slurm partition.
+		r"""Create a slurm partition.
 
 		:param dict partition_dict: A populated partition dictionary, an empty one can be created by create_partition_dict
 
@@ -983,7 +1008,7 @@ cdef class partition:
 
 	cpdef __get_partition_mode(self):
 
-		u"""Returns a dictionary that represents the mode of the slurm partition.
+		r"""Returns a dictionary that represents the mode of the slurm partition.
 
 		:returns: Partition mode
 		:rtype: `dict`
@@ -1026,7 +1051,7 @@ cdef class partition:
 
 def create_partition_dict():
 
-	u"""Returns a dictionary that can be populated by the user
+	r"""Returns a dictionary that can be populated by the user
 	and used for the update_partition and create_partition calls.
 
 	:returns: Empty reservation dictionary
@@ -1053,7 +1078,7 @@ def create_partition_dict():
 
 cpdef int slurm_create_partition(dict partition_dict={}):
 
-	u"""Create a slurm partition.
+	r"""Create a slurm partition.
 
 	:param dict partition_dict: A populated partition dictionary, an empty one is created by create_partition_dict
 
@@ -1090,7 +1115,7 @@ cpdef int slurm_create_partition(dict partition_dict={}):
 
 cpdef int slurm_update_partition(dict partition_dict={}):
 
-	u"""Update a slurm partition.
+	r"""Update a slurm partition.
 
 	:param dict partition_dict: A populated partition dictionary, an empty one is created by create_partition_dict
 
@@ -1151,7 +1176,7 @@ cpdef int slurm_update_partition(dict partition_dict={}):
 
 cpdef int slurm_delete_partition(char* PartID):
 
-	u"""Delete a slurm partition.
+	r"""Delete a slurm partition.
 
 	:param string PartID: Name of slurm partition
 
@@ -1174,7 +1199,7 @@ cpdef int slurm_delete_partition(char* PartID):
 
 cpdef int slurm_ping(int Controller=1):
 
-	u"""Issue RPC to check if slurmctld is responsive.
+	r"""Issue RPC to check if slurmctld is responsive.
 
 	:param int Controller: 1 for primary (Default=1), 2 for backup
 
@@ -1188,7 +1213,7 @@ cpdef int slurm_ping(int Controller=1):
 
 cpdef int slurm_reconfigure():
 
-	u"""Issue RPC to have slurmctld reload its configuration file.
+	r"""Issue RPC to have slurmctld reload its configuration file.
 
 	:returns: 0 for success or a slurm error code
 	:rtype: `int`
@@ -1200,7 +1225,7 @@ cpdef int slurm_reconfigure():
 
 cpdef int slurm_shutdown(uint16_t Options=0):
 
-	u"""Issue RPC to have slurmctld cease operations, both the primary and backup controller are shutdown.
+	r"""Issue RPC to have slurmctld cease operations, both the primary and backup controller are shutdown.
 
 	:param int Options:
 
@@ -1218,7 +1243,7 @@ cpdef int slurm_shutdown(uint16_t Options=0):
 
 cpdef int slurm_takeover():
 
-	u"""Issue a RPC to have slurmctld backup controller take over the primary controller.
+	r"""Issue a RPC to have slurmctld backup controller take over the primary controller.
 
 	:returns: 0 for success or a slurm error code
 	:rtype: `int`
@@ -1230,7 +1255,7 @@ cpdef int slurm_takeover():
 
 cpdef int slurm_set_debug_level(uint32_t DebugLevel=0):
 
-	u"""Set the slurm controller debug level.
+	r"""Set the slurm controller debug level.
 
 	:param int DebugLevel: 0 (default) to 6
 
@@ -1244,7 +1269,7 @@ cpdef int slurm_set_debug_level(uint32_t DebugLevel=0):
 
 cpdef int slurm_set_schedlog_level(uint32_t Enable=0):
 
-	u"""Set the slurm scheduler debug level.
+	r"""Set the slurm scheduler debug level.
 
 	:param int Enable: True = 0, False = 1
 
@@ -1265,7 +1290,7 @@ cpdef int slurm_set_schedlog_level(uint32_t Enable=0):
 
 cpdef int slurm_suspend(uint32_t JobID=0):
 
-	u"""Suspend a running slurm job.
+	r"""Suspend a running slurm job.
 
 	:param int JobID: Job identifier
 
@@ -1279,7 +1304,7 @@ cpdef int slurm_suspend(uint32_t JobID=0):
 
 cpdef int slurm_resume(uint32_t JobID=0):
 
-	u"""Resume a running slurm job step.
+	r"""Resume a running slurm job step.
 
 	:param int JobID: Job identifier
 
@@ -1293,7 +1318,7 @@ cpdef int slurm_resume(uint32_t JobID=0):
 
 cpdef int slurm_requeue(uint32_t JobID=0):
 
-	u"""Requeue a running slurm job step.
+	r"""Requeue a running slurm job step.
 
 	:param int JobID: Job identifier
 
@@ -1307,7 +1332,7 @@ cpdef int slurm_requeue(uint32_t JobID=0):
 
 cpdef int slurm_get_rem_time(uint32_t JobID=0):
 
-	u"""Get the remaining time in seconds for a slurm job step.
+	r"""Get the remaining time in seconds for a slurm job step.
 
 	:param int JobID: Job identifier
 
@@ -1321,7 +1346,7 @@ cpdef int slurm_get_rem_time(uint32_t JobID=0):
 
 cpdef int slurm_get_end_time(uint32_t JobID=0):
 
-	u"""Get the end time in seconds for a slurm job step.
+	r"""Get the end time in seconds for a slurm job step.
 
 	:param int JobID: Job identifier
 
@@ -1337,7 +1362,7 @@ cpdef int slurm_get_end_time(uint32_t JobID=0):
 
 cpdef int slurm_job_node_ready(uint32_t JobID=0):
 
-	u"""Return if a node could run a slurm job now if despatched.
+	r"""Return if a node could run a slurm job now if despatched.
 
 	:param int JobID: Job identifier
 
@@ -1351,7 +1376,7 @@ cpdef int slurm_job_node_ready(uint32_t JobID=0):
 
 cpdef int slurm_signal_job(uint32_t JobID=0, uint16_t Signal=0):
 
-	u"""Send a signal to a slurm job step.
+	r"""Send a signal to a slurm job step.
 
 	:param int JobID: Job identifier
 	:param int Signal: Signal to send (default=0)
@@ -1370,7 +1395,7 @@ cpdef int slurm_signal_job(uint32_t JobID=0, uint16_t Signal=0):
 
 cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0, uint16_t Signal=0):
 
-	u"""Send a signal to a slurm job step.
+	r"""Send a signal to a slurm job step.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1386,7 +1411,7 @@ cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0, uint16_t S
 
 cpdef int slurm_kill_job(uint32_t JobID=0, uint16_t Signal=0, uint16_t BatchFlag=0):
 
-	u"""Terminate a running slurm job step.
+	r"""Terminate a running slurm job step.
 
 	:param int JobID: Job identifier
 	:param int Signal: Signal to send
@@ -1402,7 +1427,7 @@ cpdef int slurm_kill_job(uint32_t JobID=0, uint16_t Signal=0, uint16_t BatchFlag
 
 cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0, uint16_t Signal=0):
 
-	u"""Terminate a running slurm job step.
+	r"""Terminate a running slurm job step.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1418,7 +1443,7 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0, uint16_t Sig
 
 cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0):
 
-	u"""Complete a running slurm job step.
+	r"""Complete a running slurm job step.
 
 	:param int JobID: Job identifier
 	:param int JobCode: Return code (default=0)
@@ -1433,7 +1458,7 @@ cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0):
 
 cpdef int slurm_terminate_job(uint32_t JobID=0):
 
-	u"""Terminate a running slurm job step.
+	r"""Terminate a running slurm job step.
 
 	:param int JobID: Job identifier (default=0)
 
@@ -1447,7 +1472,7 @@ cpdef int slurm_terminate_job(uint32_t JobID=0):
 
 cpdef int slurm_notify_job(uint32_t JobID=0, char* Msg=''):
 
-	u"""Notify a message to a running slurm job step.
+	r"""Notify a message to a running slurm job step.
 
 	:param string JobID: Job identifier (default=0)
 	:param string Msg: Message to send to job
@@ -1462,7 +1487,7 @@ cpdef int slurm_notify_job(uint32_t JobID=0, char* Msg=''):
 
 cpdef int slurm_terminate_job_step(uint32_t JobID=0, uint32_t JobStep=0):
 
-	u"""Terminate a running slurm job step.
+	r"""Terminate a running slurm job step.
 
 	:param int JobID: Job identifier (default=0)
 	:param int JobStep: Job step identifier (default=0)
@@ -1481,7 +1506,7 @@ cpdef int slurm_terminate_job_step(uint32_t JobID=0, uint32_t JobStep=0):
 
 cpdef slurm_checkpoint_able(uint32_t JobID=0, uint32_t JobStep=0, time_t StartTime=0):
 
-	u"""Report if checkpoint operations can presently be issued for the specified slurm job step.
+	r"""Report if checkpoint operations can presently be issued for the specified slurm job step.
 
 	If yes, returns SLURM_SUCCESS and sets start_time if checkpoint operation is presently active. Returns ESLURM_DISABLED if checkpoint operation is disabled.
 
@@ -1500,7 +1525,7 @@ cpdef slurm_checkpoint_able(uint32_t JobID=0, uint32_t JobStep=0, time_t StartTi
 
 cpdef int slurm_checkpoint_enable(uint32_t JobID=0, uint32_t JobStep=0):
 
-	u"""Enable checkpoint requests for a given slurm job step.
+	r"""Enable checkpoint requests for a given slurm job step.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1515,7 +1540,7 @@ cpdef int slurm_checkpoint_enable(uint32_t JobID=0, uint32_t JobStep=0):
 
 cpdef int slurm_checkpoint_disable(uint32_t JobID=0, uint32_t JobStep=0):
 
-	u"""Disable checkpoint requests for a given slurm job step.
+	r"""Disable checkpoint requests for a given slurm job step.
 
 	This can be issued as needed to prevent checkpointing while a job step is in a critical section or for other reasons.
 
@@ -1532,7 +1557,7 @@ cpdef int slurm_checkpoint_disable(uint32_t JobID=0, uint32_t JobStep=0):
 
 cpdef int slurm_checkpoint_create(uint32_t JobID=0, uint32_t JobStep=0, uint16_t MaxWait=60, char* ImageDir=''):
 
-	u"""Request a checkpoint for the identified slurm job step and continue its execution upon completion of the checkpoint.
+	r"""Request a checkpoint for the identified slurm job step and continue its execution upon completion of the checkpoint.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1549,7 +1574,7 @@ cpdef int slurm_checkpoint_create(uint32_t JobID=0, uint32_t JobStep=0, uint16_t
 
 cpdef int slurm_checkpoint_requeue(uint32_t JobID=0, uint16_t MaxWait=60, char* ImageDir=''):
 
-	u"""Initiate a checkpoint request for identified slurm job step, the job will be requeued after the checkpoint operation completes.
+	r"""Initiate a checkpoint request for identified slurm job step, the job will be requeued after the checkpoint operation completes.
 
 	:param int JobID: Job identifier
 	:param int MaxWait: Maximum time in seconds to wait for operation to complete
@@ -1565,7 +1590,7 @@ cpdef int slurm_checkpoint_requeue(uint32_t JobID=0, uint16_t MaxWait=60, char* 
 
 cpdef int slurm_checkpoint_vacate(uint32_t JobID=0, uint32_t JobStep=0, uint16_t MaxWait=60, char* ImageDir=''):
 
-	u"""Request a checkpoint for the identified slurm Job Step. Terminate its execution upon completion of the checkpoint.
+	r"""Request a checkpoint for the identified slurm Job Step. Terminate its execution upon completion of the checkpoint.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1582,7 +1607,7 @@ cpdef int slurm_checkpoint_vacate(uint32_t JobID=0, uint32_t JobStep=0, uint16_t
 
 cpdef int slurm_checkpoint_restart(uint32_t JobID=0, uint32_t JobStep=0, uint16_t Stick=0, char* ImageDir=''):
 
-	u"""Request that a previously checkpointed slurm job resume execution.
+	r"""Request that a previously checkpointed slurm job resume execution.
 
 	It may continue execution on different nodes than were originally used. Execution may be delayed if resources are not immediately available.
 
@@ -1601,7 +1626,7 @@ cpdef int slurm_checkpoint_restart(uint32_t JobID=0, uint32_t JobStep=0, uint16_
 
 cpdef int slurm_checkpoint_complete(uint32_t JobID=0, uint32_t JobStep=0, time_t BeginTime=0, uint32_t ErrorCode=0, char* ErrMsg=''):
 
-	u"""Note that a requested checkpoint has been completed.
+	r"""Note that a requested checkpoint has been completed.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1619,7 +1644,7 @@ cpdef int slurm_checkpoint_complete(uint32_t JobID=0, uint32_t JobStep=0, time_t
 
 cpdef int slurm_checkpoint_task_complete(uint32_t JobID=0, uint32_t JobStep=0, uint32_t TaskID=0, time_t BeginTime=0, uint32_t ErrorCode=0, char* ErrMsg=''):
 
-	u"""Note that a requested checkpoint has been completed.
+	r"""Note that a requested checkpoint has been completed.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1642,7 +1667,7 @@ cpdef int slurm_checkpoint_task_complete(uint32_t JobID=0, uint32_t JobStep=0, u
 
 def slurm_checkpoint_error(uint32_t JobID=0, uint32_t JobStep=0):
 
-	u"""Get error information about the last checkpoint operation for a given slurm job step.
+	r"""Get error information about the last checkpoint operation for a given slurm job step.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1666,7 +1691,7 @@ def slurm_checkpoint_error(uint32_t JobID=0, uint32_t JobStep=0):
 
 cpdef int slurm_checkpoint_tasks(uint32_t JobID=0, uint16_t JobStep=0, uint16_t MaxWait=60, char* NodeList=''):
 
-	u"""Send checkpoint request to tasks of specified slurm job step.
+	r"""Send checkpoint request to tasks of specified slurm job step.
 
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
@@ -1692,7 +1717,7 @@ cpdef int slurm_checkpoint_tasks(uint32_t JobID=0, uint16_t JobStep=0, uint16_t 
 
 cdef class job:
 
-	u"""Class to access/modify Slurm Job Information. 
+	r"""Class to access/modify Slurm Job Information. 
 	"""
 
 	cdef slurm.job_info_msg_t *_job_ptr
@@ -1716,7 +1741,7 @@ cdef class job:
 
 	cpdef __destroy(self):
 
-		u"""Free the slurm job memory allocated by load partition method. 
+		r"""Free the slurm job memory allocated by load partition method. 
 		"""
 
 		if self._job_ptr is not NULL:
@@ -1728,30 +1753,45 @@ cdef class job:
 
 	def lastUpdate(self):
 
-		u"""Get the time (epoch seconds) the job data was updated.
+		r"""Get the time (epoch seconds) the job data was updated.
+
+		:returns: epoch seconds
+		:rtype: `integer`
 		"""
 
 		return self._lastUpdate
 
 	def ids(self):
 
-		u"""Return the job IDs from retrieved data.
+		r"""Return the job IDs from retrieved data.
+
+		:returns: Dictionary of job IDs
+		:rtype: `dict`
 		"""
 
 		return self._JobDict.keys()
 
 	def find_id(self, char *jobID=''):
 
-		u"""Retrieve job ID data if it exists else return None
+		r"""Retrieve job ID data.
+
+		:param int str: Job id key string to search
+		:returns: Dictionary of values for given job id
+		:rtype: `dict`
 		"""
 
 		if jobID in self._JobDict.keys():
 			return self._JobDict[jobID]
-		return None
+		return {}
 
 	def find(self, char *name='', char *val=''):
 
-		u"""Search for a property and associated value in the retrieved job data
+		r"""Search for a property and associated value in the retrieved job data.
+
+		:param str name: key string to search
+		:param str value: value string to match
+		:returns: List of IDs that match
+		:rtype: `list`
 		"""
 
 		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
@@ -1764,14 +1804,14 @@ cdef class job:
 
 	def load(self):
 
-		u"""Load slurm job information.
+		r"""Load slurm job information.
 		"""
 
 		self.__load()
 
 	cpdef int __load(self):
 
-		u"""Load slurm job information.
+		r"""Load slurm job information.
 		"""
 
 		cdef slurm.job_info_msg_t *new_job_ptr = NULL
@@ -1801,7 +1841,7 @@ cdef class job:
 
 	cpdef __get(self):
 
-		u"""Get the slurm job information.
+		r"""Get the slurm job information.
 
 		:returns: Data where key is the job name, each entry contains a dictionary of job attributes
 		:rtype: `dict`
@@ -1913,7 +1953,7 @@ cdef class job:
 
 	cpdef __get_select_jobinfo(self, uint32_t dataType):
 
-		u"""Decode opaque data type jobinfo
+		r"""Decode opaque data type jobinfo
 
 		INCOMPLETE PORT 
 		"""
@@ -1972,7 +2012,7 @@ cdef class job:
 
 	cpdef int __cpus_allocated_on_node_id(self, int nodeID=0):
 
-		u"""Get the number of cpus allocated to a slurm job on a node by node name.
+		r"""Get the number of cpus allocated to a slurm job on a node by node name.
 
 		:param int nodeID: Numerical node ID
 		:returns: Num of CPUs allocated to job on this node or -1 on error
@@ -1986,7 +2026,7 @@ cdef class job:
 
 	cpdef int __cpus_allocated_on_node(self, char* nodeName=''):
 
-		u"""Get the number of cpus allocated to a slurm job on a node by node name.
+		r"""Get the number of cpus allocated to a slurm job on a node by node name.
 
 		:param string nodeName: Name of node
 		:returns: Num of CPUs allocated to job on this node or -1 on error
@@ -2000,7 +2040,7 @@ cdef class job:
 
 	cpdef __free(self):
 
-		u"""Release the storage generated by the slurm_get_job_steps function.
+		r"""Release the storage generated by the slurm_get_job_steps function.
 		"""
 
 		if self._job_ptr is not NULL:
@@ -2008,7 +2048,7 @@ cdef class job:
 
 	def print_job_info_msg(self, int oneLiner=0):
 
-		u"""Prints the contents of the data structure describing all job step records loaded by the slurm_get_job_steps function.
+		r"""Prints the contents of the data structure describing all job step records loaded by the slurm_get_job_steps function.
 
 		:param int Flag: Default=0
 		"""
@@ -2018,7 +2058,7 @@ cdef class job:
 
 def slurm_pid2jobid(uint32_t JobPID=0):
 
-	u"""Get the slurm job id from a process id.
+	r"""Get the slurm job id from a process id.
 
 	:param int JobPID: Job process id
 
@@ -2051,7 +2091,7 @@ class SlurmError(Exception):
 
 def slurm_get_errno():
 
-	u"""Return the slurm error as set by a slurm API call.
+	r"""Return the slurm error as set by a slurm API call.
 
 	:returns: slurm error number
 	:rtype: `int`
@@ -2063,7 +2103,7 @@ def slurm_get_errno():
 
 def slurm_strerror(int Errno=0):
 
-	u"""Return slurm error message represented by slurm error number
+	r"""Return slurm error message represented by slurm error number
 
 	:param int Errno: slurm error number.
 
@@ -2077,7 +2117,7 @@ def slurm_strerror(int Errno=0):
 
 def slurm_seterrno(int Errno=0):
 
-	u"""Set the slurm error number.
+	r"""Set the slurm error number.
 
 	:param int Errno: slurm error number
 	"""
@@ -2086,7 +2126,7 @@ def slurm_seterrno(int Errno=0):
 
 def slurm_perror(char* Msg=''):
 
-	u"""Print to standard error the supplied header followed by a colon followed  by a text description of the last Slurm error code generated.
+	r"""Print to standard error the supplied header followed by a colon followed  by a text description of the last Slurm error code generated.
 
 	:param string Msg: slurm program error String
 	"""
@@ -2099,7 +2139,7 @@ def slurm_perror(char* Msg=''):
 
 cdef class node:
 
-	u"""Class to access/modify/update Slurm Node Information. 
+	r"""Class to access/modify/update Slurm Node Information. 
 	"""
 
 	cdef slurm.node_info_msg_t *_Node_ptr
@@ -2123,7 +2163,7 @@ cdef class node:
 
 	cpdef __destroy(self):
 
-		u"""Free the memory allocated by load node method. 
+		r"""Free the memory allocated by load node method. 
 		"""
 
 		if self._Node_ptr is not NULL:
@@ -2135,30 +2175,45 @@ cdef class node:
 
 	def lastUpdate(self):
 
-		u"""Return last time (sepoch seconds) the node data was updated.
+		r"""Return last time (sepoch seconds) the node data was updated.
+
+		:returns: epoch seconds
+		:rtype: `integer`
 		"""
 
 		return self._lastUpdate
 
-	def id(self):
+	def ids(self):
 
-		u"""Return the node IDs from retrieved data.
+		r"""Return the node IDs from retrieved data.
+
+		:returns: Dictionary of node IDs
+		:rtype: `dict`
 		"""
 
 		return self._NodeDict.keys()
 
 	def find_id(self, char *nodeID=''):
 
-		u"""Retrieve node ID data if it exists else return None
+		r"""Retrieve node ID data.
+
+		:param int str: Node key string to search
+		:returns: Dictionary of values for given node
+		:rtype: `dict`
 		"""
 
 		if nodeID in self._NodeDict.keys():
 			return self._NodeDict[nodeID]
-		return None
+		return {}
 
 	def find(self, char *name='', char *val=''):
 
-		u"""Search for a property and associated value in the retrieved node data
+		r"""Search for a property and associated value in the retrieved node data.
+
+		:param str name: key string to search
+		:param str value: value string to match
+		:returns: List of IDs that match
+		:rtype: `list`
 		"""
 
 		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
@@ -2171,14 +2226,14 @@ cdef class node:
 
 	def load(self):
 
-		u"""Load slurm node data. 
+		r"""Load slurm node data. 
 		"""
 
 		self.__load()
 
 	cpdef int __load(self):
 
-		u"""Load node data method.
+		r"""Load node data method.
 
 		:returns: Error value
 		:rtype: `int`
@@ -2207,7 +2262,7 @@ cdef class node:
 
 	cpdef update(self, dict node_dict={}):
 
-		u"""Update slurm node information.
+		r"""Update slurm node information.
 
 		:param dict node_dict: A populated node dictionary, an empty one is created by create_node_dict
 
@@ -2219,7 +2274,7 @@ cdef class node:
 
 	cpdef print_node_info_msg(self, int oneLiner=False):
 
-		u"""Output information about all slurm nodes.
+		r"""Output information about all slurm nodes.
 
 		:param int oneLiner: Print on one line - False (Default) or True
 		"""
@@ -2229,7 +2284,7 @@ cdef class node:
 
 	cpdef get(self):
 
-		u"""Get slurm node information.
+		r"""Get slurm node information.
 
 		:returns: Data whose key is the node name.
 		:rtype: `dict`
@@ -2322,7 +2377,7 @@ cdef class node:
 
 	cpdef __get_select_nodeinfo(Node_Ptr, uint32_t dataType, uint32_t State):
 
-		u"""
+		r"""
 			WORK IN PROGRESS
 		"""
 
@@ -2373,7 +2428,7 @@ cdef class node:
 
 def slurm_update_node(dict node_dict={}):
 
-	u"""Update slurm node information.
+	r"""Update slurm node information.
 
 	:param dict node_dict: A populated node dictionary, an empty one is created by create_node_dict
 
@@ -2417,7 +2472,7 @@ def slurm_update_node(dict node_dict={}):
 
 def create_node_dict():
 
-	u"""Returns a dictionary that can be populated by the user
+	r"""Returns a dictionary that can be populated by the user
 	and used for the update_node call.
 
 	:returns: Empty node dictionary
@@ -2438,7 +2493,7 @@ def create_node_dict():
 
 cpdef slurm_get_job_steps(uint32_t JobID=0, uint32_t StepID=0, uint16_t ShowFlags=0):
 
-	u"""Loads into details about job steps that satisfy the job_id 
+	r"""Loads into details about job steps that satisfy the job_id 
 	    and/or step_id specifications provided if the data has been 
 	    updated since the update_time specified.
 
@@ -2492,7 +2547,7 @@ cpdef slurm_get_job_steps(uint32_t JobID=0, uint32_t StepID=0, uint16_t ShowFlag
 
 cpdef slurm_free_job_step_info_response_msg(ptr):
 
-	u"""Free the slurm job step info pointer.
+	r"""Free the slurm job step info pointer.
 	"""
 
 	cdef slurm.job_step_info_response_msg_t *old_job_step_info_ptr = <slurm.job_step_info_response_msg_t*>ptr_unwrapper(ptr)
@@ -2501,7 +2556,7 @@ cpdef slurm_free_job_step_info_response_msg(ptr):
 
 cpdef slurm_job_step_layout_get(uint32_t JobID=0, uint32_t StepID=0):
 
-	u"""Get the slurm job step layout from a given job and step id.
+	r"""Get the slurm job step layout from a given job and step id.
 
 	:param int JobID: slurm job id (Default=0)
 	:param int StepID: slurm step id (Default=0)
@@ -2546,7 +2601,7 @@ cpdef slurm_job_step_layout_get(uint32_t JobID=0, uint32_t StepID=0):
 
 cpdef slurm_job_step_layout_free(Ptr=''):
 
-	u"""Free the slurm job step layout pointer.
+	r"""Free the slurm job step layout pointer.
 	"""
 
 	cdef slurm.slurm_step_layout_t *old_job_step_ptr = <slurm.slurm_step_layout_t*>ptr_unwrapper(Ptr)
@@ -2559,7 +2614,7 @@ cpdef slurm_job_step_layout_free(Ptr=''):
 
 cdef class hostlist:
 
-	u"""Wrapper around slurm hostlist functions.
+	r"""Wrapper around slurm hostlist functions.
 	"""
 
 	cdef slurm.hostlist_t hl
@@ -2643,7 +2698,7 @@ cdef class trigger:
 
 	cpdef int set(self, dict trigger_dict={}):
 
-		u"""Set or create a slurm trigger.
+		r"""Set or create a slurm trigger.
 
 		:param dict trigger_dict: A populated dictionary of trigger information
 
@@ -2722,7 +2777,7 @@ cdef class trigger:
 
 	cpdef get(self):
 
-		u"""Get the information on slurm triggers.
+		r"""Get the information on slurm triggers.
 
 		:returns: Where key is the trigger ID
 		:rtype: `dict`
@@ -2757,7 +2812,7 @@ cdef class trigger:
 
 	cpdef int clear(self, uint32_t TriggerID=-1, uint32_t UserID=-1, char* ID=''):
 
-		u"""Clear or remove a slurm trigger.
+		r"""Clear or remove a slurm trigger.
 
 		:param string TriggerID: Trigger Identifier
 		:param string UserID: User Identifier
@@ -2789,7 +2844,7 @@ cdef class trigger:
 
 	cpdef int pull(self, uint32_t TriggerID=0, uint32_t UserID=0, char* ID=''):
 
-		u"""Pull a slurm trigger.
+		r"""Pull a slurm trigger.
 
 		:param int TriggerID: Trigger Identifier
 		:param int UserID: User Identifier
@@ -2823,7 +2878,7 @@ cdef class trigger:
 
 cdef class reservation:
 
-	u"""Class to access/update slurm reservation Information. 
+	r"""Class to access/update slurm reservation Information. 
 	"""
 
 	cdef slurm.reserve_info_msg_t *_Res_ptr
@@ -2844,31 +2899,44 @@ cdef class reservation:
 		self.__free()
 
 	def lastUpdate(self):
-		u"""Get the time (epoch seconds) the reservation data was updated.
+		r"""Get the time (epoch seconds) the reservation data was updated.
+
+		:returns: epoch seconds
+		:rtype: `integer`
 		"""
 		return self._lastUpdate
 
 	def ids(self):
 
-		u"""Return a list of reservation IDs from retrieved data.
+		r"""Return a list of reservation IDs from retrieved data.
+
+		:returns: Dictionary of reservation IDs
+		:rtype: `dict`
 		"""
 
 		return self._ResDict.keys()
 
 	def find_id(self, char *resID=''):
 
-		u"""Retrieve reservation ID data if it exists else return None
+		r"""Retrieve reservation ID data.
+
+		:param str resID: Reservation key string to search
+		:returns: Dictionary of values for given reservation key
+		:rtype: `dict`
 		"""
 
 		if resID in self._ResDict.keys():
 			return self._ResDict[resID]
-		return None
+		return {}
 
 	def find(self, char *name='', char *val=''):
 
-		u"""Search for a property and associated value in the retrieved reservation data
+		r"""Search for a property and associated value in the retrieved reservation data
 
-		Return a list of reservation IDs that match
+		:param str name: key string to search
+		:param str value: value string to match
+		:returns: List of IDs that match
+		:rtype: `list`
 		"""
 
 		# [ key for key, value in self._ResDict.iteritems() if self._ResDict[key]['state'] == 'error']
@@ -2884,7 +2952,7 @@ cdef class reservation:
 
 	cpdef int __load(self):
 
-		u"""Load slurm reservation information.
+		r"""Load slurm reservation information.
 		"""
 
 		cdef slurm.reserve_info_msg_t *new_reserve_info_ptr = NULL
@@ -2910,7 +2978,7 @@ cdef class reservation:
 
 	cpdef __free(self):
 
-		u"""Free slurm reservation pointer.
+		r"""Free slurm reservation pointer.
 		"""
 
 		if self._Res_ptr is not NULL:
@@ -2918,7 +2986,7 @@ cdef class reservation:
 
 	def get(self):
 
-		u"""Get slurm reservation information.
+		r"""Get slurm reservation information.
 
 		:returns: Data whose key is the Reservation ID
 		:rtype: `dict`
@@ -2958,28 +3026,28 @@ cdef class reservation:
 
 	def create(self, dict reservation_dict={}):
 
-		u"""Create slurm reservation.
+		r"""Create slurm reservation.
 		"""
 
 		return slurm_create_reservation(reservation_dict)
 
 	def delete(self, char *ResID=''):
 
-		u"""Delete slurm reservation.
+		r"""Delete slurm reservation.
 		"""
 
 		return slurm_delete_reservation(ResID)
 
 	def update(self, dict reservation_dict={}):
 
-		u"""Update a slurm reservation attributes.
+		r"""Update a slurm reservation attributes.
 		"""
 
 		return slurm_update_reservation(reservation_dict)
 
 	def print_reservation_info_msg(self, int oneLiner=False):
 
-		u"""Output information about all slurm reservations.
+		r"""Output information about all slurm reservations.
 
 		:param int Flags: Print on one line - False (Default) or True
 		"""
@@ -2993,7 +3061,7 @@ cdef class reservation:
 
 def slurm_create_reservation(dict reservation_dict={}):
 
-	u"""Create a slurm reservation.
+	r"""Create a slurm reservation.
 
 	:param dict reservation_dict: A populated reservation dictionary, an empty one is created by create_reservation_dict
 
@@ -3052,7 +3120,7 @@ def slurm_create_reservation(dict reservation_dict={}):
 
 def slurm_update_reservation(dict reservation_dict={}):
 
-	u"""Update a slurm reservation.
+	r"""Update a slurm reservation.
 
 	:param dict reservation_dict: A populated reservation dictionary, an empty one is created by create_reservation_dict
 
@@ -3111,7 +3179,7 @@ def slurm_update_reservation(dict reservation_dict={}):
 
 def slurm_delete_reservation(char* ResID=''):
 
-	u"""Delete a slurm reservation.
+	r"""Delete a slurm reservation.
 
 	:param string ResID: Reservation Identifier
 
@@ -3131,15 +3199,16 @@ def slurm_delete_reservation(char* ResID=''):
 
 def create_reservation_dict():
 
-	u"""Returns a dictionary that can be populated by the user an used for 
+	r"""Create and empty dict for use with create_reservation method.
+
+	Returns a dictionary that can be populated by the user an used for 
 	the update_reservation and create_reservation calls.
 
 	:returns: Empty Reservation dictionary
 	:rtype: `dict`
 	"""
 
-	return  {
-		'start_time': -1,
+	return {'start_time': -1,
 		'end_time': -1,
 		'duration': -1,
 		'node_cnt': -1,
@@ -3149,8 +3218,7 @@ def create_reservation_dict():
 		'partition': '',
 		'licenses': '',
 		'users': '',
-		'accounts': ''
-		}
+		'accounts': ''}
 
 #
 # Block Class
@@ -3158,7 +3226,7 @@ def create_reservation_dict():
 
 cdef class block:
 
-	u"""Class to access/update slurm block Information. 
+	r"""Class to access/update slurm block Information. 
 	"""
 
 	cdef slurm.block_info_msg_t *_block_ptr
@@ -3180,29 +3248,44 @@ cdef class block:
 
 	def lastUpdate(self):
 
-		u"""Get the time (epoch seconds) the retrieved data was updated.
+		r"""Get the time (epoch seconds) the retrieved data was updated.
+
+		:returns: epoch seconds
+		:rtype: `integer`
 		"""
 		return self._lastUpdate
 
 	def ids(self):
 
-		u"""Return the block IDs from retrieved data.
+		r"""Return the block IDs from retrieved data.
+
+		:returns: Dictionary of block IDs
+		:rtype: `dict`
 		"""
 
 		return self._BlockDict.keys()
 
 	def find_id(self, char *blockID=''):
 
-		u"""Retrieve block ID data if it exists else return None
+		r"""Retrieve block ID data.
+
+		:param int str: Block key string to search
+		:returns: Dictionary of values for given block key
+		:rtype: `dict`
 		"""
 
 		if blockID in self._BlockDict.keys():
 			return self._BlockDict[blockID]
-		return None
+		return {}
 
 	def find(self, char *name='', char *val=''):
 
-		u"""Search for a property and associated value in the retrieved block data
+		r"""Search for a property and associated value in the retrieved block data.
+
+		:param str name: key string to search
+		:param str value: value string to match
+		:returns: List of IDs that match
+		:rtype: `list`
 		"""
 
 		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
@@ -3215,7 +3298,7 @@ cdef class block:
 
 	def load(self):
 
-		u"""Load slurm block information.
+		r"""Load slurm block information.
 		"""
 
 		self.__load()
@@ -3244,9 +3327,9 @@ cdef class block:
 
 	def get(self):
 
-		u"""Get slurm block information.
+		r"""Get slurm block information.
 
-		:returns: Data whose key is the Block ID
+		:returns: Dictionary whose key is the Block ID
 		:rtype: `dict`
 		"""
 
@@ -3292,9 +3375,11 @@ cdef class block:
 
 	cpdef print_info_msg(self, int oneLiner=False):
 
-		u"""Output information about all Bluegene blocks based upon message as loaded using slurm_load_block.
+		r"""Output information about all Bluegene blocks
 
-		:param int oneLiner: Print on one line - False (Default), True
+		This is based upon data returned by the slurm_load_block.
+
+		:param int oneLiner: Print information on one line - False (Default), True
 		"""
 
 		if self._block_ptr is not NULL:
@@ -3302,7 +3387,7 @@ cdef class block:
 
 	cpdef __free(self):
 
-		u"""Free buffer returned by load method.
+		r"""Free the memory returned by load method.
 		"""
 
 		if self._block_ptr is not NULL:
@@ -3314,56 +3399,73 @@ cdef class block:
 
 	cpdef update_error(self, char *blockID=''):
 
-		u"""Set block ID to ERROR state.
+		r"""Set slurm block to ERROR state.
+
+		:param string blockID: The ID string of the block
 		"""
 
 		return self.update(blockID, BLOCK_ERROR)
 
 	cpdef update_free(self, char *blockID=''):
 
-		u"""Set block ID to FREE state.
+		r"""Set slurm block to FREE state.
+
+		:param string blockID: The ID string of the block
 		"""
 
 		return self.update(blockID, BLOCK_FREE)
 
 	cpdef update_recreate(self, char *blockID=''):
 
-		u"""Set block ID to RECREATE state.
+		r"""Set slurm block to RECREATE state.
+
+		:param string blockID: The ID string of the block
 		"""
 
 		return self.update(blockID, BLOCK_RECREATE)
 
 	cpdef update_remove(self, char *blockID=''):
 
-		u"""Set block ID to REMOVE state.
+		r"""Set slurm block to REMOVE state.
+
+		:param string blockID: The ID string of the block
 		"""
 
 		return self.update(blockID, BLOCK_REMOVE)
 
 	cpdef update_resume(self, char *blockID=''):
 
-		u"""Set block ID to RESUME state.
+		r"""Set slurm block to RESUME state.
+
+		:param string blockID: The ID string of the block
 		"""
 
 		return self.update(blockID, BLOCK_RESUME)
 
 	cpdef update(self, char *blockID='', int blockOP=0):
 
-		u"""Update slurm blockID to a given state
+		r"""Update slurm block to a given state.
 
-		Need to code in BG type detection :
- 
+		:param string blockID: The ID string of the block
+
+		:param int blockOP: The block operation to perform (default=0).
+
+			=========================
 			FREE 0
 			RECREATE 1
-			HAVE_BGL
-				READY, 2
-				BUSY, 3
-			else
-				REBOOTING, 2
-				READY, 3
+			#HAVE_BGL
+				READY 2
+				BUSY 3
+			#else
+				REBOOTING 2
+				READY 3
 			RESUME 4
 			ERROR 5
 			REMOVE 6
+			==========================
+
+		:returns: 0 for success or -1 for failure and the slurm error code is set appropiately.
+		:rtype: `int`
 		"""
 
 		cdef int i, dictlen
@@ -3381,7 +3483,6 @@ cdef class block:
 			return slurm.slurm_get_errno()
 		else:
 			return 0
-		return -1
 
 #
 # Topology Class
@@ -3389,7 +3490,7 @@ cdef class block:
 
 cpdef slurm_load_topo(Info_ptr='', uint16_t Flags=False):
 
-	u"""Load slurm topology.
+	r"""Load slurm topology.
 	"""
 
 	cdef slurm.topo_info_response_msg_t *old_topo_info_ptr = NULL
@@ -3422,7 +3523,7 @@ cpdef slurm_load_topo(Info_ptr='', uint16_t Flags=False):
 
 cpdef slurm_free_topo_info_msg(Info_ptr=''):
 
-	u"""Free slurm topology pointer.
+	r"""Free slurm topology pointer.
 	"""
 
 	cdef slurm.topo_info_response_msg_t *info_ptr = <slurm.topo_info_response_msg_t*>ptr_unwrapper(Info_ptr)
@@ -3432,7 +3533,7 @@ cpdef slurm_free_topo_info_msg(Info_ptr=''):
 
 cpdef slurm_print_topo_info_msg(Info_ptr='', int Flags=False):
 
-	u"""Output information about toplogy based upon message as loaded using slurm_load_topo.
+	r"""Output information about toplogy based upon message as loaded using slurm_load_topo.
 	:param int Flags: Print on one line - False (Default), True
 	"""
 
@@ -3450,9 +3551,9 @@ cpdef slurm_print_topo_record(Info_ptr='', int Flags=False):
 
 cdef inline dict __get_licenses(char *licenses=''):
 
-	u"""Returns a dict of licenses from the slurm license string.
+	r"""Returns a dict of licenses from the slurm license string.
 
-	:param string licenses: Slurm license string
+	:param string licenses: String containing license information
 	"""
 
 	cdef int i
@@ -3474,7 +3575,7 @@ cdef inline dict __get_licenses(char *licenses=''):
 
 cdef inline str __get_connection_type(int ConnType=0):
 
-	u"""Returns a string that represents the slurm block connection type.
+	r"""Returns a string that represents the slurm block connection type.
 
 	:param int ResType: Slurm Block Connection Type
 
@@ -3516,7 +3617,7 @@ cdef inline str __get_connection_type(int ConnType=0):
 
 cdef inline str __get_node_use(int NodeType=0):
 
-	u"""Returns a string that represents the block node mode.
+	r"""Returns a string that represents the block node mode.
 
 	:param int ResType: Slurm Block node usage
 
@@ -3542,7 +3643,7 @@ cdef inline str __get_node_use(int NodeType=0):
 
 cdef inline str __get_trigger_res_type(int ResType=0):
 
-	u"""Returns a string that represents the slurm trigger res type.
+	r"""Returns a string that represents the slurm trigger res type.
 
 	:param int ResType: Slurm Trigger Res state
 
@@ -3575,7 +3676,7 @@ cdef inline str __get_trigger_res_type(int ResType=0):
 
 cdef inline str __get_trigger_type(int TriggerType=0):
 
-	u"""Returns a string that represents the state of the slurm trigger.
+	r"""Returns a string that represents the state of the slurm trigger.
 
 	:param int TriggerType: Slurm Trigger Type
 
@@ -3620,7 +3721,7 @@ cdef inline str __get_trigger_type(int TriggerType=0):
 
 def __get_partition_state2(int inx, int extended=0):
 
-	u"""Returns a string that represents the state of the slurm partition.
+	r"""Returns a string that represents the state of the slurm partition.
 
 	:param int inx: Slurm Partition Type
 	:param int extended:
@@ -3678,7 +3779,7 @@ def __get_partition_state2(int inx, int extended=0):
 
 cdef inline list get_res_state(int flags=0):
 
-	u"""Returns a string that represents the state of the slurm reservation.
+	r"""Returns a string that represents the state of the slurm reservation.
 
 	:param int flags: Slurm Reservation Flags
 
@@ -3735,7 +3836,7 @@ cdef inline list get_res_state(int flags=0):
 
 cdef inline list get_debug_flags(int flags=0):
 
-	u"""Returns a string that represents the slurm debug flags.
+	r"""Returns a string that represents the slurm debug flags.
 
 	:param int flags: Slurm Debug Flags
 
@@ -3805,14 +3906,14 @@ cdef inline list get_debug_flags(int flags=0):
 	if (flags & DEBUG_FLAG_TRIGGERS):
 		debugFlags.append('Triggers')
 
-	if (flags & DEBUG_FLAG_WIKI ):
+	if (flags & DEBUG_FLAG_WIKI):
 		debugFlags.append('Wiki')
 
 	return debugFlags
 
 cdef inline str __get_node_state(int inx=0):
 
-	u"""Returns a string that represents the state of the slurm node.
+	r"""Returns a string that represents the state of the slurm node.
 
 	:param int inx: Slurm Node State
 
@@ -3838,39 +3939,9 @@ cdef inline str __get_node_state(int inx=0):
 
 	return node_state 
 
-cdef inline str __get_job_state(int inx=0):
-
-	u"""Returns a string that represents the state of the slurm job state.
-
-	:param int inx: Slurm Job State
-
-	:returns: Job state
-	:rtype: `string`
-	"""
-
-	cdef char* job_state = 'Unknown'
-	cdef list state = [
-			'Pending',
-			'Running',
-			'Suspended',
-			'Complete',
-			'Cancelled',
-			'Failed',
-			'Timeout',
-			'Node Fail',
-			'End'
-			]
-
-	try:
-		job_state = state[inx]
-	except:
-		pass
-
-	return job_state 
-
 cdef inline str __get_rm_partition_state(int inx=0):
 
-	u"""Returns a partition state string that matches the enum value.
+	r"""Returns a partition state string that matches the enum value.
 
 	:param int inx: Slurm Partition State
 
@@ -3898,7 +3969,7 @@ cdef inline str __get_rm_partition_state(int inx=0):
 
 cdef inline list __get_preempt_mode(uint16_t index):
 
-	u"""Returns a list that represents the preempt mode.
+	r"""Returns a list that represents the preempt mode.
 
 	:param int inx: Slurm Preempt Mode
 
@@ -3909,8 +3980,10 @@ cdef inline list __get_preempt_mode(uint16_t index):
 	cdef list modeFlags = []
 
 	cdef inx = 65534 - index 
-	if inx == PREEMPT_MODE_OFF:  return ['OFF']
-	if inx == PREEMPT_MODE_GANG: return ['GANG']
+	if inx == PREEMPT_MODE_OFF:
+		return ['OFF']
+	if inx == PREEMPT_MODE_GANG:
+		return ['GANG']
 
 	if inx & PREEMPT_MODE_GANG :
 		modeFlags.append('GANG')
@@ -3931,7 +4004,7 @@ cdef inline list __get_preempt_mode(uint16_t index):
 
 cdef inline str __get_partition_state(uint16_t inx=0):
 
-	u"""Returns a string that represents the state of the slurm partition.
+	r"""Returns a string that represents the state of the slurm partition.
 
 	:param int inx: Slurm Partition State
 
@@ -3954,7 +4027,7 @@ cdef inline str __get_partition_state(uint16_t inx=0):
 
 cdef inline dict __get_partition_mode(uint16_t inx=0):
 
-	u"""Returns a dictionary that represents the mode of the slurm partition.
+	r"""Returns a dictionary that represents the mode of the slurm partition.
 
 	:param int inx: Slurm Partition Mode
 
@@ -3986,11 +4059,41 @@ cdef inline dict __get_partition_mode(uint16_t inx=0):
 
 	return mode
 
-cdef inline str __get_job_state_reason(int inx=0):
+cdef inline str __get_job_state(int inx=0):
 
-	u"""Returns a string that represents the state of the slurm job.
+	r"""Returns a string that represents the state of the slurm job state.
 
 	:param int inx: Slurm Job State
+
+	:returns: Job state
+	:rtype: `string`
+	"""
+
+	cdef char* job_state = 'Unknown'
+	cdef list state = [
+			'Pending',
+			'Running',
+			'Suspended',
+			'Complete',
+			'Cancelled',
+			'Failed',
+			'Timeout',
+			'Node Fail',
+			'End'
+			]
+
+	try:
+		job_state = state[inx]
+	except:
+		pass
+
+	return job_state 
+
+cdef inline str __get_job_state_reason(int inx=0):
+
+	r"""Returns a reason why the slurm job is in a state.
+
+	:param int inx: Slurm job state reason
 
 	:returns: Reason state
 	:rtype: `string`
@@ -4039,7 +4142,7 @@ cdef inline str __get_job_state_reason(int inx=0):
 
 def epoch2date(int epochSecs=0):
 
-	u"""Convert epoch secs to a python time string.
+	r"""Convert epoch secs to a python time string.
 
 	:param int epochSecs: Seconds since epoch
 
