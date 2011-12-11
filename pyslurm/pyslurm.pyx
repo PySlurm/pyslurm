@@ -497,7 +497,7 @@ cdef class config:
 		:rtype: `dict`
 		"""
 
-		if keyID in self._JobDict.keys():
+		if self._JobDict.has_key(keyID):
 			return self.__JobDict[keyID]
 		return {}
 
@@ -848,11 +848,11 @@ cdef class partition:
 		:rtype: `dict`
 		"""
 
-		if partID in self._PartDict.keys():
+		if self._PartDict.has_key(partID):
 			return self._PartDict[partID]
 		return {}
 
-	def find(self, char *name='', char *val=''):
+	def find(self, char *name='', val=''):
 
 		r"""Search for a property and associated value in the retrieved partition data.
 
@@ -865,9 +865,11 @@ cdef class partition:
 		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
 		cdef list retList = []
 
-		for key, value in self._PartDict.iteritems():
-			if self._PartDict[key][name] == val:
-				retList.append(key)
+		if val != '':
+
+			for key, value in self._PartDict.iteritems():
+				if self._PartDict[key][name] == val:
+					retList.append(key)
 		return retList
 
 	def load(self):
@@ -1771,20 +1773,20 @@ cdef class job:
 
 		return self._JobDict.keys()
 
-	def find_id(self, char *jobID=''):
+	def find_id(self, int jobID=0):
 
 		r"""Retrieve job ID data.
 
-		:param int str: Job id key string to search
+		:param int jobID: Job id key string to search
 		:returns: Dictionary of values for given job id
 		:rtype: `dict`
 		"""
 
-		if jobID in self._JobDict.keys():
+		if self._JobDict.has_key(jobID):
 			return self._JobDict[jobID]
 		return {}
 
-	def find(self, char *name='', char *val=''):
+	def find(self, char *name='', val=''):
 
 		r"""Search for a property and associated value in the retrieved job data.
 
@@ -1797,9 +1799,11 @@ cdef class job:
 		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
 		cdef list retList = []
 
-		for key, value in self._JobDict.iteritems():
-			if self._JobDict[key][name] == val:
-				retList.append(key)
+		if val != '':
+
+			for key, value in self._JobDict.iteritems():
+				if self._JobDict[key][name] == val:
+					retList.append(key)
 		return retList
 
 	def load(self):
@@ -2202,11 +2206,11 @@ cdef class node:
 		:rtype: `dict`
 		"""
 
-		if nodeID in self._NodeDict.keys():
+		if self._NodeDict.has_key(nodeID):
 			return self._NodeDict[nodeID]
 		return {}
 
-	def find(self, char *name='', char *val=''):
+	def find(self, char *name='', val=''):
 
 		r"""Search for a property and associated value in the retrieved node data.
 
@@ -2219,9 +2223,11 @@ cdef class node:
 		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
 		cdef list retList = []
 
-		for key, value in self._NodeDict.iteritems():
-			if self._NodeDict[key][name] == val:
-				retList.append(key)
+		if val != '':
+
+			for key, value in self._NodeDict.iteritems():
+				if self._NodeDict[key][name] == val:
+					retList.append(key)
 		return retList
 
 	def load(self):
@@ -2925,11 +2931,11 @@ cdef class reservation:
 		:rtype: `dict`
 		"""
 
-		if resID in self._ResDict.keys():
+		if self._ResDict.has_key(resID):
 			return self._ResDict[resID]
 		return {}
 
-	def find(self, char *name='', char *val=''):
+	def find(self, char *name='', val=''):
 
 		r"""Search for a property and associated value in the retrieved reservation data
 
@@ -2942,9 +2948,11 @@ cdef class reservation:
 		# [ key for key, value in self._ResDict.iteritems() if self._ResDict[key]['state'] == 'error']
 		cdef list retList = []
 
-		for key, value in self._ResDict.iteritems():
-			if self._ResDict[key][name] == val:
-				retList.append(key)
+		if val != '':
+
+			for key, value in self._ResDict.iteritems():
+				if self._ResDict[key][name] == val:
+					retList.append(key)
 		return retList
 
 	def load(self):
@@ -3274,11 +3282,11 @@ cdef class block:
 		:rtype: `dict`
 		"""
 
-		if blockID in self._BlockDict.keys():
+		if self._BlockDict.has_key(blockID):
 			return self._BlockDict[blockID]
 		return {}
 
-	def find(self, char *name='', char *val=''):
+	def find(self, char *name='', val=''):
 
 		r"""Search for a property and associated value in the retrieved block data.
 
@@ -3291,9 +3299,11 @@ cdef class block:
 		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
 		cdef list retList = []
 
-		for key, value in self._BlockDict.iteritems():
-			if self._BlockDict[key][name] == val:
-				retList.append(key)
+		if val != '':
+
+			for key, value in self._BlockDict.iteritems():
+				if self._BlockDict[key][name] == val:
+					retList.append(key)
 		return retList
 
 	def load(self):
@@ -3559,7 +3569,7 @@ cdef inline dict __get_licenses(char *licenses=''):
 	cdef int i
 	cdef dict licDict = {}
 
-	if licenses is NULL:
+	if (licenses is NULL):
 		return licDict
 
 	cdef list alist = slurm.listOrNone(licenses, ',')
