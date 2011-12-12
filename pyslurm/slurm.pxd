@@ -137,7 +137,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		FAIL_INACTIVE_LIMIT
 		FAIL_ACCOUNT
 		FAIL_QOS
-		FAIL_QOS_THRES
+		WAIT_QOS_THRES
 
 	cdef enum select_jobdata_type:
 		SELECT_JOBDATA_GEOMETRY
