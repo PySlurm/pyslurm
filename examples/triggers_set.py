@@ -50,7 +50,7 @@ import pyslurm
 
 trigDict = {
 		'res_type':  'node' ,
-		'res_id':    'bps000',
+		'res_id':    'makalu',
 		'offset':    0,
 		'event': 'down',
 		'program':   '/tmp/test.sh'

@@ -21,6 +21,8 @@ def display(res_dict):
 					else:
 						ddate = pyslurm.epoch2date(value[res_key])
 						print "\t%-20s : %s" % (res_key, ddate)
+				elif res_key == 'flags':
+						print "\t%-20s : %s" % (res_key, pyslurm.get_res_state(value[res_key]))
 				else:
 						print "\t%-20s : %s" % (res_key, value[res_key])
 
@@ -36,7 +38,7 @@ if __name__ == "__main__":
 
 		display(res_dict)
 
-		print "Res IDs - %s" % a.id()
+		print "Res IDs - %s" % a.ids()
 
 	else:
 		print "No reservations found !"
