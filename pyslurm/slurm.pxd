@@ -842,7 +842,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t trig_id
 		uint16_t res_type
 		char *res_id
-		uint16_t trig_type
+		uint32_t trig_type
 		uint16_t offset
 		uint32_t user_id
 		char *program
