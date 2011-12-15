@@ -3901,25 +3901,118 @@ def get_node_state(uint16_t inx=0):
 
 	return __get_node_state(inx)
 
-cdef inline str __get_node_state(uint16_t inx=0):
+cdef __get_node_state(uint16_t inx=0):
 
-	cdef char* node_state = 'Unknown'
-	cdef list state = [
-			'Unknown',
-			'Down',
-			'Idle',
-			'Allocated',
-			'Error',
-			'Mixed',
-			'Future'
-			]
+	cdef int comp_flag = (inx & NODE_STATE_COMPLETING)
+	cdef int drain_flag = (inx & NODE_STATE_DRAIN)
+	cdef int fail_flag = (inx & NODE_STATE_FAIL)
+	cdef int maint_flag = (inx & NODE_STATE_MAINT)
+	cdef int no_resp_flag = (inx & NODE_STATE_NO_RESPOND)
+	cdef int power_down_flag = (inx & NODE_STATE_POWER_SAVE)
+	cdef int power_up_flag = (inx & NODE_STATE_POWER_UP)
 
-	try:
-		node_state = state[inx]
-	except:
-		pass
+	inx = <uint16_t>(inx & NODE_STATE_BASE)
 
-	return node_state 
+	if maint_flag:
+		if no_resp_flag:
+			return "Maint*"
+		return "Maint"
+
+	if drain_flag:
+
+		if comp_flag or (inx == NODE_STATE_ALLOCATED):
+			if no_resp_flag:
+				return "Draining*"
+			return "Draining"
+		elif (inx == NODE_STATE_ERROR):
+			if no_resp_flag:
+				return "Error*"
+			return "Error"
+		elif (inx == NODE_STATE_MIXED):
+			if no_resp_flag:
+				return "Mixed*"
+			return "Mixed"
+		else:
+			if no_resp_flag:
+				return "Drain*"
+			return "Drain"
+
+	if fail_flag:
+
+		if (comp_flag or (inx == NODE_STATE_ALLOCATED)):
+			if no_resp_flag:
+				return "Failing*"
+			return "Failing"
+		else:
+			if no_resp_flag:
+				return "Failed*"
+			return "Failed"
+
+	if (inx == NODE_STATE_POWER_SAVE):
+		return "Power_Down"
+
+	if (inx == NODE_STATE_POWER_UP):
+		return "Power_UP"
+
+	if (inx == NODE_STATE_DOWN):
+		if no_resp_flag:
+			return "Down*"
+		return "Down"
+
+	if (inx == NODE_STATE_ALLOCATED):
+		if power_up_flag:
+			return "Allocated#"
+		if power_down_flag:
+			return "Allocated~"
+		if no_resp_flag:
+			return "Allocated*"
+		if comp_flag:
+			return "Allocated+"
+		return "Allocated"
+
+	if comp_flag:
+		if no_resp_flag:
+			return "Completing*"
+		return "Completing"
+
+	if (inx == NODE_STATE_IDLE):
+		if power_up_flag:
+			return "Idle#"
+		if power_down_flag:
+			return "Idle~"
+		if no_resp_flag:
+			return "Idle*"
+		return "Idle"
+
+	if (inx == NODE_STATE_ERROR):
+		if power_up_flag:
+			return "Error#"
+		if power_down_flag:
+			return "Error~"
+		if no_resp_flag:
+			return "Error*"
+		return "Error"
+
+	if (inx == NODE_STATE_MIXED):
+		if power_up_flag:
+			return "Mixed#"
+		if power_down_flag:
+			return "Mixed~"
+		if no_resp_flag:
+			return "Mixed*"
+		return "Mixed"
+
+	if (inx == NODE_STATE_FUTURE):
+		if power_up_flag:
+			return "Future*"
+		return "Future"
+
+	if (inx == NODE_STATE_UNKNOWN):
+		if power_up_flag:
+			return "Unknown*"
+		return "Unknown"
+
+	return "?"
 
 def get_rm_partition_state(int inx=0):
 
