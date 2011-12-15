@@ -3724,28 +3724,50 @@ def get_trigger_type(uint32_t inx=0):
 
 cdef inline str __get_trigger_type(uint32_t TriggerType=0):
 
-	cdef char* type = 'unknown'
+	cdef char* rtype = 'unknown'
 
 	if TriggerType == TRIGGER_TYPE_UP:
-		type = 'up'
+		rtype = 'up'
 	elif TriggerType == TRIGGER_TYPE_DOWN:
-		type = 'down'
+		rtype = 'down'
 	elif TriggerType == TRIGGER_TYPE_FAIL:
-		type = 'fail'
+		rtype = 'fail'
 	elif TriggerType == TRIGGER_TYPE_TIME:
-		type = 'time'
+		rtype = 'time'
 	elif TriggerType == TRIGGER_TYPE_FINI:
-		type = 'fini'
+		rtype = 'fini'
 	elif TriggerType == TRIGGER_TYPE_RECONFIG:
-		type = 'reconfig'
+		rtype = 'reconfig'
 	elif TriggerType == TRIGGER_TYPE_BLOCK_ERR:
-		type = 'block_err'
+		rtype = 'block_err'
 	elif TriggerType == TRIGGER_TYPE_IDLE:
-		type = 'idle'
+		rtype = 'idle'
 	elif TriggerType == TRIGGER_TYPE_DRAINED:
-		type = 'drained'
+		rtype = 'drained'
+	elif TriggerType == TRIGGER_TYPE_PRI_CTLD_FAIL:
+		rtype = 'primary_slurmctld_failure'
+	elif TriggerType == TRIGGER_TYPE_PRI_CTLD_RES_OP:
+		rtype = 'primary_slurmctld_resumed_operation'
+	elif TriggerType == TRIGGER_TYPE_PRI_CTLD_RES_CTRL:
+		rtype = 'primary_slurmctld_resumed_control'
+	elif TriggerType == TRIGGER_TYPE_PRI_CTLD_ACCT_FULL:
+		rtype = 'primary_slurmctld_acct_buffer_full'
+	elif TriggerType == TRIGGER_TYPE_BU_CTLD_FAIL:
+		rtype = 'backup_ctld_failure'
+	elif TriggerType == TRIGGER_TYPE_BU_CTLD_RES_OP:
+		rtype = 'backup_ctld_resumed_operation'
+	elif TriggerType == TRIGGER_TYPE_BU_CTLD_AS_CTRL:
+		rtype = 'backup_ctld_assumed_control'
+	elif TriggerType == TRIGGER_TYPE_PRI_DBD_FAIL:
+		rtype = 'primary_slurmdbd_failure'
+	elif TriggerType == TRIGGER_TYPE_PRI_DBD_RES_OP:
+		rtype = 'primary_slurmdbd_resumed_operation'
+	elif TriggerType == TRIGGER_TYPE_PRI_DB_FAIL:
+		return 'primary_database_failure'
+	elif TriggerType == TRIGGER_TYPE_PRI_DB_RES_OP:
+		rtype = 'primary_database_resumed_operation'
 
-	return type
+	return rtype
 
 def get_res_state(uint16_t flags=0):
 
@@ -4154,47 +4176,6 @@ cdef inline str __get_partition_state(int inx, int extended=0):
 			state = 'UNKNOWN*'
 
 	return state
-
-#cdef inline str __get_partition_state(uint16_t inx=0):
-
-	#cdef char* part_state = 'Unknown'
-
-	#if inx == (0x01|0x02):
-		#part_state = 'Up'
-	#elif inx == (0x001):
-		#part_state = 'Down'
-	#elif inx == (0x00):
-		#part_state = 'Inactive'
-	#elif inx == (0x02):
-		#part_state = 'Drain'
-
-	#return part_state
-
-#cdef inline dict __get_partition_mode(uint16_t inx=0):
-
-	#cdef dict mode = {}
-
-	#if (inx & PART_FLAG_DEFAULT):
-		#mode['Default'] = True
-	#else:
-		#mode['Default'] = False
-
-	#if (inx & PART_FLAG_HIDDEN):
-		#mode['Hidden'] = True
-	#else:
-		#mode['Hidden'] = False
-
-	#if (inx & PART_FLAG_NO_ROOT):
-		#mode['DisableRootJobs'] = True
-	#else:
-		#mode['DisableRootJobs'] = False
-
-	#if (inx & PART_FLAG_ROOT_ONLY):
-		#mode['RootOnly'] = True
-	#else:
-		#mode['RootOnly'] = False
-
-	#return mode
 
 def get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 
