@@ -794,6 +794,27 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef slurm_step_layout slurm_step_layout_t
 
+	ctypedef struct job_step_pids_t:
+		char *node_name
+		uint32_t *pid
+		uint32_t pid_cnt
+
+	ctypedef struct job_step_pids_response_msg_t:
+		uint32_t job_id
+		List pid_list
+		uint32_t step_id
+
+	ctypedef struct job_step_stat_t:
+		jobacctinfo_t *jobacct
+		uint32_t num_tasks
+		uint32_t return_code
+		job_step_pids_t *step_pids
+
+	ctypedef struct job_step_stat_response_msg_t:
+		uint32_t job_id
+		List stats_list
+		uint32_t step_id
+
 	ctypedef struct reserve_info:
 		char *accounts
 		time_t end_time
