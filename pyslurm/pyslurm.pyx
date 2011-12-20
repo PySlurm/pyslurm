@@ -833,8 +833,6 @@ cdef class partition:
 		self._ShowFlags = 0
 		self._PartDict = {}
 
-		#self.__load()
-
 	def __dealloc__(self):
 		self.__destroy()
 
@@ -1727,8 +1725,6 @@ cdef class job:
 		self._ShowFlags = 0
 		self._JobDict = {}
 
-		#self.__load()
-
 	def __dealloc__(self):
 		self.__destroy()
 
@@ -2139,7 +2135,7 @@ def slurm_perror(char* Msg=''):
 
 cdef class node:
 
-	r"""Class to access/modify/update Slurm Node Information. 
+	r"""Class to access/modify/update Slurm Node Information.
 	"""
 
 	cdef slurm.node_info_msg_t *_Node_ptr
@@ -2155,8 +2151,6 @@ cdef class node:
 		self._record 
 		self._ShowFlags = 0
 		self._NodeDict = {}
-
-		#self.__load()
 
 	def __dealloc__(self):
 		self.__destroy()
@@ -2216,7 +2210,7 @@ cdef class node:
 		:rtype: `list`
 		"""
 
-		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
+		# [ key for key, value in self._NodeDict.iteritems() if self._NodeDict[key][name] == val ]
 		cdef list retList = []
 
 		if val != '':
@@ -2354,7 +2348,9 @@ cdef class node:
 			if self._Node_ptr.node_array[i].select_nodeinfo is not NULL:
 
 				slurm.slurm_get_select_nodeinfo(self._Node_ptr.node_array[i].select_nodeinfo, SELECT_NODEDATA_SUBCNT, NODE_STATE_ALLOCATED, &alloc_cpus)
+				#
 				# Should check of cluster and BG here
+				#
 				if not alloc_cpus and (IS_NODE_ALLOCATED(self._Node_ptr.node_array[i].node_state) or IS_NODE_COMPLETING(self._Node_ptr.node_array[i].node_state)):
 					alloc_cpus = Host_dict['cpus']
 				else:
@@ -2489,126 +2485,167 @@ def create_node_dict():
 		'weight': -1,
 		'features': ''
 		}
+
 #
-# Jobsteps
+# Jobsteps Class
 #
 
-cpdef slurm_get_job_steps(uint32_t JobID=0, uint32_t StepID=0, uint16_t ShowFlags=0):
-
-	r"""Loads into details about job steps that satisfy the job_id 
-	    and/or step_id specifications provided if the data has been 
-	    updated since the update_time specified.
-
-	:param int JobID: Job Identifier
-	:param int StepID: Jobstep Identifier
-	:param int ShowFlags: Display flags (Default=0)
-
-	:returns: Data whose key is the job and step ID
-	:rtype: `dict`
+cdef class jobstep:
+	
+	r"""Class to access/modify Slurm Jobstep  Information. 
 	"""
 
-	cdef slurm.job_step_info_response_msg_t *job_step_info_ptr = NULL
+	cdef slurm.time_t _lastUpdate
+	cdef uint32_t JobID, StepID
+	cdef uint16_t _ShowFlags
+	cdef dict _JobStepDict
 
-	cdef slurm.time_t last_time = 0
-	cdef dict Steps = {}, Step_dict
-	cdef int i, errCode = 0
+	def __cinit__(self):
+		self._ShowFlags = 0
+		self._lastUpdate = 0
+		self.JobID = 4294967294 # 0xfffffffe
+		self.StepID = 4294967294 # 0xfffffffe
+		self._JobStepDict = {}
 
-	ShowFlags = ShowFlags ^ SHOW_ALL
+	def __dealloc__(self):
+		self.__destroy()
 
-	errCode = slurm.slurm_get_job_steps(last_time, JobID, StepID, &job_step_info_ptr, ShowFlags)
+	cpdef __destroy(self):
 
-	if errCode != 0:
-		return Steps
+		r"""Free the slurm job memory allocated by load partition method. 
+		"""
 
-	if job_step_info_ptr is not NULL:
+		self._lastUpdate = 0
+		self._ShowFlags = 0
+		self._JobStepDict = {}
 
-		for i from 0 <= i < job_step_info_ptr.job_step_count:
+	def lastUpdate(self):
 
-			job_id = job_step_info_ptr.job_steps[i].job_id
-			step_id = job_step_info_ptr.job_steps[i].step_id
+		r"""Get the time (epoch seconds) the job data was updated.
 
-			Steps[job_id] = {}
-			Step_dict = {}
-			Step_dict['user_id'] = job_step_info_ptr.job_steps[i].user_id
-			Step_dict['num_tasks'] = job_step_info_ptr.job_steps[i].num_tasks
-			Step_dict['partition'] = job_step_info_ptr.job_steps[i].partition
-			Step_dict['start_time'] = job_step_info_ptr.job_steps[i].start_time
-			Step_dict['run_time'] = job_step_info_ptr.job_steps[i].run_time
-			Step_dict['resv_ports'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].resv_ports, '')
-			Step_dict['nodes'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].nodes, '')
-			Step_dict['name'] = job_step_info_ptr.job_steps[i].name
-			Step_dict['network'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].network, '')
-			Step_dict['ckpt_dir'] = job_step_info_ptr.job_steps[i].ckpt_dir
-			Step_dict['ckpt_int'] = job_step_info_ptr.job_steps[i].ckpt_interval
+		:returns: epoch seconds
+		:rtype: `integer`
+		"""
 
-			Steps[job_id][step_id] = Step_dict
+		return self._lastUpdate
 
-		slurm.slurm_free_job_step_info_response_msg(job_step_info_ptr)
+	cpdef get(self):
 
-	return Steps
+		r"""Get slurm node information.
 
-cpdef slurm_free_job_step_info_response_msg(ptr):
+		:returns: Data whose key is the node name.
+		:rtype: `dict`
+		"""
 
-	r"""Free the slurm job step info pointer.
-	"""
+		self.__get()
+		return self._JobStepDict
 
-	cdef slurm.job_step_info_response_msg_t *old_job_step_info_ptr = <slurm.job_step_info_response_msg_t*>ptr_unwrapper(ptr)
+	cpdef __get(self):
 
-	slurm.slurm_free_job_step_info_response_msg(old_job_step_info_ptr)
+		r"""Loads into details about job steps that satisfy the job_id 
+		and/or step_id specifications provided if the data has been 
+		updated since the update_time specified.
 
-cpdef slurm_job_step_layout_get(uint32_t JobID=0, uint32_t StepID=0):
+		:param int JobID: Job Identifier
+		:param int StepID: Jobstep Identifier
+		:param int ShowFlags: Display flags (Default=0)
 
-	r"""Get the slurm job step layout from a given job and step id.
+		:returns: Data whose key is the job and step ID
+		:rtype: `dict`
+		"""
 
-	:param int JobID: slurm job id (Default=0)
-	:param int StepID: slurm step id (Default=0)
+		cdef slurm.job_step_info_response_msg_t *job_step_info_ptr = NULL
 
-	:returns: List of job step layout.
-	:rtype: `list`
-	"""
+		cdef slurm.time_t last_time = 0
+		cdef dict Steps = {}, StepDict
+		cdef int i, errCode = 0
 
-	cdef slurm.slurm_step_layout_t *old_job_step_ptr 
-	cdef int i = 0, j = 0, Node_cnt = 0
+		cdef uint16_t ShowFlags = self._ShowFlags ^ SHOW_ALL
 
-	cdef dict Layout = {}
-	cdef list Nodes = [], Node_list = [], Tids_list = []
+		errCode = slurm.slurm_get_job_steps(last_time, self.JobID, self.StepID, &job_step_info_ptr, ShowFlags)
 
-	old_job_step_ptr = slurm.slurm_job_step_layout_get(JobID, StepID)
+		if errCode != 0:
+			self._JobStepDict = {}
+			return
 
-	if old_job_step_ptr is not NULL:
+		if job_step_info_ptr is not NULL:
 
-		Node_cnt  = old_job_step_ptr.node_cnt
+			for i from 0 <= i < job_step_info_ptr.job_step_count:
 
-		Layout['node_cnt'] = Node_cnt
-		Layout['node_list'] = old_job_step_ptr.node_list
-		Layout['plane_size'] = old_job_step_ptr.plane_size
-		Layout['task_cnt'] = old_job_step_ptr.task_cnt
-		Layout['task_dist'] = old_job_step_ptr.task_dist
+				job_id = job_step_info_ptr.job_steps[i].job_id
+				step_id = job_step_info_ptr.job_steps[i].step_id
 
-		Nodes = Layout['node_list'].split(',')
-		for i from 0 <= i < Node_cnt:
+				Steps[job_id] = {}
+				Step_dict = {}
+				Step_dict['user_id'] = job_step_info_ptr.job_steps[i].user_id
+				Step_dict['num_cpus'] = job_step_info_ptr.job_steps[i].num_cpus
+				Step_dict['num_tasks'] = job_step_info_ptr.job_steps[i].num_tasks
+				Step_dict['partition'] = job_step_info_ptr.job_steps[i].partition
+				Step_dict['start_time'] = job_step_info_ptr.job_steps[i].start_time
+				Step_dict['run_time'] = job_step_info_ptr.job_steps[i].run_time
+				Step_dict['resv_ports'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].resv_ports, '')
+				Step_dict['nodes'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].nodes, '')
+				Step_dict['name'] = job_step_info_ptr.job_steps[i].name
+				Step_dict['network'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].network, '')
+				Step_dict['ckpt_dir'] = job_step_info_ptr.job_steps[i].ckpt_dir
+				Step_dict['ckpt_interval'] = job_step_info_ptr.job_steps[i].ckpt_interval
+				Step_dict['gres'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].gres, '')
+				Step_dict['time_limit'] = job_step_info_ptr.job_steps[i].time_limit
 
-			Tids_list = []
-			for j from 0 <= j < old_job_step_ptr.tasks[i]:
+				Steps[job_id][step_id] = Step_dict
 
-				Tids_list.append(old_job_step_ptr.tids[i][j])
+			slurm.slurm_free_job_step_info_response_msg(job_step_info_ptr)
 
-			Node_list.append( [Nodes[i], Tids_list] )
-		
-		Layout['tasks'] = Node_list
+		self._JobStepDict = Steps
 
-		slurm.slurm_job_step_layout_free(old_job_step_ptr)
+	cpdef layout(self, uint32_t JobID=0, uint32_t StepID=0):
 
-	return Layout
+		return self.__layout(JobID, StepID)
 
-cpdef slurm_job_step_layout_free(Ptr=''):
+	cpdef __layout(self, uint32_t JobID, uint32_t StepID):
 
-	r"""Free the slurm job step layout pointer.
-	"""
+		r"""Get the slurm job step layout from a given job and step id.
 
-	cdef slurm.slurm_step_layout_t *old_job_step_ptr = <slurm.slurm_step_layout_t*>ptr_unwrapper(Ptr)
+		:param int JobID: slurm job id (Default=0)
+		:param int StepID: slurm step id (Default=0)
 
-	slurm.slurm_job_step_layout_free(old_job_step_ptr)
+		:returns: List of job step layout.
+		:rtype: `list`
+		"""
+
+		cdef slurm.slurm_step_layout_t *old_job_step_ptr 
+		cdef int i = 0, j = 0, Node_cnt = 0
+
+		cdef dict Layout = {}
+		cdef list Nodes = [], Node_list = [], Tids_list = []
+
+		old_job_step_ptr = slurm.slurm_job_step_layout_get(JobID, StepID)
+
+		if old_job_step_ptr is not NULL:
+
+			Node_cnt  = old_job_step_ptr.node_cnt
+
+			Layout['node_cnt'] = Node_cnt
+			Layout['node_list'] = old_job_step_ptr.node_list
+			Layout['plane_size'] = old_job_step_ptr.plane_size
+			Layout['task_cnt'] = old_job_step_ptr.task_cnt
+			Layout['task_dist'] = old_job_step_ptr.task_dist
+
+			Nodes = Layout['node_list'].split(',')
+			for i from 0 <= i < Node_cnt:
+
+				Tids_list = []
+				for j from 0 <= j < old_job_step_ptr.tasks[i]:
+
+					Tids_list.append(old_job_step_ptr.tids[i][j])
+
+				Node_list.append( [Nodes[i], Tids_list] )
+			
+			Layout['tasks'] = Node_list
+
+			slurm.slurm_job_step_layout_free(old_job_step_ptr)
+
+		return Layout
 
 #
 # Hostlist Class
@@ -2894,8 +2931,6 @@ cdef class reservation:
 		self._lastUpdate = 0
 		self._ShowFlags = 0
 		self._ResDict = {}
-
-		#self.__load()
 
 	def __dealloc__(self):
 		self.__free()
@@ -3609,26 +3644,26 @@ def get_connection_type(uint16_t inx=0):
 
 cdef inline str __get_connection_type(uint16_t ConnType=0):
 
-	cdef char* type = 'unknown'
+	cdef char* rtype = 'unknown'
 
 	if ConnType == SELECT_MESH:
-		type = 'MESH'
+		rtype = 'MESH'
 	elif ConnType == SELECT_TORUS:
-		type = 'TORUS'
+		rtype = 'TORUS'
 	elif ConnType == SELECT_NAV:
-		type = 'NAV'
+		rtype = 'NAV'
 	elif ConnType == SELECT_SMALL:
-		type = 'SMALL'
+		rtype = 'SMALL'
 	elif ConnType == SELECT_HTC_S:
-		type = 'HTC_S'
+		rtype = 'HTC_S'
 	elif ConnType == SELECT_HTC_D:
-		type = 'HTC_D'
+		rtype = 'HTC_D'
 	elif ConnType == SELECT_HTC_V:
-		type = 'HTC_V'
+		rtype = 'HTC_V'
 	elif ConnType == SELECT_HTC_L:
-		type = 'HTC_L'
+		rtype = 'HTC_L'
 
-	return type
+	return rtype
 
 def get_node_use(int inx=0):
 
@@ -3650,16 +3685,16 @@ def get_node_use(int inx=0):
 
 cdef inline str __get_node_use(int NodeType=0):
 
-	cdef char* type = 'unknown'
+	cdef char* rtype = 'unknown'
 
 	if NodeType == SELECT_COPROCESSOR_MODE:
-		type = 'COPROCESSOR'
+		rtype = 'COPROCESSOR'
 	elif NodeType == SELECT_VIRTUAL_NODE_MODE:
-		type = 'VIRTUAL_NODE'
+		rtype = 'VIRTUAL_NODE'
 	elif NodeType == SELECT_NAV_MODE:
-		type = 'NAV'
+		rtype = 'NAV'
 
-	return type
+	return rtype
 
 def get_trigger_res_type(uint16_t inx=0):
 
@@ -3683,20 +3718,20 @@ def get_trigger_res_type(uint16_t inx=0):
 
 cdef inline str __get_trigger_res_type(uint16_t ResType=0):
 
-	cdef char* type = 'unknown'
+	cdef char* rtype = 'unknown'
 
 	if ResType == TRIGGER_RES_TYPE_JOB:
-		type = 'job'
+		rtype = 'job'
 	elif ResType == TRIGGER_RES_TYPE_NODE:
-		type = 'node'
+		rtype = 'node'
 	elif ResType == TRIGGER_RES_TYPE_SLURMCTLD:
-		type = 'slurmctld'
+		rtype = 'slurmctld'
 	elif ResType == TRIGGER_RES_TYPE_SLURMDBD:
-		type ='slurmbdb'
+		rtype ='slurmbdb'
 	elif ResType == TRIGGER_RES_TYPE_DATABASE:
-		type = 'database'
+		rtype = 'database'
 
-	return type
+	return rtype
 
 def get_trigger_type(uint32_t inx=0):
 
@@ -4083,8 +4118,8 @@ def get_preempt_mode(uint16_t inx=0):
 cdef inline list __get_preempt_mode(uint16_t index):
 
 	cdef list modeFlags = []
-
 	cdef inx = 65534 - index 
+
 	if inx == PREEMPT_MODE_OFF:
 		return ['OFF']
 	if inx == PREEMPT_MODE_GANG:
