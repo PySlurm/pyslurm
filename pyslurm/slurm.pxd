@@ -1072,15 +1072,18 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern void slurm_init_update_node_msg (update_node_msg_t *)
 	cdef extern int slurm_update_node (update_node_msg_t *)
 
-	#
-	# SlurmD
-	#
+	# JobSteps
 
-	cdef extern void slurm_free_slurmd_status (slurmd_status_t *)
 	cdef extern int slurm_get_job_steps (time_t, uint32_t, uint32_t, job_step_info_response_msg_t **, uint16_t)
 	cdef extern void slurm_free_job_step_info_response_msg (job_step_info_response_msg_t *)
 	cdef extern slurm_step_layout_t *slurm_job_step_layout_get (uint32_t, uint32_t)
-	cdef void slurm_job_step_layout_free (slurm_step_layout *)
+	cdef extern void slurm_job_step_layout_free (slurm_step_layout *)
+	cdef extern int slurm_job_step_stat (uint32_t, uint32_t, char *, job_step_stat_response_msg_t **)
+	cdef extern int slurm_job_step_get_pids (uint32_t, uint32_t, char *, job_step_pids_response_msg_t **)
+	cdef extern void slurm_job_step_pids_free (job_step_pids_t *)
+	cdef extern void slurm_job_step_pids_response_msg_free (void *)
+	cdef extern void slurm_job_step_stat_free (job_step_stat_t *)
+	cdef extern void slurm_job_step_stat_response_msg_free (void *)
 
 	#
 	# Triggers
