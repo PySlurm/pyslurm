@@ -1,5 +1,5 @@
 # cython: embedsignature=True
-# cython: profile=True
+# cython: profile=False
 
 import time
 import os
@@ -14,7 +14,6 @@ from libc.stdint cimport int64_t
 from cpython cimport bool
 
 cdef extern from 'stdlib.h':
-	#ctypedef long size_t
 	ctypedef long long size_t
 
 	void free(void *__ptr)
@@ -320,6 +319,7 @@ BLOCK_BUSY = 3
 BLOCK_RESUME = 4
 BLOCK_ERROR = 5
 BLOCK_REMOVE = 6
+
 #
 # SLURM Macros as Cython inline functions
 #
@@ -494,8 +494,6 @@ cdef class config:
 		self.__lastUpdate = 0
 		self.__ConfigDict = {}
 
-		#self.__load()
-
 	def __dealloc__(self):
 		self.__free()
 
@@ -527,9 +525,8 @@ cdef class config:
 		:rtype: `dict`
 		"""
 
-		if self._JobDict.has_key(keyID):
-			return self.__JobDict[keyID]
-		return {}
+		return self.__JobDict.get(keyID, {})
+
 
 	cpdef __free(self):
 
@@ -876,9 +873,7 @@ cdef class partition:
 		:rtype: `dict`
 		"""
 
-		if self._PartDict.has_key(partID):
-			return self._PartDict[partID]
-		return {}
+		return self._PartDict.get(partID, {})
 
 	def find(self, char *name='', val=''):
 
@@ -895,9 +890,9 @@ cdef class partition:
 		if val != '':
 
 			# use a list comprenshion here maybe
-			# [ key for key, value in blockID.iteritems() if blockID[key][key] == value ]
+			# [ key for key, value in blockID.items() if blockID[key][key] == value ]
 
-			for key, value in self._PartDict.iteritems():
+			for key, value in self._PartDict.items():
 				if self._PartDict[key][name] == val:
 					retList.append(key)
 		return retList
@@ -1769,9 +1764,7 @@ cdef class job:
 		:rtype: `dict`
 		"""
 
-		if self._JobDict.has_key(jobID):
-			return self._JobDict[jobID]
-		return {}
+		return self._JobDict.get(jobID, {})
 
 	def find(self, char *name='', val=''):
 
@@ -1783,14 +1776,15 @@ cdef class job:
 		:rtype: `list`
 		"""
 
-		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
+		# [ key for key, value in blockID.items() if blockID[key]['state'] == 'error']
 		cdef list retList = []
 
 		if val != '':
 
-			for key, value in self._JobDict.iteritems():
+			for key, value in self._JobDict.items():
 				if self._JobDict[key][name] == val:
 					retList.append(key)
+
 		return retList
 
 	def load(self):
@@ -1957,7 +1951,7 @@ cdef class job:
 		cdef slurm.dynamic_plugin_data_t *jobinfo = <slurm.dynamic_plugin_data_t*>self._record.select_jobinfo
 		cdef slurm.select_jobinfo_t *tmp_ptr
 
-		cdef int retval = 0, len = 0
+		cdef int retval = 0, length = 0
 		cdef uint16_t retval16 = 0
 		cdef uint32_t retval32 = 0
 		cdef char *retvalStr, *str, *tmp_str
@@ -1977,13 +1971,13 @@ cdef class job:
 			if retval == 0:
 				return retval16
 
-		elif dataType == SELECT_JOBDATA_NODE_CNT or dataType == SELECT_JOBDATA_RESV_ID:
+		if dataType == SELECT_JOBDATA_NODE_CNT or dataType == SELECT_JOBDATA_RESV_ID:
 			
 			retval = slurm.slurm_get_select_jobinfo(jobinfo, dataType, &retval32)
 			if retval == 0:
 				return retval32
 
-		elif dataType == SELECT_JOBDATA_BLOCK_ID or dataType == SELECT_JOBDATA_NODES \
+		if dataType == SELECT_JOBDATA_BLOCK_ID or dataType == SELECT_JOBDATA_NODES \
 			or dataType == SELECT_JOBDATA_IONODES or dataType == SELECT_JOBDATA_BLRTS_IMAGE \
 			or dataType == SELECT_JOBDATA_LINUX_IMAGE or dataType == SELECT_JOBDATA_MLOADER_IMAGE \
 			or dataType == SELECT_JOBDATA_RAMDISK_IMAGE:
@@ -1992,13 +1986,13 @@ cdef class job:
 
 			retval = slurm.slurm_get_select_jobinfo(jobinfo, dataType, &tmp_str)
 			if retval == 0:
-				len = strlen(tmp_str)+1
-				str = <char*>malloc(len)
-				memcpy(tmp_str, str, len)
+				length = strlen(tmp_str)+1
+				retvalStr = <char*>malloc(length)
+				memcpy(tmp_str, retvalStr, length)
 				slurm.xfree(<void**>tmp_str)
-				return str
+				return retvalStr
 
-		elif dataType == SELECT_JOBDATA_PTR: # data-> select_jobinfo_t *jobinfo
+		if dataType == SELECT_JOBDATA_PTR: # data-> select_jobinfo_t *jobinfo
 			retval = slurm.slurm_get_select_jobinfo(jobinfo, dataType, &tmp_ptr)
 			if retval == 0:
 				# populate a dictonary
@@ -2196,9 +2190,7 @@ cdef class node:
 		:rtype: `dict`
 		"""
 
-		if self._NodeDict.has_key(nodeID):
-			return self._NodeDict[nodeID]
-		return {}
+		return self._NodeDict.get(nodeID, {})
 
 	def find(self, char *name='', val=''):
 
@@ -2210,12 +2202,12 @@ cdef class node:
 		:rtype: `list`
 		"""
 
-		# [ key for key, value in self._NodeDict.iteritems() if self._NodeDict[key][name] == val ]
+		# [ key for key, value in self._NodeDict.items() if self._NodeDict[key][name] == val ]
 		cdef list retList = []
 
 		if val != '':
 
-			for key, value in self._NodeDict.iteritems():
+			for key, value in self._NodeDict.items():
 				if self._NodeDict[key][name] == val:
 					retList.append(key)
 		return retList
@@ -2383,7 +2375,7 @@ cdef class node:
 		cdef slurm.select_nodeinfo_t *tmp_ptr
 		cdef slurm.bitstr_t *tmp_bitmap = NULL
 
-		cdef int retval = 0, len = 0
+		cdef int retval = 0, length = 0
 		cdef uint16_t retval16 = 0
 		cdef char *retvalStr, *str, *tmp_str = ''
 
@@ -2395,7 +2387,7 @@ cdef class node:
 			if retval == 0:
 				return retval16
 
-		elif dataType == SELECT_NODEDATA_BITMAP:
+		if dataType == SELECT_NODEDATA_BITMAP:
 
 			# data-> bitstr_t * needs to be freed with FREE_NULL_BITMAP
 
@@ -2410,13 +2402,13 @@ cdef class node:
 
 			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &tmp_str)
 			if retval == 0:
-				len = strlen(tmp_str)+1
-				str = <char*>malloc(len)
-				memcpy(tmp_str, str, len)
+				length = strlen(tmp_str)+1
+				str = <char*>malloc(length)
+				memcpy(tmp_str, str, length)
 				slurm.xfree(<void**>tmp_str)
 				return str
 
-		elif dataType == SELECT_NODEDATA_PTR: # data-> select_jobinfo_t *jobinfo
+		if dataType == SELECT_NODEDATA_PTR: # data-> select_jobinfo_t *jobinfo
 			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &tmp_ptr)
 			if retval == 0:
 				# opaque data as dict 
@@ -2442,26 +2434,23 @@ def slurm_update_node(dict node_dict={}):
 
 	slurm.slurm_init_update_node_msg(&node_msg)
 
-	if node_dict.has_key('reason'):
-		node_msg.reason = node_dict['reason']
-
-	if node_dict.has_key('node_state'):
+	if 'node_state' in node_dict:
 		node_msg.node_state = <uint16_t>node_dict['node_state']
 
-	if node_dict.has_key('features'):
+	if 'features' in node_dict:
 		node_msg.features = node_dict['features']
 
-	if node_dict.has_key('gres'):
+	if 'gres' in node_dict:
 		node_msg.gres = node_dict['gres']
 
-	if node_dict.has_key('node_names'):
+	if 'node_names' in node_dict:
 		node_msg.node_names = node_dict['node_names']
 
-	if node_dict.has_key('reason'):
+	if 'reason' in node_dict:
 		node_msg.reason = node_dict['reason']
 		node_msg.reason_uid = <uint32_t>os.getuid()
 
-	if node_dict.has_key('weight'):
+	if 'weight' in node_dict:
 		node_msg.weight = <uint32_t>node_dict['weight']
 
 	errCode = slurm.slurm_update_node(&node_msg)
@@ -2503,7 +2492,7 @@ cdef class jobstep:
 	def __cinit__(self):
 		self._ShowFlags = 0
 		self._lastUpdate = 0
-		self.JobID = 4294967294 # 0xfffffffe
+		self.JobID = 4294967294  # 0xfffffffe
 		self.StepID = 4294967294 # 0xfffffffe
 		self._JobStepDict = {}
 
@@ -2512,7 +2501,7 @@ cdef class jobstep:
 
 	cpdef __destroy(self):
 
-		r"""Free the slurm job memory allocated by load partition method. 
+		r"""Free the slurm job memory allocated by load jobstep method. 
 		"""
 
 		self._lastUpdate = 0
@@ -2521,7 +2510,7 @@ cdef class jobstep:
 
 	def lastUpdate(self):
 
-		r"""Get the time (epoch seconds) the job data was updated.
+		r"""Get the time (epoch seconds) the jobstep data was updated.
 
 		:returns: epoch seconds
 		:rtype: `integer`
@@ -2529,11 +2518,20 @@ cdef class jobstep:
 
 		return self._lastUpdate
 
+	def ids(self):
+
+		cdef dict jobsteps = {}
+		for key, value in self._JobStepDict.items():
+			for new_key in value.keys():
+				jobsteps.setdefault(key, []).append(new_key)
+
+		return jobsteps
+
 	cpdef get(self):
 
-		r"""Get slurm node information.
+		r"""Get slurm jobstep information.
 
-		:returns: Data whose key is the node name.
+		:returns: Data whose key is the jobstep ID.
 		:rtype: `dict`
 		"""
 
@@ -2600,10 +2598,6 @@ cdef class jobstep:
 
 	cpdef layout(self, uint32_t JobID=0, uint32_t StepID=0):
 
-		return self.__layout(JobID, StepID)
-
-	cpdef __layout(self, uint32_t JobID, uint32_t StepID):
-
 		r"""Get the slurm job step layout from a given job and step id.
 
 		:param int JobID: slurm job id (Default=0)
@@ -2612,6 +2606,10 @@ cdef class jobstep:
 		:returns: List of job step layout.
 		:rtype: `list`
 		"""
+
+		return self.__layout(JobID, StepID)
+
+	cpdef __layout(self, uint32_t JobID, uint32_t StepID):
 
 		cdef slurm.slurm_step_layout_t *old_job_step_ptr 
 		cdef int i = 0, j = 0, Node_cnt = 0
@@ -2709,7 +2707,6 @@ cdef class hostlist:
 	cpdef pop(self):
 
 		cdef char *host = ''
-
 		if self.hl is not NULL:
 			host = slurm.slurm_hostlist_shift(self.hl)
 		return host
@@ -2754,19 +2751,19 @@ cdef class trigger:
 
 		trigger_set.user_id = 0
 
-		if trigger_dict.has_key('jobid'):
+		if 'jobid' in trigger_dict:
 
 			JobId = trigger_dict['jobid']
 			trigger_set.res_type = TRIGGER_RES_TYPE_JOB #1
 			memcpy(tmp_c, JobId, 128)
 			trigger_set.res_id = tmp_c
 
-			if trigger_dict.has_key('fini'):
+			if 'fini' in trigger_dict:
 				trigger_set.trig_type = trigger_set.trig_type | TRIGGER_TYPE_FINI #0x0010
-			if trigger_dict.has_key('offset'):
+			if 'offset' in trigger_dict:
 				trigger_set.trig_type = trigger_set.trig_type | TRIGGER_TYPE_TIME #0x0008
 
-		elif trigger_dict.has_key('node'):
+		elif 'node' in trigger_dict:
 
 			trigger_set.res_type = TRIGGER_RES_TYPE_NODE #TRIGGER_RES_TYPE_NODE
 			if trigger_dict['node'] == '':
@@ -2775,7 +2772,7 @@ cdef class trigger:
 				trigger_set.res_id = trigger_dict['node']
 			
 		trigger_set.offset = 32768
-		if trigger_dict.has_key('offset'):
+		if 'offset' in trigger_dict:
 			trigger_set.offset = trigger_set.offset + trigger_dict['offset']
 
 		trigger_set.program = trigger_dict['program']
@@ -2936,11 +2933,13 @@ cdef class reservation:
 		self.__free()
 
 	def lastUpdate(self):
+
 		r"""Get the time (epoch seconds) the reservation data was updated.
 
 		:returns: epoch seconds
 		:rtype: `integer`
 		"""
+
 		return self._lastUpdate
 
 	def ids(self):
@@ -2962,9 +2961,7 @@ cdef class reservation:
 		:rtype: `dict`
 		"""
 
-		if self._ResDict.has_key(resID):
-			return self._ResDict[resID]
-		return {}
+		return self._ResDict.get(resID, {})
 
 	def find(self, char *name='', val=''):
 
@@ -2976,12 +2973,12 @@ cdef class reservation:
 		:rtype: `list`
 		"""
 
-		# [ key for key, value in self._ResDict.iteritems() if self._ResDict[key]['state'] == 'error']
+		# [ key for key, value in self._ResDict.items() if self._ResDict[key]['state'] == 'error']
 		cdef list retList = []
 
 		if val != '':
 
-			for key, value in self._ResDict.iteritems():
+			for key, value in self._ResDict.items():
 				if self._ResDict[key][name] == val:
 					retList.append(key)
 		return retList
@@ -3148,9 +3145,8 @@ def slurm_create_reservation(dict reservation_dict={}):
 
 	resid = slurm.slurm_create_reservation(&resv_msg)
 
-	if resid is NULL:
-		resID = ''
-	else:
+	resID = ''
+	if resid is not NULL:
 		resID = resid
 		free(resid)
 
@@ -3284,8 +3280,6 @@ cdef class block:
 		self._ShowFlags = 0
 		self._BlockDict = {}
 
-		#self.__load()
-
 	def __dealloc__(self):
 		self.__free()
 
@@ -3318,9 +3312,7 @@ cdef class block:
 		:rtype: `dict`
 		"""
 
-		if self._BlockDict.has_key(blockID):
-			return self._BlockDict[blockID]
-		return {}
+		return self._BlockDict.get(blockID, {})
 
 	def find(self, char *name='', val=''):
 
@@ -3332,12 +3324,12 @@ cdef class block:
 		:rtype: `list`
 		"""
 
-		# [ key for key, value in blockID.iteritems() if blockID[key]['state'] == 'error']
+		# [ key for key, value in blockID.items() if blockID[key]['state'] == 'error']
 		cdef list retList = []
 
 		if val != '':
 
-			for key, value in self._BlockDict.iteritems():
+			for key, value in self._BlockDict.items():
 				if self._BlockDict[key][name] == val:
 					retList.append(key)
 		return retList
@@ -3610,12 +3602,11 @@ cdef inline dict __get_licenses(char *licenses=''):
 
 	cdef list alist = slurm.listOrNone(licenses, ',')
 
-	if not alist:
-		return licDict
+	if alist:
 
-	for i in range(len(alist)):
-		key, value = alist[i].split('*')
-		licDict[key] = value
+		for i in xrange(len(alist)):
+			key, value = alist[i].split('*')
+			licDict[key] = value
 
 	return licDict
 
