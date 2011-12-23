@@ -11,6 +11,7 @@ from libc.string cimport strlen
 
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int64_t
+
 from cpython cimport bool
 
 cdef extern from 'stdlib.h':
@@ -37,12 +38,6 @@ cdef extern from 'Python.h':
 
 cdef extern from 'time.h':
 	ctypedef int time_t
-
-cdef ptr_wrapper(void* ptr):
-	return PyCObject_FromVoidPtr(ptr, NULL)
-
-cdef void *ptr_unwrapper(object obj):
-	return PyCObject_AsVoidPtr(obj)
 
 cdef void *xmalloc(size_t size) except NULL:
 	cdef void *mem = malloc(size)
@@ -478,8 +473,7 @@ cpdef slurm_load_slurmd_status():
 
 cdef class config:
 
-	r"""Class to access slurm config Information. 
-	"""
+	r"""Class to access slurm config Information."""
 
 	cdef slurm.slurm_ctl_conf_t *slurm_ctl_conf_ptr
 	cdef slurm.slurm_ctl_conf_t *__Config_ptr
@@ -635,150 +629,150 @@ cdef class config:
 
 			self.__lastUpdate = self.__Config_ptr.last_update
 
-			Ctl_dict['accounting_storage_enforce'] = self.__Config_ptr.accounting_storage_enforce
-			Ctl_dict['accounting_storage_backup_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_backup_host, '')
-			Ctl_dict['accounting_storage_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_host, '')
-			Ctl_dict['accounting_storage_loc'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_loc, '')
-			Ctl_dict['accounting_storage_pass'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_pass, '')
-			Ctl_dict['accounting_storage_port'] = self.__Config_ptr.accounting_storage_port
-			Ctl_dict['accounting_storage_type'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_type, '')
-			Ctl_dict['accounting_storage_user'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_user, '')
-			Ctl_dict['authtype'] = slurm.stringOrNone(self.__Config_ptr.authtype, '')
-			Ctl_dict['backup_addr'] = slurm.stringOrNone(self.__Config_ptr.backup_addr, '')
-			Ctl_dict['backup_controller'] = slurm.stringOrNone(self.__Config_ptr.backup_controller, '')
-			Ctl_dict['batch_start_timeout'] = self.__Config_ptr.batch_start_timeout
-			Ctl_dict['boot_time'] = self.__Config_ptr.boot_time
-			Ctl_dict['checkpoint_type'] = slurm.stringOrNone(self.__Config_ptr.checkpoint_type, '')
-			Ctl_dict['cluster_name'] = slurm.stringOrNone(self.__Config_ptr.cluster_name, '')
-			Ctl_dict['complete_wait'] = self.__Config_ptr.complete_wait
-			Ctl_dict['control_addr'] = slurm.stringOrNone(self.__Config_ptr.control_addr, '')
-			Ctl_dict['control_machine'] = slurm.stringOrNone(self.__Config_ptr.control_machine, '')
-			Ctl_dict['crypto_type'] = slurm.stringOrNone(self.__Config_ptr.crypto_type, '')
-			Ctl_dict['debug_flags'] = self.__Config_ptr.debug_flags
-			Ctl_dict['def_mem_per_cpu'] = self.__Config_ptr.def_mem_per_cpu
-			Ctl_dict['disable_root_jobs'] = bool(self.__Config_ptr.disable_root_jobs)
-			Ctl_dict['enforce_part_limits'] = bool(self.__Config_ptr.enforce_part_limits)
-			Ctl_dict['epilog'] = slurm.stringOrNone(self.__Config_ptr.epilog, '')
-			Ctl_dict['epilog_msg_time'] = self.__Config_ptr.epilog_msg_time
-			Ctl_dict['epilog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.epilog_slurmctld, '')
-			Ctl_dict['fast_schedule'] = bool(self.__Config_ptr.fast_schedule)
-			Ctl_dict['first_job_id'] = self.__Config_ptr.first_job_id
-			Ctl_dict['get_env_timeout'] = self.__Config_ptr.get_env_timeout
-			Ctl_dict['gres_plugins'] = slurm.listOrNone(self.__Config_ptr.gres_plugins, ',')
-			Ctl_dict['group_info'] = self.__Config_ptr.group_info
-			Ctl_dict['hash_val'] = self.__Config_ptr.hash_val
-			Ctl_dict['health_check_interval'] = self.__Config_ptr.health_check_interval
-			Ctl_dict['health_check_program'] = slurm.stringOrNone(self.__Config_ptr.health_check_program, '')
-			Ctl_dict['inactive_limit'] = self.__Config_ptr.inactive_limit
-			Ctl_dict['job_acct_gather_freq'] = self.__Config_ptr.job_acct_gather_freq
-			Ctl_dict['job_acct_gather_type'] = slurm.stringOrNone(self.__Config_ptr.job_acct_gather_type, '')
-			Ctl_dict['job_ckpt_dir'] = slurm.stringOrNone(self.__Config_ptr.job_ckpt_dir, '')
-			Ctl_dict['job_comp_host'] = slurm.stringOrNone(self.__Config_ptr.job_comp_host, '')
-			Ctl_dict['job_comp_loc'] = slurm.stringOrNone(self.__Config_ptr.job_comp_loc, '')
-			Ctl_dict['job_comp_pass'] = slurm.stringOrNone(self.__Config_ptr.job_comp_pass, '')
-			Ctl_dict['job_comp_port'] = self.__Config_ptr.job_comp_port
-			Ctl_dict['job_comp_type'] = slurm.stringOrNone(self.__Config_ptr.job_comp_type, '')
-			Ctl_dict['job_comp_user'] = slurm.stringOrNone(self.__Config_ptr.job_comp_user, '')
-			Ctl_dict['job_credential_private_key'] = slurm.stringOrNone(self.__Config_ptr.job_credential_private_key, '')
-			Ctl_dict['job_credential_public_certificate'] = slurm.stringOrNone(self.__Config_ptr.job_credential_public_certificate, '')
-			Ctl_dict['job_file_append'] = bool(self.__Config_ptr.job_file_append)
-			Ctl_dict['job_requeue'] = bool(self.__Config_ptr.job_requeue)
-			Ctl_dict['job_submit_plugins'] = slurm.stringOrNone(self.__Config_ptr.job_submit_plugins, '')
-			Ctl_dict['kill_on_bad_exit'] = bool(self.__Config_ptr.kill_on_bad_exit)
-			Ctl_dict['kill_wait'] = self.__Config_ptr.kill_wait
-			Ctl_dict['licenses'] = __get_licenses(self.__Config_ptr.licenses)
-			Ctl_dict['mail_prog'] = slurm.stringOrNone(self.__Config_ptr.mail_prog, '')
-			Ctl_dict['max_job_cnt'] = self.__Config_ptr.max_job_cnt
-			Ctl_dict['max_mem_per_cpu'] = self.__Config_ptr.max_mem_per_cpu
-			Ctl_dict['max_tasks_per_node'] = self.__Config_ptr.max_tasks_per_node
-			Ctl_dict['min_job_age'] = self.__Config_ptr.min_job_age
-			Ctl_dict['mpi_default'] = slurm.stringOrNone(self.__Config_ptr.mpi_default, '')
-			Ctl_dict['mpi_params'] = slurm.stringOrNone(self.__Config_ptr.mpi_params, '')
-			Ctl_dict['msg_timeout'] = self.__Config_ptr.msg_timeout
-			Ctl_dict['next_job_id'] = self.__Config_ptr.next_job_id
-			Ctl_dict['node_prefix']  = slurm.stringOrNone(self.__Config_ptr.node_prefix, '')
-			Ctl_dict['over_time_limit'] = self.__Config_ptr.over_time_limit
-			Ctl_dict['plugindir'] = slurm.stringOrNone(self.__Config_ptr.plugindir, '')
-			Ctl_dict['plugstack'] = slurm.stringOrNone(self.__Config_ptr.plugstack, '')
-			Ctl_dict['preempt_mode'] = self.__Config_ptr.preempt_mode
-			Ctl_dict['preempt_type'] = slurm.stringOrNone(self.__Config_ptr.preempt_type, '')
-			Ctl_dict['priority_decay_hl'] = self.__Config_ptr.priority_decay_hl
-			Ctl_dict['priority_calc_period'] = self.__Config_ptr.priority_calc_period
-			Ctl_dict['priority_favor_small'] = self.__Config_ptr.priority_favor_small
-			Ctl_dict['priority_max_age'] = self.__Config_ptr.priority_max_age
-			Ctl_dict['priority_reset_period'] = self.__Config_ptr.priority_reset_period
-			Ctl_dict['priority_type'] = slurm.stringOrNone(self.__Config_ptr.priority_type, '')
-			Ctl_dict['priority_weight_age'] = self.__Config_ptr.priority_weight_age
-			Ctl_dict['priority_weight_fs'] = self.__Config_ptr.priority_weight_fs
-			Ctl_dict['priority_weight_js'] = self.__Config_ptr.priority_weight_js
-			Ctl_dict['priority_weight_part'] = self.__Config_ptr.priority_weight_part
-			Ctl_dict['priority_weight_qos'] = self.__Config_ptr.priority_weight_qos
-			Ctl_dict['private_data'] = self.__Config_ptr.private_data
-			Ctl_dict['proctrack_type'] = slurm.stringOrNone(self.__Config_ptr.proctrack_type, '')
-			Ctl_dict['prolog'] = slurm.stringOrNone(self.__Config_ptr.prolog, '')
-			Ctl_dict['prolog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.prolog_slurmctld, '')
-			Ctl_dict['propagate_prio_process'] = self.__Config_ptr.propagate_prio_process
-			Ctl_dict['propagate_rlimits'] = slurm.stringOrNone(self.__Config_ptr.propagate_rlimits, '')
-			Ctl_dict['propagate_rlimits_except'] = slurm.stringOrNone(self.__Config_ptr.propagate_rlimits_except, '')
-			Ctl_dict['resume_program'] = slurm.stringOrNone(self.__Config_ptr.resume_program, '')
-			Ctl_dict['resume_rate'] = self.__Config_ptr.resume_rate
-			Ctl_dict['resume_timeout'] = self.__Config_ptr.resume_timeout
-			Ctl_dict['resv_over_run'] = self.__Config_ptr.resv_over_run
-			Ctl_dict['ret2service'] = self.__Config_ptr.ret2service
-			Ctl_dict['salloc_default_command'] = slurm.stringOrNone(self.__Config_ptr.salloc_default_command, '')
-			Ctl_dict['sched_logfile'] = slurm.stringOrNone(self.__Config_ptr.sched_logfile, '')
-			Ctl_dict['sched_log_level'] = self.__Config_ptr.sched_log_level
-			Ctl_dict['sched_params'] = slurm.stringOrNone(self.__Config_ptr.sched_params, '')
-			Ctl_dict['sched_time_slice'] = self.__Config_ptr.sched_time_slice
-			Ctl_dict['schedtype'] = slurm.stringOrNone(self.__Config_ptr.schedtype, '')
-			Ctl_dict['schedport'] = self.__Config_ptr.schedport
-			Ctl_dict['schedrootfltr'] = bool(self.__Config_ptr.schedrootfltr)
-			Ctl_dict['select_type'] = slurm.stringOrNone(self.__Config_ptr.select_type, '')
-			Ctl_dict['select_type_param'] = self.__Config_ptr.select_type_param
-			Ctl_dict['slurm_conf'] = slurm.stringOrNone(self.__Config_ptr.slurm_conf, '')
-			Ctl_dict['slurm_user_id'] = self.__Config_ptr.slurm_user_id
-			Ctl_dict['slurm_user_name'] = slurm.stringOrNone(self.__Config_ptr.slurm_user_name, '')
-			Ctl_dict['slurmd_user_id'] = self.__Config_ptr.slurmd_user_id
-			Ctl_dict['slurmd_user_name'] = slurm.stringOrNone(self.__Config_ptr.slurmd_user_name, '')
-			Ctl_dict['slurmctld_debug'] = self.__Config_ptr.slurmctld_debug
-			Ctl_dict['slurmctld_logfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_logfile, '')
-			Ctl_dict['slurmctld_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_pidfile, '')
-			Ctl_dict['slurmctld_port'] = self.__Config_ptr.slurmctld_port
-			Ctl_dict['slurmctld_port_count'] = self.__Config_ptr.slurmctld_port_count
-			Ctl_dict['slurmctld_timeout'] = self.__Config_ptr.slurmctld_timeout
-			Ctl_dict['slurmd_debug'] = self.__Config_ptr.slurmd_debug
-			Ctl_dict['slurmd_logfile'] = slurm.stringOrNone(self.__Config_ptr.slurmd_logfile, '')
-			Ctl_dict['slurmd_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmd_pidfile, '')
-			Ctl_dict['slurmd_port'] = self.__Config_ptr.slurmd_port
-			Ctl_dict['slurmd_spooldir'] = slurm.stringOrNone(self.__Config_ptr.slurmd_spooldir, '')
-			Ctl_dict['slurmd_timeout'] = self.__Config_ptr.slurmd_timeout
-			Ctl_dict['srun_epilog'] = slurm.stringOrNone(self.__Config_ptr.srun_epilog, '')
-			Ctl_dict['srun_prolog'] = slurm.stringOrNone(self.__Config_ptr.srun_prolog, '')
-			Ctl_dict['state_save_location'] = slurm.stringOrNone(self.__Config_ptr.state_save_location, '')
-			Ctl_dict['suspend_exc_nodes'] = slurm.listOrNone(self.__Config_ptr.suspend_exc_nodes, ',')
-			Ctl_dict['suspend_exc_parts'] = slurm.listOrNone(self.__Config_ptr.suspend_exc_parts, ',')
-			Ctl_dict['suspend_program'] = slurm.stringOrNone(self.__Config_ptr.suspend_program, '')
-			Ctl_dict['suspend_rate'] = self.__Config_ptr.suspend_rate
-			Ctl_dict['suspend_time'] = self.__Config_ptr.suspend_time
-			Ctl_dict['suspend_timeout'] = self.__Config_ptr.suspend_timeout
-			Ctl_dict['switch_type'] = slurm.stringOrNone(self.__Config_ptr.switch_type, '')
-			Ctl_dict['task_epilog'] = slurm.stringOrNone(self.__Config_ptr.task_epilog, '')
-			Ctl_dict['task_plugin'] = slurm.stringOrNone(self.__Config_ptr.task_plugin, '')
-			Ctl_dict['task_plugin_param'] = self.__Config_ptr.task_plugin_param
-			Ctl_dict['task_prolog'] = slurm.stringOrNone(self.__Config_ptr.task_prolog, '')
-			Ctl_dict['tmp_fs'] = slurm.stringOrNone(self.__Config_ptr.tmp_fs, '')
-			Ctl_dict['topology_plugin'] = slurm.stringOrNone(self.__Config_ptr.topology_plugin, '')
-			Ctl_dict['track_wckey'] = self.__Config_ptr.track_wckey
-			Ctl_dict['tree_width'] = self.__Config_ptr.tree_width
-			Ctl_dict['unkillable_program'] = slurm.stringOrNone(self.__Config_ptr.unkillable_program, '')
-			Ctl_dict['unkillable_timeout'] = self.__Config_ptr.unkillable_timeout
-			Ctl_dict['use_pam'] = bool(self.__Config_ptr.use_pam)
-			Ctl_dict['version'] = slurm.stringOrNone(self.__Config_ptr.version, '')
-			Ctl_dict['vsize_factor'] = self.__Config_ptr.vsize_factor
-			Ctl_dict['wait_time'] = self.__Config_ptr.wait_time
-			Ctl_dict['z_16'] = self.__Config_ptr.z_16
-			Ctl_dict['z_32'] = self.__Config_ptr.z_32
-			Ctl_dict['z_char'] = slurm.stringOrNone(self.__Config_ptr.z_char, '')
+			Ctl_dict[u'accounting_storage_enforce'] = self.__Config_ptr.accounting_storage_enforce
+			Ctl_dict[u'accounting_storage_backup_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_backup_host, '')
+			Ctl_dict[u'accounting_storage_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_host, '')
+			Ctl_dict[u'accounting_storage_loc'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_loc, '')
+			Ctl_dict[u'accounting_storage_pass'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_pass, '')
+			Ctl_dict[u'accounting_storage_port'] = self.__Config_ptr.accounting_storage_port
+			Ctl_dict[u'accounting_storage_type'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_type, '')
+			Ctl_dict[u'accounting_storage_user'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_user, '')
+			Ctl_dict[u'authtype'] = slurm.stringOrNone(self.__Config_ptr.authtype, '')
+			Ctl_dict[u'backup_addr'] = slurm.stringOrNone(self.__Config_ptr.backup_addr, '')
+			Ctl_dict[u'backup_controller'] = slurm.stringOrNone(self.__Config_ptr.backup_controller, '')
+			Ctl_dict[u'batch_start_timeout'] = self.__Config_ptr.batch_start_timeout
+			Ctl_dict[u'boot_time'] = self.__Config_ptr.boot_time
+			Ctl_dict[u'checkpoint_type'] = slurm.stringOrNone(self.__Config_ptr.checkpoint_type, '')
+			Ctl_dict[u'cluster_name'] = slurm.stringOrNone(self.__Config_ptr.cluster_name, '')
+			Ctl_dict[u'complete_wait'] = self.__Config_ptr.complete_wait
+			Ctl_dict[u'control_addr'] = slurm.stringOrNone(self.__Config_ptr.control_addr, '')
+			Ctl_dict[u'control_machine'] = slurm.stringOrNone(self.__Config_ptr.control_machine, '')
+			Ctl_dict[u'crypto_type'] = slurm.stringOrNone(self.__Config_ptr.crypto_type, '')
+			Ctl_dict[u'debug_flags'] = self.__Config_ptr.debug_flags
+			Ctl_dict[u'def_mem_per_cpu'] = self.__Config_ptr.def_mem_per_cpu
+			Ctl_dict[u'disable_root_jobs'] = bool(self.__Config_ptr.disable_root_jobs)
+			Ctl_dict[u'enforce_part_limits'] = bool(self.__Config_ptr.enforce_part_limits)
+			Ctl_dict[u'epilog'] = slurm.stringOrNone(self.__Config_ptr.epilog, '')
+			Ctl_dict[u'epilog_msg_time'] = self.__Config_ptr.epilog_msg_time
+			Ctl_dict[u'epilog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.epilog_slurmctld, '')
+			Ctl_dict[u'fast_schedule'] = bool(self.__Config_ptr.fast_schedule)
+			Ctl_dict[u'first_job_id'] = self.__Config_ptr.first_job_id
+			Ctl_dict[u'get_env_timeout'] = self.__Config_ptr.get_env_timeout
+			Ctl_dict[u'gres_plugins'] = slurm.listOrNone(self.__Config_ptr.gres_plugins, ',')
+			Ctl_dict[u'group_info'] = self.__Config_ptr.group_info
+			Ctl_dict[u'hash_val'] = self.__Config_ptr.hash_val
+			Ctl_dict[u'health_check_interval'] = self.__Config_ptr.health_check_interval
+			Ctl_dict[u'health_check_program'] = slurm.stringOrNone(self.__Config_ptr.health_check_program, '')
+			Ctl_dict[u'inactive_limit'] = self.__Config_ptr.inactive_limit
+			Ctl_dict[u'job_acct_gather_freq'] = self.__Config_ptr.job_acct_gather_freq
+			Ctl_dict[u'job_acct_gather_type'] = slurm.stringOrNone(self.__Config_ptr.job_acct_gather_type, '')
+			Ctl_dict[u'job_ckpt_dir'] = slurm.stringOrNone(self.__Config_ptr.job_ckpt_dir, '')
+			Ctl_dict[u'job_comp_host'] = slurm.stringOrNone(self.__Config_ptr.job_comp_host, '')
+			Ctl_dict[u'job_comp_loc'] = slurm.stringOrNone(self.__Config_ptr.job_comp_loc, '')
+			Ctl_dict[u'job_comp_pass'] = slurm.stringOrNone(self.__Config_ptr.job_comp_pass, '')
+			Ctl_dict[u'job_comp_port'] = self.__Config_ptr.job_comp_port
+			Ctl_dict[u'job_comp_type'] = slurm.stringOrNone(self.__Config_ptr.job_comp_type, '')
+			Ctl_dict[u'job_comp_user'] = slurm.stringOrNone(self.__Config_ptr.job_comp_user, '')
+			Ctl_dict[u'job_credential_private_key'] = slurm.stringOrNone(self.__Config_ptr.job_credential_private_key, '')
+			Ctl_dict[u'job_credential_public_certificate'] = slurm.stringOrNone(self.__Config_ptr.job_credential_public_certificate, '')
+			Ctl_dict[u'job_file_append'] = bool(self.__Config_ptr.job_file_append)
+			Ctl_dict[u'job_requeue'] = bool(self.__Config_ptr.job_requeue)
+			Ctl_dict[u'job_submit_plugins'] = slurm.stringOrNone(self.__Config_ptr.job_submit_plugins, '')
+			Ctl_dict[u'kill_on_bad_exit'] = bool(self.__Config_ptr.kill_on_bad_exit)
+			Ctl_dict[u'kill_wait'] = self.__Config_ptr.kill_wait
+			Ctl_dict[u'licenses'] = __get_licenses(self.__Config_ptr.licenses)
+			Ctl_dict[u'mail_prog'] = slurm.stringOrNone(self.__Config_ptr.mail_prog, '')
+			Ctl_dict[u'max_job_cnt'] = self.__Config_ptr.max_job_cnt
+			Ctl_dict[u'max_mem_per_cpu'] = self.__Config_ptr.max_mem_per_cpu
+			Ctl_dict[u'max_tasks_per_node'] = self.__Config_ptr.max_tasks_per_node
+			Ctl_dict[u'min_job_age'] = self.__Config_ptr.min_job_age
+			Ctl_dict[u'mpi_default'] = slurm.stringOrNone(self.__Config_ptr.mpi_default, '')
+			Ctl_dict[u'mpi_params'] = slurm.stringOrNone(self.__Config_ptr.mpi_params, '')
+			Ctl_dict[u'msg_timeout'] = self.__Config_ptr.msg_timeout
+			Ctl_dict[u'next_job_id'] = self.__Config_ptr.next_job_id
+			Ctl_dict[u'node_prefix']  = slurm.stringOrNone(self.__Config_ptr.node_prefix, '')
+			Ctl_dict[u'over_time_limit'] = self.__Config_ptr.over_time_limit
+			Ctl_dict[u'plugindir'] = slurm.stringOrNone(self.__Config_ptr.plugindir, '')
+			Ctl_dict[u'plugstack'] = slurm.stringOrNone(self.__Config_ptr.plugstack, '')
+			Ctl_dict[u'preempt_mode'] = self.__Config_ptr.preempt_mode
+			Ctl_dict[u'preempt_type'] = slurm.stringOrNone(self.__Config_ptr.preempt_type, '')
+			Ctl_dict[u'priority_decay_hl'] = self.__Config_ptr.priority_decay_hl
+			Ctl_dict[u'priority_calc_period'] = self.__Config_ptr.priority_calc_period
+			Ctl_dict[u'priority_favor_small'] = self.__Config_ptr.priority_favor_small
+			Ctl_dict[u'priority_max_age'] = self.__Config_ptr.priority_max_age
+			Ctl_dict[u'priority_reset_period'] = self.__Config_ptr.priority_reset_period
+			Ctl_dict[u'priority_type'] = slurm.stringOrNone(self.__Config_ptr.priority_type, '')
+			Ctl_dict[u'priority_weight_age'] = self.__Config_ptr.priority_weight_age
+			Ctl_dict[u'priority_weight_fs'] = self.__Config_ptr.priority_weight_fs
+			Ctl_dict[u'priority_weight_js'] = self.__Config_ptr.priority_weight_js
+			Ctl_dict[u'priority_weight_part'] = self.__Config_ptr.priority_weight_part
+			Ctl_dict[u'priority_weight_qos'] = self.__Config_ptr.priority_weight_qos
+			Ctl_dict[u'private_data'] = self.__Config_ptr.private_data
+			Ctl_dict[u'proctrack_type'] = slurm.stringOrNone(self.__Config_ptr.proctrack_type, '')
+			Ctl_dict[u'prolog'] = slurm.stringOrNone(self.__Config_ptr.prolog, '')
+			Ctl_dict[u'prolog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.prolog_slurmctld, '')
+			Ctl_dict[u'propagate_prio_process'] = self.__Config_ptr.propagate_prio_process
+			Ctl_dict[u'propagate_rlimits'] = slurm.stringOrNone(self.__Config_ptr.propagate_rlimits, '')
+			Ctl_dict[u'propagate_rlimits_except'] = slurm.stringOrNone(self.__Config_ptr.propagate_rlimits_except, '')
+			Ctl_dict[u'resume_program'] = slurm.stringOrNone(self.__Config_ptr.resume_program, '')
+			Ctl_dict[u'resume_rate'] = self.__Config_ptr.resume_rate
+			Ctl_dict[u'resume_timeout'] = self.__Config_ptr.resume_timeout
+			Ctl_dict[u'resv_over_run'] = self.__Config_ptr.resv_over_run
+			Ctl_dict[u'ret2service'] = self.__Config_ptr.ret2service
+			Ctl_dict[u'salloc_default_command'] = slurm.stringOrNone(self.__Config_ptr.salloc_default_command, '')
+			Ctl_dict[u'sched_logfile'] = slurm.stringOrNone(self.__Config_ptr.sched_logfile, '')
+			Ctl_dict[u'sched_log_level'] = self.__Config_ptr.sched_log_level
+			Ctl_dict[u'sched_params'] = slurm.stringOrNone(self.__Config_ptr.sched_params, '')
+			Ctl_dict[u'sched_time_slice'] = self.__Config_ptr.sched_time_slice
+			Ctl_dict[u'schedtype'] = slurm.stringOrNone(self.__Config_ptr.schedtype, '')
+			Ctl_dict[u'schedport'] = self.__Config_ptr.schedport
+			Ctl_dict[u'schedrootfltr'] = bool(self.__Config_ptr.schedrootfltr)
+			Ctl_dict[u'select_type'] = slurm.stringOrNone(self.__Config_ptr.select_type, '')
+			Ctl_dict[u'select_type_param'] = self.__Config_ptr.select_type_param
+			Ctl_dict[u'slurm_conf'] = slurm.stringOrNone(self.__Config_ptr.slurm_conf, '')
+			Ctl_dict[u'slurm_user_id'] = self.__Config_ptr.slurm_user_id
+			Ctl_dict[u'slurm_user_name'] = slurm.stringOrNone(self.__Config_ptr.slurm_user_name, '')
+			Ctl_dict[u'slurmd_user_id'] = self.__Config_ptr.slurmd_user_id
+			Ctl_dict[u'slurmd_user_name'] = slurm.stringOrNone(self.__Config_ptr.slurmd_user_name, '')
+			Ctl_dict[u'slurmctld_debug'] = self.__Config_ptr.slurmctld_debug
+			Ctl_dict[u'slurmctld_logfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_logfile, '')
+			Ctl_dict[u'slurmctld_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_pidfile, '')
+			Ctl_dict[u'slurmctld_port'] = self.__Config_ptr.slurmctld_port
+			Ctl_dict[u'slurmctld_port_count'] = self.__Config_ptr.slurmctld_port_count
+			Ctl_dict[u'slurmctld_timeout'] = self.__Config_ptr.slurmctld_timeout
+			Ctl_dict[u'slurmd_debug'] = self.__Config_ptr.slurmd_debug
+			Ctl_dict[u'slurmd_logfile'] = slurm.stringOrNone(self.__Config_ptr.slurmd_logfile, '')
+			Ctl_dict[u'slurmd_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmd_pidfile, '')
+			Ctl_dict[u'slurmd_port'] = self.__Config_ptr.slurmd_port
+			Ctl_dict[u'slurmd_spooldir'] = slurm.stringOrNone(self.__Config_ptr.slurmd_spooldir, '')
+			Ctl_dict[u'slurmd_timeout'] = self.__Config_ptr.slurmd_timeout
+			Ctl_dict[u'srun_epilog'] = slurm.stringOrNone(self.__Config_ptr.srun_epilog, '')
+			Ctl_dict[u'srun_prolog'] = slurm.stringOrNone(self.__Config_ptr.srun_prolog, '')
+			Ctl_dict[u'state_save_location'] = slurm.stringOrNone(self.__Config_ptr.state_save_location, '')
+			Ctl_dict[u'suspend_exc_nodes'] = slurm.listOrNone(self.__Config_ptr.suspend_exc_nodes, ',')
+			Ctl_dict[u'suspend_exc_parts'] = slurm.listOrNone(self.__Config_ptr.suspend_exc_parts, ',')
+			Ctl_dict[u'suspend_program'] = slurm.stringOrNone(self.__Config_ptr.suspend_program, '')
+			Ctl_dict[u'suspend_rate'] = self.__Config_ptr.suspend_rate
+			Ctl_dict[u'suspend_time'] = self.__Config_ptr.suspend_time
+			Ctl_dict[u'suspend_timeout'] = self.__Config_ptr.suspend_timeout
+			Ctl_dict[u'switch_type'] = slurm.stringOrNone(self.__Config_ptr.switch_type, '')
+			Ctl_dict[u'task_epilog'] = slurm.stringOrNone(self.__Config_ptr.task_epilog, '')
+			Ctl_dict[u'task_plugin'] = slurm.stringOrNone(self.__Config_ptr.task_plugin, '')
+			Ctl_dict[u'task_plugin_param'] = self.__Config_ptr.task_plugin_param
+			Ctl_dict[u'task_prolog'] = slurm.stringOrNone(self.__Config_ptr.task_prolog, '')
+			Ctl_dict[u'tmp_fs'] = slurm.stringOrNone(self.__Config_ptr.tmp_fs, '')
+			Ctl_dict[u'topology_plugin'] = slurm.stringOrNone(self.__Config_ptr.topology_plugin, '')
+			Ctl_dict[u'track_wckey'] = self.__Config_ptr.track_wckey
+			Ctl_dict[u'tree_width'] = self.__Config_ptr.tree_width
+			Ctl_dict[u'unkillable_program'] = slurm.stringOrNone(self.__Config_ptr.unkillable_program, '')
+			Ctl_dict[u'unkillable_timeout'] = self.__Config_ptr.unkillable_timeout
+			Ctl_dict[u'use_pam'] = bool(self.__Config_ptr.use_pam)
+			Ctl_dict[u'version'] = slurm.stringOrNone(self.__Config_ptr.version, '')
+			Ctl_dict[u'vsize_factor'] = self.__Config_ptr.vsize_factor
+			Ctl_dict[u'wait_time'] = self.__Config_ptr.wait_time
+			Ctl_dict[u'z_16'] = self.__Config_ptr.z_16
+			Ctl_dict[u'z_32'] = self.__Config_ptr.z_32
+			Ctl_dict[u'z_char'] = slurm.stringOrNone(self.__Config_ptr.z_char, '')
 
 			#
 			# Get key_pairs from Opaque data structure
@@ -988,24 +982,24 @@ cdef class partition:
 				self._record = self._Partition_ptr.partition_array[i]
 				name = self._record.name
 
-				Part_dict['max_time'] = self._record.max_time
-				Part_dict['max_share'] = self._record.max_share
-				Part_dict['max_nodes'] = self._record.max_nodes
-				Part_dict['min_nodes'] = self._record.min_nodes
-				Part_dict['total_nodes'] = self._record.total_nodes
-				Part_dict['total_cpus'] = self._record.total_cpus
-				Part_dict['priority'] = self._record.priority
-				Part_dict['preempt_mode'] = self._record.preempt_mode
-				Part_dict['default_time'] = self._record.default_time
-				Part_dict['flags'] = self._record.flags
-				Part_dict['state_up'] = self._record.state_up
-				Part_dict['alternate'] = slurm.stringOrNone(self._record.alternate, '')
-				Part_dict['nodes'] = slurm.listOrNone(self._record.nodes, ',')
-				Part_dict['allow_alloc_nodes'] = slurm.listOrNone(self._record.allow_alloc_nodes, ',')
-				Part_dict['allow_groups'] = slurm.listOrNone(self._record.allow_groups, ',')
+				Part_dict[u'max_time'] = self._record.max_time
+				Part_dict[u'max_share'] = self._record.max_share
+				Part_dict[u'max_nodes'] = self._record.max_nodes
+				Part_dict[u'min_nodes'] = self._record.min_nodes
+				Part_dict[u'total_nodes'] = self._record.total_nodes
+				Part_dict[u'total_cpus'] = self._record.total_cpus
+				Part_dict[u'priority'] = self._record.priority
+				Part_dict[u'preempt_mode'] = self._record.preempt_mode
+				Part_dict[u'default_time'] = self._record.default_time
+				Part_dict[u'flags'] = self._record.flags
+				Part_dict[u'state_up'] = self._record.state_up
+				Part_dict[u'alternate'] = slurm.stringOrNone(self._record.alternate, '')
+				Part_dict[u'nodes'] = slurm.listOrNone(self._record.nodes, ',')
+				Part_dict[u'allow_alloc_nodes'] = slurm.listOrNone(self._record.allow_alloc_nodes, ',')
+				Part_dict[u'allow_groups'] = slurm.listOrNone(self._record.allow_groups, ',')
 
-				Part_dict['last_update'] = self._lastUpdate
-				Partition[name] = Part_dict
+				Part_dict[u'last_update'] = self._lastUpdate
+				Partition[u"%s" % name] = Part_dict
 
 		self._PartDict = Partition
 
@@ -1045,21 +1039,21 @@ def create_partition_dict():
 	"""
 
 	return {
-		'Alternate': '',
-		'Name': '',
-		'MaxTime': -1,
-		'DefaultTime': -1,
-		'MaxNodes': -1,
-		'MinNodes': -1,
-		'Default': False,
-		'Hidden': False,
-		'RootOnly': False,
-		'Shared': False,
-		'Priority': -1,
-		'State': False,
-		'Nodes': '',
-		'AllowGroups': '',
-		'AllocNodes': ''
+		u'Alternate': u'',
+		u'Name': u'',
+		u'MaxTime': -1,
+		u'DefaultTime': -1,
+		u'MaxNodes': -1,
+		u'MinNodes': -1,
+		u'Default': False,
+		u'Hidden': False,
+		u'RootOnly': False,
+		u'Shared': False,
+		u'Priority': -1,
+		u'State': False,
+		u'Nodes': u'',
+		u'AllowGroups': u'',
+		u'AllocNodes': u''
 		}
 
 cpdef int slurm_create_partition(dict partition_dict={}):
@@ -1080,19 +1074,19 @@ cpdef int slurm_create_partition(dict partition_dict={}):
 
 	slurm.slurm_init_part_desc_msg(&part_msg_ptr)
 
-	if partition_dict['Name'] is not '':
-		part_msg_ptr.name = partition_dict['Name']
+	if partition_dict[u'Name'] is not '':
+		part_msg_ptr.name = partition_dict[u'Name']
 
-	if  partition_dict['DefaultTime'] != -1:
-		int_value = partition_dict['DefaultTime']
+	if  partition_dict[u'DefaultTime'] != -1:
+		int_value = partition_dict[u'DefaultTime']
 		part_msg_ptr.default_time = int_value
 
-	if partition_dict['MaxNodes'] != -1:
-		int_value = partition_dict['MaxNodes']
+	if partition_dict[u'MaxNodes'] != -1:
+		int_value = partition_dict[u'MaxNodes']
 		part_msg_ptr.max_nodes = int_value
 
-	if partition_dict['MinNodes'] != -1:
-		int_value = partition_dict['MinNodes']
+	if partition_dict[u'MinNodes'] != -1:
+		int_value = partition_dict[u'MinNodes']
 		part_msg_ptr.min_nodes = int_value
 
 	errCode = slurm.slurm_create_partition(&part_msg_ptr)
@@ -1116,45 +1110,45 @@ cpdef int slurm_update_partition(dict partition_dict={}):
 
 	slurm.slurm_init_part_desc_msg(&part_msg_ptr)
 
-	if partition_dict['Name'] is not '':
-		part_msg_ptr.name = partition_dict['Name']
+	if partition_dict[u'Name'] is not '':
+		part_msg_ptr.name = partition_dict[u'Name']
 
-	if partition_dict['Alternate'] is not '':
-		part_msg_ptr.alternate = partition_dict['Alternate']
+	if partition_dict[u'Alternate'] is not '':
+		part_msg_ptr.alternate = partition_dict[u'Alternate']
 
-	int_value = partition_dict['MaxTime']
+	int_value = partition_dict[u'MaxTime']
 	part_msg_ptr.max_time = int_value
 
-	int_value = partition_dict['DefaultTime']
+	int_value = partition_dict[u'DefaultTime']
 	part_msg_ptr.default_time = int_value
 
-	if partition_dict['MaxNodes'] != -1:
-		int_value = partition_dict['MaxNodes']
+	if partition_dict[u'MaxNodes'] != -1:
+		int_value = partition_dict[u'MaxNodes']
 		part_msg_ptr.max_nodes = int_value
 
-	if partition_dict['MinNodes'] != -1:
-		int_value = partition_dict['MinNodes']
+	if partition_dict[u'MinNodes'] != -1:
+		int_value = partition_dict[u'MinNodes']
 		part_msg_ptr.min_nodes = int_value
 
 	pystring = partition_dict['State']
 	if pystring is not '':
-		if pystring == 'DOWN':
+		if pystring == u'DOWN':
 			part_msg_ptr.state_up = 0x01      #PARTITION_DOWN (PARTITION_SUBMIT 0x01)
-		elif pystring == 'UP':
+		elif pystring == u'UP':
 			part_msg_ptr.state_up = 0x01|0x02 #PARTITION_UP (PARTITION_SUBMIT|PARTITION_SCHED)
-		elif pystring == 'DRAIN':
+		elif pystring == u'DRAIN':
 			part_msg_ptr.state_up = 0x02      #PARTITION_DRAIN (PARTITION_SCHED=0x02)
 		else:
 			errCode = -1
 
-	if partition_dict['Nodes'] is not '':
-		part_msg_ptr.nodes = partition_dict['Nodes']
+	if partition_dict[u'Nodes'] is not '':
+		part_msg_ptr.nodes = partition_dict[u'Nodes']
 
-	if partition_dict['AllowGroups'] is not '':
-		part_msg_ptr.allow_groups = partition_dict['AllowGroups']
+	if partition_dict[u'AllowGroups'] is not '':
+		part_msg_ptr.allow_groups = partition_dict[u'AllowGroups']
 
-	if partition_dict['AllocNodes'] is not '':
-		part_msg_ptr.allow_alloc_nodes = partition_dict['AllocNodes']
+	if partition_dict[u'AllocNodes'] is not '':
+		part_msg_ptr.allow_alloc_nodes = partition_dict[u'AllocNodes']
 
 	errCode = slurm.slurm_update_partition(&part_msg_ptr)
 
@@ -2192,26 +2186,6 @@ cdef class node:
 
 		return self._NodeDict.get(nodeID, {})
 
-	def find(self, char *name='', val=''):
-
-		r"""Search for a property and associated value in the retrieved node data.
-
-		:param str name: key string to search
-		:param str value: value string to match
-		:returns: List of IDs that match
-		:rtype: `list`
-		"""
-
-		# [ key for key, value in self._NodeDict.items() if self._NodeDict[key][name] == val ]
-		cdef list retList = []
-
-		if val != '':
-
-			for key, value in self._NodeDict.items():
-				if self._NodeDict[key][name] == val:
-					retList.append(key)
-		return retList
-
 	def load(self):
 
 		r"""Load slurm node data. 
@@ -2309,26 +2283,26 @@ cdef class node:
 
 			name = self._Node_ptr.node_array[i].name
 
-			Host_dict['arch'] = slurm.stringOrNone(self._Node_ptr.node_array[i].arch, '')
-			Host_dict['boot_time'] = self._Node_ptr.node_array[i].boot_time
-			Host_dict['cores'] = self._Node_ptr.node_array[i].cores
-			Host_dict['cpus'] = self._Node_ptr.node_array[i].cpus
-			Host_dict['features'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
-			Host_dict['gres'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres, '')
-			Host_dict['name'] = slurm.stringOrNone(self._Node_ptr.node_array[i].name, '')
-			Host_dict['node_state'] = self._Node_ptr.node_array[i].node_state
-			Host_dict['os'] = slurm.stringOrNone(self._Node_ptr.node_array[i].os, '')
-			Host_dict['real_memory'] = self._Node_ptr.node_array[i].real_memory
-			Host_dict['reason'] = slurm.stringOrNone(self._Node_ptr.node_array[i].reason, '')
-			Host_dict['reason_uid'] = self._Node_ptr.node_array[i].reason_uid
-			Host_dict['slurmd_start_time'] = self._Node_ptr.node_array[i].slurmd_start_time
-			Host_dict['sockets'] = self._Node_ptr.node_array[i].sockets
-			Host_dict['threads'] = self._Node_ptr.node_array[i].threads
-			Host_dict['tmp_disk'] = self._Node_ptr.node_array[i].tmp_disk
-			Host_dict['weight'] = self._Node_ptr.node_array[i].weight
+			Host_dict[u'arch'] = slurm.stringOrNone(self._Node_ptr.node_array[i].arch, '')
+			Host_dict[u'boot_time'] = self._Node_ptr.node_array[i].boot_time
+			Host_dict[u'cores'] = self._Node_ptr.node_array[i].cores
+			Host_dict[u'cpus'] = self._Node_ptr.node_array[i].cpus
+			Host_dict[u'features'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
+			Host_dict[u'gres'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres, '')
+			Host_dict[u'name'] = slurm.stringOrNone(self._Node_ptr.node_array[i].name, '')
+			Host_dict[u'node_state'] = self._Node_ptr.node_array[i].node_state
+			Host_dict[u'os'] = slurm.stringOrNone(self._Node_ptr.node_array[i].os, '')
+			Host_dict[u'real_memory'] = self._Node_ptr.node_array[i].real_memory
+			Host_dict[u'reason'] = slurm.stringOrNone(self._Node_ptr.node_array[i].reason, '')
+			Host_dict[u'reason_uid'] = self._Node_ptr.node_array[i].reason_uid
+			Host_dict[u'slurmd_start_time'] = self._Node_ptr.node_array[i].slurmd_start_time
+			Host_dict[u'sockets'] = self._Node_ptr.node_array[i].sockets
+			Host_dict[u'threads'] = self._Node_ptr.node_array[i].threads
+			Host_dict[u'tmp_disk'] = self._Node_ptr.node_array[i].tmp_disk
+			Host_dict[u'weight'] = self._Node_ptr.node_array[i].weight
 
-			if Host_dict['reason']:
-				Host_dict['last_update'] = epoch2date(last_update)
+			if Host_dict[u'reason']:
+				Host_dict[u'last_update'] = epoch2date(last_update)
 
 			if node_scaling:
 				cpus_per_node = self._Node_ptr.node_array[i].cpus / node_scaling
@@ -2344,7 +2318,7 @@ cdef class node:
 				# Should check of cluster and BG here
 				#
 				if not alloc_cpus and (IS_NODE_ALLOCATED(self._Node_ptr.node_array[i].node_state) or IS_NODE_COMPLETING(self._Node_ptr.node_array[i].node_state)):
-					alloc_cpus = Host_dict['cpus']
+					alloc_cpus = Host_dict[u'cpus']
 				else:
 					alloc_cpus *= cpus_per_node
 
@@ -2357,9 +2331,9 @@ cdef class node:
 					err_cpus *= cpus_per_node
 				total_used -= err_cpus
 
-			Host_dict['err_cpus'] = err_cpus
-			Host_dict['alloc_cpus'] = alloc_cpus
-			Host_dict['total_cpus'] = total_used
+			Host_dict[u'err_cpus'] = err_cpus
+			Host_dict[u'alloc_cpus'] = alloc_cpus
+			Host_dict[u'total_cpus'] = total_used
 
 			Hosts[name] = Host_dict
 
@@ -2371,7 +2345,8 @@ cdef class node:
 			WORK IN PROGRESS
 		"""
 
-		cdef slurm.dynamic_plugin_data_t *nodeinfo = <slurm.dynamic_plugin_data_t*>ptr_unwrapper(Node_Ptr)
+		#cdef slurm.dynamic_plugin_data_t *nodeinfo = <slurm.dynamic_plugin_data_t*>ptr_unwrapper(Node_Ptr)
+		cdef slurm.dynamic_plugin_data_t *nodeinfo = <slurm.dynamic_plugin_data_t*>Node_Ptr
 		cdef slurm.select_nodeinfo_t *tmp_ptr
 		cdef slurm.bitstr_t *tmp_bitmap = NULL
 
@@ -2435,23 +2410,23 @@ def slurm_update_node(dict node_dict={}):
 	slurm.slurm_init_update_node_msg(&node_msg)
 
 	if 'node_state' in node_dict:
-		node_msg.node_state = <uint16_t>node_dict['node_state']
+		node_msg.node_state = <uint16_t>node_dict[u'node_state']
 
 	if 'features' in node_dict:
-		node_msg.features = node_dict['features']
+		node_msg.features = node_dict[u'features']
 
 	if 'gres' in node_dict:
-		node_msg.gres = node_dict['gres']
+		node_msg.gres = node_dict[u'gres']
 
 	if 'node_names' in node_dict:
-		node_msg.node_names = node_dict['node_names']
+		node_msg.node_names = node_dict[u'node_names']
 
 	if 'reason' in node_dict:
-		node_msg.reason = node_dict['reason']
+		node_msg.reason = node_dict[u'reason']
 		node_msg.reason_uid = <uint32_t>os.getuid()
 
 	if 'weight' in node_dict:
-		node_msg.weight = <uint32_t>node_dict['weight']
+		node_msg.weight = <uint32_t>node_dict[u'weight']
 
 	errCode = slurm.slurm_update_node(&node_msg)
 
@@ -2476,7 +2451,7 @@ def create_node_dict():
 		}
 
 #
-# Jobsteps Class
+# Jobstep Class
 #
 
 cdef class jobstep:
@@ -2527,6 +2502,16 @@ cdef class jobstep:
 
 		return jobsteps
 
+	def find(self, jobID=-1, stepID=-1):
+
+		cdef dict retDict = {}
+
+		for key, value in self._JobStepDict.items():
+			if self._JobStepDict[key]['name'] == value:
+				retDict.append(key)
+
+		return {}
+
 	cpdef get(self):
 
 		r"""Get slurm jobstep information.
@@ -2575,20 +2560,20 @@ cdef class jobstep:
 
 				Steps[job_id] = {}
 				Step_dict = {}
-				Step_dict['user_id'] = job_step_info_ptr.job_steps[i].user_id
-				Step_dict['num_cpus'] = job_step_info_ptr.job_steps[i].num_cpus
-				Step_dict['num_tasks'] = job_step_info_ptr.job_steps[i].num_tasks
-				Step_dict['partition'] = job_step_info_ptr.job_steps[i].partition
-				Step_dict['start_time'] = job_step_info_ptr.job_steps[i].start_time
-				Step_dict['run_time'] = job_step_info_ptr.job_steps[i].run_time
-				Step_dict['resv_ports'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].resv_ports, '')
-				Step_dict['nodes'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].nodes, '')
-				Step_dict['name'] = job_step_info_ptr.job_steps[i].name
-				Step_dict['network'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].network, '')
-				Step_dict['ckpt_dir'] = job_step_info_ptr.job_steps[i].ckpt_dir
-				Step_dict['ckpt_interval'] = job_step_info_ptr.job_steps[i].ckpt_interval
-				Step_dict['gres'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].gres, '')
-				Step_dict['time_limit'] = job_step_info_ptr.job_steps[i].time_limit
+				Step_dict[u'user_id'] = job_step_info_ptr.job_steps[i].user_id
+				Step_dict[u'num_cpus'] = job_step_info_ptr.job_steps[i].num_cpus
+				Step_dict[u'num_tasks'] = job_step_info_ptr.job_steps[i].num_tasks
+				Step_dict[u'partition'] = job_step_info_ptr.job_steps[i].partition
+				Step_dict[u'start_time'] = job_step_info_ptr.job_steps[i].start_time
+				Step_dict[u'run_time'] = job_step_info_ptr.job_steps[i].run_time
+				Step_dict[u'resv_ports'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].resv_ports, '')
+				Step_dict[u'nodes'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].nodes, '')
+				Step_dict[u'name'] = job_step_info_ptr.job_steps[i].name
+				Step_dict[u'network'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].network, '')
+				Step_dict[u'ckpt_dir'] = job_step_info_ptr.job_steps[i].ckpt_dir
+				Step_dict[u'ckpt_interval'] = job_step_info_ptr.job_steps[i].ckpt_interval
+				Step_dict[u'gres'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].gres, '')
+				Step_dict[u'time_limit'] = job_step_info_ptr.job_steps[i].time_limit
 
 				Steps[job_id][step_id] = Step_dict
 
@@ -2623,11 +2608,11 @@ cdef class jobstep:
 
 			Node_cnt  = old_job_step_ptr.node_cnt
 
-			Layout['node_cnt'] = Node_cnt
-			Layout['node_list'] = old_job_step_ptr.node_list
-			Layout['plane_size'] = old_job_step_ptr.plane_size
-			Layout['task_cnt'] = old_job_step_ptr.task_cnt
-			Layout['task_dist'] = old_job_step_ptr.task_dist
+			Layout[u'node_cnt'] = Node_cnt
+			Layout[u'node_list'] = old_job_step_ptr.node_list
+			Layout[u'plane_size'] = old_job_step_ptr.plane_size
+			Layout[u'task_cnt'] = old_job_step_ptr.task_cnt
+			Layout[u'task_dist'] = old_job_step_ptr.task_dist
 
 			Nodes = Layout['node_list'].split(',')
 			for i from 0 <= i < Node_cnt:
@@ -2833,12 +2818,12 @@ cdef class trigger:
 				trigger_id = trigger_get.trigger_array[i].trig_id
 
 				Trigger_dict = {}
-				Trigger_dict['res_type'] = trigger_get.trigger_array[i].res_type
-				Trigger_dict['res_id'] = slurm.stringOrNone(trigger_get.trigger_array[i].res_id, '')
-				Trigger_dict['trig_type'] = trigger_get.trigger_array[i].trig_type
-				Trigger_dict['offset'] = trigger_get.trigger_array[i].offset-0x8000
-				Trigger_dict['user_id'] = trigger_get.trigger_array[i].user_id
-				Trigger_dict['program'] = slurm.stringOrNone(trigger_get.trigger_array[i].program, '')
+				Trigger_dict[u'res_type'] = trigger_get.trigger_array[i].res_type
+				Trigger_dict[u'res_id'] = slurm.stringOrNone(trigger_get.trigger_array[i].res_id, '')
+				Trigger_dict[u'trig_type'] = trigger_get.trigger_array[i].trig_type
+				Trigger_dict[u'offset'] = trigger_get.trigger_array[i].offset-0x8000
+				Trigger_dict[u'user_id'] = trigger_get.trigger_array[i].user_id
+				Trigger_dict[u'program'] = slurm.stringOrNone(trigger_get.trigger_array[i].program, '')
 
 				Triggers[trigger_id] = Trigger_dict
 
@@ -3044,17 +3029,17 @@ cdef class reservation:
 				Res_dict = {}
 
 				name = self._Res_ptr.reservation_array[i].name
-				Res_dict['name'] = name
-				Res_dict['accounts'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].accounts, ',')
-				Res_dict['features'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].features, ',')
-				Res_dict['licenses'] = __get_licenses(self._Res_ptr.reservation_array[i].licenses)
-				Res_dict['partition'] = slurm.stringOrNone(self._Res_ptr.reservation_array[i].partition, '')
-				Res_dict['node_list'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].node_list, ',')
-				Res_dict['node_cnt'] = self._Res_ptr.reservation_array[i].node_cnt
-				Res_dict['users'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].users, ',')
-				Res_dict['start_time'] = self._Res_ptr.reservation_array[i].start_time
-				Res_dict['end_time'] = self._Res_ptr.reservation_array[i].end_time
-				Res_dict['flags'] = self._Res_ptr.reservation_array[i].flags
+				Res_dict[u'name'] = name
+				Res_dict[u'accounts'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].accounts, ',')
+				Res_dict[u'features'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].features, ',')
+				Res_dict[u'licenses'] = __get_licenses(self._Res_ptr.reservation_array[i].licenses)
+				Res_dict[u'partition'] = slurm.stringOrNone(self._Res_ptr.reservation_array[i].partition, '')
+				Res_dict[u'node_list'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].node_list, ',')
+				Res_dict[u'node_cnt'] = self._Res_ptr.reservation_array[i].node_cnt
+				Res_dict[u'users'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].users, ',')
+				Res_dict[u'start_time'] = self._Res_ptr.reservation_array[i].start_time
+				Res_dict[u'end_time'] = self._Res_ptr.reservation_array[i].end_time
+				Res_dict[u'flags'] = self._Res_ptr.reservation_array[i].flags
 
 				Reservations[name] = Res_dict
 
@@ -3113,34 +3098,34 @@ def slurm_create_reservation(dict reservation_dict={}):
 
 	slurm.slurm_init_resv_desc_msg(&resv_msg)
 
-	time_value = reservation_dict['start_time']
+	time_value = reservation_dict[u'start_time']
 	resv_msg.start_time = time_value
 
-	uint32_value = reservation_dict['duration']
+	uint32_value = reservation_dict[u'duration']
 	resv_msg.duration = uint32_value
 
-	if reservation_dict['node_cnt'] != -1:
-		int_value = reservation_dict['node_cnt']
+	if reservation_dict[u'node_cnt'] != -1:
+		int_value = reservation_dict[u'node_cnt']
 		resv_msg.node_cnt = int_value
 
-	if reservation_dict['users'] is not '':
-		name = reservation_dict['users']
+	if reservation_dict[u'users'] is not '':
+		name = reservation_dict[u'users']
 		resv_msg.users = <char*>xmalloc((len(name)+1)*sizeof(char))
 		strcpy(resv_msg.users, name)
 		free_users = 1
 
-	if reservation_dict['accounts'] is not '':
-		name = reservation_dict['accounts']
+	if reservation_dict[u'accounts'] is not '':
+		name = reservation_dict[u'accounts']
 		resv_msg.accounts = <char*>xmalloc((len(name)+1)*sizeof(char))
 		strcpy(resv_msg.accounts, name)
 		free_accounts = 1
 
-	if reservation_dict['licenses'] is not '':
-		name = reservation_dict['licenses']
+	if reservation_dict[u'licenses'] is not '':
+		name = reservation_dict[u'licenses']
 		resv_msg.licenses = name
 
-	if reservation_dict['flags'] is not '':
-		int_value = reservation_dict['flags']
+	if reservation_dict[u'flags'] is not '':
+		int_value = reservation_dict[u'flags']
 		resv_msg.flags = int_value
 
 	resid = slurm.slurm_create_reservation(&resv_msg)
@@ -3176,35 +3161,35 @@ def slurm_update_reservation(dict reservation_dict={}):
 
 	slurm.slurm_init_resv_desc_msg(&resv_msg)
 
-	time_value = reservation_dict['start_time']
+	time_value = reservation_dict[u'start_time']
 	if time_value != -1:
 		resv_msg.start_time = time_value
 
-	uint32_value = reservation_dict['duration']
+	uint32_value = reservation_dict[u'duration']
 	if uint32_value != -1:
 		resv_msg.duration = uint32_value
 
-	if reservation_dict['name'] is not '':
-		resv_msg.name = reservation_dict['name']
+	if reservation_dict[u'name'] is not '':
+		resv_msg.name = reservation_dict[u'name']
 
-	if reservation_dict['node_cnt'] != -1:
-		uint32_value = reservation_dict['node_cnt']
+	if reservation_dict[u'node_cnt'] != -1:
+		uint32_value = reservation_dict[u'node_cnt']
 		resv_msg.node_cnt = uint32_value
 
-	if reservation_dict['users'] is not '':
-		name = reservation_dict['users']
+	if reservation_dict[u'users'] is not '':
+		name = reservation_dict[u'users']
 		resv_msg.users = <char*>xmalloc((len(name)+1)*sizeof(char))
 		strcpy(resv_msg.users, name)
 		free_users = 1
 
-	if reservation_dict['accounts'] is not '':
-		name = reservation_dict['accounts']
+	if reservation_dict[u'accounts'] is not '':
+		name = reservation_dict[u'accounts']
 		resv_msg.accounts = <char*>xmalloc((len(name)+1)*sizeof(char))
 		strcpy(resv_msg.accounts, name)
 		free_accounts = 1
 
-	if reservation_dict['licenses'] is not '':
-		name = reservation_dict['licenses']
+	if reservation_dict[u'licenses'] is not '':
+		name = reservation_dict[u'licenses']
 		resv_msg.licenses = name
 
 	errCode = slurm.slurm_update_reservation(&resv_msg)
@@ -3247,17 +3232,17 @@ def create_reservation_dict():
 	:rtype: `dict`
 	"""
 
-	return {'start_time': -1,
-		'end_time': -1,
-		'duration': -1,
-		'node_cnt': -1,
-		'name': '',
-		'node_list': '',
-		'flags': '',
-		'partition': '',
-		'licenses': '',
-		'users': '',
-		'accounts': ''}
+	return {u'start_time': -1,
+		u'end_time': -1,
+		u'duration': -1,
+		u'node_cnt': -1,
+		u'name': u'',
+		u'node_list': u'',
+		u'flags': u'',
+		u'partition': u'',
+		u'licenses': u'',
+		u'users': u'',
+		u'accounts': u''}
 
 #
 # Block Class
@@ -3390,22 +3375,22 @@ cdef class block:
 				Block_dict = {}
 
 				name = self._block_ptr.block_array[i].bg_block_id
-				Block_dict['bg_block_id'] = name
-				Block_dict['blrtsimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].blrtsimage, '')
+				Block_dict[u'bg_block_id'] = name
+				Block_dict[u'blrtsimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].blrtsimage, '')
 				#Block_dict['bp_inx'] = old_block_ptr.block_array[i].bp_inx
-				Block_dict['conn_type'] = self._block_ptr.block_array[i].conn_type
-				Block_dict['ionodes'] = slurm.listOrNone(self._block_ptr.block_array[i].ionodes, ',')
+				Block_dict[u'conn_type'] = self._block_ptr.block_array[i].conn_type
+				Block_dict[u'ionodes'] = slurm.listOrNone(self._block_ptr.block_array[i].ionodes, ',')
 				#Block_dict['ionode_inx']  = old_block_ptr.block_array[i].ionode_inx
-				Block_dict['job_running'] = self._block_ptr.block_array[i].job_running
-				Block_dict['linuximage'] = slurm.stringOrNone(self._block_ptr.block_array[i].linuximage, '')
-				Block_dict['mloaderimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].mloaderimage, '')
-				Block_dict['nodes'] = slurm.listOrNone(self._block_ptr.block_array[i].nodes, ',')
-				Block_dict['node_cnt'] = self._block_ptr.block_array[i].node_cnt
-				Block_dict['node_use'] = self._block_ptr.block_array[i].node_use
-				Block_dict['owner_name'] = slurm.stringOrNone(self._block_ptr.block_array[i].owner_name, '')
-				Block_dict['ramdiskimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].ramdiskimage, '')
-				Block_dict['reason'] = slurm.stringOrNone(self._block_ptr.block_array[i].reason, '')
-				Block_dict['state'] = self._block_ptr.block_array[i].state
+				Block_dict[u'job_running'] = self._block_ptr.block_array[i].job_running
+				Block_dict[u'linuximage'] = slurm.stringOrNone(self._block_ptr.block_array[i].linuximage, '')
+				Block_dict[u'mloaderimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].mloaderimage, '')
+				Block_dict[u'nodes'] = slurm.listOrNone(self._block_ptr.block_array[i].nodes, ',')
+				Block_dict[u'node_cnt'] = self._block_ptr.block_array[i].node_cnt
+				Block_dict[u'node_use'] = self._block_ptr.block_array[i].node_use
+				Block_dict[u'owner_name'] = slurm.stringOrNone(self._block_ptr.block_array[i].owner_name, '')
+				Block_dict[u'ramdiskimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].ramdiskimage, '')
+				Block_dict[u'reason'] = slurm.stringOrNone(self._block_ptr.block_array[i].reason, '')
+				Block_dict[u'state'] = self._block_ptr.block_array[i].state
 
 				Block[name] = Block_dict
 
@@ -3526,66 +3511,112 @@ cdef class block:
 # Topology Class
 #
 
-cpdef slurm_load_topo(Info_ptr='', uint16_t Flags=False):
+cdef class topology:
 
-	r"""Load slurm topology.
+	r"""Class to access/update slurm topology information. 
 	"""
 
-	cdef slurm.topo_info_response_msg_t *old_topo_info_ptr = NULL
-	cdef slurm.topo_info_response_msg_t *topo_info_ptr = NULL
+	cdef slurm.topo_info_response_msg_t *_topo_info_ptr
+	cdef dict _TopoDict
 
-	cdef slurm.time_t last_time = <slurm.time_t>NULL
-	cdef int errCode = 0
+	def __cinit__(self):
+		self._topo_info_ptr = NULL
+		self._TopoDict = {}
 
-	if Info_ptr is not '':
-		old_topo_info_ptr = <slurm.topo_info_response_msg_t *>ptr_unwrapper(Info_ptr)
-		errCode = slurm.slurm_load_topo(&old_topo_info_ptr)
-		if errCode == 0:
-			slurm.slurm_free_topo_info_msg(old_topo_info_ptr)
-		elif slurm.slurm_get_errno() == 1:
-			errCode = 0
-			topo_info_ptr = old_topo_info_ptr
-	else:
-		old_topo_info_ptr = NULL
-		topo_info_ptr = NULL
+	def __dealloc__(self):
+		self.__free()
 
-		#last_time = <time_t>NULL
+	def lastUpdate(self):
 
-		errCode = slurm.slurm_load_topo(&topo_info_ptr)
+		r"""Get the time (epoch seconds) the retrieved data was updated.
 
-	old_topo_info_ptr = topo_info_ptr
+		:returns: epoch seconds
+		:rtype: `integer`
+		"""
 
-	Info_ptr = ptr_wrapper(old_topo_info_ptr)
+		return self._lastUpdate
 
-	return errCode, Info_ptr
+	cpdef __free(self):
 
-cpdef slurm_free_topo_info_msg(Info_ptr=''):
+		r"""Free the memory returned by load method.
+		"""
 
-	r"""Free slurm topology pointer.
-	"""
+		if self._topo_info_ptr is not NULL:
+			slurm.slurm_free_topo_info_msg(self._topo_info_ptr)
+			self._topo_info_ptr = NULL
+			self._TopoDict = {}
 
-	cdef slurm.topo_info_response_msg_t *info_ptr = <slurm.topo_info_response_msg_t*>ptr_unwrapper(Info_ptr)
+	def load(self):
 
-	if info_ptr is not NULL:
-		slurm.slurm_free_topo_info_msg (info_ptr)
+		r"""Load slurm topology information.
+		"""
 
-cpdef slurm_print_topo_info_msg(Info_ptr='', int Flags=False):
+		self.__load()
 
-	r"""Output information about toplogy based upon message as loaded using slurm_load_topo.
-	:param int Flags: Print on one line - False (Default), True
-	"""
+	cpdef int __load(self):
+		
+		r"""Load slurm topology.
+		"""
 
-	cdef slurm.topo_info_response_msg_t *info_ptr = <slurm.topo_info_response_msg_t*>ptr_unwrapper(Info_ptr)
+		#self._topo_info_ptr = new_topo_info_ptr
 
-	if info_ptr is not NULL:
-		slurm.slurm_print_topo_info_msg(slurm.stdout, info_ptr, Flags)
+		cdef slurm.topo_info_response_msg_t *new_topo_info_ptr = NULL
+		cdef int errCode = 0
 
-cpdef slurm_print_topo_record(Info_ptr='', int Flags=False):
+		if self._topo_info_ptr is not NULL:
+			# free previous pointer
+			slurm.slurm_free_topo_info_msg(self._topo_info_ptr)
 
-	cdef slurm.topo_info_t *info_ptr = <slurm.topo_info_t*>ptr_unwrapper(Info_ptr)
+		errCode = slurm.slurm_load_topo(&self._topo_info_ptr)
 
-	if info_ptr is not NULL:
-		slurm.slurm_print_topo_record(slurm.stdout, info_ptr, Flags)
+		return errCode
+
+	def get(self):
+
+		r"""Get slurm topology information.
+
+		:returns: Dictionary whose key is the Topology ID
+		:rtype: `dict`
+		"""
+
+		self.__load()
+		self.__get()
+
+		return self._TopoDict
+
+	cpdef __get(self):
+
+		cdef int i
+		cdef dict Topo = {}, Topo_dict
+
+		if self._topo_info_ptr is not NULL:
+
+			for i from 0 <= i < self._topo_info_ptr.record_count:
+
+				Topo_dict = {}
+
+				name = self._topo_info_ptr.topo_array[i].name
+				Topo_dict[u'name'] = name
+				Topo_dict[u'nodes'] = slurm.listOrNone(self._topo_info_ptr.topo_array[i].nodes, ',')
+				Topo_dict[u'level'] = self._topo_info_ptr.topo_array[i].level
+				Topo_dict[u'link_speed'] = self._topo_info_ptr.topo_array[i].link_speed
+				Topo_dict[u'switches'] = slurm.listOrNone(self._topo_info_ptr.topo_array[i].switches, ',')
+
+				Topo[name] = Topo_dict
+
+		self._TopoDict = Topo
+
+	def display(self):
+		self._print_topo_info_msg()
+
+	cpdef _print_topo_info_msg(self):
+
+		r"""Output information about toplogy based upon message as loaded using slurm_load_topo.
+		:param int Flags: Print on one line - False (Default), True
+		"""
+
+		if self._topo_info_ptr is not NULL:
+			slurm.slurm_print_topo_info_msg(slurm.stdout, self._topo_info_ptr, self._ShowFlags)
 
 cdef inline dict __get_licenses(char *licenses=''):
 
@@ -3718,7 +3749,7 @@ cdef inline str __get_trigger_res_type(uint16_t ResType=0):
 	elif ResType == TRIGGER_RES_TYPE_SLURMCTLD:
 		rtype = 'slurmctld'
 	elif ResType == TRIGGER_RES_TYPE_SLURMDBD:
-		rtype ='slurmbdb'
+		rtype = 'slurmbdb'
 	elif ResType == TRIGGER_RES_TYPE_DATABASE:
 		rtype = 'database'
 
@@ -3825,34 +3856,34 @@ cdef inline list __get_res_state(uint16_t flags=0):
 	cdef list resFlags = []
 
 	if (flags & RESERVE_FLAG_MAINT):
-		resFlags.append('MAINT')
+		resFlags.append(u'MAINT')
 
 	if (flags & RESERVE_FLAG_NO_MAINT):
-		resFlags.append('NO_MAINT')
+		resFlags.append(u'NO_MAINT')
    
 	if (flags & RESERVE_FLAG_DAILY):
-		resFlags.append('DAILY')
+		resFlags.append(u'DAILY')
 
 	if (flags & RESERVE_FLAG_NO_DAILY):
-		resFlags.append('NO_DAILY')
+		resFlags.append(u'NO_DAILY')
      
 	if (flags & RESERVE_FLAG_WEEKLY): 
-		resFlags.append('WEEKLY')
+		resFlags.append(u'WEEKLY')
        
 	if (flags & RESERVE_FLAG_NO_WEEKLY):
-		resFlags.append('NO_WEEKLY')
+		resFlags.append(u'NO_WEEKLY')
 
 	if (flags & RESERVE_FLAG_IGN_JOBS): 
-		resFlags.append('IGNORE_JOBS')
+		resFlags.append(u'IGNORE_JOBS')
 
 	if (flags & RESERVE_FLAG_NO_IGN_JOB): 
-		resFlags.append('NO_IGNORE_JOBS')
+		resFlags.append(u'NO_IGNORE_JOBS')
 
 	if (flags & RESERVE_FLAG_OVERLAP):
-		resFlags.append('OVERLAP')
+		resFlags.append(u'OVERLAP')
 
 	if (flags & RESERVE_FLAG_SPEC_NODES): 
-		resFlags.append('SPEC_NODES')
+		resFlags.append(u'SPEC_NODES')
 
 	return resFlags
 
@@ -3891,49 +3922,49 @@ cdef inline list __get_debug_flags(uint32_t flags=0):
 	cdef list debugFlags = []
 
 	if (flags & DEBUG_FLAG_BG_ALGO):
-		debugFlags.append('BGBlockAlgo')
+		debugFlags.append(u'BGBlockAlgo')
 
 	if (flags & DEBUG_FLAG_BG_ALGO_DEEP):
-		debugFlags.append('BGBlockAlgoDeep')
+		debugFlags.append(u'BGBlockAlgoDeep')
 
 	if (flags & DEBUG_FLAG_BACKFILL):
-		debugFlags.append('Backfill')
+		debugFlags.append(u'Backfill')
 
 	if (flags & DEBUG_FLAG_BG_PICK):
-		debugFlags.append('BGBlockPick')
+		debugFlags.append(u'BGBlockPick')
 
 	if (flags & DEBUG_FLAG_BG_WIRES):
-		debugFlags.append('BGBlockWires')
+		debugFlags.append(u'BGBlockWires')
 
 	if (flags & DEBUG_FLAG_CPU_BIND):
-		debugFlags.append('CPU_Bind')
+		debugFlags.append(u'CPU_Bind')
 
 	if (flags & DEBUG_FLAG_GANG):
-		debugFlags.append('Gang')
+		debugFlags.append(u'Gang')
 
 	if (flags & DEBUG_FLAG_GRES):
-		debugFlags.append('Gres')
+		debugFlags.append(u'Gres')
 
 	if (flags & DEBUG_FLAG_NO_CONF_HASH):
-		debugFlags.append('NO_CONF_HASH')
+		debugFlags.append(u'NO_CONF_HASH')
 
 	if (flags & DEBUG_FLAG_PRIO ):
-		debugFlags.append('Priority')
+		debugFlags.append(u'Priority')
                
 	if (flags & DEBUG_FLAG_RESERVATION):
-		debugFlags.append('Reservation')
+		debugFlags.append(u'Reservation')
 
 	if (flags & DEBUG_FLAG_SELECT_TYPE):
-		debugFlags.append('SelectType')
+		debugFlags.append(u'SelectType')
 
 	if (flags & DEBUG_FLAG_STEPS):
-		debugFlags.append('Steps')
+		debugFlags.append(u'Steps')
 
 	if (flags & DEBUG_FLAG_TRIGGERS):
-		debugFlags.append('Triggers')
+		debugFlags.append(u'Triggers')
 
 	if (flags & DEBUG_FLAG_WIKI):
-		debugFlags.append('Wiki')
+		debugFlags.append(u'Wiki')
 
 	return debugFlags
 
@@ -4112,24 +4143,24 @@ cdef inline list __get_preempt_mode(uint16_t index):
 	cdef inx = 65534 - index 
 
 	if inx == PREEMPT_MODE_OFF:
-		return ['OFF']
+		return [u'OFF']
 	if inx == PREEMPT_MODE_GANG:
-		return ['GANG']
+		return [u'GANG']
 
 	if inx & PREEMPT_MODE_GANG :
-		modeFlags.append('GANG')
+		modeFlags.append(u'GANG')
 		inx &= (~ PREEMPT_MODE_GANG)
 
 	if (inx == PREEMPT_MODE_CANCEL):
-		modeFlags.append('CANCEL')
+		modeFlags.append(u'CANCEL')
 	elif (inx == PREEMPT_MODE_CHECKPOINT):
-		modeFlags.append('CHECKPOINT')
+		modeFlags.append(u'CHECKPOINT')
 	elif (inx == PREEMPT_MODE_REQUEUE):
-		modeFlags.append('REQUEUE')
+		modeFlags.append(u'REQUEUE')
 	elif (inx == PREEMPT_MODE_SUSPEND):
-		modeFlags.append('SUSPEND')
+		modeFlags.append(u'SUSPEND')
 	else:
-		modeFlags.append('UNKNOWN')
+		modeFlags.append(u'UNKNOWN')
 
 	return modeFlags
 
@@ -4222,33 +4253,33 @@ cdef inline __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 	cdef int val = max_share & (~SHARED_FORCE)
 
 	if (flags & PART_FLAG_DEFAULT):
-		mode['Default'] = True
+		mode[u'Default'] = True
 	else:
-		mode['Default'] = False
+		mode[u'Default'] = False
 
 	if (flags & PART_FLAG_HIDDEN):
-		mode['Hidden'] = True
+		mode[u'Hidden'] = True
 	else:
-		mode['Hidden'] = False
+		mode[u'Hidden'] = False
 
 	if (flags & PART_FLAG_NO_ROOT):
-		mode['DisableRootJobs'] = True
+		mode[u'DisableRootJobs'] = True
 	else:
-		mode['DisableRootJobs'] = False
+		mode[u'DisableRootJobs'] = False
 
 	if (flags & PART_FLAG_ROOT_ONLY):
-		mode['RootOnly'] = True
+		mode[u'RootOnly'] = True
 	else:
-		mode['RootOnly'] = False
+		mode[u'RootOnly'] = False
 
 	if val == 0:
-		mode['Shared'] = "EXCLUSIVE"
+		mode[u'Shared'] = "EXCLUSIVE"
 	elif force:
-		mode['Shared'] = "FORCED"
+		mode[u'Shared'] = "FORCED"
 	elif val == 1:
-		mode['Shared'] = False
+		mode[u'Shared'] = False
 	else:
-		mode['Shared'] = True
+		mode[u'Shared'] = True
 
 	return mode
 
