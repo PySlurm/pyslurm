@@ -6,6 +6,10 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int64_t
 
 from cpython cimport bool
+from cpython.version cimport PY_MAJOR_VERSION
+
+#from cpython cimport PyErr_SetString, PyBytes_Check
+#from cpython cimport PyUnicode_Check, PyBytes_FromStringAndSize
 
 cdef extern from 'stdlib.h':
 	ctypedef long size_t
@@ -30,7 +34,7 @@ cdef extern from 'Python.h':
 	cdef int __LINE__
 	char *__FILE__
 	char *__FUNCTION__
-	
+
 cdef extern from *:
 	ctypedef char* const_char_ptr "const char*"
 
