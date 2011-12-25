@@ -26,8 +26,8 @@ cdef extern from 'string.h':
 	void* memset(void *s, int c, size_t n)
 	void *memcpy(void *dest, void *src, size_t count)
 
-cdef extern from 'time.h':
-	ctypedef int time_t
+cdef extern from 'time.h' nogil:
+	ctypedef long time_t
 
 cdef extern from 'Python.h':
 	cdef FILE *PyFile_AsFile(object file)
