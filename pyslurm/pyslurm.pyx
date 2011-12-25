@@ -36,8 +36,8 @@ cdef extern from 'string.h':
 cdef extern from 'Python.h':
 	cdef FILE *PyFile_AsFile(object file)
 
-cdef extern from 'time.h':
-	ctypedef int time_t
+cdef extern from 'time.h' nogil:
+	ctypedef long time_t
 
 cdef void *xmalloc(size_t size) except NULL:
 	cdef void *mem = malloc(size)
@@ -1320,11 +1320,11 @@ cpdef int slurm_get_rem_time(uint32_t JobID=0):
 	:rtype: `int`
 	"""
 
-	cdef int errCode = slurm.slurm_get_rem_time(JobID)
+	cdef long retVal = slurm.slurm_get_rem_time(JobID)
 
-	return errCode
+	return retVal
 
-cpdef int slurm_get_end_time(uint32_t JobID=0):
+cpdef slurm_get_end_time(uint32_t JobID=0):
 
 	r"""Get the end time in seconds for a slurm job step.
 
@@ -1334,8 +1334,7 @@ cpdef int slurm_get_end_time(uint32_t JobID=0):
 	:rtype: `int`
 	"""
 
-	cdef time_t EndTime = <slurm.time_t>NULL
-
+	cdef time_t EndTime
 	cdef int errCode = slurm.slurm_get_end_time(JobID, &EndTime)
 
 	return errCode, EndTime
@@ -2302,7 +2301,7 @@ cdef class node:
 			Host_dict[u'weight'] = self._Node_ptr.node_array[i].weight
 
 			if Host_dict[u'reason']:
-				Host_dict[u'last_update'] = epoch2date(last_update)
+				Host_dict[u'last_update'] = last_update
 
 			if node_scaling:
 				cpus_per_node = self._Node_ptr.node_array[i].cpus / node_scaling
@@ -2345,7 +2344,6 @@ cdef class node:
 			WORK IN PROGRESS
 		"""
 
-		#cdef slurm.dynamic_plugin_data_t *nodeinfo = <slurm.dynamic_plugin_data_t*>ptr_unwrapper(Node_Ptr)
 		cdef slurm.dynamic_plugin_data_t *nodeinfo = <slurm.dynamic_plugin_data_t*>Node_Ptr
 		cdef slurm.select_nodeinfo_t *tmp_ptr
 		cdef slurm.bitstr_t *tmp_bitmap = NULL
