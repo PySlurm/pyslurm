@@ -1324,7 +1324,7 @@ cpdef int slurm_get_rem_time(uint32_t JobID=0):
 
 	return retVal
 
-cpdef slurm_get_end_time(uint32_t JobID=0):
+cpdef int slurm_get_end_time(uint32_t JobID=0):
 
 	r"""Get the end time in seconds for a slurm job step.
 
@@ -1334,10 +1334,13 @@ cpdef slurm_get_end_time(uint32_t JobID=0):
 	:rtype: `int`
 	"""
 
-	cdef time_t EndTime
+	cdef time_t EndTime = 0
 	cdef int errCode = slurm.slurm_get_end_time(JobID, &EndTime)
 
-	return errCode, EndTime
+	if errCode == 0:
+		return EndTime
+	
+	return errCode
 
 cpdef int slurm_job_node_ready(uint32_t JobID=0):
 
