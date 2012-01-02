@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
-u'''
-
-	PySlurm: Python/Cython interface for SLURM
-
-'''
+# -*- coding: utf-8 -*-
 
 import os
 import imp
@@ -20,80 +13,38 @@ from distutils.extension import Extension
 from distutils.command import clean
 from distutils.sysconfig import get_python_lib
 
+import logging
+
+logger = logging.getLogger()
+#logger.addHandler(logging.StreamHandler(sys.stderr))
+logging.basicConfig(level=20)
 
 # PySlurm Version
 
-VERSION = imp.load_source('/tmp', 'pyslurm/__init__.py').__version__
+#VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
+__version__ = "2.2.7-1"
 
-print ""
-print "Building PySlurm (%s)" % VERSION 
-print "------------------------------"
-print ""
+def fatal(logstring, code=1):
+	logger.error("Fatal: " + logstring)
+	sys.exit(code)
 
-if sys.version_info[:2] < (2, 5):
-	print("PySLURM %s requires Python version 2.5 or later (%d.%d detected)." % (VERSION, sys.version_info[:2]))
-	sys.exit(-1)
+def warn(logstring):
+	logger.error("Warning: " + logstring)
 
-compiler_dir = os.path.join(get_python_lib(prefix=''), 'src/pyslurm/')
-
-try:
-	from Cython.Distutils import build_ext
-	from Cython.Compiler.Version import version as CyVersion
-
-	print "Info - Cython version %s installed\n" % CyVersion
-
-	if CyVersion < "0.15":
-		print "Alert - Please use Cython version >= 0.15"
-		raise
-except:
-	print "Error - Cython (www.cython.org) is required to build PySlurm"
-	sys.exit(-1)
-
-# Handle flags but only on build section
-#
-#    --slurm=[ROOT_PATH] | --slurm-lib=[LIB_PATH] && --slurm-inc=[INC_PATH]
-
-SLURM_DIR = SLURM_LIB = SLURM_INC = ''
-args = sys.argv[:]
-if args[1] == 'build':
-	for arg in args:
-		if arg.find('--slurm=') == 0:
-			SLURM_DIR = arg.split('=')[1]
-			sys.argv.remove(arg)
-		if arg.find('--slurm-lib=') == 0:
-			SLURM_LIB = arg.split('=')[1]
-			sys.argv.remove(arg)
-		if arg.find('--slurm-inc=') == 0:
-			SLURM_INC = arg.split('=')[1]
-			sys.argv.remove(arg)
-
-	# Slurm installation directory
-
-	if SLURM_DIR and (SLURM_LIB or SLURM_INC):
-		usage()
-
-	if SLURM_DIR and not (SLURM_LIB or SLURM_INC):
-		SLURM_LIB = SLURM_DIR
-		SLURM_INC = SLURM_DIR
-	elif SLURM_LIB and not SLURM_INC:
-		usage()
-	elif SLURM_INC and not SLURM_LIB:
-		usage()
-	else:
-		usage()
-	
+def info(logstring):
+	logger.info("Info: " + logstring)
 
 def usage():
-		print "Error - Need to provide either SLURM dir location, please use --slurm=PATH"
-		print "        or --slurm-lib=PATH and --slurm-inc=PATH"
-		sys.exit(-1)
+	warn("Need to provide either SLURM dir location for --build")
+	warn("Please use --slurm=PATH or --slurm-lib=PATH and --slurm-inc=PATH")
+	sys.exit(1)
 
 def scandir(dir, files=[]):
 
-	u'''
+	"""
 	Scan the directory for extension files, converting
 	them to extension names in dotted notation
-	'''
+	"""
 
 	for file in os.listdir(dir):
 		path = os.path.join(dir, file)
@@ -105,9 +56,7 @@ def scandir(dir, files=[]):
 
 def makeExtension(extName):
 
-	u'''
-	Generate an Extension object from its dotted name
-	'''
+	"""Generate an Extension object from its dotted name"""
 
 	extPath = extName.replace(".", os.path.sep) + ".pyx"
 	return Extension(
@@ -122,16 +71,85 @@ def makeExtension(extName):
 		extra_link_args = [],
 	)
 
-# Read the README file for long description
-
 def read(fname):
 
-	u'''
-	Read the README.rst file for long description
-	'''
+	"""Read the README.rst file for long description"""
 
 	return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+#
+# Main section
+#
+
+info("")
+info("Building PySlurm (%s)" % __version__)
+info("------------------------------")
+info("")
+
+if sys.version_info[:2] < (2, 6):
+	fatal("PySLURM %s requires Python version 2.6 or later (%d.%d detected)." % (__version__, sys.version_info[:2]))
+
+compiler_dir = os.path.join(get_python_lib(prefix=''), 'src/pyslurm/')
+
+try:
+	from Cython.Distutils import build_ext
+	from Cython.Compiler.Version import version as CyVersion
+
+	info("Cython version %s installed\n" % CyVersion)
+
+	if CyVersion < "0.15":
+		fatal("Please use Cython version >= 0.15")
+except:
+	fatal("Cython (www.cython.org) is required to build PySlurm")
+
+#
+# Set default Slurm directory to /usr
+#
+
+DEFAULT_SLURM = '/usr'
+SLURM_DIR = SLURM_LIB = SLURM_INC = ''
+
+#
+# Handle flags but only on build section
+#
+#    --slurm=[ROOT_PATH] | --slurm-lib=[LIB_PATH] && --slurm-inc=[INC_PATH]
+#
+
+args = sys.argv[:]
+if args[1] == 'build':
+	for arg in args:
+		if arg.find('--slurm=') == 0:
+			SLURM_DIR = arg.split('=')[1]
+			sys.argv.remove(arg)
+		if arg.find('--slurm-lib=') == 0:
+			SLURM_LIB = arg.split('=')[1]
+			sys.argv.remove(arg)
+		if arg.find('--slurm-inc=') == 0:
+			SLURM_INC = arg.split('=')[1]
+			sys.argv.remove(arg)
+
+# Slurm installation directory
+
+if SLURM_DIR and (SLURM_LIB or SLURM_INC):
+	usage()
+elif SLURM_DIR and not (SLURM_LIB or SLURM_INC):
+	SLURM_LIB = SLURM_DIR
+	SLURM_INC = SLURM_DIR
+elif not SLURM_DIR and not SLURM_LIB and not SLURM_INC:
+	SLURM_LIB = DEFAULT_SLURM
+	SLURM_INC = DEFAULT_SLURM
+elif not SLURM_DIR and not (SLURM_LIB or not SLURM_INC):
+	usage()
+
+# Test for slurm lib and slurm.h maybe from derived paths ?
+
+if not os.path.exists("%s/include/slurm/slurm.h" % SLURM_INC):
+	warn("Cannot locate the Slurm include in %s" % SLURM_INC)
+	usage()
+if not os.path.exists("%s/lib/libslurm.so" % SLURM_LIB):
+	warn("Cannot locate the Slurm shared library in %s" % SLURM_LIB)
+	usage()
+	
 # Get the list of extensions
 
 extNames = scandir("pyslurm/")
@@ -142,10 +160,10 @@ extensions = [makeExtension(name) for name in extNames]
 
 setup(
 	name = "pyslurm",
-	version = VERSION,
+	version = __version__,
 	license="GPL",
 	description = ("SLURM Interface for Python"),
-	long_description=read('README.rst'),
+	long_description=read("README.rst"),
 	author = "Mark Roberts",
 	author_email = "mark@gingergeeks co uk",
 	url = "http://www.gingergeeks.co.uk/pyslurm/",
@@ -162,12 +180,11 @@ setup(
 		'Natural Language :: English',
 		'Operating System :: Linux',
 		'Programming Language :: Python',
-		'Programming Language :: Python :: 2',
-		'Programming Language :: Python :: 2.5',
 		'Programming Language :: Python :: 2.6',
 		'Programming Language :: Python :: 2.7',
+		'Programming Language :: Python :: 3.1',
+		'Programming Language :: Python :: 3.2',
 		'Topic :: Software Development :: Libraries',
 		'Topic :: Software Development :: Libraries :: Python Modules',
 	]
 )
-
