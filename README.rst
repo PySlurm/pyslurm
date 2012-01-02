@@ -9,7 +9,7 @@ Overview
 
 Currently `PySLURM` is under development to move from it's thin layer on top of the SLURM C API to an object orientated interface.
 
-The current branch is based on the SLURM 2.2.7 API but versions 2.3 and 2.4 have also been tested.
+The current branch is based on the SLURM 2.2.7 API but versions SLURM 2.3 and 2.4 have also been tested.
 
 Prerequistes
 =============
@@ -26,17 +26,24 @@ Installation
 You will need to instruct the setup.py script where either the SLURM install root 
 directory or where the SLURM libraries and SLURM include files are :
 
-Slurm root directory (Common installation directory):
+#. Slurm default directory (/usr):
 
-	python setup.py build --slurm=PATH_TO_SLURM_DIR
+	* python setup.py build
 
-	python setup.py install
+	* python setup.py install
 
-Separate Slurm library and include directory paths:
 
-	python setup.py build --slurm-lib=PATH_TO_SLURM_LIB --slurm-inc=PATH_TO_SLURM_INC
+#. Slurm root directory (Alternate installation directory):
 
-	python setup.py install
+	* python setup.py build --slurm=PATH_TO_SLURM_DIR
+
+	* python setup.py install
+
+#. Separate Slurm library and include directory paths:
+
+	* python setup.py build --slurm-lib=PATH_TO_SLURM_LIB --slurm-inc=PATH_TO_SLURM_INC
+
+	* python setup.py install
 
 If you still have issues then you could code this directly into the setup.py
 
