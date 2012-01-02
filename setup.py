@@ -128,27 +128,27 @@ if args[1] == 'build':
 			SLURM_INC = arg.split('=')[1]
 			sys.argv.remove(arg)
 
-# Slurm installation directory
+	# Slurm installation directory
 
-if SLURM_DIR and (SLURM_LIB or SLURM_INC):
-	usage()
-elif SLURM_DIR and not (SLURM_LIB or SLURM_INC):
-	SLURM_LIB = SLURM_DIR
-	SLURM_INC = SLURM_DIR
-elif not SLURM_DIR and not SLURM_LIB and not SLURM_INC:
-	SLURM_LIB = DEFAULT_SLURM
-	SLURM_INC = DEFAULT_SLURM
-elif not SLURM_DIR and not (SLURM_LIB or not SLURM_INC):
-	usage()
+	if SLURM_DIR and (SLURM_LIB or SLURM_INC):
+		usage()
+	elif SLURM_DIR and not (SLURM_LIB or SLURM_INC):
+		SLURM_LIB = SLURM_DIR
+		SLURM_INC = SLURM_DIR
+	elif not SLURM_DIR and not SLURM_LIB and not SLURM_INC:
+		SLURM_LIB = DEFAULT_SLURM
+		SLURM_INC = DEFAULT_SLURM
+	elif not SLURM_DIR and not (SLURM_LIB or not SLURM_INC):
+		usage()
 
-# Test for slurm lib and slurm.h maybe from derived paths ?
+	# Test for slurm lib and slurm.h maybe from derived paths ?
 
-if not os.path.exists("%s/include/slurm/slurm.h" % SLURM_INC):
-	warn("Cannot locate the Slurm include in %s" % SLURM_INC)
-	usage()
-if not os.path.exists("%s/lib/libslurm.so" % SLURM_LIB):
-	warn("Cannot locate the Slurm shared library in %s" % SLURM_LIB)
-	usage()
+	if not os.path.exists("%s/include/slurm/slurm.h" % SLURM_INC):
+		warn("Cannot locate the Slurm include in %s" % SLURM_INC)
+		usage()
+	if not os.path.exists("%s/lib/libslurm.so" % SLURM_LIB):
+		warn("Cannot locate the Slurm shared library in %s" % SLURM_LIB)
+		usage()
 	
 # Get the list of extensions
 
