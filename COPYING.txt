@@ -1,661 +1,2084 @@
-                    GNU AFFERO GENERAL PUBLIC LICENSE
-                       Version 3, 19 November 2007
-
- Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
- Everyone is permitted to copy and distribute verbatim copies
- of this license document, but changing it is not allowed.
-
-                            Preamble
-
-  The GNU Affero General Public License is a free, copyleft license for
-software and other kinds of works, specifically designed to ensure
-cooperation with the community in the case of network server software.
-
-  The licenses for most software and other practical works are designed
-to take away your freedom to share and change the works.  By contrast,
-our General Public Licenses are intended to guarantee your freedom to
-share and change all versions of a program--to make sure it remains free
-software for all its users.
-
-  When we speak of free software, we are referring to freedom, not
-price.  Our General Public Licenses are designed to make sure that you
-have the freedom to distribute copies of free software (and charge for
-them if you wish), that you receive source code or can get it if you
-want it, that you can change the software or use pieces of it in new
-free programs, and that you know you can do these things.
-
-  Developers that use our General Public Licenses protect your rights
-with two steps: (1) assert copyright on the software, and (2) offer
-you this License which gives you legal permission to copy, distribute
-and/or modify the software.
-
-  A secondary benefit of defending all users' freedom is that
-improvements made in alternate versions of the program, if they
-receive widespread use, become available for other developers to
-incorporate.  Many developers of free software are heartened and
-encouraged by the resulting cooperation.  However, in the case of
-software used on network servers, this result may fail to come about.
-The GNU General Public License permits making a modified version and
-letting the public access it on a server without ever releasing its
-source code to the public.
-
-  The GNU Affero General Public License is designed specifically to
-ensure that, in such cases, the modified source code becomes available
-to the community.  It requires the operator of a network server to
-provide the source code of the modified version running there to the
-users of that server.  Therefore, public use of a modified version, on
-a publicly accessible server, gives the public access to the source
-code of the modified version.
-
-  An older license, called the Affero General Public License and
-published by Affero, was designed to accomplish similar goals.  This is
-a different license, not a version of the Affero GPL, but Affero has
-released a new version of the Affero GPL which permits relicensing under
-this license.
-
-  The precise terms and conditions for copying, distribution and
-modification follow.
-
-                       TERMS AND CONDITIONS
-
-  0. Definitions.
-
-  "This License" refers to version 3 of the GNU Affero General Public License.
-
-  "Copyright" also means copyright-like laws that apply to other kinds of
-works, such as semiconductor masks.
-
-  "The Program" refers to any copyrightable work licensed under this
-License.  Each licensee is addressed as "you".  "Licensees" and
-"recipients" may be individuals or organizations.
-
-  To "modify" a work means to copy from or adapt all or part of the work
-in a fashion requiring copyright permission, other than the making of an
-exact copy.  The resulting work is called a "modified version" of the
-earlier work or a work "based on" the earlier work.
-
-  A "covered work" means either the unmodified Program or a work based
-on the Program.
-
-  To "propagate" a work means to do anything with it that, without
-permission, would make you directly or secondarily liable for
-infringement under applicable copyright law, except executing it on a
-computer or modifying a private copy.  Propagation includes copying,
-distribution (with or without modification), making available to the
-public, and in some countries other activities as well.
-
-  To "convey" a work means any kind of propagation that enables other
-parties to make or receive copies.  Mere interaction with a user through
-a computer network, with no transfer of a copy, is not conveying.
-
-  An interactive user interface displays "Appropriate Legal Notices"
-to the extent that it includes a convenient and prominently visible
-feature that (1) displays an appropriate copyright notice, and (2)
-tells the user that there is no warranty for the work (except to the
-extent that warranties are provided), that licensees may convey the
-work under this License, and how to view a copy of this License.  If
-the interface presents a list of user commands or options, such as a
-menu, a prominent item in the list meets this criterion.
-
-  1. Source Code.
-
-  The "source code" for a work means the preferred form of the work
-for making modifications to it.  "Object code" means any non-source
-form of a work.
-
-  A "Standard Interface" means an interface that either is an official
-standard defined by a recognized standards body, or, in the case of
-interfaces specified for a particular programming language, one that
-is widely used among developers working in that language.
-
-  The "System Libraries" of an executable work include anything, other
-than the work as a whole, that (a) is included in the normal form of
-packaging a Major Component, but which is not part of that Major
-Component, and (b) serves only to enable use of the work with that
-Major Component, or to implement a Standard Interface for which an
-implementation is available to the public in source code form.  A
-"Major Component", in this context, means a major essential component
-(kernel, window system, and so on) of the specific operating system
-(if any) on which the executable work runs, or a compiler used to
-produce the work, or an object code interpreter used to run it.
-
-  The "Corresponding Source" for a work in object code form means all
-the source code needed to generate, install, and (for an executable
-work) run the object code and to modify the work, including scripts to
-control those activities.  However, it does not include the work's
-System Libraries, or general-purpose tools or generally available free
-programs which are used unmodified in performing those activities but
-which are not part of the work.  For example, Corresponding Source
-includes interface definition files associated with source files for
-the work, and the source code for shared libraries and dynamically
-linked subprograms that the work is specifically designed to require,
-such as by intimate data communication or control flow between those
-subprograms and other parts of the work.
-
-  The Corresponding Source need not include anything that users
-can regenerate automatically from other parts of the Corresponding
-Source.
-
-  The Corresponding Source for a work in source code form is that
-same work.
-
-  2. Basic Permissions.
-
-  All rights granted under this License are granted for the term of
-copyright on the Program, and are irrevocable provided the stated
-conditions are met.  This License explicitly affirms your unlimited
-permission to run the unmodified Program.  The output from running a
-covered work is covered by this License only if the output, given its
-content, constitutes a covered work.  This License acknowledges your
-rights of fair use or other equivalent, as provided by copyright law.
-
-  You may make, run and propagate covered works that you do not
-convey, without conditions so long as your license otherwise remains
-in force.  You may convey covered works to others for the sole purpose
-of having them make modifications exclusively for you, or provide you
-with facilities for running those works, provided that you comply with
-the terms of this License in conveying all material for which you do
-not control copyright.  Those thus making or running the covered works
-for you must do so exclusively on your behalf, under your direction
-and control, on terms that prohibit them from making any copies of
-your copyrighted material outside their relationship with you.
-
-  Conveying under any other circumstances is permitted solely under
-the conditions stated below.  Sublicensing is not allowed; section 10
-makes it unnecessary.
-
-  3. Protecting Users' Legal Rights From Anti-Circumvention Law.
-
-  No covered work shall be deemed part of an effective technological
-measure under any applicable law fulfilling obligations under article
-11 of the WIPO copyright treaty adopted on 20 December 1996, or
-similar laws prohibiting or restricting circumvention of such
-measures.
-
-  When you convey a covered work, you waive any legal power to forbid
-circumvention of technological measures to the extent such circumvention
-is effected by exercising rights under this License with respect to
-the covered work, and you disclaim any intention to limit operation or
-modification of the work as a means of enforcing, against the work's
-users, your or third parties' legal rights to forbid circumvention of
-technological measures.
-
-  4. Conveying Verbatim Copies.
-
-  You may convey verbatim copies of the Program's source code as you
-receive it, in any medium, provided that you conspicuously and
-appropriately publish on each copy an appropriate copyright notice;
-keep intact all notices stating that this License and any
-non-permissive terms added in accord with section 7 apply to the code;
-keep intact all notices of the absence of any warranty; and give all
-recipients a copy of this License along with the Program.
-
-  You may charge any price or no price for each copy that you convey,
-and you may offer support or warranty protection for a fee.
-
-  5. Conveying Modified Source Versions.
-
-  You may convey a work based on the Program, or the modifications to
-produce it from the Program, in the form of source code under the
-terms of section 4, provided that you also meet all of these conditions:
-
-    a) The work must carry prominent notices stating that you modified
-    it, and giving a relevant date.
-
-    b) The work must carry prominent notices stating that it is
-    released under this License and any conditions added under section
-    7.  This requirement modifies the requirement in section 4 to
-    "keep intact all notices".
-
-    c) You must license the entire work, as a whole, under this
-    License to anyone who comes into possession of a copy.  This
-    License will therefore apply, along with any applicable section 7
-    additional terms, to the whole of the work, and all its parts,
-    regardless of how they are packaged.  This License gives no
-    permission to license the work in any other way, but it does not
-    invalidate such permission if you have separately received it.
-
-    d) If the work has interactive user interfaces, each must display
-    Appropriate Legal Notices; however, if the Program has interactive
-    interfaces that do not display Appropriate Legal Notices, your
-    work need not make them do so.
-
-  A compilation of a covered work with other separate and independent
-works, which are not by their nature extensions of the covered work,
-and which are not combined with it such as to form a larger program,
-in or on a volume of a storage or distribution medium, is called an
-"aggregate" if the compilation and its resulting copyright are not
-used to limit the access or legal rights of the compilation's users
-beyond what the individual works permit.  Inclusion of a covered work
-in an aggregate does not cause this License to apply to the other
-parts of the aggregate.
-
-  6. Conveying Non-Source Forms.
-
-  You may convey a covered work in object code form under the terms
-of sections 4 and 5, provided that you also convey the
-machine-readable Corresponding Source under the terms of this License,
-in one of these ways:
-
-    a) Convey the object code in, or embodied in, a physical product
-    (including a physical distribution medium), accompanied by the
-    Corresponding Source fixed on a durable physical medium
-    customarily used for software interchange.
-
-    b) Convey the object code in, or embodied in, a physical product
-    (including a physical distribution medium), accompanied by a
-    written offer, valid for at least three years and valid for as
-    long as you offer spare parts or customer support for that product
-    model, to give anyone who possesses the object code either (1) a
-    copy of the Corresponding Source for all the software in the
-    product that is covered by this License, on a durable physical
-    medium customarily used for software interchange, for a price no
-    more than your reasonable cost of physically performing this
-    conveying of source, or (2) access to copy the
-    Corresponding Source from a network server at no charge.
-
-    c) Convey individual copies of the object code with a copy of the
-    written offer to provide the Corresponding Source.  This
-    alternative is allowed only occasionally and noncommercially, and
-    only if you received the object code with such an offer, in accord
-    with subsection 6b.
-
-    d) Convey the object code by offering access from a designated
-    place (gratis or for a charge), and offer equivalent access to the
-    Corresponding Source in the same way through the same place at no
-    further charge.  You need not require recipients to copy the
-    Corresponding Source along with the object code.  If the place to
-    copy the object code is a network server, the Corresponding Source
-    may be on a different server (operated by you or a third party)
-    that supports equivalent copying facilities, provided you maintain
-    clear directions next to the object code saying where to find the
-    Corresponding Source.  Regardless of what server hosts the
-    Corresponding Source, you remain obligated to ensure that it is
-    available for as long as needed to satisfy these requirements.
-
-    e) Convey the object code using peer-to-peer transmission, provided
-    you inform other peers where the object code and Corresponding
-    Source of the work are being offered to the general public at no
-    charge under subsection 6d.
-
-  A separable portion of the object code, whose source code is excluded
-from the Corresponding Source as a System Library, need not be
-included in conveying the object code work.
-
-  A "User Product" is either (1) a "consumer product", which means any
-tangible personal property which is normally used for personal, family,
-or household purposes, or (2) anything designed or sold for incorporation
-into a dwelling.  In determining whether a product is a consumer product,
-doubtful cases shall be resolved in favor of coverage.  For a particular
-product received by a particular user, "normally used" refers to a
-typical or common use of that class of product, regardless of the status
-of the particular user or of the way in which the particular user
-actually uses, or expects or is expected to use, the product.  A product
-is a consumer product regardless of whether the product has substantial
-commercial, industrial or non-consumer uses, unless such uses represent
-the only significant mode of use of the product.
-
-  "Installation Information" for a User Product means any methods,
-procedures, authorization keys, or other information required to install
-and execute modified versions of a covered work in that User Product from
-a modified version of its Corresponding Source.  The information must
-suffice to ensure that the continued functioning of the modified object
-code is in no case prevented or interfered with solely because
-modification has been made.
-
-  If you convey an object code work under this section in, or with, or
-specifically for use in, a User Product, and the conveying occurs as
-part of a transaction in which the right of possession and use of the
-User Product is transferred to the recipient in perpetuity or for a
-fixed term (regardless of how the transaction is characterized), the
-Corresponding Source conveyed under this section must be accompanied
-by the Installation Information.  But this requirement does not apply
-if neither you nor any third party retains the ability to install
-modified object code on the User Product (for example, the work has
-been installed in ROM).
-
-  The requirement to provide Installation Information does not include a
-requirement to continue to provide support service, warranty, or updates
-for a work that has been modified or installed by the recipient, or for
-the User Product in which it has been modified or installed.  Access to a
-network may be denied when the modification itself materially and
-adversely affects the operation of the network or violates the rules and
-protocols for communication across the network.
-
-  Corresponding Source conveyed, and Installation Information provided,
-in accord with this section must be in a format that is publicly
-documented (and with an implementation available to the public in
-source code form), and must require no special password or key for
-unpacking, reading or copying.
-
-  7. Additional Terms.
-
-  "Additional permissions" are terms that supplement the terms of this
-License by making exceptions from one or more of its conditions.
-Additional permissions that are applicable to the entire Program shall
-be treated as though they were included in this License, to the extent
-that they are valid under applicable law.  If additional permissions
-apply only to part of the Program, that part may be used separately
-under those permissions, but the entire Program remains governed by
-this License without regard to the additional permissions.
-
-  When you convey a copy of a covered work, you may at your option
-remove any additional permissions from that copy, or from any part of
-it.  (Additional permissions may be written to require their own
-removal in certain cases when you modify the work.)  You may place
-additional permissions on material, added by you to a covered work,
-for which you have or can give appropriate copyright permission.
-
-  Notwithstanding any other provision of this License, for material you
-add to a covered work, you may (if authorized by the copyright holders of
-that material) supplement the terms of this License with terms:
-
-    a) Disclaiming warranty or limiting liability differently from the
-    terms of sections 15 and 16 of this License; or
-
-    b) Requiring preservation of specified reasonable legal notices or
-    author attributions in that material or in the Appropriate Legal
-    Notices displayed by works containing it; or
-
-    c) Prohibiting misrepresentation of the origin of that material, or
-    requiring that modified versions of such material be marked in
-    reasonable ways as different from the original version; or
-
-    d) Limiting the use for publicity purposes of names of licensors or
-    authors of the material; or
-
-    e) Declining to grant rights under trademark law for use of some
-    trade names, trademarks, or service marks; or
-
-    f) Requiring indemnification of licensors and authors of that
-    material by anyone who conveys the material (or modified versions of
-    it) with contractual assumptions of liability to the recipient, for
-    any liability that these contractual assumptions directly impose on
-    those licensors and authors.
-
-  All other non-permissive additional terms are considered "further
-restrictions" within the meaning of section 10.  If the Program as you
-received it, or any part of it, contains a notice stating that it is
-governed by this License along with a term that is a further
-restriction, you may remove that term.  If a license document contains
-a further restriction but permits relicensing or conveying under this
-License, you may add to a covered work material governed by the terms
-of that license document, provided that the further restriction does
-not survive such relicensing or conveying.
-
-  If you add terms to a covered work in accord with this section, you
-must place, in the relevant source files, a statement of the
-additional terms that apply to those files, or a notice indicating
-where to find the applicable terms.
-
-  Additional terms, permissive or non-permissive, may be stated in the
-form of a separately written license, or stated as exceptions;
-the above requirements apply either way.
-
-  8. Termination.
-
-  You may not propagate or modify a covered work except as expressly
-provided under this License.  Any attempt otherwise to propagate or
-modify it is void, and will automatically terminate your rights under
-this License (including any patent licenses granted under the third
-paragraph of section 11).
-
-  However, if you cease all violation of this License, then your
-license from a particular copyright holder is reinstated (a)
-provisionally, unless and until the copyright holder explicitly and
-finally terminates your license, and (b) permanently, if the copyright
-holder fails to notify you of the violation by some reasonable means
-prior to 60 days after the cessation.
-
-  Moreover, your license from a particular copyright holder is
-reinstated permanently if the copyright holder notifies you of the
-violation by some reasonable means, this is the first time you have
-received notice of violation of this License (for any work) from that
-copyright holder, and you cure the violation prior to 30 days after
-your receipt of the notice.
-
-  Termination of your rights under this section does not terminate the
-licenses of parties who have received copies or rights from you under
-this License.  If your rights have been terminated and not permanently
-reinstated, you do not qualify to receive new licenses for the same
-material under section 10.
-
-  9. Acceptance Not Required for Having Copies.
-
-  You are not required to accept this License in order to receive or
-run a copy of the Program.  Ancillary propagation of a covered work
-occurring solely as a consequence of using peer-to-peer transmission
-to receive a copy likewise does not require acceptance.  However,
-nothing other than this License grants you permission to propagate or
-modify any covered work.  These actions infringe copyright if you do
-not accept this License.  Therefore, by modifying or propagating a
-covered work, you indicate your acceptance of this License to do so.
-
-  10. Automatic Licensing of Downstream Recipients.
-
-  Each time you convey a covered work, the recipient automatically
-receives a license from the original licensors, to run, modify and
-propagate that work, subject to this License.  You are not responsible
-for enforcing compliance by third parties with this License.
-
-  An "entity transaction" is a transaction transferring control of an
-organization, or substantially all assets of one, or subdividing an
-organization, or merging organizations.  If propagation of a covered
-work results from an entity transaction, each party to that
-transaction who receives a copy of the work also receives whatever
-licenses to the work the party's predecessor in interest had or could
-give under the previous paragraph, plus a right to possession of the
-Corresponding Source of the work from the predecessor in interest, if
-the predecessor has it or can get it with reasonable efforts.
-
-  You may not impose any further restrictions on the exercise of the
-rights granted or affirmed under this License.  For example, you may
-not impose a license fee, royalty, or other charge for exercise of
-rights granted under this License, and you may not initiate litigation
-(including a cross-claim or counterclaim in a lawsuit) alleging that
-any patent claim is infringed by making, using, selling, offering for
-sale, or importing the Program or any portion of it.
-
-  11. Patents.
-
-  A "contributor" is a copyright holder who authorizes use under this
-License of the Program or a work on which the Program is based.  The
-work thus licensed is called the contributor's "contributor version".
-
-  A contributor's "essential patent claims" are all patent claims
-owned or controlled by the contributor, whether already acquired or
-hereafter acquired, that would be infringed by some manner, permitted
-by this License, of making, using, or selling its contributor version,
-but do not include claims that would be infringed only as a
-consequence of further modification of the contributor version.  For
-purposes of this definition, "control" includes the right to grant
-patent sublicenses in a manner consistent with the requirements of
-this License.
-
-  Each contributor grants you a non-exclusive, worldwide, royalty-free
-patent license under the contributor's essential patent claims, to
-make, use, sell, offer for sale, import and otherwise run, modify and
-propagate the contents of its contributor version.
-
-  In the following three paragraphs, a "patent license" is any express
-agreement or commitment, however denominated, not to enforce a patent
-(such as an express permission to practice a patent or covenant not to
-sue for patent infringement).  To "grant" such a patent license to a
-party means to make such an agreement or commitment not to enforce a
-patent against the party.
-
-  If you convey a covered work, knowingly relying on a patent license,
-and the Corresponding Source of the work is not available for anyone
-to copy, free of charge and under the terms of this License, through a
-publicly available network server or other readily accessible means,
-then you must either (1) cause the Corresponding Source to be so
-available, or (2) arrange to deprive yourself of the benefit of the
-patent license for this particular work, or (3) arrange, in a manner
-consistent with the requirements of this License, to extend the patent
-license to downstream recipients.  "Knowingly relying" means you have
-actual knowledge that, but for the patent license, your conveying the
-covered work in a country, or your recipient's use of the covered work
-in a country, would infringe one or more identifiable patents in that
-country that you have reason to believe are valid.
-
-  If, pursuant to or in connection with a single transaction or
-arrangement, you convey, or propagate by procuring conveyance of, a
-covered work, and grant a patent license to some of the parties
-receiving the covered work authorizing them to use, propagate, modify
-or convey a specific copy of the covered work, then the patent license
-you grant is automatically extended to all recipients of the covered
-work and works based on it.
-
-  A patent license is "discriminatory" if it does not include within
-the scope of its coverage, prohibits the exercise of, or is
-conditioned on the non-exercise of one or more of the rights that are
-specifically granted under this License.  You may not convey a covered
-work if you are a party to an arrangement with a third party that is
-in the business of distributing software, under which you make payment
-to the third party based on the extent of your activity of conveying
-the work, and under which the third party grants, to any of the
-parties who would receive the covered work from you, a discriminatory
-patent license (a) in connection with copies of the covered work
-conveyed by you (or copies made from those copies), or (b) primarily
-for and in connection with specific products or compilations that
-contain the covered work, unless you entered into that arrangement,
-or that patent license was granted, prior to 28 March 2007.
-
-  Nothing in this License shall be construed as excluding or limiting
-any implied license or other defenses to infringement that may
-otherwise be available to you under applicable patent law.
-
-  12. No Surrender of Others' Freedom.
-
-  If conditions are imposed on you (whether by court order, agreement or
-otherwise) that contradict the conditions of this License, they do not
-excuse you from the conditions of this License.  If you cannot convey a
-covered work so as to satisfy simultaneously your obligations under this
-License and any other pertinent obligations, then as a consequence you may
-not convey it at all.  For example, if you agree to terms that obligate you
-to collect a royalty for further conveying from those to whom you convey
-the Program, the only way you could satisfy both those terms and this
-License would be to refrain entirely from conveying the Program.
-
-  13. Remote Network Interaction; Use with the GNU General Public License.
-
-  Notwithstanding any other provision of this License, if you modify the
-Program, your modified version must prominently offer all users
-interacting with it remotely through a computer network (if your version
-supports such interaction) an opportunity to receive the Corresponding
-Source of your version by providing access to the Corresponding Source
-from a network server at no charge, through some standard or customary
-means of facilitating copying of software.  This Corresponding Source
-shall include the Corresponding Source for any work covered by version 3
-of the GNU General Public License that is incorporated pursuant to the
-following paragraph.
-
-  Notwithstanding any other provision of this License, you have
-permission to link or combine any covered work with a work licensed
-under version 3 of the GNU General Public License into a single
-combined work, and to convey the resulting work.  The terms of this
-License will continue to apply to the part which is the covered work,
-but the work with which it is combined will remain governed by version
-3 of the GNU General Public License.
-
-  14. Revised Versions of this License.
-
-  The Free Software Foundation may publish revised and/or new versions of
-the GNU Affero General Public License from time to time.  Such new versions
-will be similar in spirit to the present version, but may differ in detail to
-address new problems or concerns.
-
-  Each version is given a distinguishing version number.  If the
-Program specifies that a certain numbered version of the GNU Affero General
-Public License "or any later version" applies to it, you have the
-option of following the terms and conditions either of that numbered
-version or of any later version published by the Free Software
-Foundation.  If the Program does not specify a version number of the
-GNU Affero General Public License, you may choose any version ever published
-by the Free Software Foundation.
-
-  If the Program specifies that a proxy can decide which future
-versions of the GNU Affero General Public License can be used, that proxy's
-public statement of acceptance of a version permanently authorizes you
-to choose that version for the Program.
-
-  Later license versions may give you additional or different
-permissions.  However, no additional obligations are imposed on any
-author or copyright holder as a result of your choosing to follow a
-later version.
-
-  15. Disclaimer of Warranty.
-
-  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
-APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
-HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY
-OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
-IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
-ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
-
-  16. Limitation of Liability.
-
-  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS
-THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY
-GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE
-USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF
-DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD
-PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
-EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGES.
-
-  17. Interpretation of Sections 15 and 16.
-
-  If the disclaimer of warranty and limitation of liability provided
-above cannot be given local legal effect according to their terms,
-reviewing courts shall apply local law that most closely approximates
-an absolute waiver of all civil liability in connection with the
-Program, unless a warranty or assumption of liability accompanies a
-copy of the Program in return for a fee.
-
-                     END OF TERMS AND CONDITIONS
-
-            How to Apply These Terms to Your New Programs
-
-  If you develop a new program, and you want it to be of the greatest
-possible use to the public, the best way to achieve this is to make it
-free software which everyone can redistribute and change under these terms.
-
-  To do so, attach the following notices to the program.  It is safest
-to attach them to the start of each source file to most effectively
-state the exclusion of warranty; and each file should have at least
-the "copyright" line and a pointer to where the full notice is found.
-
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) <year>  <name of author>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-Also add information on how to contact you by electronic and paper mail.
-
-  If your software can interact with users remotely through a computer
-network, you should also make sure that it provides a way for users to
-get its source.  For example, if your program is a web application, its
-interface could display a "Source" link that leads users to an archive
-of the code.  There are many ways you could offer source, and different
-solutions will be better for different programs; see section 13 for the
-specific requirements.
-
-  You should also get your employer (if you work as a programmer) or school,
-if any, to sign a "copyright disclaimer" for the program, if necessary.
-For more information on this, and how to apply and follow the GNU AGPL, see
-<http://www.gnu.org/licenses/>.
+
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+        <title>COPYING at master from SchedMD/slurm - GitHub</title>
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="GitHub" />
+    <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub" />
+
+    
+    
+
+    <meta content="authenticity_token" name="csrf-param" />
+<meta content="KJU5KV4URx4kh5emtDJDlMGbFoD1MS/34P3yhXcgQY4=" name="csrf-token" />
+
+    <link href="https://a248.e.akamai.net/assets.github.com/stylesheets/bundles/github-df36fe65ca6f162b31c71077b25f18fcfb953685.css" media="screen" rel="stylesheet" type="text/css" />
+    
+
+    <script src="https://a248.e.akamai.net/assets.github.com/javascripts/bundles/jquery-2bdf48207f435863de9c5786265d27d992c7f6c0.js" type="text/javascript"></script>
+    <script src="https://a248.e.akamai.net/assets.github.com/javascripts/bundles/github-826c6f1fd72f47fab15f6fc2a01e5fb90daa9d56.js" type="text/javascript"></script>
+    
+
+      <link rel='permalink' href='/SchedMD/slurm/blob/11fdd879ee4c31a42f6294012a53a37ee7c466ef/COPYING'>
+
+    <meta name="description" content="slurm - SLURM: A Highly Scalable Resource Manager" />
+  <link href="https://github.com/SchedMD/slurm/commits/master.atom" rel="alternate" title="Recent Commits to slurm:master" type="application/atom+xml" />
+
+  </head>
+
+
+  <body class="logged_out page-blob   fork env-production ">
+    
+
+
+    
+
+      <div id="header" class="true clearfix">
+        <div class="container clearfix">
+          <a class="site-logo" href="https://github.com">
+            <!--[if IE]>
+            <img alt="GitHub" class="github-logo" src="https://a248.e.akamai.net/assets.github.com/images/modules/header/logov7.png?1323882717" />
+            <img alt="GitHub" class="github-logo-hover" src="https://a248.e.akamai.net/assets.github.com/images/modules/header/logov7-hover.png?1324325359" />
+            <![endif]-->
+            <img alt="GitHub" class="github-logo-4x" height="30" src="https://a248.e.akamai.net/assets.github.com/images/modules/header/logov7@4x.png?1323882717" />
+            <img alt="GitHub" class="github-logo-4x-hover" height="30" src="https://a248.e.akamai.net/assets.github.com/images/modules/header/logov7@4x-hover.png?1324325359" />
+          </a>
+
+                  <!--
+      make sure to use fully qualified URLs here since this nav
+      is used on error pages on other domains
+    -->
+    <ul class="top-nav logged_out">
+        <li class="pricing"><a href="https://github.com/plans">Signup and Pricing</a></li>
+        <li class="explore"><a href="https://github.com/explore">Explore GitHub</a></li>
+      <li class="features"><a href="https://github.com/features">Features</a></li>
+        <li class="blog"><a href="https://github.com/blog">Blog</a></li>
+      <li class="login"><a href="https://github.com/login?return_to=%2FSchedMD%2Fslurm%2Fblob%2Fmaster%2FCOPYING">Login</a></li>
+    </ul>
+
+
+
+          
+        </div>
+      </div>
+
+      
+
+            <div class="site">
+      <div class="container">
+        <div class="pagehead repohead instapaper_ignore readability-menu">
+
+
+        <div class="title-actions-bar">
+          <h1>
+            <a href="/SchedMD">SchedMD</a> /
+            <strong><a href="/SchedMD/slurm" class="js-current-repository">slurm</a></strong>
+              <span class="fork-flag">
+                <span class="text">forked from <a href="/chaos/slurm">chaos/slurm</a></span>
+              </span>
+          </h1>
+          
+
+
+
+              <ul class="pagehead-actions">
+
+
+          <li><a href="/login?return_to=%2FSchedMD%2Fslurm" class="minibutton btn-watch watch-button entice tooltipped leftwards" rel="nofollow" title="You must be logged in to use this feature"><span><span class="icon"></span>Watch</span></a></li>
+          <li><a href="/login?return_to=%2FSchedMD%2Fslurm" class="minibutton btn-fork fork-button entice tooltipped leftwards" rel="nofollow" title="You must be logged in to use this feature"><span><span class="icon"></span>Fork</span></a></li>
+
+
+      <li class="repostats">
+        <ul class="repo-stats">
+          <li class="watchers ">
+            <a href="/SchedMD/slurm/watchers" title="Watchers" class="tooltipped downwards">
+              17
+            </a>
+          </li>
+          <li class="forks">
+            <a href="/SchedMD/slurm/network" title="Forks" class="tooltipped downwards">
+              20
+            </a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+        </div>
+
+          
+
+  <ul class="tabs">
+    <li><a href="/SchedMD/slurm" class="selected" highlight="repo_sourcerepo_downloadsrepo_commitsrepo_tagsrepo_branches">Code</a></li>
+    <li><a href="/SchedMD/slurm/network" highlight="repo_networkrepo_fork_queue">Network</a>
+    <li><a href="/SchedMD/slurm/pulls" highlight="repo_pulls">Pull Requests <span class='counter'>0</span></a></li>
+
+      <li><a href="/SchedMD/slurm/issues" highlight="repo_issues">Issues <span class='counter'>0</span></a></li>
+
+
+    <li><a href="/SchedMD/slurm/graphs" highlight="repo_graphsrepo_contributors">Stats &amp; Graphs</a></li>
+
+  </ul>
+
+  
+<div class="frame frame-center tree-finder" style="display:none"
+      data-tree-list-url="/SchedMD/slurm/tree-list/11fdd879ee4c31a42f6294012a53a37ee7c466ef"
+      data-blob-url-prefix="/SchedMD/slurm/blob/11fdd879ee4c31a42f6294012a53a37ee7c466ef"
+    >
+
+  <div class="breadcrumb">
+    <b><a href="/SchedMD/slurm">slurm</a></b> /
+    <input class="tree-finder-input js-navigation-enable" type="text" name="query" autocomplete="off" spellcheck="false">
+  </div>
+
+    <div class="octotip">
+      <p>
+        <a href="/SchedMD/slurm/dismiss-tree-finder-help" class="dismiss js-dismiss-tree-list-help" title="Hide this notice forever" rel="nofollow">Dismiss</a>
+        <strong>Octotip:</strong> You've activated the <em>file finder</em>
+        by pressing <span class="kbd">t</span> Start typing to filter the
+        file list. Use <span class="kbd badmono">↑</span> and
+        <span class="kbd badmono">↓</span> to navigate,
+        <span class="kbd">enter</span> to view files.
+      </p>
+    </div>
+
+  <table class="tree-browser" cellpadding="0" cellspacing="0">
+    <tr class="js-header"><th>&nbsp;</th><th>name</th></tr>
+    <tr class="js-no-results no-results" style="display: none">
+      <th colspan="2">No matching files</th>
+    </tr>
+    <tbody class="js-results-list js-navigation-container" data-navigation-enable-mouse>
+    </tbody>
+  </table>
+</div>
+
+<div id="jump-to-line" style="display:none">
+  <h2>Jump to Line</h2>
+  <form>
+    <input class="textfield" type="text">
+    <div class="full-button">
+      <button type="submit" class="classy">
+        <span>Go</span>
+      </button>
+    </div>
+  </form>
+</div>
+
+
+<div class="subnav-bar">
+
+  <ul class="actions">
+    
+      <li class="switcher">
+
+        <div class="context-menu-container js-menu-container">
+          <span class="text">Current branch:</span>
+          <a href="#"
+             class="minibutton bigger switcher context-menu-button js-menu-target js-commitish-button btn-branch repo-tree"
+             data-master-branch="master"
+             data-ref="master">
+            <span><span class="icon"></span>master</span>
+          </a>
+
+          <div class="context-pane commitish-context js-menu-content">
+            <a href="javascript:;" class="close js-menu-close"></a>
+            <div class="title">Switch Branches/Tags</div>
+            <div class="body pane-selector commitish-selector js-filterable-commitishes">
+              <div class="filterbar">
+                <div class="placeholder-field js-placeholder-field">
+                  <label class="placeholder" for="context-commitish-filter-field" data-placeholder-mode="sticky">Filter branches/tags</label>
+                  <input type="text" id="context-commitish-filter-field" class="commitish-filter" />
+                </div>
+
+                <ul class="tabs">
+                  <li><a href="#" data-filter="branches" class="selected">Branches</a></li>
+                  <li><a href="#" data-filter="tags">Tags</a></li>
+                </ul>
+              </div>
+
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/loadleveler/COPYING" data-name="loadleveler" rel="nofollow">loadleveler</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/master/COPYING" data-name="master" rel="nofollow">master</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/nrt/COPYING" data-name="nrt" rel="nofollow">nrt</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1.0/COPYING" data-name="slurm-1.0" rel="nofollow">slurm-1.0</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1.1/COPYING" data-name="slurm-1.1" rel="nofollow">slurm-1.1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1.2/COPYING" data-name="slurm-1.2" rel="nofollow">slurm-1.2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1.3/COPYING" data-name="slurm-1.3" rel="nofollow">slurm-1.3</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-15/COPYING" data-name="slurm-2-1-15" rel="nofollow">slurm-2-1-15</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2.0/COPYING" data-name="slurm-2.0" rel="nofollow">slurm-2.0</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2.1/COPYING" data-name="slurm-2.1" rel="nofollow">slurm-2.1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2.2/COPYING" data-name="slurm-2.2" rel="nofollow">slurm-2.2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item branch-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2.3/COPYING" data-name="slurm-2.3" rel="nofollow">slurm-2.3</a>
+                  </h4>
+                </div>
+
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-4-0-0-pre2/COPYING" data-name="slurm-2-4-0-0-pre2" rel="nofollow">slurm-2-4-0-0-pre2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-4-0-0-pre1/COPYING" data-name="slurm-2-4-0-0-pre1" rel="nofollow">slurm-2-4-0-0-pre1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-2-1/COPYING" data-name="slurm-2-3-2-1" rel="nofollow">slurm-2-3-2-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-1-1/COPYING" data-name="slurm-2-3-1-1" rel="nofollow">slurm-2-3-1-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-2/COPYING" data-name="slurm-2-3-0-2" rel="nofollow">slurm-2-3-0-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-1/COPYING" data-name="slurm-2-3-0-1" rel="nofollow">slurm-2-3-0-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-0-rc2/COPYING" data-name="slurm-2-3-0-0-rc2" rel="nofollow">slurm-2-3-0-0-rc2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-0-rc1/COPYING" data-name="slurm-2-3-0-0-rc1" rel="nofollow">slurm-2-3-0-0-rc1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-0-pre6/COPYING" data-name="slurm-2-3-0-0-pre6" rel="nofollow">slurm-2-3-0-0-pre6</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-0-pre5/COPYING" data-name="slurm-2-3-0-0-pre5" rel="nofollow">slurm-2-3-0-0-pre5</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-0-pre4/COPYING" data-name="slurm-2-3-0-0-pre4" rel="nofollow">slurm-2-3-0-0-pre4</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-0-pre3/COPYING" data-name="slurm-2-3-0-0-pre3" rel="nofollow">slurm-2-3-0-0-pre3</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-0-pre2/COPYING" data-name="slurm-2-3-0-0-pre2" rel="nofollow">slurm-2-3-0-0-pre2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-3-0-0-pre1/COPYING" data-name="slurm-2-3-0-0-pre1" rel="nofollow">slurm-2-3-0-0-pre1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-7-1/COPYING" data-name="slurm-2-2-7-1" rel="nofollow">slurm-2-2-7-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-6-1/COPYING" data-name="slurm-2-2-6-1" rel="nofollow">slurm-2-2-6-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-5-1/COPYING" data-name="slurm-2-2-5-1" rel="nofollow">slurm-2-2-5-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-4-1/COPYING" data-name="slurm-2-2-4-1" rel="nofollow">slurm-2-2-4-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-3-1/COPYING" data-name="slurm-2-2-3-1" rel="nofollow">slurm-2-2-3-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-2-1/COPYING" data-name="slurm-2-2-2-1" rel="nofollow">slurm-2-2-2-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-1-2/COPYING" data-name="slurm-2-2-1-2" rel="nofollow">slurm-2-2-1-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-1-1/COPYING" data-name="slurm-2-2-1-1" rel="nofollow">slurm-2-2-1-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-2-0-1/COPYING" data-name="slurm-2-2-0-1" rel="nofollow">slurm-2-2-0-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-17-1/COPYING" data-name="slurm-2-1-17-1" rel="nofollow">slurm-2-1-17-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-16-1/COPYING" data-name="slurm-2-1-16-1" rel="nofollow">slurm-2-1-16-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-15-2/COPYING" data-name="slurm-2-1-15-2" rel="nofollow">slurm-2-1-15-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-15-1/COPYING" data-name="slurm-2-1-15-1" rel="nofollow">slurm-2-1-15-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-14-1/COPYING" data-name="slurm-2-1-14-1" rel="nofollow">slurm-2-1-14-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-13-1/COPYING" data-name="slurm-2-1-13-1" rel="nofollow">slurm-2-1-13-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-12-2/COPYING" data-name="slurm-2-1-12-2" rel="nofollow">slurm-2-1-12-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-12-1/COPYING" data-name="slurm-2-1-12-1" rel="nofollow">slurm-2-1-12-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-11-2/COPYING" data-name="slurm-2-1-11-2" rel="nofollow">slurm-2-1-11-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-11-1/COPYING" data-name="slurm-2-1-11-1" rel="nofollow">slurm-2-1-11-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-10-1/COPYING" data-name="slurm-2-1-10-1" rel="nofollow">slurm-2-1-10-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-9-1/COPYING" data-name="slurm-2-1-9-1" rel="nofollow">slurm-2-1-9-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-8-2/COPYING" data-name="slurm-2-1-8-2" rel="nofollow">slurm-2-1-8-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-8-1/COPYING" data-name="slurm-2-1-8-1" rel="nofollow">slurm-2-1-8-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-7-1/COPYING" data-name="slurm-2-1-7-1" rel="nofollow">slurm-2-1-7-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-6-2/COPYING" data-name="slurm-2-1-6-2" rel="nofollow">slurm-2-1-6-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-6-1/COPYING" data-name="slurm-2-1-6-1" rel="nofollow">slurm-2-1-6-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-5-1/COPYING" data-name="slurm-2-1-5-1" rel="nofollow">slurm-2-1-5-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-4-1/COPYING" data-name="slurm-2-1-4-1" rel="nofollow">slurm-2-1-4-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-3-2/COPYING" data-name="slurm-2-1-3-2" rel="nofollow">slurm-2-1-3-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-3-1/COPYING" data-name="slurm-2-1-3-1" rel="nofollow">slurm-2-1-3-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-2-1/COPYING" data-name="slurm-2-1-2-1" rel="nofollow">slurm-2-1-2-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-1-1/COPYING" data-name="slurm-2-1-1-1" rel="nofollow">slurm-2-1-1-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-1-0-1/COPYING" data-name="slurm-2-1-0-1" rel="nofollow">slurm-2-1-0-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-9-1/COPYING" data-name="slurm-2-0-9-1" rel="nofollow">slurm-2-0-9-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-8-1/COPYING" data-name="slurm-2-0-8-1" rel="nofollow">slurm-2-0-8-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-7-1/COPYING" data-name="slurm-2-0-7-1" rel="nofollow">slurm-2-0-7-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-6-3/COPYING" data-name="slurm-2-0-6-3" rel="nofollow">slurm-2-0-6-3</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-6-2/COPYING" data-name="slurm-2-0-6-2" rel="nofollow">slurm-2-0-6-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-6-1/COPYING" data-name="slurm-2-0-6-1" rel="nofollow">slurm-2-0-6-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-5-1/COPYING" data-name="slurm-2-0-5-1" rel="nofollow">slurm-2-0-5-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-4-1/COPYING" data-name="slurm-2-0-4-1" rel="nofollow">slurm-2-0-4-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-3-1/COPYING" data-name="slurm-2-0-3-1" rel="nofollow">slurm-2-0-3-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-2-1/COPYING" data-name="slurm-2-0-2-1" rel="nofollow">slurm-2-0-2-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-1-1/COPYING" data-name="slurm-2-0-1-1" rel="nofollow">slurm-2-0-1-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-0-3/COPYING" data-name="slurm-2-0-0-3" rel="nofollow">slurm-2-0-0-3</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-0-2/COPYING" data-name="slurm-2-0-0-2" rel="nofollow">slurm-2-0-0-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-2-0-0-1/COPYING" data-name="slurm-2-0-0-1" rel="nofollow">slurm-2-0-0-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-16-1/COPYING" data-name="slurm-1-3-16-1" rel="nofollow">slurm-1-3-16-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-15-3/COPYING" data-name="slurm-1-3-15-3" rel="nofollow">slurm-1-3-15-3</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-15-2/COPYING" data-name="slurm-1-3-15-2" rel="nofollow">slurm-1-3-15-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-15-1/COPYING" data-name="slurm-1-3-15-1" rel="nofollow">slurm-1-3-15-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-14-5/COPYING" data-name="slurm-1-3-14-5" rel="nofollow">slurm-1-3-14-5</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-14-4/COPYING" data-name="slurm-1-3-14-4" rel="nofollow">slurm-1-3-14-4</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-14-3/COPYING" data-name="slurm-1-3-14-3" rel="nofollow">slurm-1-3-14-3</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-14-2/COPYING" data-name="slurm-1-3-14-2" rel="nofollow">slurm-1-3-14-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-14-1/COPYING" data-name="slurm-1-3-14-1" rel="nofollow">slurm-1-3-14-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-13-1/COPYING" data-name="slurm-1-3-13-1" rel="nofollow">slurm-1-3-13-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-12-1/COPYING" data-name="slurm-1-3-12-1" rel="nofollow">slurm-1-3-12-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-11-1/COPYING" data-name="slurm-1-3-11-1" rel="nofollow">slurm-1-3-11-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-10-1/COPYING" data-name="slurm-1-3-10-1" rel="nofollow">slurm-1-3-10-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-9-1/COPYING" data-name="slurm-1-3-9-1" rel="nofollow">slurm-1-3-9-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-8-5/COPYING" data-name="slurm-1-3-8-5" rel="nofollow">slurm-1-3-8-5</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-8-4/COPYING" data-name="slurm-1-3-8-4" rel="nofollow">slurm-1-3-8-4</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-8-3/COPYING" data-name="slurm-1-3-8-3" rel="nofollow">slurm-1-3-8-3</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-8-2/COPYING" data-name="slurm-1-3-8-2" rel="nofollow">slurm-1-3-8-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-8-1/COPYING" data-name="slurm-1-3-8-1" rel="nofollow">slurm-1-3-8-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-7-1/COPYING" data-name="slurm-1-3-7-1" rel="nofollow">slurm-1-3-7-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-6-1/COPYING" data-name="slurm-1-3-6-1" rel="nofollow">slurm-1-3-6-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-5-1/COPYING" data-name="slurm-1-3-5-1" rel="nofollow">slurm-1-3-5-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-4-1/COPYING" data-name="slurm-1-3-4-1" rel="nofollow">slurm-1-3-4-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-3-1/COPYING" data-name="slurm-1-3-3-1" rel="nofollow">slurm-1-3-3-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-2-1/COPYING" data-name="slurm-1-3-2-1" rel="nofollow">slurm-1-3-2-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-1-1/COPYING" data-name="slurm-1-3-1-1" rel="nofollow">slurm-1-3-1-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-3-0-1/COPYING" data-name="slurm-1-3-0-1" rel="nofollow">slurm-1-3-0-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-35-1/COPYING" data-name="slurm-1-2-35-1" rel="nofollow">slurm-1-2-35-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-34-1/COPYING" data-name="slurm-1-2-34-1" rel="nofollow">slurm-1-2-34-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-33-1/COPYING" data-name="slurm-1-2-33-1" rel="nofollow">slurm-1-2-33-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-32-1/COPYING" data-name="slurm-1-2-32-1" rel="nofollow">slurm-1-2-32-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-31-1/COPYING" data-name="slurm-1-2-31-1" rel="nofollow">slurm-1-2-31-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-30-1/COPYING" data-name="slurm-1-2-30-1" rel="nofollow">slurm-1-2-30-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-29-1/COPYING" data-name="slurm-1-2-29-1" rel="nofollow">slurm-1-2-29-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-28-1/COPYING" data-name="slurm-1-2-28-1" rel="nofollow">slurm-1-2-28-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-27-1/COPYING" data-name="slurm-1-2-27-1" rel="nofollow">slurm-1-2-27-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-26-1/COPYING" data-name="slurm-1-2-26-1" rel="nofollow">slurm-1-2-26-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-25-1/COPYING" data-name="slurm-1-2-25-1" rel="nofollow">slurm-1-2-25-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-24-1/COPYING" data-name="slurm-1-2-24-1" rel="nofollow">slurm-1-2-24-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-23-1/COPYING" data-name="slurm-1-2-23-1" rel="nofollow">slurm-1-2-23-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-22-1/COPYING" data-name="slurm-1-2-22-1" rel="nofollow">slurm-1-2-22-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-21-1/COPYING" data-name="slurm-1-2-21-1" rel="nofollow">slurm-1-2-21-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-20-1/COPYING" data-name="slurm-1-2-20-1" rel="nofollow">slurm-1-2-20-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-19-1/COPYING" data-name="slurm-1-2-19-1" rel="nofollow">slurm-1-2-19-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-18-1/COPYING" data-name="slurm-1-2-18-1" rel="nofollow">slurm-1-2-18-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-17-1/COPYING" data-name="slurm-1-2-17-1" rel="nofollow">slurm-1-2-17-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-16-1/COPYING" data-name="slurm-1-2-16-1" rel="nofollow">slurm-1-2-16-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-15-1/COPYING" data-name="slurm-1-2-15-1" rel="nofollow">slurm-1-2-15-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-14-1/COPYING" data-name="slurm-1-2-14-1" rel="nofollow">slurm-1-2-14-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-13-1/COPYING" data-name="slurm-1-2-13-1" rel="nofollow">slurm-1-2-13-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-12-1/COPYING" data-name="slurm-1-2-12-1" rel="nofollow">slurm-1-2-12-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-11-1/COPYING" data-name="slurm-1-2-11-1" rel="nofollow">slurm-1-2-11-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-10-1/COPYING" data-name="slurm-1-2-10-1" rel="nofollow">slurm-1-2-10-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-9-1/COPYING" data-name="slurm-1-2-9-1" rel="nofollow">slurm-1-2-9-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-8-1/COPYING" data-name="slurm-1-2-8-1" rel="nofollow">slurm-1-2-8-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-7-1/COPYING" data-name="slurm-1-2-7-1" rel="nofollow">slurm-1-2-7-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-6-1/COPYING" data-name="slurm-1-2-6-1" rel="nofollow">slurm-1-2-6-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-5-1/COPYING" data-name="slurm-1-2-5-1" rel="nofollow">slurm-1-2-5-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-4-1/COPYING" data-name="slurm-1-2-4-1" rel="nofollow">slurm-1-2-4-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-3-1/COPYING" data-name="slurm-1-2-3-1" rel="nofollow">slurm-1-2-3-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-2-1/COPYING" data-name="slurm-1-2-2-1" rel="nofollow">slurm-1-2-2-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-1-1/COPYING" data-name="slurm-1-2-1-1" rel="nofollow">slurm-1-2-1-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-2-0-1/COPYING" data-name="slurm-1-2-0-1" rel="nofollow">slurm-1-2-0-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-36-1/COPYING" data-name="slurm-1-1-36-1" rel="nofollow">slurm-1-1-36-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-35-1/COPYING" data-name="slurm-1-1-35-1" rel="nofollow">slurm-1-1-35-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-34-1/COPYING" data-name="slurm-1-1-34-1" rel="nofollow">slurm-1-1-34-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-33-1/COPYING" data-name="slurm-1-1-33-1" rel="nofollow">slurm-1-1-33-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-32-1/COPYING" data-name="slurm-1-1-32-1" rel="nofollow">slurm-1-1-32-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-31-1/COPYING" data-name="slurm-1-1-31-1" rel="nofollow">slurm-1-1-31-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-30-1/COPYING" data-name="slurm-1-1-30-1" rel="nofollow">slurm-1-1-30-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-29-1/COPYING" data-name="slurm-1-1-29-1" rel="nofollow">slurm-1-1-29-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-28-1/COPYING" data-name="slurm-1-1-28-1" rel="nofollow">slurm-1-1-28-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-27-1/COPYING" data-name="slurm-1-1-27-1" rel="nofollow">slurm-1-1-27-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-26-1/COPYING" data-name="slurm-1-1-26-1" rel="nofollow">slurm-1-1-26-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-25-1/COPYING" data-name="slurm-1-1-25-1" rel="nofollow">slurm-1-1-25-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-24-1/COPYING" data-name="slurm-1-1-24-1" rel="nofollow">slurm-1-1-24-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-23-1/COPYING" data-name="slurm-1-1-23-1" rel="nofollow">slurm-1-1-23-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-22-1/COPYING" data-name="slurm-1-1-22-1" rel="nofollow">slurm-1-1-22-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-21-1/COPYING" data-name="slurm-1-1-21-1" rel="nofollow">slurm-1-1-21-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-20-1/COPYING" data-name="slurm-1-1-20-1" rel="nofollow">slurm-1-1-20-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-19-1/COPYING" data-name="slurm-1-1-19-1" rel="nofollow">slurm-1-1-19-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-18-1/COPYING" data-name="slurm-1-1-18-1" rel="nofollow">slurm-1-1-18-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-17-1/COPYING" data-name="slurm-1-1-17-1" rel="nofollow">slurm-1-1-17-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-16-1/COPYING" data-name="slurm-1-1-16-1" rel="nofollow">slurm-1-1-16-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-15-1/COPYING" data-name="slurm-1-1-15-1" rel="nofollow">slurm-1-1-15-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-14-1/COPYING" data-name="slurm-1-1-14-1" rel="nofollow">slurm-1-1-14-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-13-1/COPYING" data-name="slurm-1-1-13-1" rel="nofollow">slurm-1-1-13-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-12-2/COPYING" data-name="slurm-1-1-12-2" rel="nofollow">slurm-1-1-12-2</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-12-1/COPYING" data-name="slurm-1-1-12-1" rel="nofollow">slurm-1-1-12-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-11-1/COPYING" data-name="slurm-1-1-11-1" rel="nofollow">slurm-1-1-11-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-10-1/COPYING" data-name="slurm-1-1-10-1" rel="nofollow">slurm-1-1-10-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-9-1/COPYING" data-name="slurm-1-1-9-1" rel="nofollow">slurm-1-1-9-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-8-1/COPYING" data-name="slurm-1-1-8-1" rel="nofollow">slurm-1-1-8-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-7-1/COPYING" data-name="slurm-1-1-7-1" rel="nofollow">slurm-1-1-7-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-6-1/COPYING" data-name="slurm-1-1-6-1" rel="nofollow">slurm-1-1-6-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-5-1/COPYING" data-name="slurm-1-1-5-1" rel="nofollow">slurm-1-1-5-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-4-1/COPYING" data-name="slurm-1-1-4-1" rel="nofollow">slurm-1-1-4-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-3-1/COPYING" data-name="slurm-1-1-3-1" rel="nofollow">slurm-1-1-3-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-2-1/COPYING" data-name="slurm-1-1-2-1" rel="nofollow">slurm-1-1-2-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-1-1/COPYING" data-name="slurm-1-1-1-1" rel="nofollow">slurm-1-1-1-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-1-0-1/COPYING" data-name="slurm-1-1-0-1" rel="nofollow">slurm-1-1-0-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-17-1/COPYING" data-name="slurm-1-0-17-1" rel="nofollow">slurm-1-0-17-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-16-1/COPYING" data-name="slurm-1-0-16-1" rel="nofollow">slurm-1-0-16-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-15-1/COPYING" data-name="slurm-1-0-15-1" rel="nofollow">slurm-1-0-15-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-14-1/COPYING" data-name="slurm-1-0-14-1" rel="nofollow">slurm-1-0-14-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-13-1/COPYING" data-name="slurm-1-0-13-1" rel="nofollow">slurm-1-0-13-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-12-1/COPYING" data-name="slurm-1-0-12-1" rel="nofollow">slurm-1-0-12-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-11-1/COPYING" data-name="slurm-1-0-11-1" rel="nofollow">slurm-1-0-11-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-10-1/COPYING" data-name="slurm-1-0-10-1" rel="nofollow">slurm-1-0-10-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-9-1/COPYING" data-name="slurm-1-0-9-1" rel="nofollow">slurm-1-0-9-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-8-1/COPYING" data-name="slurm-1-0-8-1" rel="nofollow">slurm-1-0-8-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-7-1/COPYING" data-name="slurm-1-0-7-1" rel="nofollow">slurm-1-0-7-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-6-1/COPYING" data-name="slurm-1-0-6-1" rel="nofollow">slurm-1-0-6-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-5-1/COPYING" data-name="slurm-1-0-5-1" rel="nofollow">slurm-1-0-5-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-4-1/COPYING" data-name="slurm-1-0-4-1" rel="nofollow">slurm-1-0-4-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-3-1/COPYING" data-name="slurm-1-0-3-1" rel="nofollow">slurm-1-0-3-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-2-1/COPYING" data-name="slurm-1-0-2-1" rel="nofollow">slurm-1-0-2-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-1-1/COPYING" data-name="slurm-1-0-1-1" rel="nofollow">slurm-1-0-1-1</a>
+                  </h4>
+                </div>
+                <div class="commitish-item tag-commitish selector-item">
+                  <h4>
+                      <a href="/SchedMD/slurm/blob/slurm-1-0-0-1/COPYING" data-name="slurm-1-0-0-1" rel="nofollow">slurm-1-0-0-1</a>
+                  </h4>
+                </div>
+
+              <div class="no-results" style="display:none">Nothing to show</div>
+            </div>
+          </div><!-- /.commitish-context-context -->
+        </div>
+
+      </li>
+  </ul>
+
+  <ul class="subnav">
+    <li><a href="/SchedMD/slurm" class="selected" highlight="repo_source">Files</a></li>
+    <li><a href="/SchedMD/slurm/commits/master" highlight="repo_commits">Commits</a></li>
+    <li><a href="/SchedMD/slurm/branches" class="" highlight="repo_branches" rel="nofollow">Branches <span class="counter">12</span></a></li>
+    <li><a href="/SchedMD/slurm/tags" class="" highlight="repo_tags">Tags <span class="counter">180</span></a></li>
+    <li><a href="/SchedMD/slurm/downloads" class="blank" highlight="repo_downloads">Downloads <span class="counter">0</span></a></li>
+  </ul>
+
+</div>
+
+  
+  
+  
+
+
+          
+
+        </div><!-- /.repohead -->
+
+        
+
+
+
+
+  
+  <p class="last-commit">Latest commit to the <strong>master</strong> branch</p>
+
+<div class="commit commit-tease js-details-container">
+  <p class="commit-title ">
+      <a href="/SchedMD/slurm/commit/11fdd879ee4c31a42f6294012a53a37ee7c466ef" class="message">Merge branch 'slurm-2.3'</a>
+      
+  </p>
+  <div class="commit-meta">
+    <a href="/SchedMD/slurm/commit/11fdd879ee4c31a42f6294012a53a37ee7c466ef" class="sha-block">commit <span class="sha">11fdd879ee</span></a>
+
+    <div class="authorship">
+      <img class="gravatar" height="20" src="https://secure.gravatar.com/avatar/e4902295bc86d9fbb59b1f6381e90c39?s=140&amp;d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-140.png" width="20" />
+      <span class="author-name"><a href="/jette">jette</a></span>
+      authored <time class="js-relative-date" datetime="2012-01-09T11:33:49-08:00" title="2012-01-09 11:33:49">January 09, 2012</time>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- block_view_fragment_key: views4/v8/blob:v15:1924458:SchedMD/slurm:0712e040f1da325fc81474b5202b6421091a844d:7116ef0705885343c9e1b2171a06be0e -->
+  <div id="slider">
+
+    <div class="breadcrumb" data-path="COPYING/">
+      <b><a href="/SchedMD/slurm/tree/11fdd879ee4c31a42f6294012a53a37ee7c466ef" class="js-rewrite-sha">slurm</a></b> / COPYING       <span style="display:none" id="clippy_3993" class="clippy-text">COPYING</span>
+      
+      <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
+              width="110"
+              height="14"
+              class="clippy"
+              id="clippy" >
+      <param name="movie" value="https://a248.e.akamai.net/assets.github.com/flash/clippy.swf?1261951368?v5"/>
+      <param name="allowScriptAccess" value="always" />
+      <param name="quality" value="high" />
+      <param name="scale" value="noscale" />
+      <param NAME="FlashVars" value="id=clippy_3993&amp;copied=copied!&amp;copyto=copy to clipboard">
+      <param name="bgcolor" value="#FFFFFF">
+      <param name="wmode" value="opaque">
+      <embed src="https://a248.e.akamai.net/assets.github.com/flash/clippy.swf?1261951368?v5"
+             width="110"
+             height="14"
+             name="clippy"
+             quality="high"
+             allowScriptAccess="always"
+             type="application/x-shockwave-flash"
+             pluginspage="http://www.macromedia.com/go/getflashplayer"
+             FlashVars="id=clippy_3993&amp;copied=copied!&amp;copyto=copy to clipboard"
+             bgcolor="#FFFFFF"
+             wmode="opaque"
+      />
+      </object>
+      
+
+    </div>
+
+    <div class="frames">
+      <div class="frame frame-center" data-path="COPYING/" data-permalink-url="/SchedMD/slurm/blob/11fdd879ee4c31a42f6294012a53a37ee7c466ef/COPYING" data-title="COPYING at master from SchedMD/slurm - GitHub" data-type="blob">
+          <ul class="big-actions">
+            <li><a class="file-edit-link minibutton js-rewrite-sha" href="/SchedMD/slurm/edit/11fdd879ee4c31a42f6294012a53a37ee7c466ef/COPYING" data-method="post" rel="nofollow"><span>Edit this file</span></a></li>
+          </ul>
+
+        <div id="files">
+          <div class="file">
+            <div class="meta">
+              <div class="info">
+                <span class="icon"><img alt="Txt" height="16" src="https://a248.e.akamai.net/assets.github.com/images/icons/txt.png?1252203928" width="16" /></span>
+                <span class="mode" title="File Mode">100644</span>
+                  <span>384 lines (315 sloc)</span>
+                <span>20.314 kb</span>
+              </div>
+              <ul class="actions">
+                <li><a href="/SchedMD/slurm/raw/master/COPYING" id="raw-url">raw</a></li>
+                  <li><a href="/SchedMD/slurm/blame/master/COPYING">blame</a></li>
+                <li><a href="/SchedMD/slurm/commits/master/COPYING" rel="nofollow">history</a></li>
+              </ul>
+            </div>
+              <div class="data type-text">
+      <table cellpadding="0" cellspacing="0" class="lines">
+        <tr>
+          <td>
+            <pre class="line_numbers"><span id="L1" rel="#L1">1</span>
+<span id="L2" rel="#L2">2</span>
+<span id="L3" rel="#L3">3</span>
+<span id="L4" rel="#L4">4</span>
+<span id="L5" rel="#L5">5</span>
+<span id="L6" rel="#L6">6</span>
+<span id="L7" rel="#L7">7</span>
+<span id="L8" rel="#L8">8</span>
+<span id="L9" rel="#L9">9</span>
+<span id="L10" rel="#L10">10</span>
+<span id="L11" rel="#L11">11</span>
+<span id="L12" rel="#L12">12</span>
+<span id="L13" rel="#L13">13</span>
+<span id="L14" rel="#L14">14</span>
+<span id="L15" rel="#L15">15</span>
+<span id="L16" rel="#L16">16</span>
+<span id="L17" rel="#L17">17</span>
+<span id="L18" rel="#L18">18</span>
+<span id="L19" rel="#L19">19</span>
+<span id="L20" rel="#L20">20</span>
+<span id="L21" rel="#L21">21</span>
+<span id="L22" rel="#L22">22</span>
+<span id="L23" rel="#L23">23</span>
+<span id="L24" rel="#L24">24</span>
+<span id="L25" rel="#L25">25</span>
+<span id="L26" rel="#L26">26</span>
+<span id="L27" rel="#L27">27</span>
+<span id="L28" rel="#L28">28</span>
+<span id="L29" rel="#L29">29</span>
+<span id="L30" rel="#L30">30</span>
+<span id="L31" rel="#L31">31</span>
+<span id="L32" rel="#L32">32</span>
+<span id="L33" rel="#L33">33</span>
+<span id="L34" rel="#L34">34</span>
+<span id="L35" rel="#L35">35</span>
+<span id="L36" rel="#L36">36</span>
+<span id="L37" rel="#L37">37</span>
+<span id="L38" rel="#L38">38</span>
+<span id="L39" rel="#L39">39</span>
+<span id="L40" rel="#L40">40</span>
+<span id="L41" rel="#L41">41</span>
+<span id="L42" rel="#L42">42</span>
+<span id="L43" rel="#L43">43</span>
+<span id="L44" rel="#L44">44</span>
+<span id="L45" rel="#L45">45</span>
+<span id="L46" rel="#L46">46</span>
+<span id="L47" rel="#L47">47</span>
+<span id="L48" rel="#L48">48</span>
+<span id="L49" rel="#L49">49</span>
+<span id="L50" rel="#L50">50</span>
+<span id="L51" rel="#L51">51</span>
+<span id="L52" rel="#L52">52</span>
+<span id="L53" rel="#L53">53</span>
+<span id="L54" rel="#L54">54</span>
+<span id="L55" rel="#L55">55</span>
+<span id="L56" rel="#L56">56</span>
+<span id="L57" rel="#L57">57</span>
+<span id="L58" rel="#L58">58</span>
+<span id="L59" rel="#L59">59</span>
+<span id="L60" rel="#L60">60</span>
+<span id="L61" rel="#L61">61</span>
+<span id="L62" rel="#L62">62</span>
+<span id="L63" rel="#L63">63</span>
+<span id="L64" rel="#L64">64</span>
+<span id="L65" rel="#L65">65</span>
+<span id="L66" rel="#L66">66</span>
+<span id="L67" rel="#L67">67</span>
+<span id="L68" rel="#L68">68</span>
+<span id="L69" rel="#L69">69</span>
+<span id="L70" rel="#L70">70</span>
+<span id="L71" rel="#L71">71</span>
+<span id="L72" rel="#L72">72</span>
+<span id="L73" rel="#L73">73</span>
+<span id="L74" rel="#L74">74</span>
+<span id="L75" rel="#L75">75</span>
+<span id="L76" rel="#L76">76</span>
+<span id="L77" rel="#L77">77</span>
+<span id="L78" rel="#L78">78</span>
+<span id="L79" rel="#L79">79</span>
+<span id="L80" rel="#L80">80</span>
+<span id="L81" rel="#L81">81</span>
+<span id="L82" rel="#L82">82</span>
+<span id="L83" rel="#L83">83</span>
+<span id="L84" rel="#L84">84</span>
+<span id="L85" rel="#L85">85</span>
+<span id="L86" rel="#L86">86</span>
+<span id="L87" rel="#L87">87</span>
+<span id="L88" rel="#L88">88</span>
+<span id="L89" rel="#L89">89</span>
+<span id="L90" rel="#L90">90</span>
+<span id="L91" rel="#L91">91</span>
+<span id="L92" rel="#L92">92</span>
+<span id="L93" rel="#L93">93</span>
+<span id="L94" rel="#L94">94</span>
+<span id="L95" rel="#L95">95</span>
+<span id="L96" rel="#L96">96</span>
+<span id="L97" rel="#L97">97</span>
+<span id="L98" rel="#L98">98</span>
+<span id="L99" rel="#L99">99</span>
+<span id="L100" rel="#L100">100</span>
+<span id="L101" rel="#L101">101</span>
+<span id="L102" rel="#L102">102</span>
+<span id="L103" rel="#L103">103</span>
+<span id="L104" rel="#L104">104</span>
+<span id="L105" rel="#L105">105</span>
+<span id="L106" rel="#L106">106</span>
+<span id="L107" rel="#L107">107</span>
+<span id="L108" rel="#L108">108</span>
+<span id="L109" rel="#L109">109</span>
+<span id="L110" rel="#L110">110</span>
+<span id="L111" rel="#L111">111</span>
+<span id="L112" rel="#L112">112</span>
+<span id="L113" rel="#L113">113</span>
+<span id="L114" rel="#L114">114</span>
+<span id="L115" rel="#L115">115</span>
+<span id="L116" rel="#L116">116</span>
+<span id="L117" rel="#L117">117</span>
+<span id="L118" rel="#L118">118</span>
+<span id="L119" rel="#L119">119</span>
+<span id="L120" rel="#L120">120</span>
+<span id="L121" rel="#L121">121</span>
+<span id="L122" rel="#L122">122</span>
+<span id="L123" rel="#L123">123</span>
+<span id="L124" rel="#L124">124</span>
+<span id="L125" rel="#L125">125</span>
+<span id="L126" rel="#L126">126</span>
+<span id="L127" rel="#L127">127</span>
+<span id="L128" rel="#L128">128</span>
+<span id="L129" rel="#L129">129</span>
+<span id="L130" rel="#L130">130</span>
+<span id="L131" rel="#L131">131</span>
+<span id="L132" rel="#L132">132</span>
+<span id="L133" rel="#L133">133</span>
+<span id="L134" rel="#L134">134</span>
+<span id="L135" rel="#L135">135</span>
+<span id="L136" rel="#L136">136</span>
+<span id="L137" rel="#L137">137</span>
+<span id="L138" rel="#L138">138</span>
+<span id="L139" rel="#L139">139</span>
+<span id="L140" rel="#L140">140</span>
+<span id="L141" rel="#L141">141</span>
+<span id="L142" rel="#L142">142</span>
+<span id="L143" rel="#L143">143</span>
+<span id="L144" rel="#L144">144</span>
+<span id="L145" rel="#L145">145</span>
+<span id="L146" rel="#L146">146</span>
+<span id="L147" rel="#L147">147</span>
+<span id="L148" rel="#L148">148</span>
+<span id="L149" rel="#L149">149</span>
+<span id="L150" rel="#L150">150</span>
+<span id="L151" rel="#L151">151</span>
+<span id="L152" rel="#L152">152</span>
+<span id="L153" rel="#L153">153</span>
+<span id="L154" rel="#L154">154</span>
+<span id="L155" rel="#L155">155</span>
+<span id="L156" rel="#L156">156</span>
+<span id="L157" rel="#L157">157</span>
+<span id="L158" rel="#L158">158</span>
+<span id="L159" rel="#L159">159</span>
+<span id="L160" rel="#L160">160</span>
+<span id="L161" rel="#L161">161</span>
+<span id="L162" rel="#L162">162</span>
+<span id="L163" rel="#L163">163</span>
+<span id="L164" rel="#L164">164</span>
+<span id="L165" rel="#L165">165</span>
+<span id="L166" rel="#L166">166</span>
+<span id="L167" rel="#L167">167</span>
+<span id="L168" rel="#L168">168</span>
+<span id="L169" rel="#L169">169</span>
+<span id="L170" rel="#L170">170</span>
+<span id="L171" rel="#L171">171</span>
+<span id="L172" rel="#L172">172</span>
+<span id="L173" rel="#L173">173</span>
+<span id="L174" rel="#L174">174</span>
+<span id="L175" rel="#L175">175</span>
+<span id="L176" rel="#L176">176</span>
+<span id="L177" rel="#L177">177</span>
+<span id="L178" rel="#L178">178</span>
+<span id="L179" rel="#L179">179</span>
+<span id="L180" rel="#L180">180</span>
+<span id="L181" rel="#L181">181</span>
+<span id="L182" rel="#L182">182</span>
+<span id="L183" rel="#L183">183</span>
+<span id="L184" rel="#L184">184</span>
+<span id="L185" rel="#L185">185</span>
+<span id="L186" rel="#L186">186</span>
+<span id="L187" rel="#L187">187</span>
+<span id="L188" rel="#L188">188</span>
+<span id="L189" rel="#L189">189</span>
+<span id="L190" rel="#L190">190</span>
+<span id="L191" rel="#L191">191</span>
+<span id="L192" rel="#L192">192</span>
+<span id="L193" rel="#L193">193</span>
+<span id="L194" rel="#L194">194</span>
+<span id="L195" rel="#L195">195</span>
+<span id="L196" rel="#L196">196</span>
+<span id="L197" rel="#L197">197</span>
+<span id="L198" rel="#L198">198</span>
+<span id="L199" rel="#L199">199</span>
+<span id="L200" rel="#L200">200</span>
+<span id="L201" rel="#L201">201</span>
+<span id="L202" rel="#L202">202</span>
+<span id="L203" rel="#L203">203</span>
+<span id="L204" rel="#L204">204</span>
+<span id="L205" rel="#L205">205</span>
+<span id="L206" rel="#L206">206</span>
+<span id="L207" rel="#L207">207</span>
+<span id="L208" rel="#L208">208</span>
+<span id="L209" rel="#L209">209</span>
+<span id="L210" rel="#L210">210</span>
+<span id="L211" rel="#L211">211</span>
+<span id="L212" rel="#L212">212</span>
+<span id="L213" rel="#L213">213</span>
+<span id="L214" rel="#L214">214</span>
+<span id="L215" rel="#L215">215</span>
+<span id="L216" rel="#L216">216</span>
+<span id="L217" rel="#L217">217</span>
+<span id="L218" rel="#L218">218</span>
+<span id="L219" rel="#L219">219</span>
+<span id="L220" rel="#L220">220</span>
+<span id="L221" rel="#L221">221</span>
+<span id="L222" rel="#L222">222</span>
+<span id="L223" rel="#L223">223</span>
+<span id="L224" rel="#L224">224</span>
+<span id="L225" rel="#L225">225</span>
+<span id="L226" rel="#L226">226</span>
+<span id="L227" rel="#L227">227</span>
+<span id="L228" rel="#L228">228</span>
+<span id="L229" rel="#L229">229</span>
+<span id="L230" rel="#L230">230</span>
+<span id="L231" rel="#L231">231</span>
+<span id="L232" rel="#L232">232</span>
+<span id="L233" rel="#L233">233</span>
+<span id="L234" rel="#L234">234</span>
+<span id="L235" rel="#L235">235</span>
+<span id="L236" rel="#L236">236</span>
+<span id="L237" rel="#L237">237</span>
+<span id="L238" rel="#L238">238</span>
+<span id="L239" rel="#L239">239</span>
+<span id="L240" rel="#L240">240</span>
+<span id="L241" rel="#L241">241</span>
+<span id="L242" rel="#L242">242</span>
+<span id="L243" rel="#L243">243</span>
+<span id="L244" rel="#L244">244</span>
+<span id="L245" rel="#L245">245</span>
+<span id="L246" rel="#L246">246</span>
+<span id="L247" rel="#L247">247</span>
+<span id="L248" rel="#L248">248</span>
+<span id="L249" rel="#L249">249</span>
+<span id="L250" rel="#L250">250</span>
+<span id="L251" rel="#L251">251</span>
+<span id="L252" rel="#L252">252</span>
+<span id="L253" rel="#L253">253</span>
+<span id="L254" rel="#L254">254</span>
+<span id="L255" rel="#L255">255</span>
+<span id="L256" rel="#L256">256</span>
+<span id="L257" rel="#L257">257</span>
+<span id="L258" rel="#L258">258</span>
+<span id="L259" rel="#L259">259</span>
+<span id="L260" rel="#L260">260</span>
+<span id="L261" rel="#L261">261</span>
+<span id="L262" rel="#L262">262</span>
+<span id="L263" rel="#L263">263</span>
+<span id="L264" rel="#L264">264</span>
+<span id="L265" rel="#L265">265</span>
+<span id="L266" rel="#L266">266</span>
+<span id="L267" rel="#L267">267</span>
+<span id="L268" rel="#L268">268</span>
+<span id="L269" rel="#L269">269</span>
+<span id="L270" rel="#L270">270</span>
+<span id="L271" rel="#L271">271</span>
+<span id="L272" rel="#L272">272</span>
+<span id="L273" rel="#L273">273</span>
+<span id="L274" rel="#L274">274</span>
+<span id="L275" rel="#L275">275</span>
+<span id="L276" rel="#L276">276</span>
+<span id="L277" rel="#L277">277</span>
+<span id="L278" rel="#L278">278</span>
+<span id="L279" rel="#L279">279</span>
+<span id="L280" rel="#L280">280</span>
+<span id="L281" rel="#L281">281</span>
+<span id="L282" rel="#L282">282</span>
+<span id="L283" rel="#L283">283</span>
+<span id="L284" rel="#L284">284</span>
+<span id="L285" rel="#L285">285</span>
+<span id="L286" rel="#L286">286</span>
+<span id="L287" rel="#L287">287</span>
+<span id="L288" rel="#L288">288</span>
+<span id="L289" rel="#L289">289</span>
+<span id="L290" rel="#L290">290</span>
+<span id="L291" rel="#L291">291</span>
+<span id="L292" rel="#L292">292</span>
+<span id="L293" rel="#L293">293</span>
+<span id="L294" rel="#L294">294</span>
+<span id="L295" rel="#L295">295</span>
+<span id="L296" rel="#L296">296</span>
+<span id="L297" rel="#L297">297</span>
+<span id="L298" rel="#L298">298</span>
+<span id="L299" rel="#L299">299</span>
+<span id="L300" rel="#L300">300</span>
+<span id="L301" rel="#L301">301</span>
+<span id="L302" rel="#L302">302</span>
+<span id="L303" rel="#L303">303</span>
+<span id="L304" rel="#L304">304</span>
+<span id="L305" rel="#L305">305</span>
+<span id="L306" rel="#L306">306</span>
+<span id="L307" rel="#L307">307</span>
+<span id="L308" rel="#L308">308</span>
+<span id="L309" rel="#L309">309</span>
+<span id="L310" rel="#L310">310</span>
+<span id="L311" rel="#L311">311</span>
+<span id="L312" rel="#L312">312</span>
+<span id="L313" rel="#L313">313</span>
+<span id="L314" rel="#L314">314</span>
+<span id="L315" rel="#L315">315</span>
+<span id="L316" rel="#L316">316</span>
+<span id="L317" rel="#L317">317</span>
+<span id="L318" rel="#L318">318</span>
+<span id="L319" rel="#L319">319</span>
+<span id="L320" rel="#L320">320</span>
+<span id="L321" rel="#L321">321</span>
+<span id="L322" rel="#L322">322</span>
+<span id="L323" rel="#L323">323</span>
+<span id="L324" rel="#L324">324</span>
+<span id="L325" rel="#L325">325</span>
+<span id="L326" rel="#L326">326</span>
+<span id="L327" rel="#L327">327</span>
+<span id="L328" rel="#L328">328</span>
+<span id="L329" rel="#L329">329</span>
+<span id="L330" rel="#L330">330</span>
+<span id="L331" rel="#L331">331</span>
+<span id="L332" rel="#L332">332</span>
+<span id="L333" rel="#L333">333</span>
+<span id="L334" rel="#L334">334</span>
+<span id="L335" rel="#L335">335</span>
+<span id="L336" rel="#L336">336</span>
+<span id="L337" rel="#L337">337</span>
+<span id="L338" rel="#L338">338</span>
+<span id="L339" rel="#L339">339</span>
+<span id="L340" rel="#L340">340</span>
+<span id="L341" rel="#L341">341</span>
+<span id="L342" rel="#L342">342</span>
+<span id="L343" rel="#L343">343</span>
+<span id="L344" rel="#L344">344</span>
+<span id="L345" rel="#L345">345</span>
+<span id="L346" rel="#L346">346</span>
+<span id="L347" rel="#L347">347</span>
+<span id="L348" rel="#L348">348</span>
+<span id="L349" rel="#L349">349</span>
+<span id="L350" rel="#L350">350</span>
+<span id="L351" rel="#L351">351</span>
+<span id="L352" rel="#L352">352</span>
+<span id="L353" rel="#L353">353</span>
+<span id="L354" rel="#L354">354</span>
+<span id="L355" rel="#L355">355</span>
+<span id="L356" rel="#L356">356</span>
+<span id="L357" rel="#L357">357</span>
+<span id="L358" rel="#L358">358</span>
+<span id="L359" rel="#L359">359</span>
+<span id="L360" rel="#L360">360</span>
+<span id="L361" rel="#L361">361</span>
+<span id="L362" rel="#L362">362</span>
+<span id="L363" rel="#L363">363</span>
+<span id="L364" rel="#L364">364</span>
+<span id="L365" rel="#L365">365</span>
+<span id="L366" rel="#L366">366</span>
+<span id="L367" rel="#L367">367</span>
+<span id="L368" rel="#L368">368</span>
+<span id="L369" rel="#L369">369</span>
+<span id="L370" rel="#L370">370</span>
+<span id="L371" rel="#L371">371</span>
+<span id="L372" rel="#L372">372</span>
+<span id="L373" rel="#L373">373</span>
+<span id="L374" rel="#L374">374</span>
+<span id="L375" rel="#L375">375</span>
+<span id="L376" rel="#L376">376</span>
+<span id="L377" rel="#L377">377</span>
+<span id="L378" rel="#L378">378</span>
+<span id="L379" rel="#L379">379</span>
+<span id="L380" rel="#L380">380</span>
+<span id="L381" rel="#L381">381</span>
+<span id="L382" rel="#L382">382</span>
+<span id="L383" rel="#L383">383</span>
+</pre>
+          </td>
+          <td width="100%">
+                <div class="highlight"><pre><div class='line' id='LC1'>All SLURM code and documentation is available under the GNU General Public </div><div class='line' id='LC2'>License. Some tools in the &quot;contribs&quot; directory have other licenses. See </div><div class='line' id='LC3'>the documentation for individual contributed tools for details. </div><div class='line' id='LC4'><br/></div><div class='line' id='LC5'>In addition, as a special exception, the copyright holders give permission </div><div class='line' id='LC6'>to link the code of portions of this program with the OpenSSL library under </div><div class='line' id='LC7'>certain conditions as described in each individual source file, and distribute </div><div class='line' id='LC8'>linked combinations including the two. You must obey the GNU General Public </div><div class='line' id='LC9'>License in all respects for all of the code used other than OpenSSL. If you </div><div class='line' id='LC10'>modify file(s) with this exception, you may extend this exception to your</div><div class='line' id='LC11'>version of the file(s), but you are not obligated to do so. If you do not </div><div class='line' id='LC12'>wish to do so, delete this exception statement from your version. If you </div><div class='line' id='LC13'>delete this exception statement from all source files in the program, then </div><div class='line' id='LC14'>also delete it here.  </div><div class='line' id='LC15'><br/></div><div class='line' id='LC16'>=============================================================================</div><div class='line' id='LC17'><br/></div><div class='line' id='LC18'>OUR NOTICE AND TERMS OF AND CONDITIONS OF THE GNU GENERAL PUBLIC LICENSE</div><div class='line' id='LC19'><br/></div><div class='line' id='LC20'>Auspices</div><div class='line' id='LC21'><br/></div><div class='line' id='LC22'>This work performed under the auspices of the U.S. Department of Energy by </div><div class='line' id='LC23'>Lawrence Livermore National Laboratory under Contract DE-AC52-07NA27344.</div><div class='line' id='LC24'><br/></div><div class='line' id='LC25'>Disclaimer</div><div class='line' id='LC26'><br/></div><div class='line' id='LC27'>This work was sponsored by an agency of the United States government. </div><div class='line' id='LC28'>Neither the United States Government nor Lawrence Livermore National </div><div class='line' id='LC29'>Security, LLC, nor any of their employees, makes any warranty, express </div><div class='line' id='LC30'>or implied, or assumes any liability or responsibility for the accuracy, </div><div class='line' id='LC31'>completeness, or usefulness of any information, apparatus, product, or </div><div class='line' id='LC32'>process disclosed, or represents that its use would not infringe privately</div><div class='line' id='LC33'>owned rights. References herein to any specific commercial products, process, </div><div class='line' id='LC34'>or services by trade names, trademark, manufacturer or otherwise does not</div><div class='line' id='LC35'>necessarily constitute or imply its endorsement, recommendation, or</div><div class='line' id='LC36'>favoring by the United States Government or the Lawrence Livermore National</div><div class='line' id='LC37'>Security, LLC. The views and opinions of authors expressed herein do not </div><div class='line' id='LC38'>necessarily state or reflect those of the United States government or </div><div class='line' id='LC39'>Lawrence Livermore National Security, LLC, and shall not be used for </div><div class='line' id='LC40'>advertising or product endorsement purposes.</div><div class='line' id='LC41'><br/></div><div class='line' id='LC42'>=============================================================================</div><div class='line' id='LC43'><br/></div><div class='line' id='LC44'>		    GNU GENERAL PUBLIC LICENSE</div><div class='line' id='LC45'>		       Version 2, June 1991</div><div class='line' id='LC46'><br/></div><div class='line' id='LC47'>&nbsp;Copyright (C) 1989, 1991 Free Software Foundation, Inc.</div><div class='line' id='LC48'>&nbsp;51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA</div><div class='line' id='LC49'>&nbsp;Everyone is permitted to copy and distribute verbatim copies</div><div class='line' id='LC50'>&nbsp;of this license document, but changing it is not allowed.</div><div class='line' id='LC51'><br/></div><div class='line' id='LC52'>			    Preamble</div><div class='line' id='LC53'><br/></div><div class='line' id='LC54'>&nbsp;&nbsp;The licenses for most software are designed to take away your</div><div class='line' id='LC55'>freedom to share and change it.  By contrast, the GNU General Public</div><div class='line' id='LC56'>License is intended to guarantee your freedom to share and change free</div><div class='line' id='LC57'>software--to make sure the software is free for all its users.  This</div><div class='line' id='LC58'>General Public License applies to most of the Free Software</div><div class='line' id='LC59'>Foundation&#39;s software and to any other program whose authors commit to</div><div class='line' id='LC60'>using it.  (Some other Free Software Foundation software is covered by</div><div class='line' id='LC61'>the GNU Library General Public License instead.)  You can apply it to</div><div class='line' id='LC62'>your programs, too.</div><div class='line' id='LC63'><br/></div><div class='line' id='LC64'>&nbsp;&nbsp;When we speak of free software, we are referring to freedom, not</div><div class='line' id='LC65'>price.  Our General Public Licenses are designed to make sure that you</div><div class='line' id='LC66'>have the freedom to distribute copies of free software (and charge for</div><div class='line' id='LC67'>this service if you wish), that you receive source code or can get it</div><div class='line' id='LC68'>if you want it, that you can change the software or use pieces of it</div><div class='line' id='LC69'>in new free programs; and that you know you can do these things.</div><div class='line' id='LC70'><br/></div><div class='line' id='LC71'>&nbsp;&nbsp;To protect your rights, we need to make restrictions that forbid</div><div class='line' id='LC72'>anyone to deny you these rights or to ask you to surrender the rights.</div><div class='line' id='LC73'>These restrictions translate to certain responsibilities for you if you</div><div class='line' id='LC74'>distribute copies of the software, or if you modify it.</div><div class='line' id='LC75'><br/></div><div class='line' id='LC76'>&nbsp;&nbsp;For example, if you distribute copies of such a program, whether</div><div class='line' id='LC77'>gratis or for a fee, you must give the recipients all the rights that</div><div class='line' id='LC78'>you have.  You must make sure that they, too, receive or can get the</div><div class='line' id='LC79'>source code.  And you must show them these terms so they know their</div><div class='line' id='LC80'>rights.</div><div class='line' id='LC81'><br/></div><div class='line' id='LC82'>&nbsp;&nbsp;We protect your rights with two steps: (1) copyright the software, and</div><div class='line' id='LC83'>(2) offer you this license which gives you legal permission to copy,</div><div class='line' id='LC84'>distribute and/or modify the software.</div><div class='line' id='LC85'><br/></div><div class='line' id='LC86'>&nbsp;&nbsp;Also, for each author&#39;s protection and ours, we want to make certain</div><div class='line' id='LC87'>that everyone understands that there is no warranty for this free</div><div class='line' id='LC88'>software.  If the software is modified by someone else and passed on, we</div><div class='line' id='LC89'>want its recipients to know that what they have is not the original, so</div><div class='line' id='LC90'>that any problems introduced by others will not reflect on the original</div><div class='line' id='LC91'>authors&#39; reputations.</div><div class='line' id='LC92'><br/></div><div class='line' id='LC93'>&nbsp;&nbsp;Finally, any free program is threatened constantly by software</div><div class='line' id='LC94'>patents.  We wish to avoid the danger that redistributors of a free</div><div class='line' id='LC95'>program will individually obtain patent licenses, in effect making the</div><div class='line' id='LC96'>program proprietary.  To prevent this, we have made it clear that any</div><div class='line' id='LC97'>patent must be licensed for everyone&#39;s free use or not licensed at all.</div><div class='line' id='LC98'><br/></div><div class='line' id='LC99'>&nbsp;&nbsp;The precise terms and conditions for copying, distribution and</div><div class='line' id='LC100'>modification follow.</div><div class='line' id='LC101'><br/></div><div class='line' id='LC102'>		    GNU GENERAL PUBLIC LICENSE</div><div class='line' id='LC103'>&nbsp;&nbsp;&nbsp;TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION</div><div class='line' id='LC104'><br/></div><div class='line' id='LC105'>&nbsp;&nbsp;0. This License applies to any program or other work which contains</div><div class='line' id='LC106'>a notice placed by the copyright holder saying it may be distributed</div><div class='line' id='LC107'>under the terms of this General Public License.  The &quot;Program&quot;, below,</div><div class='line' id='LC108'>refers to any such program or work, and a &quot;work based on the Program&quot;</div><div class='line' id='LC109'>means either the Program or any derivative work under copyright law:</div><div class='line' id='LC110'>that is to say, a work containing the Program or a portion of it,</div><div class='line' id='LC111'>either verbatim or with modifications and/or translated into another</div><div class='line' id='LC112'>language.  (Hereinafter, translation is included without limitation in</div><div class='line' id='LC113'>the term &quot;modification&quot;.)  Each licensee is addressed as &quot;you&quot;.</div><div class='line' id='LC114'><br/></div><div class='line' id='LC115'>Activities other than copying, distribution and modification are not</div><div class='line' id='LC116'>covered by this License; they are outside its scope.  The act of</div><div class='line' id='LC117'>running the Program is not restricted, and the output from the Program</div><div class='line' id='LC118'>is covered only if its contents constitute a work based on the</div><div class='line' id='LC119'>Program (independent of having been made by running the Program).</div><div class='line' id='LC120'>Whether that is true depends on what the Program does.</div><div class='line' id='LC121'><br/></div><div class='line' id='LC122'>&nbsp;&nbsp;1. You may copy and distribute verbatim copies of the Program&#39;s</div><div class='line' id='LC123'>source code as you receive it, in any medium, provided that you</div><div class='line' id='LC124'>conspicuously and appropriately publish on each copy an appropriate</div><div class='line' id='LC125'>copyright notice and disclaimer of warranty; keep intact all the</div><div class='line' id='LC126'>notices that refer to this License and to the absence of any warranty;</div><div class='line' id='LC127'>and give any other recipients of the Program a copy of this License</div><div class='line' id='LC128'>along with the Program.</div><div class='line' id='LC129'><br/></div><div class='line' id='LC130'>You may charge a fee for the physical act of transferring a copy, and</div><div class='line' id='LC131'>you may at your option offer warranty protection in exchange for a fee.</div><div class='line' id='LC132'><br/></div><div class='line' id='LC133'>&nbsp;&nbsp;2. You may modify your copy or copies of the Program or any portion</div><div class='line' id='LC134'>of it, thus forming a work based on the Program, and copy and</div><div class='line' id='LC135'>distribute such modifications or work under the terms of Section 1</div><div class='line' id='LC136'>above, provided that you also meet all of these conditions:</div><div class='line' id='LC137'><br/></div><div class='line' id='LC138'>&nbsp;&nbsp;&nbsp;&nbsp;a) You must cause the modified files to carry prominent notices</div><div class='line' id='LC139'>&nbsp;&nbsp;&nbsp;&nbsp;stating that you changed the files and the date of any change.</div><div class='line' id='LC140'><br/></div><div class='line' id='LC141'>&nbsp;&nbsp;&nbsp;&nbsp;b) You must cause any work that you distribute or publish, that in</div><div class='line' id='LC142'>&nbsp;&nbsp;&nbsp;&nbsp;whole or in part contains or is derived from the Program or any</div><div class='line' id='LC143'>&nbsp;&nbsp;&nbsp;&nbsp;part thereof, to be licensed as a whole at no charge to all third</div><div class='line' id='LC144'>&nbsp;&nbsp;&nbsp;&nbsp;parties under the terms of this License.</div><div class='line' id='LC145'><br/></div><div class='line' id='LC146'>&nbsp;&nbsp;&nbsp;&nbsp;c) If the modified program normally reads commands interactively</div><div class='line' id='LC147'>&nbsp;&nbsp;&nbsp;&nbsp;when run, you must cause it, when started running for such</div><div class='line' id='LC148'>&nbsp;&nbsp;&nbsp;&nbsp;interactive use in the most ordinary way, to print or display an</div><div class='line' id='LC149'>&nbsp;&nbsp;&nbsp;&nbsp;announcement including an appropriate copyright notice and a</div><div class='line' id='LC150'>&nbsp;&nbsp;&nbsp;&nbsp;notice that there is no warranty (or else, saying that you provide</div><div class='line' id='LC151'>&nbsp;&nbsp;&nbsp;&nbsp;a warranty) and that users may redistribute the program under</div><div class='line' id='LC152'>&nbsp;&nbsp;&nbsp;&nbsp;these conditions, and telling the user how to view a copy of this</div><div class='line' id='LC153'>&nbsp;&nbsp;&nbsp;&nbsp;License.  (Exception: if the Program itself is interactive but</div><div class='line' id='LC154'>&nbsp;&nbsp;&nbsp;&nbsp;does not normally print such an announcement, your work based on</div><div class='line' id='LC155'>&nbsp;&nbsp;&nbsp;&nbsp;the Program is not required to print an announcement.)</div><div class='line' id='LC156'><br/></div><div class='line' id='LC157'>These requirements apply to the modified work as a whole.  If</div><div class='line' id='LC158'>identifiable sections of that work are not derived from the Program,</div><div class='line' id='LC159'>and can be reasonably considered independent and separate works in</div><div class='line' id='LC160'>themselves, then this License, and its terms, do not apply to those</div><div class='line' id='LC161'>sections when you distribute them as separate works.  But when you</div><div class='line' id='LC162'>distribute the same sections as part of a whole which is a work based</div><div class='line' id='LC163'>on the Program, the distribution of the whole must be on the terms of</div><div class='line' id='LC164'>this License, whose permissions for other licensees extend to the</div><div class='line' id='LC165'>entire whole, and thus to each and every part regardless of who wrote it.</div><div class='line' id='LC166'><br/></div><div class='line' id='LC167'>Thus, it is not the intent of this section to claim rights or contest</div><div class='line' id='LC168'>your rights to work written entirely by you; rather, the intent is to</div><div class='line' id='LC169'>exercise the right to control the distribution of derivative or</div><div class='line' id='LC170'>collective works based on the Program.</div><div class='line' id='LC171'><br/></div><div class='line' id='LC172'>In addition, mere aggregation of another work not based on the Program</div><div class='line' id='LC173'>with the Program (or with a work based on the Program) on a volume of</div><div class='line' id='LC174'>a storage or distribution medium does not bring the other work under</div><div class='line' id='LC175'>the scope of this License.</div><div class='line' id='LC176'><br/></div><div class='line' id='LC177'>&nbsp;&nbsp;3. You may copy and distribute the Program (or a work based on it,</div><div class='line' id='LC178'>under Section 2) in object code or executable form under the terms of</div><div class='line' id='LC179'>Sections 1 and 2 above provided that you also do one of the following:</div><div class='line' id='LC180'><br/></div><div class='line' id='LC181'>&nbsp;&nbsp;&nbsp;&nbsp;a) Accompany it with the complete corresponding machine-readable</div><div class='line' id='LC182'>&nbsp;&nbsp;&nbsp;&nbsp;source code, which must be distributed under the terms of Sections</div><div class='line' id='LC183'>&nbsp;&nbsp;&nbsp;&nbsp;1 and 2 above on a medium customarily used for software interchange; or,</div><div class='line' id='LC184'><br/></div><div class='line' id='LC185'>&nbsp;&nbsp;&nbsp;&nbsp;b) Accompany it with a written offer, valid for at least three</div><div class='line' id='LC186'>&nbsp;&nbsp;&nbsp;&nbsp;years, to give any third party, for a charge no more than your</div><div class='line' id='LC187'>&nbsp;&nbsp;&nbsp;&nbsp;cost of physically performing source distribution, a complete</div><div class='line' id='LC188'>&nbsp;&nbsp;&nbsp;&nbsp;machine-readable copy of the corresponding source code, to be</div><div class='line' id='LC189'>&nbsp;&nbsp;&nbsp;&nbsp;distributed under the terms of Sections 1 and 2 above on a medium</div><div class='line' id='LC190'>&nbsp;&nbsp;&nbsp;&nbsp;customarily used for software interchange; or,</div><div class='line' id='LC191'><br/></div><div class='line' id='LC192'>&nbsp;&nbsp;&nbsp;&nbsp;c) Accompany it with the information you received as to the offer</div><div class='line' id='LC193'>&nbsp;&nbsp;&nbsp;&nbsp;to distribute corresponding source code.  (This alternative is</div><div class='line' id='LC194'>&nbsp;&nbsp;&nbsp;&nbsp;allowed only for noncommercial distribution and only if you</div><div class='line' id='LC195'>&nbsp;&nbsp;&nbsp;&nbsp;received the program in object code or executable form with such</div><div class='line' id='LC196'>&nbsp;&nbsp;&nbsp;&nbsp;an offer, in accord with Subsection b above.)</div><div class='line' id='LC197'><br/></div><div class='line' id='LC198'>The source code for a work means the preferred form of the work for</div><div class='line' id='LC199'>making modifications to it.  For an executable work, complete source</div><div class='line' id='LC200'>code means all the source code for all modules it contains, plus any</div><div class='line' id='LC201'>associated interface definition files, plus the scripts used to</div><div class='line' id='LC202'>control compilation and installation of the executable.  However, as a</div><div class='line' id='LC203'>special exception, the source code distributed need not include</div><div class='line' id='LC204'>anything that is normally distributed (in either source or binary</div><div class='line' id='LC205'>form) with the major components (compiler, kernel, and so on) of the</div><div class='line' id='LC206'>operating system on which the executable runs, unless that component</div><div class='line' id='LC207'>itself accompanies the executable.</div><div class='line' id='LC208'><br/></div><div class='line' id='LC209'>If distribution of executable or object code is made by offering</div><div class='line' id='LC210'>access to copy from a designated place, then offering equivalent</div><div class='line' id='LC211'>access to copy the source code from the same place counts as</div><div class='line' id='LC212'>distribution of the source code, even though third parties are not</div><div class='line' id='LC213'>compelled to copy the source along with the object code.</div><div class='line' id='LC214'><br/></div><div class='line' id='LC215'>&nbsp;&nbsp;4. You may not copy, modify, sublicense, or distribute the Program</div><div class='line' id='LC216'>except as expressly provided under this License.  Any attempt</div><div class='line' id='LC217'>otherwise to copy, modify, sublicense or distribute the Program is</div><div class='line' id='LC218'>void, and will automatically terminate your rights under this License.</div><div class='line' id='LC219'>However, parties who have received copies, or rights, from you under</div><div class='line' id='LC220'>this License will not have their licenses terminated so long as such</div><div class='line' id='LC221'>parties remain in full compliance.</div><div class='line' id='LC222'><br/></div><div class='line' id='LC223'>&nbsp;&nbsp;5. You are not required to accept this License, since you have not</div><div class='line' id='LC224'>signed it.  However, nothing else grants you permission to modify or</div><div class='line' id='LC225'>distribute the Program or its derivative works.  These actions are</div><div class='line' id='LC226'>prohibited by law if you do not accept this License.  Therefore, by</div><div class='line' id='LC227'>modifying or distributing the Program (or any work based on the</div><div class='line' id='LC228'>Program), you indicate your acceptance of this License to do so, and</div><div class='line' id='LC229'>all its terms and conditions for copying, distributing or modifying</div><div class='line' id='LC230'>the Program or works based on it.</div><div class='line' id='LC231'><br/></div><div class='line' id='LC232'>&nbsp;&nbsp;6. Each time you redistribute the Program (or any work based on the</div><div class='line' id='LC233'>Program), the recipient automatically receives a license from the</div><div class='line' id='LC234'>original licensor to copy, distribute or modify the Program subject to</div><div class='line' id='LC235'>these terms and conditions.  You may not impose any further</div><div class='line' id='LC236'>restrictions on the recipients&#39; exercise of the rights granted herein.</div><div class='line' id='LC237'>You are not responsible for enforcing compliance by third parties to</div><div class='line' id='LC238'>this License.</div><div class='line' id='LC239'><br/></div><div class='line' id='LC240'>&nbsp;&nbsp;7. If, as a consequence of a court judgment or allegation of patent</div><div class='line' id='LC241'>infringement or for any other reason (not limited to patent issues),</div><div class='line' id='LC242'>conditions are imposed on you (whether by court order, agreement or</div><div class='line' id='LC243'>otherwise) that contradict the conditions of this License, they do not</div><div class='line' id='LC244'>excuse you from the conditions of this License.  If you cannot</div><div class='line' id='LC245'>distribute so as to satisfy simultaneously your obligations under this</div><div class='line' id='LC246'>License and any other pertinent obligations, then as a consequence you</div><div class='line' id='LC247'>may not distribute the Program at all.  For example, if a patent</div><div class='line' id='LC248'>license would not permit royalty-free redistribution of the Program by</div><div class='line' id='LC249'>all those who receive copies directly or indirectly through you, then</div><div class='line' id='LC250'>the only way you could satisfy both it and this License would be to</div><div class='line' id='LC251'>refrain entirely from distribution of the Program.</div><div class='line' id='LC252'><br/></div><div class='line' id='LC253'>If any portion of this section is held invalid or unenforceable under</div><div class='line' id='LC254'>any particular circumstance, the balance of the section is intended to</div><div class='line' id='LC255'>apply and the section as a whole is intended to apply in other</div><div class='line' id='LC256'>circumstances.</div><div class='line' id='LC257'><br/></div><div class='line' id='LC258'>It is not the purpose of this section to induce you to infringe any</div><div class='line' id='LC259'>patents or other property right claims or to contest validity of any</div><div class='line' id='LC260'>such claims; this section has the sole purpose of protecting the</div><div class='line' id='LC261'>integrity of the free software distribution system, which is</div><div class='line' id='LC262'>implemented by public license practices.  Many people have made</div><div class='line' id='LC263'>generous contributions to the wide range of software distributed</div><div class='line' id='LC264'>through that system in reliance on consistent application of that</div><div class='line' id='LC265'>system; it is up to the author/donor to decide if he or she is willing</div><div class='line' id='LC266'>to distribute software through any other system and a licensee cannot</div><div class='line' id='LC267'>impose that choice.</div><div class='line' id='LC268'><br/></div><div class='line' id='LC269'>This section is intended to make thoroughly clear what is believed to</div><div class='line' id='LC270'>be a consequence of the rest of this License.</div><div class='line' id='LC271'><br/></div><div class='line' id='LC272'>&nbsp;&nbsp;8. If the distribution and/or use of the Program is restricted in</div><div class='line' id='LC273'>certain countries either by patents or by copyrighted interfaces, the</div><div class='line' id='LC274'>original copyright holder who places the Program under this License</div><div class='line' id='LC275'>may add an explicit geographical distribution limitation excluding</div><div class='line' id='LC276'>those countries, so that distribution is permitted only in or among</div><div class='line' id='LC277'>countries not thus excluded.  In such case, this License incorporates</div><div class='line' id='LC278'>the limitation as if written in the body of this License.</div><div class='line' id='LC279'><br/></div><div class='line' id='LC280'>&nbsp;&nbsp;9. The Free Software Foundation may publish revised and/or new versions</div><div class='line' id='LC281'>of the General Public License from time to time.  Such new versions will</div><div class='line' id='LC282'>be similar in spirit to the present version, but may differ in detail to</div><div class='line' id='LC283'>address new problems or concerns.</div><div class='line' id='LC284'><br/></div><div class='line' id='LC285'>Each version is given a distinguishing version number.  If the Program</div><div class='line' id='LC286'>specifies a version number of this License which applies to it and &quot;any</div><div class='line' id='LC287'>later version&quot;, you have the option of following the terms and conditions</div><div class='line' id='LC288'>either of that version or of any later version published by the Free</div><div class='line' id='LC289'>Software Foundation.  If the Program does not specify a version number of</div><div class='line' id='LC290'>this License, you may choose any version ever published by the Free Software</div><div class='line' id='LC291'>Foundation.</div><div class='line' id='LC292'><br/></div><div class='line' id='LC293'>&nbsp;&nbsp;10. If you wish to incorporate parts of the Program into other free</div><div class='line' id='LC294'>programs whose distribution conditions are different, write to the author</div><div class='line' id='LC295'>to ask for permission.  For software which is copyrighted by the Free</div><div class='line' id='LC296'>Software Foundation, write to the Free Software Foundation; we sometimes</div><div class='line' id='LC297'>make exceptions for this.  Our decision will be guided by the two goals</div><div class='line' id='LC298'>of preserving the free status of all derivatives of our free software and</div><div class='line' id='LC299'>of promoting the sharing and reuse of software generally.</div><div class='line' id='LC300'><br/></div><div class='line' id='LC301'>			    NO WARRANTY</div><div class='line' id='LC302'><br/></div><div class='line' id='LC303'>&nbsp;&nbsp;11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY</div><div class='line' id='LC304'>FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN</div><div class='line' id='LC305'>OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES</div><div class='line' id='LC306'>PROVIDE THE PROGRAM &quot;AS IS&quot; WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED</div><div class='line' id='LC307'>OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF</div><div class='line' id='LC308'>MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS</div><div class='line' id='LC309'>TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE</div><div class='line' id='LC310'>PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,</div><div class='line' id='LC311'>REPAIR OR CORRECTION.</div><div class='line' id='LC312'><br/></div><div class='line' id='LC313'>&nbsp;&nbsp;12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING</div><div class='line' id='LC314'>WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR</div><div class='line' id='LC315'>REDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,</div><div class='line' id='LC316'>INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING</div><div class='line' id='LC317'>OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED</div><div class='line' id='LC318'>TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY</div><div class='line' id='LC319'>YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER</div><div class='line' id='LC320'>PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE</div><div class='line' id='LC321'>POSSIBILITY OF SUCH DAMAGES.</div><div class='line' id='LC322'><br/></div><div class='line' id='LC323'>		     END OF TERMS AND CONDITIONS</div><div class='line' id='LC324'><br/></div><div class='line' id='LC325'>	    How to Apply These Terms to Your New Programs</div><div class='line' id='LC326'><br/></div><div class='line' id='LC327'>&nbsp;&nbsp;If you develop a new program, and you want it to be of the greatest</div><div class='line' id='LC328'>possible use to the public, the best way to achieve this is to make it</div><div class='line' id='LC329'>free software which everyone can redistribute and change under these terms.</div><div class='line' id='LC330'><br/></div><div class='line' id='LC331'>&nbsp;&nbsp;To do so, attach the following notices to the program.  It is safest</div><div class='line' id='LC332'>to attach them to the start of each source file to most effectively</div><div class='line' id='LC333'>convey the exclusion of warranty; and each file should have at least</div><div class='line' id='LC334'>the &quot;copyright&quot; line and a pointer to where the full notice is found.</div><div class='line' id='LC335'><br/></div><div class='line' id='LC336'>&nbsp;&nbsp;&nbsp;&nbsp;&lt;one line to give the program&#39;s name and a brief idea of what it does.&gt;</div><div class='line' id='LC337'>&nbsp;&nbsp;&nbsp;&nbsp;Copyright (C) &lt;year&gt;  &lt;name of author&gt;</div><div class='line' id='LC338'><br/></div><div class='line' id='LC339'>&nbsp;&nbsp;&nbsp;&nbsp;This program is free software; you can redistribute it and/or modify</div><div class='line' id='LC340'>&nbsp;&nbsp;&nbsp;&nbsp;it under the terms of the GNU General Public License as published by</div><div class='line' id='LC341'>&nbsp;&nbsp;&nbsp;&nbsp;the Free Software Foundation; either version 2 of the License, or</div><div class='line' id='LC342'>&nbsp;&nbsp;&nbsp;&nbsp;(at your option) any later version.</div><div class='line' id='LC343'><br/></div><div class='line' id='LC344'>&nbsp;&nbsp;&nbsp;&nbsp;This program is distributed in the hope that it will be useful,</div><div class='line' id='LC345'>&nbsp;&nbsp;&nbsp;&nbsp;but WITHOUT ANY WARRANTY; without even the implied warranty of</div><div class='line' id='LC346'>&nbsp;&nbsp;&nbsp;&nbsp;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</div><div class='line' id='LC347'>&nbsp;&nbsp;&nbsp;&nbsp;GNU General Public License for more details.</div><div class='line' id='LC348'><br/></div><div class='line' id='LC349'>&nbsp;&nbsp;&nbsp;&nbsp;You should have received a copy of the GNU General Public License</div><div class='line' id='LC350'>&nbsp;&nbsp;&nbsp;&nbsp;along with this program; if not, write to the Free Software</div><div class='line' id='LC351'>&nbsp;&nbsp;&nbsp;&nbsp;Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA</div><div class='line' id='LC352'><br/></div><div class='line' id='LC353'><br/></div><div class='line' id='LC354'>Also add information on how to contact you by electronic and paper mail.</div><div class='line' id='LC355'><br/></div><div class='line' id='LC356'>If the program is interactive, make it output a short notice like this</div><div class='line' id='LC357'>when it starts in an interactive mode:</div><div class='line' id='LC358'><br/></div><div class='line' id='LC359'>&nbsp;&nbsp;&nbsp;&nbsp;Gnomovision version 69, Copyright (C) year name of author</div><div class='line' id='LC360'>&nbsp;&nbsp;&nbsp;&nbsp;Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show w&#39;.</div><div class='line' id='LC361'>&nbsp;&nbsp;&nbsp;&nbsp;This is free software, and you are welcome to redistribute it</div><div class='line' id='LC362'>&nbsp;&nbsp;&nbsp;&nbsp;under certain conditions; type `show c&#39; for details.</div><div class='line' id='LC363'><br/></div><div class='line' id='LC364'>The hypothetical commands `show w&#39; and `show c&#39; should show the appropriate</div><div class='line' id='LC365'>parts of the General Public License.  Of course, the commands you use may</div><div class='line' id='LC366'>be called something other than `show w&#39; and `show c&#39;; they could even be</div><div class='line' id='LC367'>mouse-clicks or menu items--whatever suits your program.</div><div class='line' id='LC368'><br/></div><div class='line' id='LC369'>You should also get your employer (if you work as a programmer) or your</div><div class='line' id='LC370'>school, if any, to sign a &quot;copyright disclaimer&quot; for the program, if</div><div class='line' id='LC371'>necessary.  Here is a sample; alter the names:</div><div class='line' id='LC372'><br/></div><div class='line' id='LC373'>&nbsp;&nbsp;Yoyodyne, Inc., hereby disclaims all copyright interest in the program</div><div class='line' id='LC374'>&nbsp;&nbsp;`Gnomovision&#39; (which makes passes at compilers) written by James Hacker.</div><div class='line' id='LC375'><br/></div><div class='line' id='LC376'>&nbsp;&nbsp;&lt;signature of Ty Coon&gt;, 1 April 1989</div><div class='line' id='LC377'>&nbsp;&nbsp;Ty Coon, President of Vice</div><div class='line' id='LC378'><br/></div><div class='line' id='LC379'>This General Public License does not permit incorporating your program into</div><div class='line' id='LC380'>proprietary programs.  If your program is a subroutine library, you may</div><div class='line' id='LC381'>consider it more useful to permit linking proprietary applications with the</div><div class='line' id='LC382'>library.  If this is what you want to do, use the GNU Library General</div><div class='line' id='LC383'>Public License instead of this License.</div></pre></div>
+          </td>
+        </tr>
+      </table>
+  </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<div class="frame frame-loading" style="display:none;" data-tree-list-url="/SchedMD/slurm/tree-list/11fdd879ee4c31a42f6294012a53a37ee7c466ef" data-blob-url-prefix="/SchedMD/slurm/blob/11fdd879ee4c31a42f6294012a53a37ee7c466ef">
+  <img src="https://a248.e.akamai.net/assets.github.com/images/modules/ajax/big_spinner_336699.gif?1315937507" height="32" width="32">
+</div>
+
+      </div>
+    </div>
+
+
+      <!-- footer -->
+      <div id="footer" >
+        
+  <div class="upper_footer">
+     <div class="container clearfix">
+
+       <!--[if IE]><h4 id="blacktocat_ie">GitHub Links</h4><![endif]-->
+       <![if !IE]><h4 id="blacktocat">GitHub Links</h4><![endif]>
+
+       <ul class="footer_nav">
+         <h4>GitHub</h4>
+         <li><a href="https://github.com/about">About</a></li>
+         <li><a href="https://github.com/blog">Blog</a></li>
+         <li><a href="https://github.com/features">Features</a></li>
+         <li><a href="https://github.com/contact">Contact &amp; Support</a></li>
+         <li><a href="https://github.com/training">Training</a></li>
+         <li><a href="http://enterprise.github.com/">GitHub Enterprise</a></li>
+         <li><a href="http://status.github.com/">Site Status</a></li>
+       </ul>
+
+       <ul class="footer_nav">
+         <h4>Tools</h4>
+         <li><a href="http://get.gaug.es/">Gauges: Analyze web traffic</a></li>
+         <li><a href="http://speakerdeck.com">Speaker Deck: Presentations</a></li>
+         <li><a href="https://gist.github.com">Gist: Code snippets</a></li>
+         <li><a href="http://mac.github.com/">GitHub for Mac</a></li>
+         <li><a href="http://mobile.github.com/">Issues for iPhone</a></li>
+         <li><a href="http://jobs.github.com/">Job Board</a></li>
+       </ul>
+
+       <ul class="footer_nav">
+         <h4>Extras</h4>
+         <li><a href="http://shop.github.com/">GitHub Shop</a></li>
+         <li><a href="http://octodex.github.com/">The Octodex</a></li>
+       </ul>
+
+       <ul class="footer_nav">
+         <h4>Documentation</h4>
+         <li><a href="http://help.github.com/">GitHub Help</a></li>
+         <li><a href="http://developer.github.com/">Developer API</a></li>
+         <li><a href="http://github.github.com/github-flavored-markdown/">GitHub Flavored Markdown</a></li>
+         <li><a href="http://pages.github.com/">GitHub Pages</a></li>
+       </ul>
+
+     </div><!-- /.site -->
+  </div><!-- /.upper_footer -->
+
+<div class="lower_footer">
+  <div class="container clearfix">
+    <!--[if IE]><div id="legal_ie"><![endif]-->
+    <![if !IE]><div id="legal"><![endif]>
+      <ul>
+          <li><a href="https://github.com/site/terms">Terms of Service</a></li>
+          <li><a href="https://github.com/site/privacy">Privacy</a></li>
+          <li><a href="https://github.com/security">Security</a></li>
+      </ul>
+
+      <p>&copy; 2012 <span id="_rrt" title="0.14123s from fe10.rs.github.com">GitHub</span> Inc. All rights reserved.</p>
+    </div><!-- /#legal or /#legal_ie-->
+
+      <div class="sponsor">
+        <a href="http://www.rackspace.com" class="logo">
+          <img alt="Dedicated Server" height="36" src="https://a248.e.akamai.net/assets.github.com/images/modules/footer/rackspace_logo.png?v2" width="38" />
+        </a>
+        Powered by the <a href="http://www.rackspace.com ">Dedicated
+        Servers</a> and<br/> <a href="http://www.rackspacecloud.com">Cloud
+        Computing</a> of Rackspace Hosting<span>&reg;</span>
+      </div>
+  </div><!-- /.site -->
+</div><!-- /.lower_footer -->
+
+      </div><!-- /#footer -->
+
+    
+
+<div id="keyboard_shortcuts_pane" class="instapaper_ignore readability-extra" style="display:none">
+  <h2>Keyboard Shortcuts <small><a href="#" class="js-see-all-keyboard-shortcuts">(see all)</a></small></h2>
+
+  <div class="columns threecols">
+    <div class="column first">
+      <h3>Site wide shortcuts</h3>
+      <dl class="keyboard-mappings">
+        <dt>s</dt>
+        <dd>Focus site search</dd>
+      </dl>
+      <dl class="keyboard-mappings">
+        <dt>?</dt>
+        <dd>Bring up this help dialog</dd>
+      </dl>
+    </div><!-- /.column.first -->
+
+    <div class="column middle" style='display:none'>
+      <h3>Commit list</h3>
+      <dl class="keyboard-mappings">
+        <dt>j</dt>
+        <dd>Move selection down</dd>
+      </dl>
+      <dl class="keyboard-mappings">
+        <dt>k</dt>
+        <dd>Move selection up</dd>
+      </dl>
+      <dl class="keyboard-mappings">
+        <dt>c <em>or</em> o <em>or</em> enter</dt>
+        <dd>Open commit</dd>
+      </dl>
+      <dl class="keyboard-mappings">
+        <dt>y</dt>
+        <dd>Expand URL to its canonical form</dd>
+      </dl>
+    </div><!-- /.column.first -->
+
+    <div class="column last" style='display:none'>
+      <h3>Pull request list</h3>
+      <dl class="keyboard-mappings">
+        <dt>j</dt>
+        <dd>Move selection down</dd>
+      </dl>
+      <dl class="keyboard-mappings">
+        <dt>k</dt>
+        <dd>Move selection up</dd>
+      </dl>
+      <dl class="keyboard-mappings">
+        <dt>o <em>or</em> enter</dt>
+        <dd>Open issue</dd>
+      </dl>
+    </div><!-- /.columns.last -->
+
+  </div><!-- /.columns.equacols -->
+
+  <div style='display:none'>
+    <div class="rule"></div>
+
+    <h3>Issues</h3>
+
+    <div class="columns threecols">
+      <div class="column first">
+        <dl class="keyboard-mappings">
+          <dt>j</dt>
+          <dd>Move selection down</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>k</dt>
+          <dd>Move selection up</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>x</dt>
+          <dd>Toggle selection</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>o <em>or</em> enter</dt>
+          <dd>Open issue</dd>
+        </dl>
+      </div><!-- /.column.first -->
+      <div class="column middle">
+        <dl class="keyboard-mappings">
+          <dt>I</dt>
+          <dd>Mark selection as read</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>U</dt>
+          <dd>Mark selection as unread</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>e</dt>
+          <dd>Close selection</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>y</dt>
+          <dd>Remove selection from view</dd>
+        </dl>
+      </div><!-- /.column.middle -->
+      <div class="column last">
+        <dl class="keyboard-mappings">
+          <dt>c</dt>
+          <dd>Create issue</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>l</dt>
+          <dd>Create label</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>i</dt>
+          <dd>Back to inbox</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>u</dt>
+          <dd>Back to issues</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>/</dt>
+          <dd>Focus issues search</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div style='display:none'>
+    <div class="rule"></div>
+
+    <h3>Issues Dashboard</h3>
+
+    <div class="columns threecols">
+      <div class="column first">
+        <dl class="keyboard-mappings">
+          <dt>j</dt>
+          <dd>Move selection down</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>k</dt>
+          <dd>Move selection up</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>o <em>or</em> enter</dt>
+          <dd>Open issue</dd>
+        </dl>
+      </div><!-- /.column.first -->
+    </div>
+  </div>
+
+  <div style='display:none'>
+    <div class="rule"></div>
+
+    <h3>Network Graph</h3>
+    <div class="columns equacols">
+      <div class="column first">
+        <dl class="keyboard-mappings">
+          <dt><span class="badmono">←</span> <em>or</em> h</dt>
+          <dd>Scroll left</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt><span class="badmono">→</span> <em>or</em> l</dt>
+          <dd>Scroll right</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt><span class="badmono">↑</span> <em>or</em> k</dt>
+          <dd>Scroll up</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt><span class="badmono">↓</span> <em>or</em> j</dt>
+          <dd>Scroll down</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>t</dt>
+          <dd>Toggle visibility of head labels</dd>
+        </dl>
+      </div><!-- /.column.first -->
+      <div class="column last">
+        <dl class="keyboard-mappings">
+          <dt>shift <span class="badmono">←</span> <em>or</em> shift h</dt>
+          <dd>Scroll all the way left</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>shift <span class="badmono">→</span> <em>or</em> shift l</dt>
+          <dd>Scroll all the way right</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>shift <span class="badmono">↑</span> <em>or</em> shift k</dt>
+          <dd>Scroll all the way up</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>shift <span class="badmono">↓</span> <em>or</em> shift j</dt>
+          <dd>Scroll all the way down</dd>
+        </dl>
+      </div><!-- /.column.last -->
+    </div>
+  </div>
+
+  <div >
+    <div class="rule"></div>
+    <div class="columns threecols">
+      <div class="column first" >
+        <h3>Source Code Browsing</h3>
+        <dl class="keyboard-mappings">
+          <dt>t</dt>
+          <dd>Activates the file finder</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>l</dt>
+          <dd>Jump to line</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>w</dt>
+          <dd>Switch branch/tag</dd>
+        </dl>
+        <dl class="keyboard-mappings">
+          <dt>y</dt>
+          <dd>Expand URL to its canonical form</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div id="markdown-help" class="instapaper_ignore readability-extra">
+  <h2>Markdown Cheat Sheet</h2>
+
+  <div class="cheatsheet-content">
+
+  <div class="mod">
+    <div class="col">
+      <h3>Format Text</h3>
+      <p>Headers</p>
+      <pre>
+# This is an &lt;h1&gt; tag
+## This is an &lt;h2&gt; tag
+###### This is an &lt;h6&gt; tag</pre>
+     <p>Text styles</p>
+     <pre>
+*This text will be italic*
+_This will also be italic_
+**This text will be bold**
+__This will also be bold__
+
+*You **can** combine them*
+</pre>
+    </div>
+    <div class="col">
+      <h3>Lists</h3>
+      <p>Unordered</p>
+      <pre>
+* Item 1
+* Item 2
+  * Item 2a
+  * Item 2b</pre>
+     <p>Ordered</p>
+     <pre>
+1. Item 1
+2. Item 2
+3. Item 3
+   * Item 3a
+   * Item 3b</pre>
+    </div>
+    <div class="col">
+      <h3>Miscellaneous</h3>
+      <p>Images</p>
+      <pre>
+![GitHub Logo](/images/logo.png)
+Format: ![Alt Text](url)
+</pre>
+     <p>Links</p>
+     <pre>
+http://github.com - automatic!
+[GitHub](http://github.com)</pre>
+<p>Blockquotes</p>
+     <pre>
+As Kanye West said:
+
+> We're living the future so
+> the present is our past.
+</pre>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <h3>Code Examples in Markdown</h3>
+  <div class="col">
+      <p>Syntax highlighting with <a href="http://github.github.com/github-flavored-markdown/" title="GitHub Flavored Markdown" target="_blank">GFM</a></p>
+      <pre>
+```javascript
+function fancyAlert(arg) {
+  if(arg) {
+    $.facebox({div:'#foo'})
+  }
+}
+```</pre>
+    </div>
+    <div class="col">
+      <p>Or, indent your code 4 spaces</p>
+      <pre>
+Here is a Python code example
+without syntax highlighting:
+
+    def foo:
+      if not bar:
+        return true</pre>
+    </div>
+    <div class="col">
+      <p>Inline code for comments</p>
+      <pre>
+I think you should use an
+`&lt;addr&gt;` element here instead.</pre>
+    </div>
+  </div>
+
+  </div>
+</div>
+
+
+    <div class="context-overlay"></div>
+
+    <div class="ajax-error-message">
+      <p><span class="icon"></span> Something went wrong with that request. Please try again. <a href="javascript:;" class="ajax-error-dismiss">Dismiss</a></p>
+    </div>
+
+    
+    
+    
+  </body>
+</html>
+
