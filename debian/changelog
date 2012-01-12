@@ -1,0 +1,5 @@
+python-pyslurm (2.2.7-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)
+
+ -- Stéphan Gorget <stephan.gorget@edf.fr>  Thu, 12 Jan 2012 11:40:55 +0100
