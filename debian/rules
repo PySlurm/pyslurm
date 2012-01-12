@@ -3,3 +3,6 @@
 %:
 	dh $@ --with python2
 
+clean:
+	dh $@
+	rm -rf pyslurm/pyslurm.c
