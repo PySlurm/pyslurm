@@ -32,6 +32,9 @@ directory or where the SLURM libraries and SLURM include files are :
 
 	* python setup.py install
 
+#. Indicate Blue Gene type (L/P/Q) on build line:
+
+	* --bgl or --bgp or --bgq
 
 #. Slurm root directory (Alternate installation directory):
 
