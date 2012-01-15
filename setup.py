@@ -37,6 +37,7 @@ def info(logstring):
 def usage():
 	warn("Need to provide either SLURM dir location for --build")
 	warn("Please use --slurm=PATH or --slurm-lib=PATH and --slurm-inc=PATH")
+	warn("Please set BlueGene type with --bgl --bgp or --bgq")
 	sys.exit(1)
 
 def scandir(dir, files=[]):
@@ -117,6 +118,7 @@ SLURM_DIR = SLURM_LIB = SLURM_INC = ''
 
 args = sys.argv[:]
 if args[1] == 'build':
+
 	for arg in args:
 		if arg.find('--slurm=') == 0:
 			SLURM_DIR = arg.split('=')[1]
@@ -128,6 +130,31 @@ if args[1] == 'build':
 			SLURM_INC = arg.split('=')[1]
 			sys.argv.remove(arg)
 
+		BGL = BGP = BGQ = 0
+		if arg.find('--bgl') == 0:
+			BGL=1
+			sys.argv.remove(arg)
+		if arg.find('--bgp') == 0:
+			BGP=1
+			sys.argv.remove(arg)
+		if arg.find('--bgq') == 0:
+			BGQ=1
+			sys.argv.remove(arg)
+
+	# BlueGene Types
+
+	if (BGL + BGP + BGQ) > 1:
+		fatal("Please specifiy one BG Type either --bgl or --bgp or --bgq")
+	else:
+		try:
+			f = open("pyslurm/bluegene.pxi", "w")
+			f.write("DEF BGL=%d\n" % BGL)
+			f.write("DEF BGP=%d\n" % BGP)
+			f.write("DEF BGQ=%d\n" % BGQ)
+			f.close()
+		except:
+			fatal("Unable to write Blue Gene type to pyslurm/bluegene.pxd")
+		
 	# Slurm installation directory
 
 	if SLURM_DIR and (SLURM_LIB or SLURM_INC):
@@ -149,7 +176,7 @@ if args[1] == 'build':
 	if not os.path.exists("%s/lib/libslurm.so" % SLURM_LIB):
 		warn("Cannot locate the Slurm shared library in %s" % SLURM_LIB)
 		usage()
-	
+
 # Get the list of extensions
 
 extNames = scandir("pyslurm/")
