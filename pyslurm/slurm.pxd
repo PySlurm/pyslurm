@@ -1,30 +1,24 @@
+
 # cython: embedsignature=True
 # cython: profile=False
 
-from libc.string cimport strlen 
+from libc.string cimport strlen, memset, memcpy
+
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int64_t
 
+from libc.stdlib cimport malloc, free
+
 from cpython cimport bool
 from cpython.version cimport PY_MAJOR_VERSION
-
-#from cpython cimport PyErr_SetString, PyBytes_Check
-#from cpython cimport PyUnicode_Check, PyBytes_FromStringAndSize
 
 cdef extern from 'stdlib.h':
 	ctypedef long size_t
 	ctypedef long long size_t
 
-	void free(void *__ptr)
-	void* malloc(size_t size)
-
 cdef extern from 'stdio.h':
 	ctypedef struct FILE
 	cdef FILE *stdout
-
-cdef extern from 'string.h':
-	void* memset(void *s, int c, size_t n)
-	void *memcpy(void *dest, void *src, size_t count)
 
 cdef extern from 'time.h' nogil:
 	ctypedef long time_t
@@ -51,13 +45,13 @@ cdef inline stringOrNone(char* value, value2):
 	if value is NULL:
 		if value2 is '':
 			return None
-		return value2
-	return value
+		return u"%s" % value2
+	return u"%s" % value
 
 cdef inline boolToString(int value):
 	if value == 0:
-		return 'False'
-	return 'True'
+		return u'False'
+	return u'True'
 
 #
 # SLURM declarations not in slurm.h
