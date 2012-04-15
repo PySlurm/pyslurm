@@ -1705,7 +1705,7 @@ cdef class job:
 				if tmp_str != NULL:
 					retvalStr = <char *>slurm.xmalloc((len(tmp_str)+1)*sizeof(char))
 					strcpy(retvalStr, tmp_str)
-					slurm.xfree(<void **>tmp_str)
+					slurm.xfree(tmp_str)
 					return "%s" % retvalStr
 				else:
 					return "%s" % ''
@@ -2098,9 +2098,9 @@ cdef class node:
 			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &tmp_str)
 			if retval == 0:
 				length = strlen(tmp_str)+1
-				retvalStr = <char*>malloc(length)
-				memcpy(tmp_str, retvalStr, length)
-				slurm.xfree(<void**>tmp_str)
+				retvalStr = <char*>slurm.xmalloc(length*sizeof(char))
+				strcpy(retvalStr, tmp_str)
+				slurm.xfree(tmp_str)
 				return retvalStr
 
 		if dataType == SELECT_NODEDATA_PTR: # data-> select_jobinfo_t *jobinfo
@@ -2861,9 +2861,9 @@ def slurm_create_reservation(dict reservation_dict={}):
 		free(resid)
 
 	if free_users == 1:
-		free(resv_msg.users)
+		slurm.xfree(resv_msg.users)
 	if free_accounts == 1:
-		free(resv_msg.accounts)
+		slurm.xfree(resv_msg.accounts)
 
 	return u"%s" % resID
 
@@ -2920,9 +2920,9 @@ def slurm_update_reservation(dict reservation_dict={}):
 	errCode = slurm.slurm_update_reservation(&resv_msg)
 
 	if free_users == 1:
-		free(resv_msg.users)
+		slurm.xfree(resv_msg.users)
 	if free_accounts == 1:
-		free(resv_msg.accounts)
+		slurm.xfree(resv_msg.accounts)
 
 	return errCode
 
