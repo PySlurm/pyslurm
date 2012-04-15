@@ -39,9 +39,9 @@ def version():
 
 __version__ = version()
 if not __version__:
-        sys.exit(1)
+	sys.exit(1)
 	warn("Unable to determine pyslurm version number")
-        sys.exit(1)
+	sys.exit(1)
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
