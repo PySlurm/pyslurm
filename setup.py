@@ -39,7 +39,6 @@ def version():
 
 __version__ = version()
 if not __version__:
-	sys.exit(1)
 	warn("Unable to determine pyslurm version number")
 	sys.exit(1)
 
@@ -162,7 +161,7 @@ if args[1] == 'build':
 
 	# BlueGene Types
 
-	if BGL == 0:
+	if (BGL + BGP + BGQ > 1):
 		fatal("Please specifiy one BG Type either --bgl or --bgp or --bgq")
 	else:
 		try:
