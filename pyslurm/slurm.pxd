@@ -57,8 +57,8 @@ cdef inline boolToString(int value):
 # SLURM declarations not in slurm.h
 #
 
-cdef inline xmalloc(size_t __sz):
-	slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
+cdef inline void* xmalloc(size_t __sz):
+	return slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
 
 cdef inline xfree(void **__p):
 	slurm_xfree(__p, __FILE__, __LINE__, __FUNCTION__)
