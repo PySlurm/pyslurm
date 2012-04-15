@@ -60,8 +60,8 @@ cdef inline boolToString(int value):
 cdef inline void* xmalloc(size_t __sz):
 	return slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
 
-cdef inline xfree(void **__p):
-	slurm_xfree(__p, __FILE__, __LINE__, __FUNCTION__)
+cdef inline xfree(char* __p):
+	slurm_xfree(<void **>&(__p), __FILE__, __LINE__, __FUNCTION__)
 
 cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
 cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
