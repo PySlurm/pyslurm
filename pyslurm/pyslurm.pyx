@@ -30,7 +30,7 @@ cdef extern from 'time.h' nogil:
 	ctypedef long time_t
 
 try:
-	#import __builtin__
+	import __builtin__
 except ImportError:
 	# Python 3
 	import builtins as __builtin__
@@ -1703,7 +1703,8 @@ cdef class job:
 			retval = slurm.slurm_get_select_jobinfo(jobinfo, dataType, &tmp_str)
 			if retval == 0:
 				if tmp_str != NULL:
-					retvalStr = strcpy(<char *>xmalloc(strlen(tmp_str)+1),tmp_str)
+					retvalStr = <char *>slurm.xmalloc((len(tmp_str)+1)*sizeof(char))
+					strcpy(retvalStr, tmp_str)
 					slurm.xfree(<void **>tmp_str)
 					return "%s" % retvalStr
 				else:
@@ -2834,13 +2835,13 @@ def slurm_create_reservation(dict reservation_dict={}):
 
 	if reservation_dict[u'users'] is not '':
 		name = reservation_dict[u'users']
-		resv_msg.users = <char*>xmalloc((len(name)+1)*sizeof(char))
+		resv_msg.users = <char*>slurm.xmalloc((len(name)+1)*sizeof(char))
 		strcpy(resv_msg.users, name)
 		free_users = 1
 
 	if reservation_dict[u'accounts'] is not '':
 		name = reservation_dict[u'accounts']
-		resv_msg.accounts = <char*>xmalloc((len(name)+1)*sizeof(char))
+		resv_msg.accounts = <char*>slurm.xmalloc((len(name)+1)*sizeof(char))
 		strcpy(resv_msg.accounts, name)
 		free_accounts = 1
 
@@ -2902,13 +2903,13 @@ def slurm_update_reservation(dict reservation_dict={}):
 
 	if reservation_dict[u'users'] is not '':
 		name = reservation_dict[u'users']
-		resv_msg.users = <char*>xmalloc((len(name)+1)*sizeof(char))
+		resv_msg.users = <char*>slurm.xmalloc((len(name)+1)*sizeof(char))
 		strcpy(resv_msg.users, name)
 		free_users = 1
 
 	if reservation_dict[u'accounts'] is not '':
 		name = reservation_dict[u'accounts']
-		resv_msg.accounts = <char*>xmalloc((len(name)+1)*sizeof(char))
+		resv_msg.accounts = <char*>slurm.xmalloc((len(name)+1)*sizeof(char))
 		strcpy(resv_msg.accounts, name)
 		free_accounts = 1
 
