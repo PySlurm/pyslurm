@@ -428,7 +428,7 @@ cdef class config:
 			Ctl_dict[u'over_time_limit'] = self.__Config_ptr.over_time_limit
 			Ctl_dict[u'plugindir'] = slurm.stringOrNone(self.__Config_ptr.plugindir, '')
 			Ctl_dict[u'plugstack'] = slurm.stringOrNone(self.__Config_ptr.plugstack, '')
-			Ctl_dict[u'preempt_mode'] = self.__Config_ptr.preempt_mode
+			Ctl_dict[u'preempt_mode'] = get_preempt_mode(self.__Config_ptr.preempt_mode)
 			Ctl_dict[u'preempt_type'] = slurm.stringOrNone(self.__Config_ptr.preempt_type, '')
 			Ctl_dict[u'priority_decay_hl'] = self.__Config_ptr.priority_decay_hl
 			Ctl_dict[u'priority_calc_period'] = self.__Config_ptr.priority_calc_period
@@ -714,7 +714,7 @@ cdef class partition:
 				Part_dict[u'total_nodes'] = self._record.total_nodes
 				Part_dict[u'total_cpus'] = self._record.total_cpus
 				Part_dict[u'priority'] = self._record.priority
-				Part_dict[u'preempt_mode'] = self._record.preempt_mode
+				Part_dict[u'preempt_mode'] = get_preempt_mode(self._record.preempt_mode)
 				Part_dict[u'default_time'] = self._record.default_time
 				Part_dict[u'flags'] = self._record.flags
 				Part_dict[u'state_up'] = self._record.state_up
