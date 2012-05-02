@@ -1,5 +1,13 @@
+python-pyslurm (2.3.3-1) unstable; urgency=low
+
+  * New pyslurm version 2.3.3
+  * Initial release (Closes: #nnnn)
+
+ -- Stephan Gorget <stephan.gorget@edf.fr>  Wed, 02 May 2012 15:38:43 +0200
+
 python-pyslurm (2.2.7-1) unstable; urgency=low
 
-  * Initial release (Closes: #nnnn)
+  * New pyslurm version 2.2.7
+  * First packaging
 
  -- Stéphan Gorget <stephan.gorget@edf.fr>  Thu, 12 Jan 2012 11:40:55 +0100
