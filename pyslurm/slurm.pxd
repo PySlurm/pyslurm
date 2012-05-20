@@ -69,6 +69,20 @@ cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
 cdef extern void slurm_api_set_conf_file(char *)
 cdef extern void slurm_api_clear_config()
 
+cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
+cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
+cdef extern char *slurm_job_reason_string(int inx)
+cdef extern char *slurm_job_state_string(uint16_t inx)
+cdef extern char *slurm_job_state_string_compact(uint16_t inx)
+cdef extern int   slurm_job_state_num(char *state_name)
+cdef extern char *slurm_node_state_string(uint16_t inx)
+cdef extern char *slurm_node_state_string_compact(uint16_t inx)
+cdef extern char *slurm_reservation_flags_string(uint16_t inx)
+cdef extern void  slurm_accounting_enforce_string(uint16_t enforce, char *, int)
+cdef extern char *slurm_conn_type_string(int)
+cdef extern char *slurm_node_use_string(int)
+cdef extern char *slurm_bg_block_state_string(uint16_t)
+
 #
 # SLURM spank API - Love the name !
 #
