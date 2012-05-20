@@ -18,8 +18,6 @@ for key in sorted(ctl_dict.iterkeys()):
 			ddate = pyslurm.epoch2date(ctl_dict[key])
 			print "\t%-35s : %s" % (key, ddate)
 
-	elif 'debug_flags' in key:
-		print "\t%-35s : %s" % (key, pyslurm.get_debug_flags(ctl_dict[key]))
 	else:
 		if 'key_pairs' not in key:
 			print "\t%-35s : %s" % (key, ctl_dict[key])
