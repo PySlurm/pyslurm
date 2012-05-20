@@ -1,11 +1,25 @@
 #!/usr/bin/env python
 
 import pyslurm
-from time import gmtime, strftime
 
-a, b = pyslurm.slurm_load_topo()
-print "*"*80
-pyslurm.slurm_print_topo_info_msg(b)
-print "*"*80
+def display(topo_dict):
+
+	if topo_dict:
+
+		print("-" * 80)
+		for key, value in topo_dict.items():
+
+			print("Name: %s" % (key))
+			for subkey, new_value in value.items():
+				print("\t%-17s : %s" % (subkey, new_value))
 
 
+if __name__ == "__main__":
+
+	topo = pyslurm.topology()
+	topo_dict = topo.get()
+
+	if len(topo_dict) > 0:
+		display(topo_dict)
+	else:
+		print("No Topology found !")
