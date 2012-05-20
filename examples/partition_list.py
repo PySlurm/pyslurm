@@ -25,10 +25,6 @@ def display(part_dict):
 
 					if value[part_key] == 0xffffffff:
 						valStr = "Unlimited"
-				elif part_key == 'state_up':
-					valStr = pyslurm.get_partition_state(value[part_key])
-				elif part_key == 'flags':
-					valStr = pyslurm.get_partition_mode(value[part_key])
 				elif part_key == 'last_update':
 					valStr = pyslurm.epoch2date(value[part_key])
 
