@@ -26,10 +26,6 @@ def display(block_dict):
 					else:
 						ddate = pyslurm.epoch2date(ddate)
 						print "\t%-17s : %s" % (part_key, ddate)
-				elif part_key == 'connection_type':
-					print "\t%-17s : %s" % (part_key, pyslurm.get_connection_type(value[part_key]))
-				elif part_key == 'state':
-					print "\t%-17s : %s" % (part_key, value[part_key])
 				else: 
 					print "\t%-17s : %s" % (part_key, value[part_key])
 
