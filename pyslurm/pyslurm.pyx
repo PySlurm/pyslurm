@@ -431,7 +431,7 @@ cdef class config:
 			Ctl_dict[u'over_time_limit'] = self.__Config_ptr.over_time_limit
 			Ctl_dict[u'plugindir'] = slurm.stringOrNone(self.__Config_ptr.plugindir, '')
 			Ctl_dict[u'plugstack'] = slurm.stringOrNone(self.__Config_ptr.plugstack, '')
-			Ctl_dict[u'preempt_mode'] = self.__Config_ptr.preempt_mode
+			Ctl_dict[u'preempt_mode'] = get_preempt_mode(self.__Config_ptr.preempt_mode)
 			Ctl_dict[u'preempt_type'] = slurm.stringOrNone(self.__Config_ptr.preempt_type, '')
 			Ctl_dict[u'priority_decay_hl'] = self.__Config_ptr.priority_decay_hl
 			Ctl_dict[u'priority_calc_period'] = self.__Config_ptr.priority_calc_period
@@ -717,10 +717,10 @@ cdef class partition:
 				Part_dict[u'total_nodes'] = self._record.total_nodes
 				Part_dict[u'total_cpus'] = self._record.total_cpus
 				Part_dict[u'priority'] = self._record.priority
-				Part_dict[u'preempt_mode'] = self._record.preempt_mode
+				Part_dict[u'preempt_mode'] = get_preempt_mode(self._record.preempt_mode)
 				Part_dict[u'default_time'] = self._record.default_time
-				Part_dict[u'flags'] = self._record.flags
-				Part_dict[u'state_up'] = self._record.state_up
+				Part_dict[u'flags'] = get_partition_mode(self._record.flags)
+				Part_dict[u'state_up'] = get_partition_state_up(self._record.state_up)
 				Part_dict[u'alternate'] = slurm.stringOrNone(self._record.alternate, '')
 				Part_dict[u'nodes'] = slurm.listOrNone(self._record.nodes, ',')
 				Part_dict[u'allow_alloc_nodes'] = slurm.listOrNone(self._record.allow_alloc_nodes, ',')
@@ -1655,8 +1655,8 @@ cdef class job:
 				Job_dict[u'ramdisk_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_RAMDISK_IMAGE)
 				#Job_dict['node_cnt'] = self.get_select_jobinfo(SELECT_JOBDATA_NODE_CNT)
 				Job_dict[u'resv_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_RESV_ID)
-				Job_dict[u'rotate'] = self.__get_select_jobinfo(SELECT_JOBDATA_ROTATE)
-				Job_dict[u'conn_type'] = self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE)
+				Job_dict[u'rotate'] = bool(self.__get_select_jobinfo(SELECT_JOBDATA_ROTATE))
+				Job_dict[u'conn_type'] = get_conn_type_string(self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
 				Job_dict[u'altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
 				Job_dict[u'reboot'] = self.__get_select_jobinfo(SELECT_JOBDATA_REBOOT)
 
@@ -1668,7 +1668,7 @@ cdef class job:
 				Job_dict[u'show_flags'] = self._job_ptr.job_array[i].show_flags
 				Job_dict[u'start_time'] = self._job_ptr.job_array[i].start_time
 				Job_dict[u'state_desc'] = slurm.stringOrNone(self._job_ptr.job_array[i].state_desc, '')
-				Job_dict[u'state_reason'] = self._job_ptr.job_array[i].state_reason
+				Job_dict[u'state_reason'] = get_job_state_reason(self._job_ptr.job_array[i].state_reason)
 				Job_dict[u'submit_time'] = self._job_ptr.job_array[i].submit_time
 				Job_dict[u'suspend_time'] = self._job_ptr.job_array[i].suspend_time
 				Job_dict[u'time_limit'] = self._job_ptr.job_array[i].time_limit
@@ -2036,7 +2036,7 @@ cdef class node:
 			Host_dict['name'] = slurm.stringOrNone(self._Node_ptr.node_array[i].name, '')
 			Host_dict['node_addr'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_addr, '')
 			Host_dict['node_hostname'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_hostname, '')
-			Host_dict['node_state'] = self._Node_ptr.node_array[i].node_state
+			Host_dict['node_state'] = get_node_state(self._Node_ptr.node_array[i].node_state)
 			Host_dict['os'] = slurm.stringOrNone(self._Node_ptr.node_array[i].os, '')
 			Host_dict['real_memory'] = self._Node_ptr.node_array[i].real_memory
 			Host_dict['reason'] = slurm.stringOrNone(self._Node_ptr.node_array[i].reason, '')
@@ -2790,7 +2790,7 @@ cdef class reservation:
 				Res_dict[u'users'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].users, ',')
 				Res_dict[u'start_time'] = self._Res_ptr.reservation_array[i].start_time
 				Res_dict[u'end_time'] = self._Res_ptr.reservation_array[i].end_time
-				Res_dict[u'flags'] = self._Res_ptr.reservation_array[i].flags
+				Res_dict[u'flags'] = get_res_state(self._Res_ptr.reservation_array[i].flags)
 
 				Reservations[name] = Res_dict
 
@@ -3127,7 +3127,7 @@ cdef class block:
 				name = self._block_ptr.block_array[i].bg_block_id
 				Block_dict[u'bg_block_id'] = name
 				Block_dict[u'blrtsimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].blrtsimage, '')
-				Block_dict[u'conn_type'] = self._block_ptr.block_array[i].conn_type[HIGHEST_DIMENSIONS]
+				Block_dict[u'conn_type'] = get_conn_type_string(self._block_ptr.block_array[i].conn_type[HIGHEST_DIMENSIONS])
 				Block_dict[u'ionode_str'] = slurm.listOrNone(self._block_ptr.block_array[i].ionode_str, ',')
 				Block_dict[u'job_running'] = self._block_ptr.block_array[i].job_running
 				Block_dict[u'linuximage'] = slurm.stringOrNone(self._block_ptr.block_array[i].linuximage, '')
@@ -3135,11 +3135,11 @@ cdef class block:
 				Block_dict[u'mp_str'] = slurm.stringOrNone(self._block_ptr.block_array[i].mp_str, '')
 				Block_dict[u'mp_used_str'] = slurm.stringOrNone(self._block_ptr.block_array[i].mp_used_str, '')
 				Block_dict[u'cnode_cnt'] = self._block_ptr.block_array[i].cnode_cnt
-				Block_dict[u'node_use'] = self._block_ptr.block_array[i].node_use
+				Block_dict[u'node_use'] = get_node_use(self._block_ptr.block_array[i].node_use)
 				Block_dict[u'owner_name'] = slurm.stringOrNone(self._block_ptr.block_array[i].owner_name, '')
 				Block_dict[u'ramdiskimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].ramdiskimage, '')
 				Block_dict[u'reason'] = slurm.stringOrNone(self._block_ptr.block_array[i].reason, '')
-				Block_dict[u'state'] = self._block_ptr.block_array[i].state
+				Block_dict[u'state'] = get_bg_block_state_string(self._block_ptr.block_array[i].state)
 
 				Block[name] = Block_dict
 
@@ -3469,7 +3469,7 @@ cdef class front_end:
 
 				name = u"%s" % self._FrontEndNode_ptr.front_end_array[i].name
 				FE_dict[u'name'] = name
-				FE_dict[u'node_state'] = self._FrontEndNode_ptr.front_end_array[i].node_state
+				FE_dict[u'node_state'] = get_node_state(self._FrontEndNode_ptr.front_end_array[i].node_state)
 				FE_dict[u'reason'] = slurm.stringOrNone(self._FrontEndNode_ptr.front_end_array[i].reason, '')
 				FE_dict[u'reason_uid'] = self._FrontEndNode_ptr.front_end_array[i].reason_uid
 				FE_dict[u'slurmd_start_time'] = self._FrontEndNode_ptr.front_end_array[i].slurmd_start_time
@@ -3480,7 +3480,7 @@ cdef class front_end:
 		self._FrontEndDict = FENode
 
 #
-#
+# Helper functions
 #
 
 def get_last_slurm_error():
@@ -3542,30 +3542,7 @@ def get_connection_type(uint16_t inx=0):
 	:rtype: `string`
 	"""
 
-	return __get_connection_type(inx)
-
-cdef inline object __get_connection_type(uint16_t ConnType=0):
-
-	rtype = 'unknown'
-
-	if ConnType == SELECT_MESH:
-		rtype = 'MESH'
-	elif ConnType == SELECT_TORUS:
-		rtype = 'TORUS'
-	elif ConnType == SELECT_NAV:
-		rtype = 'NAV'
-	elif ConnType == SELECT_SMALL:
-		rtype = 'SMALL'
-	elif ConnType == SELECT_HTC_S:
-		rtype = 'HTC_S'
-	elif ConnType == SELECT_HTC_D:
-		rtype = 'HTC_D'
-	elif ConnType == SELECT_HTC_V:
-		rtype = 'HTC_V'
-	elif ConnType == SELECT_HTC_L:
-		rtype = 'HTC_L'
-
-	return u"%s" % rtype
+	return (inx, slurm.slurm_conn_type_string(inx))
 
 def get_node_use(int inx=0):
 
@@ -3583,7 +3560,7 @@ def get_node_use(int inx=0):
 	:rtype: `string`
 	"""
 
-	return __get_node_use(inx)
+	return (inx, slurm.slurm_node_state_string(inx))
 
 cdef inline object __get_node_use(int NodeType=0):
 
@@ -3617,7 +3594,7 @@ def get_trigger_res_type(uint16_t inx=0):
 	:rtype: `string`
 	"""
 
-	return __get_trigger_res_type(inx)
+	return (inx, __get_trigger_res_type(inx))
 
 cdef inline object __get_trigger_res_type(uint16_t ResType=0):
 
@@ -3671,7 +3648,7 @@ def get_trigger_type(uint32_t inx=0):
 	:rtype: `string`
 	"""
 
-	return __get_trigger_type(inx)
+	return (inx, __get_trigger_type(inx))
 
 cdef inline object __get_trigger_type(uint32_t TriggerType=0):
 
@@ -3745,49 +3722,7 @@ def get_res_state(uint16_t flags=0):
 	:rtype: `list`
 	"""
 
-	return __get_res_state(flags)
-
-cdef inline list __get_res_state(uint16_t flags=0):
-
-	cdef list resFlags = []
-
-	if (flags & RESERVE_FLAG_MAINT):
-		resFlags.append(u'MAINT')
-
-	if (flags & RESERVE_FLAG_NO_MAINT):
-		resFlags.append(u'NO_MAINT')
-   
-	if (flags & RESERVE_FLAG_DAILY):
-		resFlags.append(u'DAILY')
-
-	if (flags & RESERVE_FLAG_NO_DAILY):
-		resFlags.append(u'NO_DAILY')
-     
-	if (flags & RESERVE_FLAG_WEEKLY): 
-		resFlags.append(u'WEEKLY')
-       
-	if (flags & RESERVE_FLAG_NO_WEEKLY):
-		resFlags.append(u'NO_WEEKLY')
-
-	if (flags & RESERVE_FLAG_IGN_JOBS): 
-		resFlags.append(u'IGNORE_JOBS')
-
-	if (flags & RESERVE_FLAG_NO_IGN_JOB): 
-		resFlags.append(u'NO_IGNORE_JOBS')
-
-	if (flags & RESERVE_FLAG_LIC_ONLY):
-		resFlags.append(u'LIC_ONLY')
-
-	if (flags & RESERVE_FLAG_NO_LIC_ONLY): 
-		resFlags.append(u'NO_LIC_ONLY')
-
-	if (flags & RESERVE_FLAG_OVERLAP):
-		resFlags.append(u'OVERLAP')
-
-	if (flags & RESERVE_FLAG_SPEC_NODES): 
-		resFlags.append(u'SPEC_NODES')
-
-	return resFlags
+	return (flags, slurm.slurm_reservation_flags_string(flags))
 
 def get_debug_flags(uint32_t inx=0):
 
@@ -3818,7 +3753,7 @@ def get_debug_flags(uint32_t inx=0):
 	:rtype: `list`
 	"""
 
-	return __get_debug_flags(inx)
+	return (inx, __get_debug_flags(inx))
 
 cdef inline list __get_debug_flags(uint32_t flags=0):
 
@@ -3884,120 +3819,7 @@ def get_node_state(uint16_t inx=0):
 	:rtype: `string`
 	"""
 
-	return __get_node_state(inx)
-
-cdef object __get_node_state(uint16_t inx=0):
-
-	cdef int comp_flag = (inx & NODE_STATE_COMPLETING)
-	cdef int drain_flag = (inx & NODE_STATE_DRAIN)
-	cdef int fail_flag = (inx & NODE_STATE_FAIL)
-	cdef int maint_flag = (inx & NODE_STATE_MAINT)
-	cdef int no_resp_flag = (inx & NODE_STATE_NO_RESPOND)
-	cdef int power_down_flag = (inx & NODE_STATE_POWER_SAVE)
-	cdef int power_up_flag = (inx & NODE_STATE_POWER_UP)
-
-	inx = <uint16_t>(inx & NODE_STATE_BASE)
-
-	if maint_flag:
-		if no_resp_flag:
-			return u"Maint*"
-		return u"Maint"
-
-	if drain_flag:
-
-		if comp_flag or (inx == NODE_STATE_ALLOCATED):
-			if no_resp_flag:
-				return u"Draining*"
-			return u"Draining"
-		elif (inx == NODE_STATE_ERROR):
-			if no_resp_flag:
-				return u"Error*"
-			return u"Error"
-		elif (inx == NODE_STATE_MIXED):
-			if no_resp_flag:
-				return u"Mixed*"
-			return u"Mixed"
-		else:
-			if no_resp_flag:
-				return u"Drained*"
-			return u"Drained"
-
-	if fail_flag:
-
-		if (comp_flag or (inx == NODE_STATE_ALLOCATED)):
-			if no_resp_flag:
-				return u"Failing*"
-			return u"Failing"
-		else:
-			if no_resp_flag:
-				return u"Failed*"
-			return u"Failed"
-
-	if (inx == NODE_STATE_POWER_SAVE):
-		return u"Power_Down"
-
-	if (inx == NODE_STATE_POWER_UP):
-		return u"Power_Up"
-
-	if (inx == NODE_STATE_DOWN):
-		if no_resp_flag:
-			return u"Down*"
-		return u"Down"
-
-	if (inx == NODE_STATE_ALLOCATED):
-		if power_up_flag:
-			return u"Allocated#"
-		if power_down_flag:
-			return u"Allocated~"
-		if no_resp_flag:
-			return u"Allocated*"
-		if comp_flag:
-			return u"Allocated+"
-		return u"Allocated"
-
-	if comp_flag:
-		if no_resp_flag:
-			return u"Completing*"
-		return u"Completing"
-
-	if (inx == NODE_STATE_IDLE):
-		if power_up_flag:
-			return u"Idle#"
-		if power_down_flag:
-			return u"Idle~"
-		if no_resp_flag:
-			return u"Idle*"
-		return u"Idle"
-
-	if (inx == NODE_STATE_ERROR):
-		if power_up_flag:
-			return u"Error#"
-		if power_down_flag:
-			return u"Error~"
-		if no_resp_flag:
-			return u"Error*"
-		return u"Error"
-
-	if (inx == NODE_STATE_MIXED):
-		if power_up_flag:
-			return u"Mixed#"
-		if power_down_flag:
-			return u"Mixed~"
-		if no_resp_flag:
-			return u"Mixed*"
-		return u"Mixed"
-
-	if (inx == NODE_STATE_FUTURE):
-		if power_up_flag:
-			return u"Future*"
-		return u"Future"
-
-	if (inx == NODE_STATE_UNKNOWN):
-		if power_up_flag:
-			return u"Unknown*"
-		return u"Unknown"
-
-	return u"?"
+	return (inx, slurm.slurm_node_state_string(inx))
 
 def get_rm_partition_state(int inx=0):
 
@@ -4009,7 +3831,7 @@ def get_rm_partition_state(int inx=0):
 	:rtype: `list`
 	"""
 
-	return __get_rm_partition_state(inx)
+	return (inx, __get_rm_partition_state(inx))
 
 cdef inline object __get_rm_partition_state(int inx=0):
 
@@ -4041,7 +3863,7 @@ def get_preempt_mode(uint16_t inx=0):
 	:rtype: `list`
 	"""
 
-	return __get_preempt_mode(inx)
+	return (inx, slurm.slurm_preempt_mode_string(inx))
 
 cdef inline list __get_preempt_mode(uint16_t index):
 
@@ -4070,6 +3892,18 @@ cdef inline list __get_preempt_mode(uint16_t index):
 
 	return modeFlags
 
+def get_partition_state_up(int inx=0):
+
+	pystring = u'UNKNOWN'
+	if inx == 0x01:
+		pystring = u'DOWN'
+	elif (inx == 0x02):
+		pystring = u'DRAIN'
+	elif (inx == 0x01|0x02):
+		pystring = u'UP'
+
+	return (inx, pystring)
+
 def get_partition_state(uint16_t inx=0, uint16_t extended=0):
 
 	u"""Returns a string that represents the state of the slurm partition.
@@ -4080,7 +3914,7 @@ def get_partition_state(uint16_t inx=0, uint16_t extended=0):
 	:rtype: `string`
 	"""
 
-	return __get_partition_state(inx, extended)
+	return (inx, __get_partition_state(inx, extended))
 
 cdef inline object __get_partition_state(int inx, int extended=0):
 
@@ -4150,7 +3984,7 @@ def get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 	:rtype: `dict`
 	"""
 
-	return __get_partition_mode(flags, max_share)
+	return (flags, __get_partition_mode(flags, max_share))
 
 cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 
@@ -4189,6 +4023,30 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 
 	return mode
 
+def get_conn_type_string(int inx=0):
+
+	u"""Returns a string that represents the state of the slurm bluegene connection type.
+
+	:param int inx: Slurm BG connection state
+
+	:returns: Block Connection state
+	:rtype: `string`
+	"""
+
+	return (inx, slurm.slurm_conn_type_string(inx))
+
+def get_bg_block_state_string(uint16_t inx=0):
+
+	u"""Returns a string that represents the state of the slurm bluegene block state.
+
+	:param int inx: Slurm BG block state
+
+	:returns: Block state
+	:rtype: `string`
+	"""
+
+	return (inx, slurm.slurm_bg_block_state_string(inx))
+
 def get_job_state(int inx=0):
 
 	u"""Returns a string that represents the state of the slurm job state.
@@ -4199,30 +4057,7 @@ def get_job_state(int inx=0):
 	:rtype: `string`
 	"""
 
-	return __get_job_state(inx)
-
-cdef inline object __get_job_state(int inx=0):
-
-	job_state = 'Unknown'
-	cdef list state = [
-			'Pending',
-			'Running',
-			'Suspended',
-			'Complete',
-			'Cancelled',
-			'Failed',
-			'Timeout',
-			'Node Fail',
-			'Preempted',
-			'End'
-			]
-
-	try:
-		job_state = state[inx]
-	except:
-		pass
-
-	return u"%s" % job_state 
+	return (inx, slurm.slurm_job_state_string(inx))
 
 def get_job_state_reason(uint16_t inx=0):
 
@@ -4234,53 +4069,7 @@ def get_job_state_reason(uint16_t inx=0):
 	:rtype: `string`
 	"""
 
-	return __get_job_state_reason(inx)
-
-cdef inline object __get_job_state_reason(uint16_t inx=0):
-
-	job_state_reason = 'Unknown'
-
-	cdef list reason = [
-		'None',
-		'higher priority jobs exist',
-		'dependent job has not completed',
-		'required resources not available',
-		'request exceeds partition node limit',
-		'request exceeds partition time limit',
-		'requested partition is down',
-		'requested partition is inactive',
-		'job is held by administrator',
-		'job is waiting for specific begin time',
-		'job is waiting for licenses',
-		'user/bank job limit reached',
-		'user/bank resource limit reached',
-		'user/bank time limit reached',
-		'reservation not available',
-		'required node is DOWN or DRAINED',
-		'job is held by user',
-		'TBD2',
-		'partition for job is DOWN',
-		'some node in the allocation failed',
-		'constraints can not be satisfied',
-		'slurm system failure',
-		'unable to launch job',
-		'exit code was non-zero',
-		'reached end of time limit',
-		'reached slurm InactiveLimit',
-		'invalid account',
-		'invalid QOS',
-		'required QOS threshold has been breached',
-		'QOS job limit reached',
-		'QOS resource limit reached',
-		'QOS time limit reached'
-		]
-
-	try:
-		job_state_reason = reason[inx]
-	except:
-		pass
-
-	return u"%s" % job_state_reason 
+	return (inx, slurm.slurm_job_reason_string(inx))
 
 def epoch2date(int epochSecs=0):
 
