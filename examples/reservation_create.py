@@ -12,7 +12,10 @@ start_epoch = int(time.mktime(time.strptime(dstring, dpattern)))
 
 a = pyslurm.reservation()
 res_dict = pyslurm.create_reservation_dict()
+res_dict["accounts"] = "mark"
+res_dict["users"] = "mark"
 res_dict["node_cnt"] = 1
+res_dict["nodes"] = "bps001"
 res_dict["users"] = "root"
 res_dict["start_time"] = start_epoch
 res_dict["duration"] = 600
