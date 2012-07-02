@@ -2785,7 +2785,7 @@ cdef class reservation:
 				Res_dict[u'features'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].features, ',')
 				Res_dict[u'licenses'] = __get_licenses(self._Res_ptr.reservation_array[i].licenses)
 				Res_dict[u'partition'] = slurm.stringOrNone(self._Res_ptr.reservation_array[i].partition, '')
-				Res_dict[u'node_list'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].node_list, ',')
+				Res_dict[u'node_list'] = slurm.stringOrNone(self._Res_ptr.reservation_array[i].node_list, ',')
 				Res_dict[u'node_cnt'] = self._Res_ptr.reservation_array[i].node_cnt
 				Res_dict[u'users'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].users, ',')
 				Res_dict[u'start_time'] = self._Res_ptr.reservation_array[i].start_time
@@ -2875,8 +2875,8 @@ def slurm_create_reservation(dict reservation_dict={}):
 		name = reservation_dict[u'licenses']
 		resv_msg.licenses = name
 
-	if reservation_dict[u'flags'] is not '':
-		int_value = reservation_dict[u'flags']
+	if reservation_dict[u'flags']:
+		int_value = int(reservation_dict[u'flags'])
 		resv_msg.flags = int_value
 
 	resid = slurm.slurm_create_reservation(&resv_msg)
@@ -2887,9 +2887,9 @@ def slurm_create_reservation(dict reservation_dict={}):
 		free(resid)
 
 	if free_users == 1:
-		free(resv_msg.users)
+		slurm.xfree(resv_msg.users)
 	if free_accounts == 1:
-		free(resv_msg.accounts)
+		slurm.xfree(resv_msg.accounts)
 
 	return u"%s" % resID
 
@@ -2946,9 +2946,9 @@ def slurm_update_reservation(dict reservation_dict={}):
 	errCode = slurm.slurm_update_reservation(&resv_msg)
 
 	if free_users == 1:
-		free(resv_msg.users)
+		slurm.xfree(resv_msg.users)
 	if free_accounts == 1:
-		free(resv_msg.accounts)
+		slurm.xfree(resv_msg.accounts)
 
 	return errCode
 
@@ -2983,7 +2983,7 @@ def create_reservation_dict():
 	:rtype: `dict`
 	"""
 
-	return {u'start_time': -1,
+	return { u'start_time': -1,
 		u'end_time': -1,
 		u'duration': -1,
 		u'node_cnt': -1,
@@ -2993,7 +2993,7 @@ def create_reservation_dict():
 		u'partition': u'',
 		u'licenses': u'',
 		u'users': u'',
-		u'accounts': u''}
+		u'accounts': u'' }
 
 #
 # Block Class
@@ -3498,7 +3498,7 @@ def get_last_slurm_error():
 	else:
 		return (rc, slurm.slurm_strerror(rc))
 
-cdef inline dict __get_licenses(char *licenses=''):
+cdef inline dict __get_licenses(licenses=''):
 
 	u"""Returns a dict of licenses from the slurm license string.
 
@@ -3508,7 +3508,7 @@ cdef inline dict __get_licenses(char *licenses=''):
 	cdef int i
 	cdef dict licDict = {}
 
-	if (licenses is NULL):
+	if (licenses == ''):
 		return licDict
 
 	cdef list alist = slurm.listOrNone(licenses, ',')
