@@ -1453,7 +1453,7 @@ cdef class job:
 	"""
 
 	cdef slurm.job_info_msg_t *_job_ptr
-	cdef slurm.job_info_t _record
+	cdef slurm.slurm_job_info_t _record
 	cdef slurm.time_t _lastUpdate
 	
 	cdef uint16_t _ShowFlags
