@@ -20,7 +20,7 @@ if old_dlopen_flags:
 	if hasattr(sys, "setdlopenflags"):
 		sys.setdlopenflags(old_dlopen_flags)
 
-__version__ = "2.3.4-1"
+__version__ = "2.3.5-1"
 def version():
 	return __version__
 
