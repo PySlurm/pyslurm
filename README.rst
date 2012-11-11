@@ -1,5 +1,5 @@
 ====================================
- PySLURM: SLURM interface for Python
+ PySlurm: Slurm interface for Python
 ====================================
 
 :Authors: Mark Roberts <mark@gingergeeks.co.uk> and Stephan Gorget <phantez@gmail.com>
@@ -7,16 +7,16 @@
 Overview
 ========
 
-Currently `PySLURM` is under development to move from it's thin layer on top of the SLURM C API to an object orientated interface.
+Currently `PySlurm` is under development to move from it's thin layer on top of the Slurm C API to an object orientated interface.
 
-The current branch is based on the SLURM 2.5.0 API
+The current branch is based on the Slurm 2.5.0 API
 
 Prerequistes
 =============
 
-This version has been tested with SLURM 2.5.0, Cython 0.15.1 and Python 2.7.2, 2.7.3 and 3.2.3
+This version has been tested with Slurm 2.5.0, Cython 0.15.1 and Python 2.7.2, 2.7.3 and 3.2.3
 
-* [SLURM] http://www.schedmd.com
+* [Slurm] http://www.schedmd.com
 * [Python] http://www.python.org
 * [Cython] http://www.cython.org
 
