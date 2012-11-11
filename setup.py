@@ -22,11 +22,12 @@ logging.basicConfig(level=20)
 # PySlurm Version
 
 def version():
+
 	__version__ = ''
 	try:
 		verStr = open('pyslurm/__init__.py', "rt").read()
 	except EnvironmentError:
-		pass
+		raise RuntimeError("Problem reading file pyslurm/__init__.py")
 	else:
 		VER = r"^__version__ = ['\"]([^'\"]*)['\"]"
 		VGRP = re.search(VER, verStr, re.M)
@@ -39,7 +40,7 @@ def version():
 
 __version__ = version()
 if not __version__:
-	warn("Unable to determine pyslurm version number")
+	warn("No pyslurm version could be determined")
 	sys.exit(1)
 
 def fatal(logstring, code=1):
@@ -161,7 +162,7 @@ if args[1] == 'build':
 
 	# BlueGene Types
 
-	if (BGL + BGP + BGQ > 1):
+	if (BGL + BGP + BGQ) > 1:
 		fatal("Please specifiy one BG Type either --bgl or --bgp or --bgq")
 	else:
 		try:
