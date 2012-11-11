@@ -22,7 +22,7 @@ logging.basicConfig(level=20)
 # PySlurm Version
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
-__version__ = "2.4.2-1"
+__version__ = "2.4.4-1"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
