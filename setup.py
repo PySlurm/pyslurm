@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import platform
-import re
+import imp
 import sys
+import platform
 
-from stat import *
 from string import *
+from stat import *
 
 from distutils.core import setup
 from distutils.extension import Extension
@@ -21,26 +21,8 @@ logging.basicConfig(level=20)
 
 # PySlurm Version
 
-def version():
-	__version__ = ''
-	try:
-		verStr = open('pyslurm/__init__.py', "rt").read()
-	except EnvironmentError:
-		pass
-	else:
-		VER = r"^__version__ = ['\"]([^'\"]*)['\"]"
-		VGRP = re.search(VER, verStr, re.M)
-		if VGRP:
-			__version__ = VGRP.group(1)
-		else:
-			raise RuntimeError("Unable to locate version in pyslurm/__init__.py")
-
-	return __version__
-
-__version__ = version()
-if not __version__:
-	warn("Unable to determine pyslurm version number")
-	sys.exit(1)
+#VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
+__version__ = "2.4.0-1"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
@@ -148,25 +130,25 @@ if args[1] == 'build':
 			SLURM_INC = arg.split('=')[1]
 			sys.argv.remove(arg)
 
-		BG = BGL = BGP = BGQ = 0
+		BGL = BGP = BGQ = 0
 		if arg.find('--bgl') == 0:
-			BG = BGL = 1
+			BGL=1
 			sys.argv.remove(arg)
 		if arg.find('--bgp') == 0:
-			BG = BGP = 1
+			BGP=1
 			sys.argv.remove(arg)
 		if arg.find('--bgq') == 0:
-			BG = BGQ = 1
+			BGQ=1
 			sys.argv.remove(arg)
 
 	# BlueGene Types
 
-	if (BGL + BGP + BGQ > 1):
+	if (BGL + BGP + BGQ) > 1:
 		fatal("Please specifiy one BG Type either --bgl or --bgp or --bgq")
 	else:
 		try:
 			f = open("pyslurm/bluegene.pxi", "w")
-			f.write("DEF BG=%d\n" % BG)
+			f.write("DEF BG=1\n")
 			f.write("DEF BGL=%d\n" % BGL)
 			f.write("DEF BGP=%d\n" % BGP)
 			f.write("DEF BGQ=%d\n" % BGQ)
