@@ -20,14 +20,14 @@ cdef extern from 'stdio.h':
 	ctypedef struct FILE
 	cdef FILE *stdout
 
+cdef extern from 'time.h' nogil:
+	ctypedef long time_t
+
 cdef extern from 'Python.h':
 	cdef FILE *PyFile_AsFile(object file)
 	cdef int __LINE__
 	char *__FILE__
 	char *__FUNCTION__
-
-cdef extern from 'time.h' nogil:
-	ctypedef long time_t
 
 cdef extern from *:
 	ctypedef char* const_char_ptr "const char*"
@@ -41,10 +41,8 @@ cdef inline listOrNone(char* value, char* sep_char):
 		return []
 	return value.split(sep_char)
 
-cdef inline stringOrNone(char* value, value2):
+cdef inline stringOrNone(char* value, char* value2=None):
 	if value is NULL:
-		if value2 is '':
-			return None
 		return u"%s" % value2
 	return u"%s" % value
 
@@ -57,32 +55,17 @@ cdef inline boolToString(int value):
 # SLURM declarations not in slurm.h
 #
 
-cdef inline void* xmalloc(size_t __sz):
-	return slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
+cdef inline xmalloc(size_t __sz):
+	slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
 
-cdef inline xfree(char*__p):
-	slurm_xfree(<void **>&(__p), __FILE__, __LINE__, __FUNCTION__)
+cdef inline xfree(void **__p):
+	slurm_xfree(__p, __FILE__, __LINE__, __FUNCTION__)
 
 cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
 cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
 
 cdef extern void slurm_api_set_conf_file(char *)
 cdef extern void slurm_api_clear_config()
-
-cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
-cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
-cdef extern char *slurm_job_reason_string(int inx)
-cdef extern char *slurm_job_state_string(uint16_t inx)
-cdef extern char *slurm_job_state_string_compact(uint16_t inx)
-cdef extern int   slurm_job_state_num(char *state_name)
-cdef extern char *slurm_node_state_string(uint16_t inx)
-cdef extern char *slurm_node_state_string_compact(uint16_t inx)
-cdef extern char *slurm_reservation_flags_string(uint16_t inx)
-#cdef extern void  slurm_private_data_string(uint16_t, char *, int) 
-cdef extern void  slurm_accounting_enforce_string(uint16_t enforce, char *, int)
-cdef extern char *slurm_conn_type_string(int)
-cdef extern char *slurm_node_use_string(int)
-cdef extern char *slurm_bg_block_state_string(uint16_t)
 
 #
 # SLURM spank API - Love the name !
@@ -530,7 +513,6 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t priority_decay_hl
 		uint32_t priority_calc_period
 		uint16_t priority_favor_small
-		uint16_t priority_flags
 		uint32_t priority_max_age
 		uint16_t priority_reset_period
 		char *priority_type
