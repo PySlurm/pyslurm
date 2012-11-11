@@ -60,7 +60,7 @@ include "slurm_defines.pxi"
 # SLURM Macros as Cython inline functions
 #
 
-cdef inline SLURM_VERSION_NUMBER(): return 0x020401
+cdef inline SLURM_VERSION_NUMBER(): return 0x020402
 cdef inline SLURM_VERSION_MAJOR(a): return ((a >> 16) & 0xff)
 cdef inline SLURM_VERSION_MINOR(a): return ((a >>  8) & 0xff)
 cdef inline SLURM_VERSION_MICRO(a): return (a & 0xff)
