@@ -41,7 +41,7 @@ cdef inline listOrNone(char* value, char* sep_char):
 		return []
 	return value.split(sep_char)
 
-cdef inline stringOrNone(char* value, char* value2=None):
+cdef inline stringOrNone(char* value, char* value2):
 	if value is NULL:
 		return u"%s" % value2
 	return u"%s" % value
