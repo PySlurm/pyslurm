@@ -22,7 +22,7 @@ logging.basicConfig(level=20)
 # PySlurm Version
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
-__version__ = "2.4.0-1"
+__version__ = "2.5.0-1"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
@@ -190,13 +190,13 @@ setup(
 	name = "pyslurm",
 	version = __version__,
 	license="GPL",
-	description = ("SLURM Interface for Python"),
+	description = ("Slurm Interface for Python"),
 	long_description=read("README.rst"),
 	author = "Mark Roberts",
 	author_email = "mark@gingergeeks co uk",
 	url = "http://www.gingergeeks.co.uk/pyslurm/",
 	platforms = ["Linux"],
-	keywords = ["Batch Scheduler", "Resource Manager", "SLURM", "Cython"],
+	keywords = ["Batch Scheduler", "Resource Manager", "Slurm", "Cython"],
 	packages = ["pyslurm"],
 	ext_modules = extensions,
 	cmdclass = {"build_ext": build_ext },
@@ -212,6 +212,7 @@ setup(
 		'Programming Language :: Python :: 2.7',
 		'Programming Language :: Python :: 3.1',
 		'Programming Language :: Python :: 3.2',
+		'Programming Language :: Python :: 3.3',
 		'Topic :: Software Development :: Libraries',
 		'Topic :: Software Development :: Libraries :: Python Modules',
 	]
