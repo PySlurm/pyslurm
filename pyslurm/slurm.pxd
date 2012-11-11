@@ -234,6 +234,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		CPU_BIND_TO_CORES = 0x04
 		CPU_BIND_TO_SOCKETS = 0x08
 		CPU_BIND_TO_LDOMS = 0x10
+		CPU_BIND_TO_BOARDS = 0x1000
 		CPU_BIND_NONE = 0x20
 		CPU_BIND_RANK = 0x40
 		CPU_BIND_MAP = 0x80
@@ -495,6 +496,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t inactive_limit
 		uint16_t job_acct_gather_freq
 		char *job_acct_gather_type
+		uint16_t xres_access_freq
 		char *job_ckpt_dir
 		char *job_comp_host
 		char *job_comp_loc
@@ -509,7 +511,9 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *job_submit_plugins
 		uint16_t kill_on_bad_exit
 		uint16_t kill_wait
+		char *launch_type
 		char *licenses
+		char *licenses_used
 		char *mail_prog
 		uint32_t max_job_cnt
 		uint32_t max_job_id
@@ -638,6 +642,8 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *licenses
 		uint32_t max_cpus
 		uint32_t max_nodes
+		uint16_t boards_per_node
+		uint16_t sockets_per_board
 		uint16_t sockets_per_node
 		uint16_t cores_per_socket
 		uint16_t threads_per_core
@@ -682,12 +688,12 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *wckey
 		char *work_dir
 
-	ctypedef job_info job_info_t
+	ctypedef job_info slurm_job_info_t
 
 	ctypedef struct job_info_msg:
 		time_t last_update
 		uint32_t record_count
-		job_info_t *job_array
+		slurm_job_info_t *job_array
 
 	ctypedef job_info_msg job_info_msg_t
 
@@ -770,6 +776,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef struct node_info:
 		char *arch
+		uint16_t boards
 		time_t boot_time
 		uint16_t cores
 		uint16_t cpus
@@ -870,6 +877,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		time_t last_slurmctld_msg
 		uint16_t slurmd_debug
 		uint16_t actual_cpus
+		uint16_t actual_boards
 		uint16_t actual_sockets
 		uint16_t actual_cores
 		uint16_t actual_threads
@@ -893,6 +901,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *nodes
 		int *node_inx
 		uint32_t num_cpus
+		uint32_t cpu_freq
 		uint32_t num_tasks
 		char *partition
 		char *resv_ports
@@ -951,6 +960,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *licenses
 		char *name
 		uint32_t node_cnt
+		uint32_t core_cnt
 		int *node_inx
 		char *node_list
 		char *partition
@@ -974,6 +984,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t flags
 		char *licenses
 		char *name
+		uint32_t core_cnt
 		uint32_t node_cnt
 		char *node_list
 		char *partition
@@ -1153,9 +1164,9 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern int slurm_load_jobs (time_t, job_info_msg_t **, uint16_t)
 	cdef extern int slurm_notify_job (uint32_t, char *)
 	cdef extern int slurm_pid2jobid (uint32_t, uint32_t *)
-	cdef extern void slurm_print_job_info (FILE *, job_info_t *, int)
+	cdef extern void slurm_print_job_info (FILE *, slurm_job_info_t *, int)
 	cdef extern void slurm_print_job_info_msg (FILE *, job_info_msg_t *, int)
-	cdef extern char *slurm_sprint_job_info (job_info_t *, int)
+	cdef extern char *slurm_sprint_job_info (slurm_job_info_t *, int)
 	cdef extern int slurm_update_job (job_desc_msg_t *)
 
 	#
