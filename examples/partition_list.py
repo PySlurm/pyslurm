@@ -28,6 +28,22 @@ def display(part_dict):
 				elif part_key == 'last_update':
 					valStr = pyslurm.epoch2date(value[part_key])
 
+				elif part_key == 'state_up':
+					valStr = "(%s, %s)" % (value[part_key], pyslurm.get_partition_state_up(value[part_key]))
+
+				elif part_key == 'flags':
+					valStr = "(%s, %s)" % (value[part_key], pyslurm.get_partition_mode(value[part_key]))
+
+				elif part_key == 'alternate':
+					if value[part_key] == '':
+						valStr = "ALL"
+				elif part_key == 'allow_groups':
+					if value[part_key] == []:
+						valStr = "%s (ALL)" % value[part_key]
+				elif part_key == 'allow_alloc_nodes':
+					if value[part_key] == []:
+						valStr = "%s (ALL)" % value[part_key]
+	
 				print "\t%-20s : %s" % (part_key, valStr)
 
 			print "-" * 80

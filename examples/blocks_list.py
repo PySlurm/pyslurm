@@ -26,11 +26,16 @@ def display(block_dict):
 					else:
 						ddate = pyslurm.epoch2date(ddate)
 						print "\t%-17s : %s" % (part_key, ddate)
+				elif part_key == 'node_use':
+					print "\t%-17s : (%s, %s)" % (part_key, value[part_key], pyslurm.get_node_use(value[part_key]))
+				elif part_key == 'conn_type':
+					print "\t%-17s : (%s, %s)" % (part_key, value[part_key], pyslurm.get_connection_type(value[part_key]))
+				elif part_key == 'state':
+					print "\t%-17s : (%s, %s)" % (part_key, value[part_key], pyslurm.get_conn_type_string(value[part_key]))
 				else: 
 					print "\t%-17s : %s" % (part_key, value[part_key])
 
 			print "-" * 80
-
 
 if __name__ == "__main__":
 

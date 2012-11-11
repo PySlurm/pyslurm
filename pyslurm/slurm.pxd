@@ -41,11 +41,11 @@ cdef inline listOrNone(char* value, char* sep_char):
 		return []
 	return value.split(sep_char)
 
-cdef inline stringOrNone(char* value, value2):
+cdef inline stringOrNone(char* value, char* value2):
 	if value is NULL:
-		if value2 is '':
-			return None
-		return u"%s" % value2
+		if value2 != NULL:
+			return u"%s" % value2
+		return None
 	return u"%s" % value
 
 cdef inline boolToString(int value):
@@ -71,7 +71,7 @@ cdef extern void slurm_api_clear_config()
 
 cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
 cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
-cdef extern char *slurm_job_reason_string(int inx)
+cdef extern char *slurm_job_reason_string(uint16_t inx)
 cdef extern char *slurm_job_state_string(uint16_t inx)
 cdef extern char *slurm_job_state_string_compact(uint16_t inx)
 cdef extern int   slurm_job_state_num(char *state_name)
@@ -106,8 +106,156 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
 
 cdef extern from 'slurm/slurm.h' nogil:
 
-	enum: SYSTEM_DIMENSIONS = 3
-	enum: HIGHEST_DIMENSIONS = 5
+	cdef int SLURM_VERSION_NUMBER
+
+	cdef int INFINITE
+	cdef int NO_VAL
+	cdef int MAX_TASKS_PER_NODE
+	cdef int SLURM_BATCH_SCRIPT
+
+	cdef int SYSTEM_DIMENSIONS
+	cdef int HIGHEST_DIMENSIONS
+
+	cdef int JOB_STATE_BASE
+	cdef int JOB_STATE_FLAGS
+	cdef int JOB_COMPLETING
+	cdef int JOB_CONFIGURING
+	cdef int JOB_RESIZING
+
+	cdef int SHOW_ALL
+	cdef int SHOW_DETAIL
+
+	cdef int READY_JOB_FATAL
+	cdef int READY_JOB_ERROR
+
+	cdef int READY_NODE_STATE
+	cdef int READY_JOB_STATE
+
+	cdef int MAIL_JOB_BEGIN
+	cdef int MAIL_JOB_END
+	cdef int MAIL_JOB_FAIL
+	cdef int MAIL_JOB_REQUEUE
+
+	cdef int NICE_OFFSET
+
+	cdef int NODE_STATE_BASE
+	cdef int NODE_STATE_FLAGS
+	cdef int NODE_RESUME
+
+	cdef int NODE_STATE_DRAIN
+	cdef int NODE_STATE_COMPLETING
+	cdef int NODE_STATE_NO_RESPOND
+	cdef int NODE_STATE_POWER_SAVE
+	cdef int NODE_STATE_FAIL
+	cdef int NODE_STATE_POWER_UP
+	cdef int NODE_STATE_MAINT
+
+	cdef int PARTITION_SUBMIT
+	cdef int PARTITION_SCHED
+	cdef int PARTITION_DOWN
+	cdef int PARTITION_UP
+	cdef int PARTITION_DRAIN
+	cdef int PARTITION_INACTIVE
+
+	cdef int MEM_PER_CPU
+	cdef int SHARED_FORCE
+
+	cdef int PROP_PRIO_OFF
+	cdef int PROP_PRIO_ON
+	cdef int PROP_PRIO_NICER
+
+	cdef int PART_FLAG_DEFAULT
+	cdef int PART_FLAG_HIDDEN
+	cdef int PART_FLAG_NO_ROOT 
+	cdef int PART_FLAG_ROOT_ONLY
+	cdef int PART_FLAG_DEFAULT_CLR
+	cdef int PART_FLAG_HIDDEN_CLR
+	cdef int PART_FLAG_NO_ROOT_CLR
+	cdef int PART_FLAG_ROOT_ONLY_CLR
+
+	cdef int RESERVE_FLAG_MAINT
+	cdef int RESERVE_FLAG_NO_MAINT
+	cdef int RESERVE_FLAG_DAILY
+	cdef int RESERVE_FLAG_NO_DAILY
+	cdef int RESERVE_FLAG_WEEKLY
+	cdef int RESERVE_FLAG_NO_WEEKLY
+	cdef int RESERVE_FLAG_IGN_JOBS
+	cdef int RESERVE_FLAG_NO_IGN_JOB
+	cdef int RESERVE_FLAG_LIC_ONLY
+	cdef int RESERVE_FLAG_NO_LIC_ONLY
+	cdef int RESERVE_FLAG_OVERLAP
+	cdef int RESERVE_FLAG_SPEC_NODES
+
+	cdef int TRIGGER_RES_TYPE_JOB
+	cdef int TRIGGER_RES_TYPE_NODE
+	cdef int TRIGGER_RES_TYPE_SLURMCTLD
+	cdef int TRIGGER_RES_TYPE_SLURMDBD
+	cdef int TRIGGER_RES_TYPE_DATABASE
+	cdef int TRIGGER_RES_TYPE_FRONT_END
+
+	cdef int TRIGGER_TYPE_UP
+	cdef int TRIGGER_TYPE_DOWN
+	cdef int TRIGGER_TYPE_FAIL
+	cdef int TRIGGER_TYPE_TIME
+	cdef int TRIGGER_TYPE_FINI
+	cdef int TRIGGER_TYPE_RECONFIG
+	cdef int TRIGGER_TYPE_BLOCK_ERR
+	cdef int TRIGGER_TYPE_IDLE
+	cdef int TRIGGER_TYPE_DRAINED
+	cdef int TRIGGER_TYPE_PRI_CTLD_FAIL
+	cdef int TRIGGER_TYPE_PRI_CTLD_RES_OP
+	cdef int TRIGGER_TYPE_PRI_CTLD_RES_CTRL
+	cdef int TRIGGER_TYPE_PRI_CTLD_ACCT_FULL
+	cdef int TRIGGER_TYPE_BU_CTLD_FAIL
+	cdef int TRIGGER_TYPE_BU_CTLD_RES_OP
+	cdef int TRIGGER_TYPE_BU_CTLD_AS_CTRL
+	cdef int TRIGGER_TYPE_PRI_DBD_FAIL
+	cdef int TRIGGER_TYPE_PRI_DBD_RES_OP
+	cdef int TRIGGER_TYPE_PRI_DB_FAIL
+	cdef int TRIGGER_TYPE_PRI_DB_RES_OP
+
+	cdef int PREEMPT_MODE_OFF
+	cdef int PREEMPT_MODE_SUSPEND
+	cdef int PREEMPT_MODE_REQUEUE
+	cdef int PREEMPT_MODE_CHECKPOINT
+	cdef int PREEMPT_MODE_CANCEL
+	cdef int PREEMPT_MODE_GANG
+
+	cdef int PRIVATE_DATA_JOBS  
+	cdef int PRIVATE_DATA_NODES
+	cdef int PRIVATE_DATA_PARTITIONS
+	cdef int PRIVATE_DATA_USAGE
+	cdef int PRIVATE_DATA_USERS
+	cdef int PRIVATE_DATA_ACCOUNTS
+	cdef int PRIVATE_DATA_RESERVATIONS
+
+	cdef int PRIORITY_RESET_NONE
+	cdef int PRIORITY_RESET_NOW
+	cdef int PRIORITY_RESET_DAILY
+	cdef int PRIORITY_RESET_WEEKLY
+	cdef int PRIORITY_RESET_MONTHLY
+	cdef int PRIORITY_RESET_QUARTERLY
+	cdef int PRIORITY_RESET_YEARLY
+
+	cdef int DEBUG_FLAG_SELECT_TYPE
+	cdef int DEBUG_FLAG_STEPS
+	cdef int DEBUG_FLAG_TRIGGERS
+	cdef int DEBUG_FLAG_CPU_BIND
+	cdef int DEBUG_FLAG_WIKI
+	cdef int DEBUG_FLAG_NO_CONF_HASH
+	cdef int DEBUG_FLAG_GRES
+	cdef int DEBUG_FLAG_BG_PICK
+	cdef int DEBUG_FLAG_BG_WIRES
+	cdef int DEBUG_FLAG_BG_ALGO
+	cdef int DEBUG_FLAG_BG_ALGO_DEEP
+	cdef int DEBUG_FLAG_PRIO
+	cdef int DEBUG_FLAG_BACKFILL
+	cdef int DEBUG_FLAG_GANG
+	cdef int DEBUG_FLAG_RESERVATION
+	cdef int DEBUG_FLAG_FRONT_END
+
+	enum: HIGHEST_DIMENSIONS
+	enum: SYSTEM_DIMENSIONS
 
 	cdef enum job_states:
 		JOB_PENDING
@@ -1232,4 +1380,3 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern char *slurm_sprint_front_end_table (front_end_info_t * front_end_ptr, int one_liner)
 	cdef void slurm_init_update_front_end_msg (update_front_end_msg_t * update_front_end_msg)
 	cdef extern int slurm_update_front_end (update_front_end_msg_t * front_end_msg)
-
