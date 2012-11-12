@@ -214,6 +214,11 @@ cdef extern from 'slurm/slurm.h' nogil:
 		NODE_STATE_FUTURE
 		NODE_STATE_END
 
+	ctypedef enum acct_energy_type:
+		ENERGY_DATA_JOULES_TASK
+		ENERGY_DATA_STRUCT
+		ENERGY_DATA_RECONFIG
+
 	ctypedef enum task_dist_states:
 		SLURM_DIST_CYCLIC = 1
 		SLURM_DIST_BLOCK
@@ -366,6 +371,15 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef dynamic_plugin_data dynamic_plugin_data_t
 
+	ctypedef acct_gather_energy:
+		uint32_t previous_consumed_energy
+		uint32_t base_consumed_energy
+		uint32_t base_watts		# lowest power consump of node, in watts 
+		uint32_t consumed_energy	# total energy consumed by node, in joules
+		uint32_t current_watts		# current power consump of node, in watts
+
+	ctypedef acct_gather_energy acct_gather_energy_t
+
 	ctypedef struct job_descriptor:
 		char *account
 		uint16_t acctg_freq
@@ -429,12 +443,15 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t max_cpus
 		uint32_t min_nodes
 		uint32_t max_nodes
+		uint`6_t boards_per_node
+		uint16_t sockets_per_board
 		uint16_t sockets_per_node
 		uint16_t cores_per_socket
 		uint16_t threads_per_core
 		uint16_t ntasks_per_node
 		uint16_t ntasks_per_socket
 		uint16_t ntasks_per_core
+		uint16_t ntasks_per_board
 		uint16_t pn_min_cpus
 		uint32_t pn_min_memory
 		uint32_t pn_min_tmp_disk
@@ -467,6 +484,8 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *accounting_storage_type
 		char *accounting_storage_user
 		uint16_t acctng_store_job_comment
+		char *acct_gather_energy_type
+		uint16_t acct_gather_node_freq
 		char *authtype
 		char *backup_addr
 		char *backup_controller
@@ -782,6 +801,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t cpus
 		char *features
 		char *gres
+		uint32_t cpu_load
 		char *name
 		char *node_addr
 		char *node_hostname
@@ -796,6 +816,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t threads
 		uint32_t tmp_disk
 		uint32_t weight
+		acct_gather_energy_t *energy
 		dynamic_plugin_data_t *select_nodeinfo
 
 	ctypedef node_info node_info_t

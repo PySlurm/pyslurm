@@ -185,6 +185,7 @@ cpdef list slurm_load_slurmd_status():
 		Status_dict[u'last_slurmctld_msg'] = slurmd_status.last_slurmctld_msg
 		Status_dict[u'slurmd_debug'] = slurmd_status.slurmd_debug
 		Status_dict[u'actual_cpus'] = slurmd_status.actual_cpus
+		Status_dict[u'actual_boards'] = slurmd_status.actual_boards
 		Status_dict[u'actual_sockets'] = slurmd_status.actual_sockets
 		Status_dict[u'actual_cores'] = slurmd_status.actual_cores
 		Status_dict[u'actual_threads'] = slurmd_status.actual_threads
@@ -372,6 +373,8 @@ cdef class config:
 			Ctl_dict[u'accounting_storage_type'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_type, '')
 			Ctl_dict[u'accounting_storage_user'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_user, '')
 			Ctl_dict[u'acctng_store_job_comment'] = self.__Config_ptr.acctng_store_job_comment
+			Ctl_dict[u'acct_gather_energy_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_energy_type, '')
+			Ctl_dict[u'acct_gather_node_freq'] = self.__Config_ptr.acct_gather_node_freq
 			Ctl_dict[u'authtype'] = slurm.stringOrNone(self.__Config_ptr.authtype, '')
 			Ctl_dict[u'backup_addr'] = slurm.stringOrNone(self.__Config_ptr.backup_addr, '')
 			Ctl_dict[u'backup_controller'] = slurm.stringOrNone(self.__Config_ptr.backup_controller, '')
@@ -415,7 +418,9 @@ cdef class config:
 			Ctl_dict[u'job_submit_plugins'] = slurm.stringOrNone(self.__Config_ptr.job_submit_plugins, '')
 			Ctl_dict[u'kill_on_bad_exit'] = bool(self.__Config_ptr.kill_on_bad_exit)
 			Ctl_dict[u'kill_wait'] = self.__Config_ptr.kill_wait
-			Ctl_dict[u'licenses'] = __get_licenses(self.__Config_ptr.licenses)
+			Ctl_dict[u'launch_type'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
+			Ctl_dict[u'licenses_used'] = slurm.stringOrNone(self.__Config_ptr.licenses_used, '')
+			Ctl_dict[u'launch_type'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
 			Ctl_dict[u'mail_prog'] = slurm.stringOrNone(self.__Config_ptr.mail_prog, '')
 			Ctl_dict[u'max_job_cnt'] = self.__Config_ptr.max_job_cnt
 			Ctl_dict[u'max_job_id'] = self.__Config_ptr.max_job_id
@@ -1618,6 +1623,8 @@ cdef class job:
 				Job_dict[u'licenses'] = __get_licenses(self._job_ptr.job_array[i].licenses)
 				Job_dict[u'max_cpus'] = self._job_ptr.job_array[i].max_cpus
 				Job_dict[u'max_nodes'] = self._job_ptr.job_array[i].max_nodes
+				Job_dict[u'boards_per_node'] = self._job_ptr.job_array[i].boards_per_node
+				Job_dict[u'sockets_per_board'] = self._job_ptr.job_array[i].sockets_per_board
 				Job_dict[u'sockets_per_node'] = self._job_ptr.job_array[i].sockets_per_node
 				Job_dict[u'cores_per_socket'] = self._job_ptr.job_array[i].cores_per_socket
 				Job_dict[u'threads_per_core'] = self._job_ptr.job_array[i].threads_per_core
@@ -1632,6 +1639,7 @@ cdef class job:
 				Job_dict[u'ntasks_per_core'] = self._job_ptr.job_array[i].ntasks_per_core
 				Job_dict[u'ntasks_per_node'] = self._job_ptr.job_array[i].ntasks_per_node
 				Job_dict[u'ntasks_per_socket'] = self._job_ptr.job_array[i].ntasks_per_socket
+				Job_dict[u'ntasks_per_board'] = self._job_ptr.job_array[i].ntasks_per_board
 				Job_dict[u'num_nodes'] = self._job_ptr.job_array[i].num_nodes
 				Job_dict[u'num_cpus'] = self._job_ptr.job_array[i].num_cpus
 				Job_dict[u'partition'] = self._job_ptr.job_array[i].partition
@@ -2034,11 +2042,13 @@ cdef class node:
 			name = self._Node_ptr.node_array[i].name
 
 			Host_dict['arch'] = slurm.stringOrNone(self._Node_ptr.node_array[i].arch, '')
+			Host_dict['boards'] = self._Node_ptr.node_array[i].boot_time
 			Host_dict['boot_time'] = self._Node_ptr.node_array[i].boot_time
 			Host_dict['cores'] = self._Node_ptr.node_array[i].cores
 			Host_dict['cpus'] = self._Node_ptr.node_array[i].cpus
 			Host_dict['features'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
 			Host_dict['gres'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres, '')
+			Host_dict['cpu_load'] = self._Node_ptr.node_array[i].cpu_load
 			Host_dict['name'] = slurm.stringOrNone(self._Node_ptr.node_array[i].name, '')
 			Host_dict['node_addr'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_addr, '')
 			Host_dict['node_hostname'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_hostname, '')
@@ -2053,6 +2063,10 @@ cdef class node:
 			Host_dict['tmp_disk'] = self._Node_ptr.node_array[i].tmp_disk
 			Host_dict['weight'] = self._Node_ptr.node_array[i].weight
 
+			#
+			# Add in energy gather values here
+			#
+
 			if Host_dict['reason']:
 				Host_dict['last_update'] = last_update
 
@@ -2066,8 +2080,9 @@ cdef class node:
 			if self._Node_ptr.node_array[i].select_nodeinfo is not NULL:
 
 				slurm.slurm_get_select_nodeinfo(self._Node_ptr.node_array[i].select_nodeinfo, SELECT_NODEDATA_SUBCNT, NODE_STATE_ALLOCATED, &alloc_cpus)
+
 				#
-				# Should check of cluster and BG here
+				# Should check for cluster and BG here
 				#
 
 				if not alloc_cpus and (IS_NODE_ALLOCATED(self._Node_ptr.node_array[i].node_state) or IS_NODE_COMPLETING(self._Node_ptr.node_array[i].node_state)):
@@ -2085,6 +2100,7 @@ cdef class node:
 				total_used -= err_cpus
 
 				slurm.slurm_get_select_nodeinfo(self._Node_ptr.node_array[i].select_nodeinfo, SELECT_NODEDATA_STR, NODE_STATE_ERROR, &test)
+
 			Host_dict['err_cpus'] = err_cpus
 			Host_dict['alloc_cpus'] = alloc_cpus
 			Host_dict['total_cpus'] = total_used
