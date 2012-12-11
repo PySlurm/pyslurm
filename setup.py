@@ -35,9 +35,11 @@ def info(logstring):
 	logger.info("Info: " + logstring)
 
 def usage():
-	warn("Need to provide either SLURM dir location for --build")
-	warn("Please use --slurm=PATH or --slurm-lib=PATH and --slurm-inc=PATH")
-	warn("Please set BlueGene type with --bgl --bgp or --bgq")
+	info("Need to provide either SLURM dir location for build")
+	info("Please use --slurm=PATH or --slurm-lib=PATH and --slurm-inc=PATH")
+	info("i.e If slurm is installed in /usr use :")
+	info("\t--slurm=/usr or --slurm-lib=/usr/lib64 and --slurm-inc=/usr/include")
+	info("For now if using BlueGene cluster set the type with --bgl --bgp or --bgq")
 	sys.exit(1)
 
 def scandir(dir, files=[]):
@@ -63,8 +65,8 @@ def makeExtension(extName):
 	return Extension(
 		extName,
 		[extPath],
-		include_dirs = ['%s/include' % SLURM_INC, '.'],   # adding the '.' to include_dirs is CRUCIAL!!
-		library_dirs = ['%s/lib' % SLURM_LIB], 
+		include_dirs = ['%s' % SLURM_INC, '.'],   # adding the '.' to include_dirs is CRUCIAL!!
+		library_dirs = ['%s' % SLURM_LIB], 
 		libraries = ['slurm'],
 		runtime_library_dirs = ['%s/lib' % SLURM_LIB],
 		extra_objects = [],
@@ -161,22 +163,25 @@ if args[1] == 'build':
 	if SLURM_DIR and (SLURM_LIB or SLURM_INC):
 		usage()
 	elif SLURM_DIR and not (SLURM_LIB or SLURM_INC):
-		SLURM_LIB = SLURM_DIR
-		SLURM_INC = SLURM_DIR
+		SLURM_LIB = "%s/lib" % SLURM_DIR
+		SLURM_INC = "%s/include" % SLURM_DIR
 	elif not SLURM_DIR and not SLURM_LIB and not SLURM_INC:
-		SLURM_LIB = DEFAULT_SLURM
-		SLURM_INC = DEFAULT_SLURM
+		SLURM_LIB = "%s/lib" %  DEFAULT_SLURM
+		SLURM_INC = "%s/include" %  DEFAULT_SLURM
 	elif not SLURM_DIR and not (SLURM_LIB or not SLURM_INC):
 		usage()
 
 	# Test for slurm lib and slurm.h maybe from derived paths ?
 
-	if not os.path.exists("%s/include/slurm/slurm.h" % SLURM_INC):
-		warn("Cannot locate the Slurm include in %s" % SLURM_INC)
+	if not os.path.exists("%s/slurm/slurm.h" % SLURM_INC):
+		info("Cannot locate the Slurm include in %s" % SLURM_INC)
 		usage()
-	if not os.path.exists("%s/lib/libslurm.so" % SLURM_LIB):
-		warn("Cannot locate the Slurm shared library in %s" % SLURM_LIB)
-		usage()
+	if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
+		info("Cannot locate the Slurm shared library in %s, checking lib64 .... " % SLURM_LIB)
+		SLURM_LIB = "%s/lib64" %  DEFAULT_SLURM
+		if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
+			info("Cannot locate the Slurm shared library in %s" % SLURM_LIB)
+			usage()
 
 # Get the list of extensions
 
