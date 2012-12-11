@@ -89,7 +89,7 @@ cdef inline IS_NODE_FUTURE(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE
 
 cdef inline IS_NODE_DRAIN(int _X): return (_X & NODE_STATE_DRAIN)
 cdef inline IS_NODE_DRAINING(int _X): return ((_X & NODE_STATE_DRAIN) or (IS_NODE_ALLOCATED(_X) or IS_NODE_ERROR(_X) or IS_NODE_MIXED(_X)))
-cdef inline IS_NODE_DRAINED(int _X): return (IS_NODE_DRAIN(_X) and not IS_NODE_DRAINING(_X))
+cdef inline IS_NODE_DRAINED(int _X): return (IS_NODE_DRAIN(_X) and IS_NODE_DRAINING(_X) != 0)
 cdef inline IS_NODE_COMPLETING(int _X): return (_X & NODE_STATE_COMPLETING)
 cdef inline IS_NODE_NO_RESPOND(int _X): return (_X & NODE_STATE_NO_RESPOND)
 cdef inline IS_NODE_POWER_SAVE(int _X): return (_X & NODE_STATE_POWER_SAVE)
@@ -785,12 +785,12 @@ def create_partition_dict():
 		u'DefaultTime': -1,
 		u'MaxNodes': -1,
 		u'MinNodes': -1,
-		u'Default': False,
-		u'Hidden': False,
-		u'RootOnly': False,
-		u'Shared': False,
+		u'Default': 0,
+		u'Hidden': 0,
+		u'RootOnly': 0,
+		u'Shared': 0,
 		u'Priority': -1,
-		u'State': False,
+		u'State': 0,
 		u'Nodes': u'',
 		u'AllowGroups': u'',
 		u'AllocNodes': u''
@@ -1639,7 +1639,7 @@ cdef class job:
 				Job_dict[u'ntasks_per_core'] = self._job_ptr.job_array[i].ntasks_per_core
 				Job_dict[u'ntasks_per_node'] = self._job_ptr.job_array[i].ntasks_per_node
 				Job_dict[u'ntasks_per_socket'] = self._job_ptr.job_array[i].ntasks_per_socket
-				Job_dict[u'ntasks_per_board'] = self._job_ptr.job_array[i].ntasks_per_board
+				#Job_dict[u'ntasks_per_board'] = self._job_ptr.job_array[i].ntasks_per_board
 				Job_dict[u'num_nodes'] = self._job_ptr.job_array[i].num_nodes
 				Job_dict[u'num_cpus'] = self._job_ptr.job_array[i].num_cpus
 				Job_dict[u'partition'] = self._job_ptr.job_array[i].partition
@@ -2889,8 +2889,9 @@ def slurm_create_reservation(dict reservation_dict={}):
 
 	if reservation_dict[u'node_cnt'] != -1:
 		int_value = reservation_dict[u'node_cnt']
-		resv_msg.node_cnt = <uint32_t>slurm.xmalloc(sizeof(uint32_t) * 2)
-		*resv_msg.node_cnt = int_value
+		resv_msg.node_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * 2)
+		resv_msg.node_cnt[0] = int_value
+		resv_msg.node_cnt[1] = 0
 
 	if reservation_dict[u'users'] is not '':
 		name = reservation_dict[u'users']
@@ -2910,13 +2911,11 @@ def slurm_create_reservation(dict reservation_dict={}):
 		int_value = reservation_dict[u'flags']
 		resv_msg.flags = int_value
 
-	print "Here 2"
 	resid = slurm.slurm_create_reservation(&resv_msg)
 
 	resID = ''
 	if resid is not NULL:
 		resID = resid
-		print "Here 3 %s" % resID
 		free(resid)
 
 	if free_users == 1:
@@ -2956,9 +2955,9 @@ def slurm_update_reservation(dict reservation_dict={}):
 	if reservation_dict[u'name'] is not '':
 		resv_msg.name = reservation_dict[u'name']
 
-	if reservation_dict[u'node_cnt'] != -1:
-		uint32_value = reservation_dict[u'node_cnt']
-		resv_msg.node_cnt = uint32_value
+	#if reservation_dict[u'node_cnt'] != -1:
+		#uint32_value = reservation_dict[u'node_cnt']
+		#resv_msg.node_cnt = uint32_value
 
 	if reservation_dict[u'users'] is not '':
 		name = reservation_dict[u'users']
@@ -3403,7 +3402,7 @@ cdef class statistics:
 	cdef dict _StatsDict
 
 	def __cinit__(self):
-		self._req 
+		self._req.command_id = 0
 		self._buf = NULL 
 		self._StatsDict = {}
 
@@ -4085,33 +4084,33 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 	cdef int val = max_share & (~SHARED_FORCE)
 
 	if (flags & PART_FLAG_DEFAULT):
-		mode[u'Default'] = True
+		mode[u'Default'] = 1
 	else:
-		mode[u'Default'] = False
+		mode[u'Default'] = 0
 
 	if (flags & PART_FLAG_HIDDEN):
-		mode[u'Hidden'] = True
+		mode[u'Hidden'] = 1
 	else:
-		mode[u'Hidden'] = False
+		mode[u'Hidden'] = 0
 
 	if (flags & PART_FLAG_NO_ROOT):
-		mode[u'DisableRootJobs'] = True
+		mode[u'DisableRootJobs'] = 1
 	else:
-		mode[u'DisableRootJobs'] = False
+		mode[u'DisableRootJobs'] = 0
 
 	if (flags & PART_FLAG_ROOT_ONLY):
-		mode[u'RootOnly'] = True
+		mode[u'RootOnly'] = 1
 	else:
-		mode[u'RootOnly'] = False
+		mode[u'RootOnly'] = 0
 
 	if val == 0:
 		mode[u'Shared'] = u"EXCLUSIVE"
 	elif force:
 		mode[u'Shared'] = u"FORCED"
 	elif val == 1:
-		mode[u'Shared'] = False
+		mode[u'Shared'] = 0
 	else:
-		mode[u'Shared'] = True
+		mode[u'Shared'] = 1
 
 	return mode
 
