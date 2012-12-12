@@ -371,7 +371,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef dynamic_plugin_data dynamic_plugin_data_t
 
-	ctypedef acct_gather_energy:
+	ctypedef struct acct_gather_energy:
 		uint32_t previous_consumed_energy
 		uint32_t base_consumed_energy
 		uint32_t base_watts		# lowest power consump of node, in watts 
@@ -443,7 +443,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t max_cpus
 		uint32_t min_nodes
 		uint32_t max_nodes
-		uint`6_t boards_per_node
+		uint16_t boards_per_node
 		uint16_t sockets_per_board
 		uint16_t sockets_per_node
 		uint16_t cores_per_socket
@@ -1006,7 +1006,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *licenses
 		char *name
 		uint32_t core_cnt
-		uint32_t node_cnt
+		uint32_t *node_cnt
 		char *node_list
 		char *partition
 		time_t   start_time
