@@ -2,18 +2,18 @@
 
 import os
 import imp
-import sys
+import logging
 import platform
+import shutil
+import sys
 
-from string import *
 from stat import *
+from string import *
 
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.command import clean
 from distutils.sysconfig import get_python_lib
-
-import logging
 
 logger = logging.getLogger()
 #logger.addHandler(logging.StreamHandler(sys.stderr))
@@ -23,6 +23,7 @@ logging.basicConfig(level=20)
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
 __version__ = "2.5.0-1"
+__slurm_hex_version__ = "0x020500"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
@@ -80,6 +81,52 @@ def read(fname):
 
 	return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+def read_inc_version(fname):
+
+	"""Read the supplied include file and extract slurm version number
+	in the line #define SLURM_VERSION_NUMBER 0x020500 """
+
+	hex = ''
+	f = open(fname, "r")
+	for line in f:
+		if line.find("#define SLURM_VERSION_NUMBER") == 0:
+			hex = line.split(" ")[2].strip()
+			info("Build - Detected Slurm include file version - %s" % hex)
+
+	return hex
+
+def clean():
+
+	"""Cleanup build directory and temporary files"""
+
+	info("Clean - checking for objects to clean")
+	if os.path.isdir("build/"):
+		info("Clean - removing pyslurm build temp directory ...")
+		try:
+			shutil.rmtree("build/")
+		except:
+			fatal("Clean - failed to remove pyslurm build/ directory !") 
+			sys.exit(-1)
+
+	files = [ "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi" ]
+
+	for file in files:
+
+		if os.path.exists(file):
+
+			if os.path.isfile(file):
+				try:
+					info("Clean - removing %s temp file" % file)
+					os.unlink(file)
+				except:
+					fatal("Clean - failed to remove %s temp file" % file)
+					sys.exit(-1)
+			else:
+				fatal("Clean - %s temp file not a file !" % file)
+				sys.exit(-1)
+
+	info("Clean - completed")
+
 #
 # Main section
 #
@@ -90,7 +137,7 @@ info("------------------------------")
 info("")
 
 if sys.version_info[:2] < (2, 6):
-	fatal("PySLURM %s requires Python version 2.6 or later (%d.%d detected)." % (__version__, sys.version_info[:2]))
+	fatal("PySlurm %s requires Python version 2.6 or later (%d.%d detected)." % (__version__, sys.version_info[:2]))
 
 compiler_dir = os.path.join(get_python_lib(prefix=''), 'src/pyslurm/')
 
@@ -119,7 +166,21 @@ SLURM_DIR = SLURM_LIB = SLURM_INC = ''
 #
 
 args = sys.argv[:]
+if args[1] == 'clean':
+
+	#
+	# Call clean up of temporary build objects
+	#
+
+	clean()
+
 if args[1] == 'build':
+
+	#
+	# Call clean up of temporary build objects
+	#
+
+	clean()
 
 	for arg in args:
 		if arg.find('--slurm=') == 0:
@@ -143,21 +204,6 @@ if args[1] == 'build':
 			BGQ=1
 			sys.argv.remove(arg)
 
-	# BlueGene Types
-
-	if (BGL + BGP + BGQ) > 1:
-		fatal("Please specifiy one BG Type either --bgl or --bgp or --bgq")
-	else:
-		try:
-			f = open("pyslurm/bluegene.pxi", "w")
-			f.write("DEF BG=1\n")
-			f.write("DEF BGL=%d\n" % BGL)
-			f.write("DEF BGP=%d\n" % BGP)
-			f.write("DEF BGQ=%d\n" % BGQ)
-			f.close()
-		except:
-			fatal("Unable to write Blue Gene type to pyslurm/bluegene.pxd")
-		
 	# Slurm installation directory
 
 	if SLURM_DIR and (SLURM_LIB or SLURM_INC):
@@ -174,14 +220,36 @@ if args[1] == 'build':
 	# Test for slurm lib and slurm.h maybe from derived paths ?
 
 	if not os.path.exists("%s/slurm/slurm.h" % SLURM_INC):
-		info("Cannot locate the Slurm include in %s" % SLURM_INC)
+		info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
 		usage()
+
+	if read_inc_version("%s/slurm/slurm.h" % SLURM_INC) != __slurm_hex_version__:
+		fatal("Build - Incorrect slurm version detected, Pyslurm needs Slurm-2.5.0")
+		sys.exit(-1)
+
 	if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
-		info("Cannot locate the Slurm shared library in %s, checking lib64 .... " % SLURM_LIB)
+		info("Build - Cannot locate the Slurm shared library in %s, checking lib64 .... " % SLURM_LIB)
 		SLURM_LIB = "%s/lib64" %  DEFAULT_SLURM
 		if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
-			info("Cannot locate the Slurm shared library in %s" % SLURM_LIB)
+			info("Build - Cannot locate the Slurm shared library in %s" % SLURM_LIB)
 			usage()
+
+	# BlueGene Types
+
+	if (BGL + BGP + BGQ) > 1:
+		fatal("Please specifiy one BG Type either --bgl or --bgp or --bgq")
+	else:
+		info("Build - Generating pyslurm/bluegene.pxi file")
+		try:
+			f = open("pyslurm/bluegene.pxi", "w")
+			f.write("DEF BG=1\n")
+			f.write("DEF BGL=%d\n" % BGL)
+			f.write("DEF BGP=%d\n" % BGP)
+			f.write("DEF BGQ=%d\n" % BGQ)
+			f.close()
+		except:
+			fatal("Build - Unable to write Blue Gene type to pyslurm/bluegene.pxd")
+			sys.exit(-1)
 
 # Get the list of extensions
 
