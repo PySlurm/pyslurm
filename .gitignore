@@ -1,0 +1,13 @@
+# Ignore Build Directory #
+
+build/
+
+# Ignore Docs Directory #
+
+doc/
+
+# Igmore Temporary Build Files #
+
+pyslurm/pyslurm.c
+pyslurm/bluegene.pxi
+pyslurm/*.pyc
