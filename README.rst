@@ -14,7 +14,7 @@ The current branch is based on the Slurm 2.5.0 API
 Prerequistes
 =============
 
-This version has been tested with Slurm 2.5.0, Cython 0.17.2 and Python 2.7
+This version has been tested with Slurm 2.5.0, Cython 0.17.3 and Python 2.7
 
 * [Slurm] http://www.schedmd.com
 * [Python] http://www.python.org
