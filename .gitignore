@@ -4,7 +4,7 @@ build/
 
 # Ignore Docs Directory #
 
-doc/
+#doc/
 
 # Igmore Temporary Build Files #
 
