@@ -3253,12 +3253,14 @@ cdef class block:
 			=========================
 			FREE			0
 			RECREATE		1
-			#if BGL
+
+			if BlueGeneL 
 				READY		2
 				BUSY		3
-			#else
+			For other systems
 				REBOOTING	2
 				READY		3
+
 			RESUME			4
 			ERROR			5
 			REMOVE			6
