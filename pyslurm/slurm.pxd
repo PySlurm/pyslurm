@@ -178,6 +178,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		SELECT_JOBDATA_BLOCK_NODE_CNT
 		SELECT_JOBDATA_START_LOC
 		SELECT_JOBDATA_USER_NAME
+		SELECT_JOBDATA_CONFIRMED
 
 	cdef enum select_nodedata_type:
 		SELECT_NODEDATA_BITMAP_SIZE
