@@ -33,13 +33,20 @@ cdef extern from *:
 	ctypedef char* const_char_ptr "const char*"
 
 #
-# PySLURM helper functions
+# PySlurm helper functions
 #
 
 cdef inline listOrNone(char* value, char* sep_char):
 	if value is NULL:
 		return []
-	return value.split(sep_char)
+	if sep_char is NULL:
+		return value
+
+	if sep_char == b'':
+		return value
+
+	return value.split('')
+	
 
 cdef inline stringOrNone(char* value, value2):
 	if value is NULL:
@@ -54,7 +61,7 @@ cdef inline boolToString(int value):
 	return u'True'
 
 #
-# SLURM declarations not in slurm.h
+# Slurm declarations not in slurm.h
 #
 
 cdef inline void* xmalloc(size_t __sz):
@@ -85,14 +92,14 @@ cdef extern char *slurm_node_use_string(int)
 cdef extern char *slurm_bg_block_state_string(uint16_t)
 
 #
-# SLURM spank API - Love the name !
+# Slurm spank API - Love the name !
 #
 
 cdef extern from 'slurm/spank.h' nogil:
 	cdef extern void slurm_verbose (char *, ...)
 
 #
-# SLURM error API
+# Slurm error API
 #
 
 cdef extern from 'slurm/slurm_errno.h' nogil:
@@ -102,7 +109,7 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
 	cdef void slurm_perror (char *)
 
 #
-# Main SLURM API
+# Main Slurm API
 #
 
 cdef extern from 'slurm/slurm.h' nogil:
