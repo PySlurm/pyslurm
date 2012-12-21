@@ -50,6 +50,11 @@ directory or where the SLURM libraries and SLURM include files are :
 
 If you still have issues then you could code this directly into the setup.py
 
+#. The build will automatically call a cleanup procedure to remove temporary build files
+but this can be called directly as well with :
+
+	* python setup.py clean
+
 Documentation
 =============
 
