@@ -33,10 +33,6 @@ def display(job_dict):
 					else:
 						ddate = pyslurm.epoch2date(value[part_key])
 						print "\t%-20s : %s" % (part_key, ddate)
-				elif part_key == 'state_reason':
-					print "\t%-20s : %s" % (part_key, pyslurm.get_job_state_reason(value[part_key]))
-				elif part_key == 'job_state':
-					print "\t%-20s : %s" % (part_key, pyslurm.get_job_state(value[part_key]))
 				else:
 					print "\t%-20s : %s" % (part_key, value[part_key])
 			print "-" * 80
