@@ -50,7 +50,7 @@ include "bluegene.pxi"
 include "slurm_defines.pxi"
 
 #
-# SLURM Macros as Cython inline functions
+# Slurm Macros as Cython inline functions
 #
 
 cdef inline SLURM_VERSION_NUMBER(): return slurm.SLURM_VERSION_NUMBER
@@ -637,6 +637,9 @@ cdef class partition:
 	cpdef int __load(self):
 
 		u"""Load slurm partition information.
+
+		:returns: error Code
+		:rtype: `integer`
 		"""
 
 		cdef slurm.partition_info_msg_t *new_Partition_ptr = NULL
@@ -915,7 +918,7 @@ cpdef int slurm_delete_partition(char* PartID):
 	return errCode
 
 #
-# SLURM Ping/Reconfig/Shutdown functions
+# Slurm Ping/Reconfig/Shutdown functions
 #
 
 cpdef int slurm_ping(int Controller=1):
@@ -1021,7 +1024,7 @@ cpdef int slurm_set_schedlog_level(uint32_t Enable=0):
 	return errCode
 
 #
-# SLURM Job Suspend Functions
+# Slurm Job Suspend Functions
 #
 
 cpdef int slurm_suspend(uint32_t JobID=0):
@@ -1128,7 +1131,7 @@ cpdef int slurm_signal_job(uint32_t JobID=0, uint16_t Signal=0):
 	return errCode
 
 #
-# SLURM Job/Step Signaling Functions
+# Slurm Job/Step Signaling Functions
 #
 
 cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0, uint16_t Signal=0):
@@ -1239,7 +1242,7 @@ cpdef int slurm_terminate_job_step(uint32_t JobID=0, uint32_t JobStep=0):
 	return errCode
 
 #
-# SLURM Checkpoint functions
+# Slurm Checkpoint functions
 #
 
 cpdef tuple slurm_checkpoint_able(uint32_t JobID=0, uint32_t JobStep=0):
@@ -1400,7 +1403,7 @@ cpdef int slurm_checkpoint_task_complete(uint32_t JobID=0, uint32_t JobStep=0, u
 	return errCode
 
 #
-# SLURM Job Checkpoint Functions
+# Slurm Job Checkpoint Functions
 #
 
 def slurm_checkpoint_error(uint32_t JobID=0, uint32_t JobStep=0):
@@ -1450,7 +1453,7 @@ cpdef int slurm_checkpoint_tasks(uint32_t JobID=0, uint16_t JobStep=0, uint16_t 
 	return errCode
 
 #
-# SLURM Job Class to Control Configuration Read/Update
+# Slurm Job Class to Control Configuration Read/Update
 #
 
 cdef class job:
@@ -1541,6 +1544,9 @@ cdef class job:
 	cpdef int __load(self):
 
 		u"""Load slurm job information.
+
+		:returns: error Code
+		:rtype: `integer`
 		"""
 
 		cdef slurm.job_info_msg_t *new_job_ptr = NULL
@@ -1818,7 +1824,7 @@ def slurm_pid2jobid(uint32_t JobPID=0):
 	return errCode, JobID
 
 #
-# SLURM Error Class
+# Slurm Error Class
 #
 
 class SlurmError(Exception):
@@ -1830,7 +1836,7 @@ class SlurmError(Exception):
 		return repr(slurm.slurm_strerror(self.value))
 
 #
-# SLURM Error Functions
+# Slurm Error Functions
 #
 
 def slurm_get_errno():
@@ -1878,7 +1884,7 @@ def slurm_perror(char* Msg=''):
 	slurm.slurm_perror(Msg)
 
 #
-# SLURM Node Read/Print/Update Class 
+# Slurm Node Read/Print/Update Class 
 #
 
 cdef class node:
@@ -2831,14 +2837,16 @@ cdef class reservation:
 		u"""Create slurm reservation.
 		"""
 
-		print "Here !"
 		a = slurm_create_reservation(reservation_dict)
-		print "Here ! %s" % a
+
 		return a
 
 	def delete(self, char *ResID=''):
 
 		u"""Delete slurm reservation.
+
+		:returns: 0 for success or a slurm error code
+		:rtype: `int`
 		"""
 
 		return slurm_delete_reservation(ResID)
@@ -2846,6 +2854,9 @@ cdef class reservation:
 	def update(self, dict reservation_dict={}):
 
 		u"""Update a slurm reservation attributes.
+
+		:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
+		:rtype: `int`
 		"""
 
 		return slurm_update_reservation(reservation_dict)
@@ -3160,7 +3171,7 @@ cdef class block:
 				name = self._block_ptr.block_array[i].bg_block_id
 				Block_dict[u'bg_block_id'] = name
 				Block_dict[u'blrtsimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].blrtsimage, '')
-				#Block_dict[u'conn_type'] = self._block_ptr.block_array[i].conn_type[HIGHEST_DIMENSIONS]
+				Block_dict[u'conn_type'] = self._block_ptr.block_array[i].conn_type[HIGHEST_DIMENSIONS]
 				Block_dict[u'conn_type'] = get_conn_type_string(self._block_ptr.block_array[i].conn_type[HIGHEST_DIMENSIONS])
 				Block_dict[u'ionode_str'] = slurm.listOrNone(self._block_ptr.block_array[i].ionode_str, ',')
 				Block_dict[u'linuximage'] = slurm.stringOrNone(self._block_ptr.block_array[i].linuximage, '')
@@ -3171,7 +3182,7 @@ cdef class block:
 				Block_dict[u'node_use'] = get_node_use(self._block_ptr.block_array[i].node_use)
 				Block_dict[u'ramdiskimage'] = slurm.stringOrNone(self._block_ptr.block_array[i].ramdiskimage, '')
 				Block_dict[u'reason'] = slurm.stringOrNone(self._block_ptr.block_array[i].reason, '')
-				#Block_dict[u'state'] = self._block_ptr.block_array[i].state
+				Block_dict[u'state'] = self._block_ptr.block_array[i].state
 				Block_dict[u'state'] = get_bg_block_state_string(self._block_ptr.block_array[i].state)
 
 				Block[name] = Block_dict
@@ -3643,7 +3654,6 @@ def get_connection_type(int inx=0):
 	:param ResType: Slurm block connection type
 	:type ResType: Integer
 
-		=======================================
 		SELECT_MESH                 1
 		SELECT_TORUS                2
 		SELECT_NAV                  3
@@ -3652,10 +3662,9 @@ def get_connection_type(int inx=0):
 		SELECT_HTC_D                6
 		SELECT_HTC_V                7
 		SELECT_HTC_L                8
-		=======================================
 
 	:returns: block connection string
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, slurm.slurm_conn_type_string(inx))
@@ -3666,14 +3675,12 @@ def get_node_use(int inx=0):
 
 	:param int ResType: Slurm block node usage
 
-		=======================================
 		SELECT_COPROCESSOR_MODE         1
 		SELECT_VIRTUAL_NODE_MODE        2
 		SELECT_NAV_MODE                 3
-		=======================================
 
 	:returns: block node usage
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, __get_node_use(inx))
@@ -3688,17 +3695,15 @@ def get_trigger_res_type(uint16_t inx=0):
 
 	:param int ResType: Slurm trigger res state
 
-		=======================================
 		TRIGGER_RES_TYPE_JOB            1
 		TRIGGER_RES_TYPE_NODE           2
 		TRIGGER_RES_TYPE_SLURMCTLD      3
 		TRIGGER_RES_TYPE_SLURMDBD       4
 		TRIGGER_RES_TYPE_DATABASE       5
 		TRIGGER_RES_TYPE_FRONT_END      6
-		=======================================
 
 	:returns: Trigger reservation state
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, __get_trigger_res_type(inx))
@@ -3728,7 +3733,6 @@ def get_trigger_type(uint32_t inx=0):
 
 	:param int TriggerType: Slurm trigger type
 
-		===========================================
 		TRIGGER_TYPE_UP                 0x00000001
 		TRIGGER_TYPE_DOWN               0x00000002
 		TRIGGER_TYPE_FAIL               0x00000004
@@ -3749,10 +3753,9 @@ def get_trigger_type(uint32_t inx=0):
 		TRIGGER_TYPE_PRI_DBD_RES_OP     0x00020000
 		TRIGGER_TYPE_PRI_DB_FAIL        0x00040000
 		TRIGGER_TYPE_PRI_DB_RES_OP      0x00080000
-		===========================================
 
 	:returns: Trigger state
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, __get_trigger_type(inx))
@@ -3810,7 +3813,6 @@ def get_res_state(uint16_t inx=0):
 
 	:param int flags: Slurm reservation flags
 
-		=========================================
 		RESERVE_FLAG_MAINT              0x0001
 		RESERVE_FLAG_NO_MAINT           0x0002
 		RESERVE_FLAG_DAILY              0x0004
@@ -3823,10 +3825,9 @@ def get_res_state(uint16_t inx=0):
 		RESERVE_FLAG_NO_LIC_ONLY        0x0200
 		RESERVE_FLAG_OVERLAP            0x4000
 		RESERVE_FLAG_SPEC_NODES         0x8000
-		=========================================
 
 	:returns: Reservation state
-	:rtype: `list`
+	:rtype: `tuple`
 	"""
 
 	return (inx, slurm.slurm_reservation_flags_string(inx))
@@ -3839,28 +3840,26 @@ def get_debug_flags(uint32_t inx=0):
 	:param flags: Slurm debug flags
 	:type flags: integer
 
-	====================================
-	DEBUG_FLAG_SELECT_TYPE    0x00000001
-	DEBUG_FLAG_STEPS          0x00000002
-	DEBUG_FLAG_TRIGGERS       0x00000004
-	DEBUG_FLAG_CPU_BIND       0x00000008
-	DEBUG_FLAG_WIKI           0x00000010
-	DEBUG_FLAG_NO_CONF_HASH   0x00000020
-	DEBUG_FLAG_GRES           0x00000040
-	DEBUG_FLAG_BG_PICK        0x00000080
-	DEBUG_FLAG_BG_WIRES       0x00000100
-	DEBUG_FLAG_BG_ALGO        0x00000200
-	DEBUG_FLAG_BG_ALGO_DEEP   0x00000400
-	DEBUG_FLAG_PRIO           0x00000800
-	DEBUG_FLAG_BACKFILL       0x00001000
-	DEBUG_FLAG_GANG           0x00002000
-	DEBUG_FLAG_RESERVATION    0x00004000
-	DEBUG_FLAG_FRONT_END      0x00008000
-	DEBUG_FLAG_NO_REALTIME    0x00010000
-	====================================
+		DEBUG_FLAG_SELECT_TYPE    0x00000001
+		DEBUG_FLAG_STEPS          0x00000002
+		DEBUG_FLAG_TRIGGERS       0x00000004
+		DEBUG_FLAG_CPU_BIND       0x00000008
+		DEBUG_FLAG_WIKI           0x00000010
+		DEBUG_FLAG_NO_CONF_HASH   0x00000020
+		DEBUG_FLAG_GRES           0x00000040
+		DEBUG_FLAG_BG_PICK        0x00000080
+		DEBUG_FLAG_BG_WIRES       0x00000100
+		DEBUG_FLAG_BG_ALGO        0x00000200
+		DEBUG_FLAG_BG_ALGO_DEEP   0x00000400
+		DEBUG_FLAG_PRIO           0x00000800
+		DEBUG_FLAG_BACKFILL       0x00001000
+		DEBUG_FLAG_GANG           0x00002000
+		DEBUG_FLAG_RESERVATION    0x00004000
+		DEBUG_FLAG_FRONT_END      0x00008000
+		DEBUG_FLAG_NO_REALTIME    0x00010000
 
 	:returns: Debug flag string
-	:rtype: `list`
+	:rtype: `tuple`
 	"""
 
 	return (inx, __get_debug_flags(inx))
@@ -3926,7 +3925,7 @@ def get_node_state(uint16_t inx=0):
 	:param int inx: Slurm node state
 
 	:returns: Node state
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, slurm.slurm_node_state_string(inx))
@@ -3938,7 +3937,7 @@ def get_rm_partition_state(int inx=0):
 	:param int inx: Slurm partition state
 
 	:returns: Preempt mode
-	:rtype: `list`
+	:rtype: `tuple`
 	"""
 
 	return (inx, __get_rm_partition_state(inx))
@@ -3969,8 +3968,15 @@ def get_preempt_mode(uint16_t inx=0):
 
 	:param int inx: Slurm preempt mode
 
+		PREEMPT_MODE_OFF	0x0000
+		PREEMPT_MODE_SUSPEND	0x0001
+		PREEMPT_MODE_REQUEUE	0x0002
+		PREEMPT_MODE_CHECKPOINT	0x0004
+		PREEMPT_MODE_CANCEL	0x0008
+		PREEMPT_MODE_GANG	0x8000
+
 	:returns: Preempt mode
-	:rtype: `list`
+	:rtype: `tuple`
 	"""
 
 	return (inx, slurm.slurm_preempt_mode_string(inx))
@@ -3981,8 +3987,13 @@ def get_partition_state(uint16_t inx=0, uint16_t extended=0):
 
 	:param int inx: Slurm partition state
 
+		PARTITION_DOWN		0x01
+		PARTITION_UP		0x01 | 0x02
+		PARTITION_DRAIN		0x02
+		PARTITION_INACTIVE      0x00
+
 	:returns: Partition state
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, __get_partition_state(inx, extended))
@@ -4101,7 +4112,7 @@ def get_conn_type_string(int inx=0):
 	:param int inx: Slurm BG connection state
 
 	:returns: Block Connection state
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, slurm.slurm_conn_type_string(inx))
@@ -4113,7 +4124,7 @@ def get_bg_block_state_string(uint16_t inx=0):
 	:param int inx: Slurm BG block state
 
 	:returns: Block state
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, slurm.slurm_bg_block_state_string(inx))
@@ -4124,8 +4135,19 @@ def get_job_state(int inx=0):
 
 	:param int inx: Slurm job state
 
+		JOB_PENDING	0
+		JOB_RUNNING	1
+		JOB_SUSPENDED	2
+		JOB_COMPLETE	3
+		JOB_CANCELLED	4
+		JOB_FAILED	5
+		JOB_TIMEOUT	6
+		JOB_NODE_FAIL	7
+		JOB_PREEMPTED	8
+		JOB_END		9
+
 	:returns: Job state
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, slurm.slurm_job_state_string(inx))
@@ -4137,7 +4159,7 @@ def get_job_state_reason(uint16_t inx=0):
 	:param int inx: Slurm job state reason
 
 	:returns: Reason state
-	:rtype: `string`
+	:rtype: `tuple`
 	"""
 
 	return (inx, slurm.slurm_job_reason_string(inx))
