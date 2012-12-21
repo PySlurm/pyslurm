@@ -203,7 +203,7 @@ cpdef list slurm_load_slurmd_status():
 	return Status
 
 #
-# SLURM Config Class 
+# Slurm Config Class 
 #
 
 cdef class config:
@@ -234,6 +234,7 @@ cdef class config:
 		:returns: epoch seconds
 		:rtype: `integer`
 		"""
+
 		return self._lastUpdate
 
 	def ids(self):
@@ -2019,7 +2020,7 @@ cdef class node:
 
 		cdef int i, total_used, cpus_per_node
 		cdef uint16_t alloc_cpus, err_cpus
-		cdef uint32_t node_scaling = 0
+		cdef uint32_t tmp_disk, node_scaling = 0
 		cdef time_t last_update
 
 		cdef char* test
@@ -3244,32 +3245,6 @@ cdef class block:
 
 	cpdef update(self, char *blockID='', int blockOP=0):
 
-		u"""Update slurm block to a given state.
-
-		:param string blockID: The ID string of the block
-
-		:param int blockOP: The block operation to perform (default=0).
-
-			=========================
-			FREE			0
-			RECREATE		1
-
-			if BlueGeneL 
-				READY		2
-				BUSY		3
-			For other systems
-				REBOOTING	2
-				READY		3
-
-			RESUME			4
-			ERROR			5
-			REMOVE			6
-			==========================
-
-		:returns: 0 for success or -1 for failure and the slurm error code is set appropiately.
-		:rtype: `int`
-		"""
-
 		cdef int i, dictlen
 
 		cdef slurm.update_block_msg_t block_msg
@@ -3283,8 +3258,8 @@ cdef class block:
 
 		if slurm.slurm_update_block(&block_msg):
 			return slurm.slurm_get_errno()
-		else:
-			return 0
+
+		return 0
 
 #
 # Topology Class
@@ -3665,7 +3640,8 @@ def get_connection_type(int inx=0):
 
 	u"""Returns a string that represents the slurm block connection type.
 
-	:param int ResType: Slurm block connection type
+	:param ResType: Slurm block connection type
+	:type ResType: Integer
 
 		=======================================
 		SELECT_MESH                 1
@@ -3857,29 +3833,31 @@ def get_res_state(uint16_t inx=0):
 
 def get_debug_flags(uint32_t inx=0):
 
-	u"""Returns a string that represents the slurm debug flags.
+	u"""
+	Returns a string that represents the slurm debug flags.
 
-	:param int flags: Slurm debug flags
+	:param flags: Slurm debug flags
+	:type flags: integer
 
-		=====================================
-		DEBUG_FLAG_SELECT_TYPE    0x00000001
-		DEBUG_FLAG_STEPS          0x00000002
-		DEBUG_FLAG_TRIGGERS       0x00000004
-		DEBUG_FLAG_CPU_BIND       0x00000008
-		DEBUG_FLAG_WIKI           0x00000010
-		DEBUG_FLAG_NO_CONF_HASH   0x00000020
-		DEBUG_FLAG_GRES           0x00000040
-		DEBUG_FLAG_BG_PICK        0x00000080
-		DEBUG_FLAG_BG_WIRES       0x00000100
-		DEBUG_FLAG_BG_ALGO        0x00000200
-		DEBUG_FLAG_BG_ALGO_DEEP   0x00000400
-		DEBUG_FLAG_PRIO           0x00000800
-		DEBUG_FLAG_BACKFILL       0x00001000
-		DEBUG_FLAG_GANG           0x00002000
-		DEBUG_FLAG_RESERVATION    0x00004000
-		DEBUG_FLAG_FRONT_END      0x00008000
-		DEBUG_FLAG_NO_REALTIME    0x00010000
-		=====================================
+	====================================
+	DEBUG_FLAG_SELECT_TYPE    0x00000001
+	DEBUG_FLAG_STEPS          0x00000002
+	DEBUG_FLAG_TRIGGERS       0x00000004
+	DEBUG_FLAG_CPU_BIND       0x00000008
+	DEBUG_FLAG_WIKI           0x00000010
+	DEBUG_FLAG_NO_CONF_HASH   0x00000020
+	DEBUG_FLAG_GRES           0x00000040
+	DEBUG_FLAG_BG_PICK        0x00000080
+	DEBUG_FLAG_BG_WIRES       0x00000100
+	DEBUG_FLAG_BG_ALGO        0x00000200
+	DEBUG_FLAG_BG_ALGO_DEEP   0x00000400
+	DEBUG_FLAG_PRIO           0x00000800
+	DEBUG_FLAG_BACKFILL       0x00001000
+	DEBUG_FLAG_GANG           0x00002000
+	DEBUG_FLAG_RESERVATION    0x00004000
+	DEBUG_FLAG_FRONT_END      0x00008000
+	DEBUG_FLAG_NO_REALTIME    0x00010000
+	====================================
 
 	:returns: Debug flag string
 	:rtype: `list`
