@@ -2,16 +2,20 @@
 
 import pyslurm
 import sys
-from pwd import getpwnam  
+from pwd import getpwnam, getpwuid
 from time import gmtime, strftime, sleep
 
 def list_users(job_dict):
  
 	users = []
 	if job_dict:
+
 		for jobid, value in sorted(job_dict.iteritems()):
+
 			if value["account"] not in users:
+
 				users.append(value["account"])
+
 	return users
 
 if __name__ == "__main__":
@@ -35,7 +39,10 @@ if __name__ == "__main__":
 	for user in users:
 
 		user_jobs = pyslurmjob.find('account', user)
-		gecos = getpwnam(user)[4].split(",")[0]
+		try:
+			gecos = getpwnam(user)[4].split(",")[0]
+		except:
+			pass
 
 		procs_request = 0
 		nodes_request = 0
@@ -46,12 +53,17 @@ if __name__ == "__main__":
 
 		for jobid in user_jobs:
 
-			if pyslurm.get_job_state(jobs[jobid]["job_state"]) == "Pending":
+			if not user:
+				user = jobs[jobid]["user_id"]
+				gecos = "%s" % getpwuid(user)[4]
+				user = "%s" % user
+
+			if jobs[jobid]["job_state"][1] == "Pending":
 				pending = pending + 1
 				procs_request = procs_request + jobs[jobid]["num_cpus"] 
 				nodes_request = nodes_request + jobs[jobid]["num_nodes"]
 
-			if pyslurm.get_job_state(jobs[jobid]["job_state"]) == "Running":
+			if jobs[jobid]["job_state"][1] == "Running":
 				running = running + 1
 				procs_used = procs_used + jobs[jobid]["num_cpus"] 
 				nodes_used = nodes_used + jobs[jobid]["num_nodes"]
