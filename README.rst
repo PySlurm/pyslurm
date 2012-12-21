@@ -51,12 +51,20 @@ directory or where the SLURM libraries and SLURM include files are :
 If you still have issues then you could code this directly into the setup.py
 
 #. The build will automatically call a cleanup procedure to remove temporary build files
-but this can be called directly as well with :
+but this can be called directly if needed as well with :
 
 	* python setup.py clean
 
 Documentation
 =============
+
+`Sphinx <http://www.sphinx-doc.org>`_ (needs to be installe) is currently used to generate the 
+documentation from the reStructuredText based doc strings from the module once it is built 
+and can be regenerated at any time :
+
+	* cd doc
+	* make clean
+	* make html
 
 Prebuilt documentation for the module can be reviewed `online
 <http://www.gingergeeks.co.uk/pyslurm>`_, and the source code 
