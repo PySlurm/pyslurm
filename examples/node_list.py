@@ -21,8 +21,6 @@ def display(node_dict):
 						print "\t%-17s : %s" % (part_key, ddate)
 				elif ('reason_uid' in part_key and value['reason'] is None):
 					print "\t%-17s :" % part_key
-				elif 'node_state' == part_key:
-					print "\t%-17s : %s" % (part_key, pyslurm.get_node_state(value[part_key]))
 				else: 
 					print "\t%-17s : %s" % (part_key, value[part_key])
 
