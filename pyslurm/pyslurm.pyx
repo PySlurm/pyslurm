@@ -3367,6 +3367,10 @@ cdef class topology:
 		self._TopoDict = Topo
 
 	def display(self):
+
+		u"""Display topology information to standard output
+		"""
+
 		self._print_topo_info_msg()
 
 	cpdef _print_topo_info_msg(self):
@@ -3629,6 +3633,9 @@ cdef inline dict __get_licenses(char *licenses=''):
 	u"""Returns a dict of licenses from the slurm license string.
 
 	:param string licenses: String containing license information
+
+	:returns: Dictionary of licenses and associated value.
+	:rtype: `dict`
 	"""
 
 	cdef int i
@@ -3651,17 +3658,16 @@ def get_connection_type(int inx=0):
 
 	u"""Returns a string that represents the slurm block connection type.
 
-	:param ResType: Slurm block connection type
-	:type ResType: Integer
+	:param int ResType: Slurm block connection type
 
-		SELECT_MESH                 1
-		SELECT_TORUS                2
-		SELECT_NAV                  3
-		SELECT_SMALL                4
-		SELECT_HTC_S                5
-		SELECT_HTC_D                6
-		SELECT_HTC_V                7
-		SELECT_HTC_L                8
+		- SELECT_MESH                 1
+		- SELECT_TORUS                2
+		- SELECT_NAV                  3
+		- SELECT_SMALL                4
+		- SELECT_HTC_S                5
+		- SELECT_HTC_D                6
+		- SELECT_HTC_V                7
+		- SELECT_HTC_L                8
 
 	:returns: block connection string
 	:rtype: `tuple`
@@ -3675,9 +3681,9 @@ def get_node_use(int inx=0):
 
 	:param int ResType: Slurm block node usage
 
-		SELECT_COPROCESSOR_MODE         1
-		SELECT_VIRTUAL_NODE_MODE        2
-		SELECT_NAV_MODE                 3
+		- SELECT_COPROCESSOR_MODE         1
+		- SELECT_VIRTUAL_NODE_MODE        2
+		- SELECT_NAV_MODE                 3
 
 	:returns: block node usage
 	:rtype: `tuple`
@@ -3695,12 +3701,12 @@ def get_trigger_res_type(uint16_t inx=0):
 
 	:param int ResType: Slurm trigger res state
 
-		TRIGGER_RES_TYPE_JOB            1
-		TRIGGER_RES_TYPE_NODE           2
-		TRIGGER_RES_TYPE_SLURMCTLD      3
-		TRIGGER_RES_TYPE_SLURMDBD       4
-		TRIGGER_RES_TYPE_DATABASE       5
-		TRIGGER_RES_TYPE_FRONT_END      6
+		- TRIGGER_RES_TYPE_JOB            1
+		- TRIGGER_RES_TYPE_NODE           2
+		- TRIGGER_RES_TYPE_SLURMCTLD      3
+		- TRIGGER_RES_TYPE_SLURMDBD       4
+		- TRIGGER_RES_TYPE_DATABASE       5
+		- TRIGGER_RES_TYPE_FRONT_END      6
 
 	:returns: Trigger reservation state
 	:rtype: `tuple`
@@ -3733,26 +3739,26 @@ def get_trigger_type(uint32_t inx=0):
 
 	:param int TriggerType: Slurm trigger type
 
-		TRIGGER_TYPE_UP                 0x00000001
-		TRIGGER_TYPE_DOWN               0x00000002
-		TRIGGER_TYPE_FAIL               0x00000004
-		TRIGGER_TYPE_TIME               0x00000008
-		TRIGGER_TYPE_FINI               0x00000010
-		TRIGGER_TYPE_RECONFIG           0x00000020
-		TRIGGER_TYPE_BLOCK_ERR          0x00000040
-		TRIGGER_TYPE_IDLE               0x00000080
-		TRIGGER_TYPE_DRAINED            0x00000100
-		TRIGGER_TYPE_PRI_CTLD_FAIL      0x00000200
-		TRIGGER_TYPE_PRI_CTLD_RES_OP    0x00000400
-		TRIGGER_TYPE_PRI_CTLD_RES_CTRL  0x00000800
-		TRIGGER_TYPE_PRI_CTLD_ACCT_FULL 0x00001000
-		TRIGGER_TYPE_BU_CTLD_FAIL       0x00002000
-		TRIGGER_TYPE_BU_CTLD_RES_OP     0x00004000
-		TRIGGER_TYPE_BU_CTLD_AS_CTRL    0x00008000
-		TRIGGER_TYPE_PRI_DBD_FAIL       0x00010000
-		TRIGGER_TYPE_PRI_DBD_RES_OP     0x00020000
-		TRIGGER_TYPE_PRI_DB_FAIL        0x00040000
-		TRIGGER_TYPE_PRI_DB_RES_OP      0x00080000
+		- TRIGGER_TYPE_UP                 0x00000001
+		- TRIGGER_TYPE_DOWN               0x00000002
+		- TRIGGER_TYPE_FAIL               0x00000004
+		- TRIGGER_TYPE_TIME               0x00000008
+		- TRIGGER_TYPE_FINI               0x00000010
+		- TRIGGER_TYPE_RECONFIG           0x00000020
+		- TRIGGER_TYPE_BLOCK_ERR          0x00000040
+		- TRIGGER_TYPE_IDLE               0x00000080
+		- TRIGGER_TYPE_DRAINED            0x00000100
+		- TRIGGER_TYPE_PRI_CTLD_FAIL      0x00000200
+		- TRIGGER_TYPE_PRI_CTLD_RES_OP    0x00000400
+		- TRIGGER_TYPE_PRI_CTLD_RES_CTRL  0x00000800
+		- TRIGGER_TYPE_PRI_CTLD_ACCT_FULL 0x00001000
+		- TRIGGER_TYPE_BU_CTLD_FAIL       0x00002000
+		- TRIGGER_TYPE_BU_CTLD_RES_OP     0x00004000
+		- TRIGGER_TYPE_BU_CTLD_AS_CTRL    0x00008000
+		- TRIGGER_TYPE_PRI_DBD_FAIL       0x00010000
+		- TRIGGER_TYPE_PRI_DBD_RES_OP     0x00020000
+		- TRIGGER_TYPE_PRI_DB_FAIL        0x00040000
+		- TRIGGER_TYPE_PRI_DB_RES_OP      0x00080000
 
 	:returns: Trigger state
 	:rtype: `tuple`
@@ -3813,18 +3819,18 @@ def get_res_state(uint16_t inx=0):
 
 	:param int flags: Slurm reservation flags
 
-		RESERVE_FLAG_MAINT              0x0001
-		RESERVE_FLAG_NO_MAINT           0x0002
-		RESERVE_FLAG_DAILY              0x0004
-		RESERVE_FLAG_NO_DAILY           0x0008
-		RESERVE_FLAG_WEEKLY             0x0010
-		RESERVE_FLAG_NO_WEEKLY          0x0020
-		RESERVE_FLAG_IGN_JOBS           0x0040
-		RESERVE_FLAG_NO_IGN_JOB         0x0080
-		RESERVE_FLAG_LIC_ONLY           0x0100
-		RESERVE_FLAG_NO_LIC_ONLY        0x0200
-		RESERVE_FLAG_OVERLAP            0x4000
-		RESERVE_FLAG_SPEC_NODES         0x8000
+		- RESERVE_FLAG_MAINT              0x0001
+		- RESERVE_FLAG_NO_MAINT           0x0002
+		- RESERVE_FLAG_DAILY              0x0004
+		- RESERVE_FLAG_NO_DAILY           0x0008
+		- RESERVE_FLAG_WEEKLY             0x0010
+		- RESERVE_FLAG_NO_WEEKLY          0x0020
+		- RESERVE_FLAG_IGN_JOBS           0x0040
+		- RESERVE_FLAG_NO_IGN_JOB         0x0080
+		- RESERVE_FLAG_LIC_ONLY           0x0100
+		- RESERVE_FLAG_NO_LIC_ONLY        0x0200
+		- RESERVE_FLAG_OVERLAP            0x4000
+		- RESERVE_FLAG_SPEC_NODES         0x8000
 
 	:returns: Reservation state
 	:rtype: `tuple`
@@ -3837,26 +3843,25 @@ def get_debug_flags(uint32_t inx=0):
 	u"""
 	Returns a string that represents the slurm debug flags.
 
-	:param flags: Slurm debug flags
-	:type flags: integer
+	:param int flags: Slurm debug flags
 
-		DEBUG_FLAG_SELECT_TYPE    0x00000001
-		DEBUG_FLAG_STEPS          0x00000002
-		DEBUG_FLAG_TRIGGERS       0x00000004
-		DEBUG_FLAG_CPU_BIND       0x00000008
-		DEBUG_FLAG_WIKI           0x00000010
-		DEBUG_FLAG_NO_CONF_HASH   0x00000020
-		DEBUG_FLAG_GRES           0x00000040
-		DEBUG_FLAG_BG_PICK        0x00000080
-		DEBUG_FLAG_BG_WIRES       0x00000100
-		DEBUG_FLAG_BG_ALGO        0x00000200
-		DEBUG_FLAG_BG_ALGO_DEEP   0x00000400
-		DEBUG_FLAG_PRIO           0x00000800
-		DEBUG_FLAG_BACKFILL       0x00001000
-		DEBUG_FLAG_GANG           0x00002000
-		DEBUG_FLAG_RESERVATION    0x00004000
-		DEBUG_FLAG_FRONT_END      0x00008000
-		DEBUG_FLAG_NO_REALTIME    0x00010000
+		- DEBUG_FLAG_SELECT_TYPE    0x00000001
+		- DEBUG_FLAG_STEPS          0x00000002
+		- DEBUG_FLAG_TRIGGERS       0x00000004
+		- DEBUG_FLAG_CPU_BIND       0x00000008
+		- DEBUG_FLAG_WIKI           0x00000010
+		- DEBUG_FLAG_NO_CONF_HASH   0x00000020
+		- DEBUG_FLAG_GRES           0x00000040
+		- DEBUG_FLAG_BG_PICK        0x00000080
+		- DEBUG_FLAG_BG_WIRES       0x00000100
+		- DEBUG_FLAG_BG_ALGO        0x00000200
+		- DEBUG_FLAG_BG_ALGO_DEEP   0x00000400
+		- DEBUG_FLAG_PRIO           0x00000800
+		- DEBUG_FLAG_BACKFILL       0x00001000
+		- DEBUG_FLAG_GANG           0x00002000
+		- DEBUG_FLAG_RESERVATION    0x00004000
+		- DEBUG_FLAG_FRONT_END      0x00008000
+		- DEBUG_FLAG_NO_REALTIME    0x00010000
 
 	:returns: Debug flag string
 	:rtype: `tuple`
@@ -3968,12 +3973,12 @@ def get_preempt_mode(uint16_t inx=0):
 
 	:param int inx: Slurm preempt mode
 
-		PREEMPT_MODE_OFF	0x0000
-		PREEMPT_MODE_SUSPEND	0x0001
-		PREEMPT_MODE_REQUEUE	0x0002
-		PREEMPT_MODE_CHECKPOINT	0x0004
-		PREEMPT_MODE_CANCEL	0x0008
-		PREEMPT_MODE_GANG	0x8000
+		- PREEMPT_MODE_OFF		0x0000
+		- PREEMPT_MODE_SUSPEND		0x0001
+		- PREEMPT_MODE_REQUEUE		0x0002
+		- PREEMPT_MODE_CHECKPOINT	0x0004
+		- PREEMPT_MODE_CANCEL		0x0008
+		- PREEMPT_MODE_GANG		0x8000
 
 	:returns: Preempt mode
 	:rtype: `tuple`
@@ -3987,10 +3992,10 @@ def get_partition_state(uint16_t inx=0, uint16_t extended=0):
 
 	:param int inx: Slurm partition state
 
-		PARTITION_DOWN		0x01
-		PARTITION_UP		0x01 | 0x02
-		PARTITION_DRAIN		0x02
-		PARTITION_INACTIVE      0x00
+		- PARTITION_DOWN	0x01
+		- PARTITION_UP		0x01 | 0x02
+		- PARTITION_DRAIN	0x02
+		- PARTITION_INACTIVE	0x00
 
 	:returns: Partition state
 	:rtype: `tuple`
@@ -4135,16 +4140,16 @@ def get_job_state(int inx=0):
 
 	:param int inx: Slurm job state
 
-		JOB_PENDING	0
-		JOB_RUNNING	1
-		JOB_SUSPENDED	2
-		JOB_COMPLETE	3
-		JOB_CANCELLED	4
-		JOB_FAILED	5
-		JOB_TIMEOUT	6
-		JOB_NODE_FAIL	7
-		JOB_PREEMPTED	8
-		JOB_END		9
+		- JOB_PENDING		0
+		- JOB_RUNNING		1
+		- JOB_SUSPENDED		2
+		- JOB_COMPLETE		3
+		- JOB_CANCELLED		4
+		- JOB_FAILED		5
+		- JOB_TIMEOUT		6
+		- JOB_NODE_FAIL		7
+		- JOB_PREEMPTED		8
+		- JOB_END		9
 
 	:returns: Job state
 	:rtype: `tuple`
