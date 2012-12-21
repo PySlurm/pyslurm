@@ -45,7 +45,7 @@ cdef inline listOrNone(char* value, char* sep_char):
 	if sep_char == b'':
 		return value
 
-	return value.split('')
+	return value.split(sep_char)
 	
 
 cdef inline stringOrNone(char* value, value2):
