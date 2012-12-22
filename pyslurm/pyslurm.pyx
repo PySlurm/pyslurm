@@ -137,7 +137,7 @@ def is_controller(Host=''):
  
 	:param string Host: Name of host to check
 
-	:returns: None, primary, backup
+	:returns: None, primary or backup
 	:rtype: `string`
 	"""
 
@@ -343,6 +343,7 @@ cdef class config:
 
 		self.__load()
 		self.__get()
+
 		return self.__ConfigDict
 
 	cpdef dict __get(self):
@@ -638,7 +639,7 @@ cdef class partition:
 
 		u"""Load slurm partition information.
 
-		:returns: error Code
+		:returns: slurm error Code
 		:rtype: `integer`
 		"""
 
@@ -650,9 +651,9 @@ cdef class partition:
 		if self._Partition_ptr is not NULL:
 
 			errCode = slurm.slurm_load_partitions(self._Partition_ptr.last_update, &new_Partition_ptr, self._ShowFlags)
-			if errCode == 0: # SLURM_SUCCESS
+			if errCode == 0:	# SLURM_SUCCESS
 				slurm.slurm_free_partition_info_msg(self._Partition_ptr)
-			elif slurm.slurm_get_errno() == 1900: # SLURM_NO_CHANGE_IN_DATA = 1900
+			elif slurm.slurm_get_errno() == 1900:	# SLURM_NO_CHANGE_IN_DATA = 1900
 				errCode = 0
 				new_Partition_ptr = self._Partition_ptr
 		else:
@@ -844,7 +845,7 @@ cpdef int slurm_update_partition(dict partition_dict={}):
 	:param dict partition_dict: A populated partition dictionary, an empty one is created by create_partition_dict
 
 	:returns: 0 for success, -1 for error, and the slurm error code is set appropriately.
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef slurm.update_part_msg_t part_msg_ptr
@@ -877,11 +878,11 @@ cpdef int slurm_update_partition(dict partition_dict={}):
 	pystring = partition_dict['State']
 	if pystring is not '':
 		if pystring == u'DOWN':
-			part_msg_ptr.state_up = 0x01      #PARTITION_DOWN (PARTITION_SUBMIT 0x01)
+			part_msg_ptr.state_up = 0x01		# PARTITION_DOWN (PARTITION_SUBMIT 0x01)
 		elif pystring == u'UP':
-			part_msg_ptr.state_up = 0x01|0x02 #PARTITION_UP (PARTITION_SUBMIT|PARTITION_SCHED)
+			part_msg_ptr.state_up = 0x01|0x02	# PARTITION_UP (PARTITION_SUBMIT|PARTITION_SCHED)
 		elif pystring == u'DRAIN':
-			part_msg_ptr.state_up = 0x02      #PARTITION_DRAIN (PARTITION_SCHED=0x02)
+			part_msg_ptr.state_up = 0x02		# PARTITION_DRAIN (PARTITION_SCHED=0x02)
 		else:
 			errCode = -1
 
@@ -905,7 +906,7 @@ cpdef int slurm_delete_partition(char* PartID):
 	:param string PartID: Name of slurm partition
 
 	:returns: 0 for success else set the slurm error code as appropriately.
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef slurm.delete_part_msg_t part_msg
@@ -970,7 +971,7 @@ cpdef int slurm_takeover():
 	u"""Issue a RPC to have slurmctld backup controller take over the primary controller.
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_takeover()
@@ -984,7 +985,7 @@ cpdef int slurm_set_debug_level(uint32_t DebugLevel=0):
 	:param int DebugLevel: 0 (default) to 6
 
 	:returns: 0 for success, -1 for error and set slurm error number
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_set_debug_level(DebugLevel)
@@ -999,7 +1000,7 @@ cpdef int slurm_set_debugflags(uint32_t debug_flags_plus=0, uint32_t debug_flags
 	:param int debug_flags_minus: debug flags to be removed
 
 	:returns: 0 for success, -1 for error and set slurm error number
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_set_debugflags(debug_flags_plus, debug_flags_minus)
@@ -1012,8 +1013,8 @@ cpdef int slurm_set_schedlog_level(uint32_t Enable=0):
 
 	:param int Enable: True = 0, False = 1
 
-	:returns: 0 for success, -1 for error and set slurm error number
-	:rtype: `int`
+	:returns: 0 for success, -1 for error and set the slurm error number
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = -1
@@ -1034,7 +1035,7 @@ cpdef int slurm_suspend(uint32_t JobID=0):
 	:param int JobID: Job identifier
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_suspend(JobID)
@@ -1048,7 +1049,7 @@ cpdef int slurm_resume(uint32_t JobID=0):
 	:param int JobID: Job identifier
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_resume(JobID)
@@ -1062,7 +1063,7 @@ cpdef int slurm_requeue(uint32_t JobID=0):
 	:param int JobID: Job identifier
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_requeue(JobID)
@@ -1076,7 +1077,7 @@ cpdef long slurm_get_rem_time(uint32_t JobID=0):
 	:param int JobID: Job identifier
 
 	:returns: Remaining time in seconds or -1 on error
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef long retVal = slurm.slurm_get_rem_time(JobID)
@@ -1090,7 +1091,7 @@ cpdef slurm_get_end_time(uint32_t JobID=0):
 	:param int JobID: Job identifier
 
 	:returns: Remaining time in seconds or -1 on error
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef time_t EndTime = 0
@@ -1108,7 +1109,7 @@ cpdef int slurm_job_node_ready(uint32_t JobID=0):
 	:param int JobID: Job identifier
 
 	:returns: Node Ready code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_job_node_ready(JobID)
@@ -1123,7 +1124,7 @@ cpdef int slurm_signal_job(uint32_t JobID=0, uint16_t Signal=0):
 	:param int Signal: Signal to send (default=0)
 
 	:returns: 0 for success or -1 for error and the set Slurm errno
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_signal_job(JobID, Signal)
@@ -1142,8 +1143,8 @@ cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0, uint16_t S
 	:param int JobStep: Job step identifier
 	:param int Signal: Signal to send (default=0)
 
-	:returns: Error code - 0 for success or -1 for error and set slurm errno
-	:rtype: `int`
+	:returns: Error code - 0 for success or -1 for error and set the slurm errno
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_signal_job_step(JobID, JobStep, Signal)
@@ -1159,7 +1160,7 @@ cpdef int slurm_kill_job(uint32_t JobID=0, uint16_t Signal=0, uint16_t BatchFlag
 	:param int BatchFlag: Job batch flag (default=0)
 
 	:returns: 0 for success or -1 for error and set slurm errno
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_kill_job(JobID, Signal, BatchFlag)
@@ -1175,7 +1176,7 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0, uint16_t Sig
 	:param int Signal: Signal to send (default=0)
 
 	:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_kill_job_step(JobID, JobStep, Signal)
@@ -1190,7 +1191,7 @@ cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0):
 	:param int JobCode: Return code (default=0)
 
 	:returns: 0 for success or -1 for error and set slurm errno
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_complete_job(JobID, JobCode)
@@ -1204,7 +1205,7 @@ cpdef int slurm_terminate_job(uint32_t JobID=0):
 	:param int JobID: Job identifier (default=0)
 
 	:returns: 0 for success or -1 for error and set slurm errno
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_terminate_job(JobID)
@@ -1219,7 +1220,7 @@ cpdef int slurm_notify_job(uint32_t JobID=0, char* Msg=''):
 	:param string Msg: Message to send to job
 
 	:returns: 0 for success or -1 on error
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_notify_job(JobID, Msg)
@@ -1234,7 +1235,7 @@ cpdef int slurm_terminate_job_step(uint32_t JobID=0, uint32_t JobStep=0):
 	:param int JobStep: Job step identifier (default=0)
 
 	:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_terminate_job_step(JobID, JobStep)
@@ -1256,7 +1257,9 @@ cpdef tuple slurm_checkpoint_able(uint32_t JobID=0, uint32_t JobStep=0):
 	:param int StartTime: Checkpoint start time
 
 	:returns: 0 can be checkpointed or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
+	:returns: Time of checkpoint
+	:rtype: `integer`
 	"""
 
 	cdef time_t Time = 0
@@ -1272,7 +1275,7 @@ cpdef int slurm_checkpoint_enable(uint32_t JobID=0, uint32_t JobStep=0):
 	:param int JobStep: Job step identifier
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_checkpoint_enable(JobID, JobStep)
@@ -1289,7 +1292,7 @@ cpdef int slurm_checkpoint_disable(uint32_t JobID=0, uint32_t JobStep=0):
 	:param int JobStep: Job step identifier
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_checkpoint_disable(JobID, JobStep)
@@ -1306,7 +1309,7 @@ cpdef int slurm_checkpoint_create(uint32_t JobID=0, uint32_t JobStep=0, uint16_t
 	:param string ImageDir: Directory to write checkpoint files
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_checkpoint_create(JobID, JobStep, MaxWait, ImageDir)
@@ -1322,7 +1325,7 @@ cpdef int slurm_checkpoint_requeue(uint32_t JobID=0, uint16_t MaxWait=60, char* 
 	:param string ImageDir: Directory to write checkpoint files
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_checkpoint_requeue(JobID, MaxWait, ImageDir)
@@ -1339,7 +1342,7 @@ cpdef int slurm_checkpoint_vacate(uint32_t JobID=0, uint32_t JobStep=0, uint16_t
 	:param string ImageDir: Directory to store checkpoint files
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm_checkpoint_vacate(JobID, JobStep, MaxWait, ImageDir)
@@ -1358,7 +1361,7 @@ cpdef int slurm_checkpoint_restart(uint32_t JobID=0, uint32_t JobStep=0, uint16_
 	:param string ImageDir: Directory to find checkpoint image files
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_checkpoint_restart(JobID, JobStep, Stick, ImageDir)
@@ -1376,7 +1379,7 @@ cpdef int slurm_checkpoint_complete(uint32_t JobID=0, uint32_t JobStep=0, time_t
 	:param string ErrMsg: Error message, preserved for highest error code
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_checkpoint_complete(JobID, JobStep, BeginTime, ErrorCode, ErrMsg)
@@ -1395,7 +1398,7 @@ cpdef int slurm_checkpoint_task_complete(uint32_t JobID=0, uint32_t JobStep=0, u
 	:param string ErrMsg: Error message, preserved for highest error code
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errCode = slurm.slurm_checkpoint_task_complete(JobID, JobStep, TaskID, BeginTime, ErrorCode, ErrMsg)
@@ -1414,8 +1417,8 @@ def slurm_checkpoint_error(uint32_t JobID=0, uint32_t JobStep=0):
 	:param int JobStep: Job step identifier
 
 	:returns: 0 for success or a slurm error code
-	:rtype: tuple
-	:returns: Slurm error message
+	:rtype: `integer`
+	:returns: Slurm error message and error string
 	:rtype: `string`
 	"""
 
@@ -1440,9 +1443,7 @@ cpdef int slurm_checkpoint_tasks(uint32_t JobID=0, uint16_t JobStep=0, uint16_t 
 	:param string NodeList: String of nodelist
 
 	:returns: 0 for success, non zero on failure and with errno set
-	:rtype: tuple
-	:returns: Error message
-	:rtype: `string`
+	:rtype: `integer`
 	"""
 
 	cdef slurm.time_t BeginTime = <slurm.time_t>NULL
@@ -1711,7 +1712,6 @@ cdef class job:
 		cdef slurm.select_jobinfo_t *tmp_ptr
 
 		cdef int retval = 0
-		#cdef int length = 0
 		cdef uint16_t retval16 = 0
 		cdef uint32_t retval32 = 0
 		cdef char *retvalStr = NULL, *str, *tmp_str
@@ -1767,7 +1767,7 @@ cdef class job:
 
 		:param int nodeID: Numerical node ID
 		:returns: Num of CPUs allocated to job on this node or -1 on error
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef slurm.job_resources_t *job_resrcs_ptr = <slurm.job_resources_t *>self._record.job_resrcs
@@ -1781,7 +1781,7 @@ cdef class job:
 
 		:param string nodeName: Name of node
 		:returns: Num of CPUs allocated to job on this node or -1 on error
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef slurm.job_resources_t *job_resrcs_ptr = <slurm.job_resources_t *>self._record.job_resrcs
@@ -1813,9 +1813,9 @@ def slurm_pid2jobid(uint32_t JobPID=0):
 	:param int JobPID: Job process id
 
 	:returns: 0 for success or a slurm error code
-	:rtype: `int`
+	:rtype: `integer`
 	:returns: Job Identifier
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef uint32_t JobID = 0
@@ -1844,7 +1844,7 @@ def slurm_get_errno():
 	u"""Return the slurm error as set by a slurm API call.
 
 	:returns: slurm error number
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef int errNum = slurm.slurm_get_errno()
@@ -1853,7 +1853,7 @@ def slurm_get_errno():
 
 def slurm_strerror(int Errno=0):
 
-	u"""Return slurm error message represented by slurm error number
+	u"""Return slurm error message represented by a given slurm error number.
 
 	:param int Errno: slurm error number.
 
@@ -1960,7 +1960,7 @@ cdef class node:
 		u"""Load node data method.
 
 		:returns: Error value
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef slurm.node_info_msg_t *new_node_info_ptr = NULL
@@ -1971,9 +1971,9 @@ cdef class node:
 		if self._Node_ptr is not NULL:
 
 			errCode = slurm.slurm_load_node(self._Node_ptr.last_update, &new_node_info_ptr, self._ShowFlags)
-			if errCode == 0: # SLURM_SUCCESS
+			if errCode == 0:	# SLURM_SUCCESS
 				slurm.slurm_free_node_info_msg(self._Node_ptr)
-			elif slurm.slurm_get_errno() == 1900: # SLURM_NO_CHANGE_IN_DATA = 1900
+			elif slurm.slurm_get_errno() == 1900:	# SLURM_NO_CHANGE_IN_DATA = 1900
 				errCode = 0
 				new_node_info_ptr = self._Node_ptr
 		else:
@@ -1991,7 +1991,7 @@ cdef class node:
 		:param dict node_dict: A populated node dictionary, an empty one is created by create_node_dict
 
 		:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		return slurm_update_node(node_dict)
@@ -2070,15 +2070,22 @@ cdef class node:
 			Host_dict['tmp_disk'] = self._Node_ptr.node_array[i].tmp_disk
 			Host_dict['weight'] = self._Node_ptr.node_array[i].weight
 
-			#
-			# Add in energy gather values here
-			#
-
 			if Host_dict['reason']:
 				Host_dict['last_update'] = last_update
 
 			if node_scaling:
 				cpus_per_node = self._Node_ptr.node_array[i].cpus / node_scaling
+
+			#
+			# Energy statistics
+			#
+
+			Host_dict['energy'] = {}
+			Host_dict['energy']['base_watts'] = self._Node_ptr.node_array[i].energy.base_watts
+			Host_dict['energy']['current_watts'] = self._Node_ptr.node_array[i].energy.current_watts
+			Host_dict['energy']['consumed_energy'] = self._Node_ptr.node_array[i].energy.consumed_energy
+			Host_dict['energy']['base_consumed_energy'] = self._Node_ptr.node_array[i].energy.base_consumed_energy
+			Host_dict['energy']['previous_consumed_energy'] = self._Node_ptr.node_array[i].energy.previous_consumed_energy
 
 			#
 			# NEED TO DO MORE WORK HERE ! SUCH AS NODE STATES AND BG DETECTION
@@ -2159,7 +2166,9 @@ cdef class node:
 				slurm.xfree(tmp_str)
 				return retvalStr
 
-		if dataType == SELECT_NODEDATA_PTR: # data-> select_jobinfo_t *jobinfo
+		# data-> select_jobinfo_t *jobinfo
+
+		if dataType == SELECT_NODEDATA_PTR:
 			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &tmp_ptr)
 			if retval == 0:
 				# opaque data as dict 
@@ -2174,7 +2183,7 @@ def slurm_update_node(dict node_dict={}):
 	:param dict node_dict: A populated node dictionary, an empty one is created by create_node_dict
 
 	:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef slurm.update_node_msg_t node_msg
@@ -2232,7 +2241,7 @@ def create_node_dict():
 
 cdef class jobstep:
 	
-	u"""Class to access/modify Slurm Jobstep  Information. 
+	u"""Class to access/modify Slurm Jobstep Information.
 	"""
 
 	cdef slurm.time_t _lastUpdate
@@ -2243,8 +2252,8 @@ cdef class jobstep:
 	def __cinit__(self):
 		self._ShowFlags = 0
 		self._lastUpdate = 0
-		self.JobID = 4294967294  # 0xfffffffe
-		self.StepID = 4294967294 # 0xfffffffe
+		self.JobID = 4294967294		# 0xfffffffe
+		self.StepID = 4294967294	# 0xfffffffe
 		self._JobStepDict = {}
 
 	def __dealloc__(self):
@@ -2475,10 +2484,10 @@ cdef class hostlist:
 
 	cpdef pop(self):
 
+		# convert C char to python byte string
 		cdef char *host = ''
 		if self.hl is not NULL:
 			host = slurm.slurm_hostlist_shift(self.hl)
-		# convert C char to python byte string
 		return host
 
 	cpdef get(self):
@@ -2489,11 +2498,11 @@ cdef class hostlist:
 		cdef char *hostlist = NULL
 		cdef char *newlist  = ''
 
+		# convert C char to python byte string
 		if self.hl is not NULL:
 			hostlist = slurm.slurm_hostlist_ranged_string_malloc(self.hl)
 			newlist = hostlist
 			slurm.free(hostlist)
-		# convert C char to python byte string
 		return newlist 
 
 #
@@ -2509,7 +2518,7 @@ cdef class trigger:
 		:param dict trigger_dict: A populated dictionary of trigger information
 
 		:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef slurm.trigger_info_t trigger_set
@@ -2572,8 +2581,8 @@ cdef class trigger:
 		while slurm.slurm_set_trigger(&trigger_set):
 
 			slurm.slurm_perror('slurm_set_trigger')
-			if slurm.slurm_get_errno() != 11: #EAGAIN
-
+			# EAGAIN
+			if slurm.slurm_get_errno() != 11:
 				errCode = slurm.slurm_get_errno()
 				return errCode
 
@@ -2627,7 +2636,7 @@ cdef class trigger:
 		:param string ID: Job Identifier
 
 		:returns: 0 for success or a slurm error code
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef slurm.trigger_info_t trigger_clear
@@ -2659,7 +2668,7 @@ cdef class trigger:
 		:param string ID: Job Identifier
 
 		:returns: 0 for success or a slurm error code
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef slurm.trigger_info_t trigger_pull
@@ -2846,7 +2855,7 @@ cdef class reservation:
 		u"""Delete slurm reservation.
 
 		:returns: 0 for success or a slurm error code
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		return slurm_delete_reservation(ResID)
@@ -2856,7 +2865,7 @@ cdef class reservation:
 		u"""Update a slurm reservation attributes.
 
 		:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		return slurm_update_reservation(reservation_dict)
@@ -2944,7 +2953,7 @@ def slurm_update_reservation(dict reservation_dict={}):
 	:param dict reservation_dict: A populated reservation dictionary, an empty one is created by create_reservation_dict
 
 	:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef slurm.resv_desc_msg_t resv_msg
@@ -3003,7 +3012,7 @@ def slurm_delete_reservation(char* ResID=''):
 	:param string ResID: Reservation Identifier
 
 	:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef slurm.reservation_name_msg_t resv_msg 
@@ -3129,7 +3138,7 @@ cdef class block:
 		if self._block_ptr is not NULL:
 
 			errCode = slurm.slurm_load_block_info(self._block_ptr.last_update, &new_block_info_ptr, self._ShowFlags)
-			if errCode == 0: # SLURM_SUCCESS
+			if errCode == 0:	# SLURM_SUCCESS
 				slurm.slurm_free_block_info_msg(self._block_ptr)
 			elif slurm.slurm_get_errno() == 1900:	# SLURM_NO_CHANGE_IN_DATA = 1900
 				errCode = 0
@@ -3191,7 +3200,7 @@ cdef class block:
 
 	cpdef print_info_msg(self, int oneLiner=False):
 
-		u"""Output information about all Bluegene blocks
+		u"""Output information about all slurm blocks
 
 		This is based upon data returned by the slurm_load_block.
 
@@ -3413,11 +3422,11 @@ cdef class statistics:
 		#extern int  slurm_get_statistics (stats_info_response_msg_t **buf, stats_info_request_msg_t *req)
 		"""
 
-		self._req.command_id = 0 # STAT_COMMAND_GET
+		self._req.command_id = 0	# STAT_COMMAND_GET
 
 		cdef int errCode = slurm.slurm_get_statistics(&self._buf, <slurm.stats_info_request_msg_t*>&self._req)
 
-		print(("%s" % errCode))
+		#print(("%s" % errCode))
 
 		return errCode
 
@@ -3482,7 +3491,7 @@ cdef class statistics:
 		#extern int slurm_reset_statistics (stats_info_request_msg_t *req)
 		"""
 
-		self._req.command_id = 1 # STAT_COMMAND_RESET
+		self._req.command_id = 1	# STAT_COMMAND_RESET
 
 		cdef int errCode = slurm.slurm_reset_statistics(<slurm.stats_info_request_msg_t*>&self._req)
 
@@ -3615,10 +3624,12 @@ cdef class front_end:
 
 def get_last_slurm_error():
 
-	u"""Get the last error from a slurm API call
+	u"""Get and return the last error from a slurm API call
 
-	:returns: Tuple of error number and the associated error string
-	:rtype: `tuple`
+	:returns: Slurm error number and the associated error string
+	:rtype: `integer`
+	:returns: Slurm error string
+	:rtype: `string`
 	"""
 
 	rc =  slurm.slurm_get_errno()
@@ -3656,7 +3667,7 @@ cdef inline dict __get_licenses(char *licenses=''):
 
 def get_connection_type(int inx=0):
 
-	u"""Returns a string that represents the slurm block connection type.
+	u"""Returns a tuple that represents the slurm block connection type.
 
 	:param int ResType: Slurm block connection type
 
@@ -3669,15 +3680,17 @@ def get_connection_type(int inx=0):
 		- SELECT_HTC_V                7
 		- SELECT_HTC_L                8
 
-	:returns: block connection string
-	:rtype: `tuple`
+	:returns: Block connection value
+	:rtype: `integer`
+	:returns: Block connection string
+	:rtype: `string`
 	"""
 
 	return (inx, slurm.slurm_conn_type_string(inx))
 
 def get_node_use(int inx=0):
 
-	u"""Returns a string that represents the block node mode.
+	u"""Returns a tuple that represents the block node mode.
 
 	:param int ResType: Slurm block node usage
 
@@ -3685,8 +3698,10 @@ def get_node_use(int inx=0):
 		- SELECT_VIRTUAL_NODE_MODE        2
 		- SELECT_NAV_MODE                 3
 
-	:returns: block node usage
-	:rtype: `tuple`
+	:returns: Block node usage value
+	:rtype: `integer`
+	:returns: Block node usage string
+	:rtype: `string`
 	"""
 
 	return (inx, __get_node_use(inx))
@@ -3697,7 +3712,7 @@ cdef inline object __get_node_use(uint16_t NodeType=0):
 
 def get_trigger_res_type(uint16_t inx=0):
 
-	u"""Returns a string that represents the slurm trigger res type.
+	u"""Returns a tuple that represents the slurm trigger res type.
 
 	:param int ResType: Slurm trigger res state
 
@@ -3708,8 +3723,10 @@ def get_trigger_res_type(uint16_t inx=0):
 		- TRIGGER_RES_TYPE_DATABASE       5
 		- TRIGGER_RES_TYPE_FRONT_END      6
 
-	:returns: Trigger reservation state
-	:rtype: `tuple`
+	:returns: Trigger reservation state value
+	:rtype: `integer`
+	:returns:  Trigger reservation state string
+	:rtype: `string`
 	"""
 
 	return (inx, __get_trigger_res_type(inx))
@@ -3735,7 +3752,7 @@ cdef inline object __get_trigger_res_type(uint16_t ResType=0):
 
 def get_trigger_type(uint32_t inx=0):
 
-	u"""Returns a string that represents the state of the slurm trigger.
+	u"""Returns a tuple that represents the state of the slurm trigger.
 
 	:param int TriggerType: Slurm trigger type
 
@@ -3760,8 +3777,10 @@ def get_trigger_type(uint32_t inx=0):
 		- TRIGGER_TYPE_PRI_DB_FAIL        0x00040000
 		- TRIGGER_TYPE_PRI_DB_RES_OP      0x00080000
 
-	:returns: Trigger state
-	:rtype: `tuple`
+	:returns: Trigger state value
+	:rtype: `integer`
+	:returns: Trigger state string
+	:rtype: `string`
 	"""
 
 	return (inx, __get_trigger_type(inx))
@@ -3815,7 +3834,7 @@ cdef inline object __get_trigger_type(uint32_t TriggerType=0):
 
 def get_res_state(uint16_t inx=0):
 
-	u"""Returns a string that represents the state of the slurm reservation.
+	u"""Returns a tuple that represents the state of the slurm reservation.
 
 	:param int flags: Slurm reservation flags
 
@@ -3832,8 +3851,10 @@ def get_res_state(uint16_t inx=0):
 		- RESERVE_FLAG_OVERLAP            0x4000
 		- RESERVE_FLAG_SPEC_NODES         0x8000
 
-	:returns: Reservation state
-	:rtype: `tuple`
+	:returns: Reservation state value
+	:rtype: `integer`
+	:returns: Reservation state string
+	:rtype: `string`
 	"""
 
 	return (inx, slurm.slurm_reservation_flags_string(inx))
@@ -3841,7 +3862,7 @@ def get_res_state(uint16_t inx=0):
 def get_debug_flags(uint32_t inx=0):
 
 	u"""
-	Returns a string that represents the slurm debug flags.
+	Returns a tuple that represents the slurm debug flags.
 
 	:param int flags: Slurm debug flags
 
@@ -3863,8 +3884,10 @@ def get_debug_flags(uint32_t inx=0):
 		- DEBUG_FLAG_FRONT_END      0x00008000
 		- DEBUG_FLAG_NO_REALTIME    0x00010000
 
+	:returns: Debug flag value
+	:rtype: `integer`
 	:returns: Debug flag string
-	:rtype: `tuple`
+	:rtype: `string`
 	"""
 
 	return (inx, __get_debug_flags(inx))
@@ -3925,24 +3948,28 @@ cdef inline list __get_debug_flags(uint32_t flags=0):
 
 def get_node_state(uint16_t inx=0):
 
-	u"""Returns a string that represents the state of the slurm node.
+	u"""Returns a tuple that represents the state of the slurm node.
 
 	:param int inx: Slurm node state
 
-	:returns: Node state
-	:rtype: `tuple`
+	:returns: Node state value
+	:rtype: `integer`
+	:returns: Node state string
+	:rtype: `string`
 	"""
 
 	return (inx, slurm.slurm_node_state_string(inx))
 
 def get_rm_partition_state(int inx=0):
 
-	u"""Returns a partition state string that matches the enum value.
+	u"""Returns a ttuple that represents the partition state.
 
 	:param int inx: Slurm partition state
 
-	:returns: Preempt mode
-	:rtype: `tuple`
+	:returns: Partition state value
+	:rtype: `integer`
+	:returns: Partition state string
+	:rtype: `string`
 	"""
 
 	return (inx, __get_rm_partition_state(inx))
@@ -3969,7 +3996,7 @@ cdef inline object __get_rm_partition_state(int inx=0):
 
 def get_preempt_mode(uint16_t inx=0):
 
-	u"""Returns a list that represents the preempt mode.
+	u"""Returns a tuple that represents the preempt mode.
 
 	:param int inx: Slurm preempt mode
 
@@ -3980,8 +4007,10 @@ def get_preempt_mode(uint16_t inx=0):
 		- PREEMPT_MODE_CANCEL		0x0008
 		- PREEMPT_MODE_GANG		0x8000
 
-	:returns: Preempt mode
-	:rtype: `tuple`
+	:returns: Preempt mode value
+	:rtype: `integer`
+	:returns: Preempt mode string
+	:rtype: `string`
 	"""
 
 	return (inx, slurm.slurm_preempt_mode_string(inx))
@@ -3997,8 +4026,10 @@ def get_partition_state(uint16_t inx=0, uint16_t extended=0):
 		- PARTITION_DRAIN	0x02
 		- PARTITION_INACTIVE	0x00
 
-	:returns: Partition state
-	:rtype: `tuple`
+	:returns: Partition state value
+	:rtype: `integer`
+	:returns: Partition state string
+	:rtype: `string`
 	"""
 
 	return (inx, __get_partition_state(inx, extended))
@@ -4063,12 +4094,14 @@ cdef inline object __get_partition_state(int inx, int extended=0):
 
 def get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 
-	u"""Returns a dictionary that represents the mode of the slurm partition.
+	u"""Returns a tuple of the partition mode
 
 	:param int inx: Slurm partition mode
 
-	:returns: Partition mode
-	:rtype: `dict`
+	:returns: Partition mode flag
+	:rtype: `integer`
+	:returns: Partition mode string
+	:rtype: `string`
 	"""
 
 	return (flags, __get_partition_mode(flags, max_share))
@@ -4116,8 +4149,10 @@ def get_conn_type_string(int inx=0):
 
 	:param int inx: Slurm BG connection state
 
-	:returns: Block Connection state
-	:rtype: `tuple`
+	:returns: Block connection value
+	:rtype: `integer`
+	:returns: Block connection string
+	:rtype: `string`
 	"""
 
 	return (inx, slurm.slurm_conn_type_string(inx))
@@ -4128,8 +4163,10 @@ def get_bg_block_state_string(uint16_t inx=0):
 
 	:param int inx: Slurm BG block state
 
-	:returns: Block state
-	:rtype: `tuple`
+	:returns: Block state value
+	:rtype: `integer`
+	:returns: Block state string
+	:rtype: `string`
 	"""
 
 	return (inx, slurm.slurm_bg_block_state_string(inx))
@@ -4151,8 +4188,10 @@ def get_job_state(int inx=0):
 		- JOB_PREEMPTED		8
 		- JOB_END		9
 
-	:returns: Job state
-	:rtype: `tuple`
+	:returns: Job state value
+	:rtype: `integer`
+	:returns: Job state string
+	:rtype: `string`
 	"""
 
 	return (inx, slurm.slurm_job_state_string(inx))
@@ -4163,8 +4202,10 @@ def get_job_state_reason(uint16_t inx=0):
 
 	:param int inx: Slurm job state reason
 
-	:returns: Reason state
-	:rtype: `tuple`
+	:returns: Reason value
+	:rtype: `integer`
+	:returns: Reason string
+	:rtype: `string`
 	"""
 
 	return (inx, slurm.slurm_job_reason_string(inx))
