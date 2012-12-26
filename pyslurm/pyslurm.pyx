@@ -1674,6 +1674,7 @@ cdef class job:
 				Job_dict[u'cnode_cnt'] = self.__get_select_jobinfo(SELECT_JOBDATA_NODE_CNT)
 				Job_dict[u'resv_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_RESV_ID)
 				Job_dict[u'rotate'] = bool(self.__get_select_jobinfo(SELECT_JOBDATA_ROTATE))
+				print "Type %s" % (self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
 				Job_dict[u'conn_type'] = get_conn_type_string(self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
 				Job_dict[u'altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
 				Job_dict[u'reboot'] = self.__get_select_jobinfo(SELECT_JOBDATA_REBOOT)
@@ -4143,7 +4144,7 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 
 	return mode
 
-def get_conn_type_string(int inx=0):
+def get_conn_type_string(inx=0):
 
 	u"""Returns a string that represents the state of the slurm bluegene connection type.
 
@@ -4155,7 +4156,9 @@ def get_conn_type_string(int inx=0):
 	:rtype: `string`
 	"""
 
-	return (inx, slurm.slurm_conn_type_string(inx))
+	if inx != None:
+		return (inx, slurm.slurm_conn_type_string(inx))
+	return (None, "None")
 
 def get_bg_block_state_string(uint16_t inx=0):
 
@@ -4210,7 +4213,7 @@ def get_job_state_reason(uint16_t inx=0):
 
 	return (inx, slurm.slurm_job_reason_string(inx))
 
-def epoch2date(int epochSecs=0):
+def epoch2date(epochSecs=0):
 
 	u"""Convert epoch secs to a python time string.
 
