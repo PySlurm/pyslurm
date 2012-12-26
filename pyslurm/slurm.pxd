@@ -77,6 +77,7 @@ cdef extern void slurm_api_set_conf_file(char *)
 cdef extern void slurm_api_clear_config()
 
 cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
+cdef extern uint16_t slurm_get_preempt_mode()
 cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
 cdef extern char *slurm_job_reason_string(int inx)
 cdef extern char *slurm_job_state_string(uint16_t inx)
