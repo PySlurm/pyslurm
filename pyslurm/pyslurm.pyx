@@ -711,6 +711,7 @@ cdef class partition:
 		"""
 
 		cdef int i = 0
+		cdef unsigned int preempt_mode
 		cdef dict Partition = {}, Part_dict 
 
 		if self._Partition_ptr is not NULL:
@@ -729,7 +730,13 @@ cdef class partition:
 				Part_dict[u'total_nodes'] = self._record.total_nodes
 				Part_dict[u'total_cpus'] = self._record.total_cpus
 				Part_dict[u'priority'] = self._record.priority
-				Part_dict[u'preempt_mode'] = get_preempt_mode(self._record.preempt_mode)
+
+				preempt_mode = self._record.preempt_mode
+				if ( preempt_mode == <unsigned int>NO_VAL ):
+					preempt_mode = slurm.slurm_get_preempt_mode()	# use cluster param
+				preempt_mode = slurm.slurm_get_preempt_mode()
+				Part_dict[u'preempt_mode'] = get_preempt_mode(preempt_mode)
+
 				Part_dict[u'default_time'] = self._record.default_time
 				Part_dict[u'flags'] = self._record.flags
 				Part_dict[u'state_up'] = self._record.state_up
@@ -1674,7 +1681,6 @@ cdef class job:
 				Job_dict[u'cnode_cnt'] = self.__get_select_jobinfo(SELECT_JOBDATA_NODE_CNT)
 				Job_dict[u'resv_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_RESV_ID)
 				Job_dict[u'rotate'] = bool(self.__get_select_jobinfo(SELECT_JOBDATA_ROTATE))
-				print "Type %s" % (self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
 				Job_dict[u'conn_type'] = get_conn_type_string(self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
 				Job_dict[u'altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
 				Job_dict[u'reboot'] = self.__get_select_jobinfo(SELECT_JOBDATA_REBOOT)
