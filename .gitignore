@@ -10,4 +10,8 @@ build/
 
 pyslurm/pyslurm.c
 pyslurm/bluegene.pxi
+pyslurm/*.py~
 pyslurm/*.pyc
+pyslurm/*.pyx~
+pyslurm/*.pxi~
+pyslurm/*.pxd~
