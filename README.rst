@@ -23,8 +23,8 @@ This version has been tested with Slurm 2.5.0, Cython 0.17.3 and Python 2.7
 Installation
 ============
 
-You will need to instruct the setup.py script where either the SLURM install root 
-directory or where the SLURM libraries and SLURM include files are :
+You will need to instruct the setup.py script where either the Slurm install root 
+directory or where the Slurm libraries and Slurm include files are :
 
 #. Slurm default directory (/usr):
 
@@ -48,10 +48,7 @@ directory or where the SLURM libraries and SLURM include files are :
 
 	* python setup.py install
 
-If you still have issues then you could code this directly into the setup.py
-
-#. The build will automatically call a cleanup procedure to remove temporary build files
-but this can be called directly if needed as well with :
+#. The build will automatically call a cleanup procedure to remove temporary build files but this can be called directly if needed as well with :
 
 	* python setup.py clean
 
