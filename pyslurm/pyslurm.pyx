@@ -1671,7 +1671,6 @@ cdef class job:
 				Job_dict[u'restart_cnt'] = self._job_ptr.job_array[i].restart_cnt
 				Job_dict[u'resv_name'] = slurm.stringOrNone(self._job_ptr.job_array[i].resv_name, '')
 
-				Job_dict[u'nodes'] = self.__get_select_jobinfo(SELECT_JOBDATA_NODES)
 				Job_dict[u'ionodes'] = self.__get_select_jobinfo(SELECT_JOBDATA_IONODES)
 				Job_dict[u'block_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_BLOCK_ID)
 				Job_dict[u'blrts_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_BLRTS_IMAGE)
