@@ -23,7 +23,7 @@ logging.basicConfig(level=20)
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
 __version__ = "2.6.3-0pre2"
-__slurm_hex_version__ = "0x020600"
+__slurm_hex_version__ = "0x0206"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
@@ -223,7 +223,7 @@ if args[1] == 'build':
 		info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
 		usage()
 
-	if read_inc_version("%s/slurm/slurm.h" % SLURM_INC) != __slurm_hex_version__:
+	if read_inc_version("%s/slurm/slurm.h" % SLURM_INC)[:len(__slurm_hex_version__)] != __slurm_hex_version__:
 		fatal("Build - Incorrect slurm version detected, Pyslurm needs Slurm-2.6.0")
 		sys.exit(-1)
 
