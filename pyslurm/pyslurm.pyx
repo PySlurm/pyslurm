@@ -1063,7 +1063,8 @@ cpdef int slurm_resume(uint32_t JobID=0):
 
 	return errCode
 
-cpdef int slurm_requeue(uint32_t JobID=0):
+cpdef int slurm_requeue(uint32_t JobID=0, uint32_t state=0):
+
 
 	u"""Requeue a running slurm job step.
 
@@ -1073,7 +1074,7 @@ cpdef int slurm_requeue(uint32_t JobID=0):
 	:rtype: `integer`
 	"""
 
-	cdef int errCode = slurm.slurm_requeue(JobID)
+	cdef int errCode = slurm.slurm_requeue(JobID, state)
 
 	return errCode
 
@@ -1202,20 +1203,6 @@ cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0):
 	"""
 
 	cdef int errCode = slurm.slurm_complete_job(JobID, JobCode)
-
-	return errCode
-
-cpdef int slurm_terminate_job(uint32_t JobID=0):
-
-	u"""Terminate a running slurm job step.
-
-	:param int JobID: Job identifier (default=0)
-
-	:returns: 0 for success or -1 for error and set slurm errno
-	:rtype: `integer`
-	"""
-
-	cdef int errCode = slurm.slurm_terminate_job(JobID)
 
 	return errCode
 
