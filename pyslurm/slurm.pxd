@@ -115,6 +115,7 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
 
 cdef extern from 'slurm/slurm.h' nogil:
 
+	enum: SLURM_VERSION_NUMBER
 	enum: SYSTEM_DIMENSIONS = 4
 	enum: HIGHEST_DIMENSIONS = 5
 

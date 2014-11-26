@@ -92,12 +92,13 @@ if __name__ == '__main__':
 
 	(options, args) = parser.parse_args()
 
-	hosts = socket.gethostbyaddr(socket.gethostname())[1]
+	hosts = socket.gethostbyaddr(socket.gethostname())[2]
 	my_host = hosts[0]
 
 	lock_file = "/var/tmp/slurm_node_xml.lck"
 	if os.path.exists(lock_file):
-		sys.exit()
+		print ("Lock file " +  "/var/tmp/slurm_node_xml.lck" + " exists, exiting")
+		sys.exit(1)
 	else:
 		open(lock_file,'w').close()
 
@@ -139,22 +140,22 @@ if __name__ == '__main__':
 		sys.stdout.write("\t\t<version>%s</version>\n" % a[4])
 		sys.stdout.write("\t</slurmd>\n")
 
-	a, b = pyslurm.slurm_load_jobs()
-	jobs = pyslurm.get_job_data(b)
+	aux = pyslurm.job()
+
+	jobs = aux.get()
 
 	now = int(time.time())
 	PiDs = {}
-	for key, value in jobs.iteritems():
+	for jobid, jobinfo  in jobs.iteritems():
 
-		jobid = value[1]
-		if value[6] == "Running":
-			userid = pwd.getpwuid(value[4])[0]
-			nodes = value[14].split(',')
+		if jobinfo['job_state'][1] == "RUNNING":
+			userid = pwd.getpwuid(jobinfo['user_id']).pw_name
+			nodes = jobinfo['alloc_node'].split(',')
 
 			if my_host in nodes:
 				PiDs[jobid] = []
 
-			a = os.popen('/bin/ps --noheaders -u %s -o pid,ppid,size,rss,vsize,pcpu,args' % userid, 'r')
+			a = os.popen('/bin/ps --noheaders -u %s -o pid,ppid,size,rss,vsize,pcpu,args' %(userid), 'r')
 			for lines in a:
 				line = lines.split()
 				command = " ".join(line[6:])
@@ -189,7 +190,7 @@ if __name__ == '__main__':
 	sys.stdout.write("</node>\n")
 	sys.stdout.flush()
 
-	pyslurm.slurm_free_job_info_msg(b)
+	aux.__free()
 
 	if not options.output:
 		sys.stdout.close()

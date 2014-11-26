@@ -160,11 +160,11 @@ def slurm_api_version():
 	:rtype: `tuple`
 	"""
 
-	cdef long version = slurm.SLURM_VERSION_NUMBER
+	cdef long version = SLURM_VERSION_NUMBER()
 
 	return (SLURM_VERSION_MAJOR(version), SLURM_VERSION_MINOR(version), SLURM_VERSION_MICRO(version))
 
-cpdef list slurm_load_slurmd_status():
+cpdef dict slurm_load_slurmd_status():
 
 	u"""Issue RPC to get and load the status of Slurmd daemon.
 
@@ -197,6 +197,7 @@ cpdef list slurm_load_slurmd_status():
 		Status_dict[u'version'] = slurm.stringOrNone(slurmd_status.version, '')
 
 		Status[hostname] = Status_dict
+
 
 	slurm.slurm_free_slurmd_status(slurmd_status)
 
@@ -1768,6 +1769,7 @@ cdef class job:
 
 		return retval
 
+	
 	cpdef int __cpus_allocated_on_node(self, char* nodeName=''):
 
 		u"""Get the number of cpus allocated to a slurm job on a node by node name.
@@ -4225,3 +4227,5 @@ class Dict(defaultdict):
 
 	def __repr__(self):
 		return dict.__repr__(self)
+
+
