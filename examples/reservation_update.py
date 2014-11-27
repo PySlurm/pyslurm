@@ -5,7 +5,7 @@ import pyslurm
 a = pyslurm.reservation()
 res_dict = pyslurm.create_reservation_dict()
 
-res_dict["name"] = "root_10"
+res_dict["name"] = "root_2"
 res_dict["duration"] = 8000
 
 rc = a.update(res_dict)

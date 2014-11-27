@@ -3,7 +3,7 @@
 import pyslurm
 
 SLURM_DEBUG=1
-SCHED_DEBUG=0
+SCHED_DEBUG=1
 
 rc = pyslurm.slurm_set_debug_level(SLURM_DEBUG)
 if rc == -1:
