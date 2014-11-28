@@ -224,8 +224,10 @@ if args[1] == 'build':
 		usage()
 
 	if read_inc_version("%s/slurm/slurm.h" % SLURM_INC)[:len(__slurm_hex_version__)] != __slurm_hex_version__:
-		fatal("Build - Incorrect slurm version detected, Pyslurm needs Slurm-2.5.x")
-		sys.exit(-1)
+		
+		#fatal("Build - Incorrect slurm version detected, Pyslurm needs Slurm-2.5.x")
+		#sys.exit(-1)
+		info ("Build - Incorrect slurm version detected, Pyslurm needs Slurm-2.5.x")
 
 	if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
 		info("Build - Cannot locate the Slurm shared library in %s, checking lib64 .... " % SLURM_LIB)

@@ -1,6 +1,6 @@
 import pyslurm
 
-steps = pyslurm.slurm_get_job_steps(5, 0, 2)
+steps = pyslurm.slurm_get_job_steps(125, 0, 2)
 print steps
 for job, job_step in sorted(steps.iteritems()):
 

@@ -18,8 +18,8 @@
 import pyslurm
 
 Node_dict = {
-		'node_names': 'bps000',
-		'node_state': pyslurm.NODE_STATE_DRAIN, 
+		'node_names': 'slurm-compute1',
+		'node_state': pyslurm.NODE_RESUME, 
 		'reason': 'API test'
 	}
 

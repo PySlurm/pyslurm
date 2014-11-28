@@ -160,11 +160,11 @@ def slurm_api_version():
 	:rtype: `tuple`
 	"""
 
-	cdef long version = slurm.SLURM_VERSION_NUMBER
+	cdef long version = SLURM_VERSION_NUMBER()
 
 	return (SLURM_VERSION_MAJOR(version), SLURM_VERSION_MINOR(version), SLURM_VERSION_MICRO(version))
 
-cpdef list slurm_load_slurmd_status():
+cpdef dict slurm_load_slurmd_status():
 
 	u"""Issue RPC to get and load the status of Slurmd daemon.
 
@@ -197,6 +197,7 @@ cpdef list slurm_load_slurmd_status():
 		Status_dict[u'version'] = slurm.stringOrNone(slurmd_status.version, '')
 
 		Status[hostname] = Status_dict
+
 
 	slurm.slurm_free_slurmd_status(slurmd_status)
 
@@ -1063,7 +1064,8 @@ cpdef int slurm_resume(uint32_t JobID=0):
 
 	return errCode
 
-cpdef int slurm_requeue(uint32_t JobID=0):
+cpdef int slurm_requeue(uint32_t JobID=0, uint32_t state=0):
+
 
 	u"""Requeue a running slurm job step.
 
@@ -1073,7 +1075,7 @@ cpdef int slurm_requeue(uint32_t JobID=0):
 	:rtype: `integer`
 	"""
 
-	cdef int errCode = slurm.slurm_requeue(JobID)
+	cdef int errCode = slurm.slurm_requeue(JobID, state)
 
 	return errCode
 
@@ -1202,20 +1204,6 @@ cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0):
 	"""
 
 	cdef int errCode = slurm.slurm_complete_job(JobID, JobCode)
-
-	return errCode
-
-cpdef int slurm_terminate_job(uint32_t JobID=0):
-
-	u"""Terminate a running slurm job step.
-
-	:param int JobID: Job identifier (default=0)
-
-	:returns: 0 for success or -1 for error and set slurm errno
-	:rtype: `integer`
-	"""
-
-	cdef int errCode = slurm.slurm_terminate_job(JobID)
 
 	return errCode
 
@@ -1781,6 +1769,7 @@ cdef class job:
 
 		return retval
 
+	
 	cpdef int __cpus_allocated_on_node(self, char* nodeName=''):
 
 		u"""Get the number of cpus allocated to a slurm job on a node by node name.
@@ -4238,3 +4227,5 @@ class Dict(defaultdict):
 
 	def __repr__(self):
 		return dict.__repr__(self)
+
+

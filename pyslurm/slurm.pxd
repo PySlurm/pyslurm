@@ -115,6 +115,7 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
 
 cdef extern from 'slurm/slurm.h' nogil:
 
+	enum: SLURM_VERSION_NUMBER
 	enum: SYSTEM_DIMENSIONS = 4
 	enum: HIGHEST_DIMENSIONS = 5
 
@@ -1225,7 +1226,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 	#
 
 	cdef extern int slurm_complete_job (uint32_t, uint32_t)
-	cdef extern int slurm_terminate_job (uint32_t)
+	# cdef extern int slurm_terminate_job (uint32_t, uint32_t)
 	cdef extern int slurm_terminate_job_step (uint32_t, uint32_t)
 
 	#
@@ -1234,7 +1235,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	cdef extern int slurm_suspend (uint32_t)
 	cdef extern int slurm_resume (uint32_t)
-	cdef extern int slurm_requeue (uint32_t)
+	cdef extern int slurm_requeue (uint32_t, uint32_t)
 
 	#
 	# Checkpoint

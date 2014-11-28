@@ -2,7 +2,7 @@
 
 import pyslurm
 
-rc = pyslurm.slurm_delete_partition(2)
+rc = pyslurm.slurm_delete_partition("mark")
 if rc == -1:
 	print "Error : %s" % pyslurm.slurm_strerror(pyslurm.slurm_get_errno())
 elif rc == 0:

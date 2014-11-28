@@ -92,12 +92,14 @@ if __name__ == '__main__':
 
 	(options, args) = parser.parse_args()
 
-	hosts = socket.gethostbyaddr(socket.gethostname())[1]
+	hosts = socket.gethostbyaddr(socket.gethostname())[2]
 	my_host = hosts[0]
 
 	lock_file = "/var/tmp/slurm_node_xml.lck"
 	if os.path.exists(lock_file):
-		sys.exit()
+		print ("Lock file disabled. Enable after debugging")
+#		print ("Lock file " +  "/var/tmp/slurm_node_xml.lck" + " exists, exiting")
+		sys.exit(1)
 	else:
 		open(lock_file,'w').close()
 
@@ -106,10 +108,12 @@ if __name__ == '__main__':
 		rrd = options.directory
 
 	node_file = r'%s/%s.xml' % (options.directory, my_host)
-	if not options.output:
-		stdout_orig = sys.stdout
-		sys.stdout = open(node_file, 'w')
-		
+	#===========================================================================
+	# if not options.output:
+	# 	stdout_orig = sys.stdout
+	# 	sys.stdout = open(node_file, 'w')
+	# 	
+	#===========================================================================
 	now = int(time.time())
 	sys.stdout.write('<?xml version="1.0" encoding="iso-8859-1" ?>\n')
 	sys.stdout.write("<node>\n")
@@ -139,30 +143,31 @@ if __name__ == '__main__':
 		sys.stdout.write("\t\t<version>%s</version>\n" % a[4])
 		sys.stdout.write("\t</slurmd>\n")
 
-	a, b = pyslurm.slurm_load_jobs()
-	jobs = pyslurm.get_job_data(b)
+	aux = pyslurm.job()
+
+	jobs = aux.get()
 
 	now = int(time.time())
 	PiDs = {}
-	for key, value in jobs.iteritems():
+	for jobid, jobinfo  in jobs.iteritems():
 
-		jobid = value[1]
-		if value[6] == "Running":
-			userid = pwd.getpwuid(value[4])[0]
-			nodes = value[14].split(',')
+		if jobinfo['job_state'][1] == "RUNNING":
+			userid = pwd.getpwuid(jobinfo['user_id']).pw_name
+			nodes = jobinfo['alloc_node'].split(',')
 
 			if my_host in nodes:
 				PiDs[jobid] = []
 
-			a = os.popen('/bin/ps --noheaders -u %s -o pid,ppid,size,rss,vsize,pcpu,args' % userid, 'r')
+			a = os.popen('/bin/ps --noheaders -u %s -o pid,ppid,size,rss,vsize,pcpu,args' %(userid), 'r')
 			for lines in a:
 				line = lines.split()
+				print line
 				command = " ".join(line[6:])
 				newline = [ line[0], line[1], line[2], line[3], line[4], line[5], command ]
 				pid = int(line[0])
 				rc, slurm_jobid = pyslurm.slurm_pid2jobid(pid)
 				if rc == 0:
-					if PiDs.has_key(slurm_jobid):
+					if not PiDs.has_key(slurm_jobid): 
 						PiDs[slurm_jobid].append(newline)
 			a.close()
 
@@ -189,7 +194,7 @@ if __name__ == '__main__':
 	sys.stdout.write("</node>\n")
 	sys.stdout.flush()
 
-	pyslurm.slurm_free_job_info_msg(b)
+	aux.__free()
 
 	if not options.output:
 		sys.stdout.close()
