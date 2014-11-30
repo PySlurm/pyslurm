@@ -14,23 +14,15 @@ def display(part_dict):
 
 				if 'default_time' in part_key:
 
-					if value[part_key] == 0xffffffff:
-						valStr = (value[part_key], "infinite")	
-					elif value[part_key] == 0xfffffffe:
-						valStr = (value[part_key], "no_value")
+					if isinstance(value[part_key], int):
+						valStr = "%s minutes" % (value[part_key]/60)
 					else:
-						valStr = (value[part_key], "%s minutes" % (value[part_key]/60) )
+						valStr = value[part_key]
 
 				elif part_key in [ 'max_nodes', 'max_time']:
 
 					if value[part_key] == 0xffffffff:
 						valStr = "Unlimited"
-				elif part_key == 'state_up':
-					valStr = pyslurm.get_partition_state(value[part_key])
-				elif part_key == 'flags':
-					valStr = pyslurm.get_partition_mode(value[part_key])
-				elif part_key == 'last_update':
-					valStr = pyslurm.epoch2date(value[part_key])
 
 				print "\t%-20s : %s" % (part_key, valStr)
 
