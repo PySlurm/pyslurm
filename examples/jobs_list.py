@@ -35,6 +35,7 @@ def display(job_dict):
 						print "\t%-20s : %s" % (part_key, ddate)
 				else:
 					print "\t%-20s : %s" % (part_key, value[part_key])
+				
 			print "-" * 80
 
 if __name__ == "__main__":
@@ -50,10 +51,10 @@ if __name__ == "__main__":
 		print "Number of Jobs - %s" % len(jobs)
 		print
 
-		pending = a.find('job_state', pyslurm.JOB_PENDING)
-		running = a.find('job_state', pyslurm.JOB_RUNNING)
+		pending = a.find('job_state', 'PENDING')
+		running = a.find('job_state', 'RUNNING')
 
-		print "%s" % a.find('state_reason', pyslurm.WAIT_HELD_USER) 
+		#print "%s" % a.find('state_reason', 'HOLD')
 
 		print "Number of pending jobs - %s" % len(pending)
 		print "Number of running jobs - %s" % len(running)
@@ -65,4 +66,3 @@ if __name__ == "__main__":
 	
 		print "No jobs found !"
 
-	#print a.find_id(10000)
