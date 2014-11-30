@@ -4,7 +4,7 @@ def display(stats_dict):
 
 	if stats_dict:
 
-		print "-" * 80
+		print '{:*^80}'.format(' Slurm Controller Statistics ')
 		for key, value in stats_dict.iteritems():
 			if key in ['bf_when_last_cycle', 'req_time', 'req_time_start']:
 				ddate = value
@@ -25,7 +25,7 @@ def display(stats_dict):
 			else:
 				print "%-25s : %-17s" % (key, value)
 
-		print "-" * 80
+		print '{:*^80}'.format('')
 	else:
 		
 		print "No Stats found !"

@@ -10,7 +10,7 @@ def controller_up(controller=1):
 	rc = pyslurm.slurm_ping(controller)
 	if rc != 0:
 		rc = pyslurm.slurm_get_errno()
-		print "Failed - %s," % pyslurm.slurm_strerror(rc)
+		print "Failed - %s" % pyslurm.slurm_strerror(rc)
 	else:
 		print "Success"
 
