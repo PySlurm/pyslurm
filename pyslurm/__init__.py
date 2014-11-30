@@ -20,10 +20,6 @@ if old_dlopen_flags:
 	if hasattr(sys, "setdlopenflags"):
 		sys.setdlopenflags(old_dlopen_flags)
 
-<<<<<<< HEAD
-__version__ = "2.6.0-0pre2"
-=======
 __version__ = "14.11.0-0"
->>>>>>> slurm-14.11
 def version():
 	return __version__
