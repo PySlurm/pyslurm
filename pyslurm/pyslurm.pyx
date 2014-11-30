@@ -132,7 +132,7 @@ cpdef tuple get_controllers():
 
 	return primary, backup
 
-def is_controller(char Host):
+def is_controller(Host):
 
 	u"""Return slurm controller status for host.
  
