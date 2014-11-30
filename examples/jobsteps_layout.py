@@ -1,14 +1,33 @@
 import pyslurm
 
-steps = pyslurm.slurm_get_job_steps(5, 0, 2)
-print steps
-for job, job_step in sorted(steps.iteritems()):
+def display(steps):
+
+	time_fields = ['time_limit']
+	date_fields = ['start_time']
+
+	for job, job_step in sorted(steps.iteritems()):
 
 		print "Job: %s" % job
-		for step in sorted(job_step.iterkeys()):
+		for step, step_dict in job_step.iteritems():
 
 			print "\tStep: %s" % step
-			step_info = pyslurm.slurm_job_step_layout_get(job, step)
-			for task in sorted(step_info.iterkeys()):
-				print "\t\t%s:\t%s" % (task, step_info[task])
+               		for task, value in sorted(step_dict.iteritems()):
 
+				if task in date_fields:
+
+					if value == 0:
+						print "\t\t%-20s : N/A" % (task)
+					else:
+						ddate = pyslurm.epoch2date(value)
+						print "\t\t%-20s : %s" % (task, ddate)
+				else:
+					print "\t\t%-20s : %s" % (task, value)
+
+if __name__ == "__main__":
+
+	a = pyslurm.jobstep()
+	steps = a.get()
+
+	if len(steps) > 0:
+
+		display(steps)
