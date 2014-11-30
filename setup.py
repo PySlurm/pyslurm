@@ -23,7 +23,8 @@ logging.basicConfig(level=20)
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
 __version__ = "14.11.0-0"
-__slurm_hex_version__ = "0x0e0b00"
+__min_slurm_hex_version__ = "0x0e0b00"
+__max_slurm_hex_version__ = "0x0e0b01"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
@@ -91,10 +92,20 @@ def read_inc_version(fname):
 	for line in f:
 		if line.find("#define SLURM_VERSION_NUMBER") == 0:
 			hex = line.split(" ")[2].strip()
-			info("Build - Detected Slurm include file version - %s" % hex)
+			info("Build - Detected Slurm include file version - %s (%s)" % (hex, inc_vers2str(hex)))
 	f.close()
 
 	return hex
+
+def inc_vers2str(hex_inc_version):
+
+	"""Return a slurm version number string decoded from the bit shifted components of the 
+           slurm version hex string supplied in slurm.h
+	"""
+
+	a = int(hex_inc_version,16)
+	b = ( a >> 16 & 0xff, a >> 8 & 0xff, a & 0xff)
+	return '.'.join(map(str,b))
 
 def clean():
 
@@ -231,8 +242,11 @@ if args[1] == 'build' or args[1] == 'build_ext':
 		info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
 		usage()
 
-	if read_inc_version("%s/slurm/slurm.h" % SLURM_INC) != __slurm_hex_version__:
-		fatal("Build - Incorrect slurm version detected, Pyslurm needs Slurm-%s" % __version__)
+	# Test for supported min and max Slurm versions 
+
+        SLURM_INC_VER = read_inc_version("%s/slurm/slurm.h" % SLURM_INC)
+	if (int(SLURM_INC_VER,16) < int(__min_slurm_hex_version__,16)) or (int(SLURM_INC_VER,16) > int(__max_slurm_hex_version__,16)):
+		fatal("Build - Incorrect slurm version detected, require Slurm-%s to slurm-%s" % (inc_vers2str(__min_slurm_hex_version__), inc_vers2str(__max_slurm_hex_version__)))
 		sys.exit(-1)
 
 	if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
