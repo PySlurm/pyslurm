@@ -58,12 +58,12 @@ if __name__ == "__main__":
 				gecos = "%s" % getpwuid(user)[4]
 				user = "%s" % user
 
-			if jobs[jobid]["job_state"][1] == "Pending":
+			if jobs[jobid]["job_state"] == "PENDING":
 				pending = pending + 1
 				procs_request = procs_request + jobs[jobid]["num_cpus"] 
 				nodes_request = nodes_request + jobs[jobid]["num_nodes"]
 
-			if jobs[jobid]["job_state"][1] == "Running":
+			if jobs[jobid]["job_state"] == "RUNNING":
 				running = running + 1
 				procs_used = procs_used + jobs[jobid]["num_cpus"] 
 				nodes_used = nodes_used + jobs[jobid]["num_nodes"]
