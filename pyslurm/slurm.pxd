@@ -5,7 +5,7 @@
 from libc.string cimport strlen, memset, memcpy
 
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, int32_t
 
 from libc.stdlib cimport malloc, free
 
@@ -31,6 +31,8 @@ cdef extern from 'time.h' nogil:
 
 cdef extern from *:
 	ctypedef char* const_char_ptr "const char*"
+
+#ctypedef struct sockaddr_in slurm_addr_t
 
 #
 # PySlurm helper functions
@@ -70,27 +72,23 @@ cdef inline void* xmalloc(size_t __sz):
 cdef inline xfree(char*__p):
 	slurm_xfree(<void **>&(__p), __FILE__, __LINE__, __FUNCTION__)
 
-cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
-cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
-
-cdef extern void slurm_api_set_conf_file(char *)
+cdef extern void slurm_accounting_enforce_string(uint16_t enforce, char *, int)
 cdef extern void slurm_api_clear_config()
-
-cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
-cdef extern uint16_t slurm_get_preempt_mode()
-cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
-cdef extern char *slurm_job_reason_string(int inx)
-cdef extern char *slurm_job_state_string(uint16_t inx)
-cdef extern char *slurm_job_state_string_compact(uint16_t inx)
-cdef extern int   slurm_job_state_num(char *state_name)
-cdef extern char *slurm_node_state_string(uint16_t inx)
-cdef extern char *slurm_node_state_string_compact(uint16_t inx)
-cdef extern char *slurm_reservation_flags_string(uint16_t inx)
-#cdef extern void  slurm_private_data_string(uint16_t, char *, int) 
-cdef extern void  slurm_accounting_enforce_string(uint16_t enforce, char *, int)
-cdef extern char *slurm_conn_type_string(int)
-cdef extern char *slurm_node_use_string(int)
+cdef extern void slurm_api_set_conf_file(char *)
 cdef extern char *slurm_bg_block_state_string(uint16_t)
+cdef extern char *slurm_conn_type_string(enum)
+cdef extern uint16_t slurm_get_preempt_mode()
+cdef extern char *slurm_job_reason_string(int inx)
+cdef extern int   slurm_job_state_num(char *state_name)
+cdef extern char *slurm_job_state_string(uint16_t inx)
+cdef extern char *slurm_node_state_string(uint32_t inx)
+cdef extern char *slurm_node_state_string_compact(uint32_t inx)
+cdef extern char *slurm_node_use_string(int)
+cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
+cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
+cdef extern char *slurm_reservation_flags_string(uint32_t flags)
+cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
+cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
 
 #
 # Slurm spank API - Love the name !
@@ -115,6 +113,7 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
 
 cdef extern from 'slurm/slurm.h' nogil:
 
+	enum: SLURM_VERSION_NUMBER = 0x0e0b00
 	enum: SYSTEM_DIMENSIONS = 4
 	enum: HIGHEST_DIMENSIONS = 5
 
@@ -128,6 +127,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		JOB_TIMEOUT
 		JOB_NODE_FAIL
 		JOB_PREEMPTED
+		JOB_BOOT_FAIL
 		JOB_END
 
 	cdef enum job_state_reason:
@@ -163,6 +163,46 @@ cdef extern from 'slurm/slurm.h' nogil:
 		WAIT_QOS_JOB_LIMIT
 		WAIT_QOS_RESOURCE_LIMIT
 		WAIT_QOS_TIME_LIMIT
+		WAIT_BLOCK_MAX_ERR
+		WAIT_BLOCK_D_ACTION
+		WAIT_CLEANING
+		WAIT_PROLOG
+		WAIT_QOS
+		WAIT_ACCOUNT
+		WAIT_DEP_INVALID
+		WAIT_QOS_GRP_CPU
+		WAIT_QOS_GRP_CPU_MIN
+		WAIT_QOS_GRP_CPU_RUN_MIN
+		WAIT_QOS_GRP_JOB
+		WAIT_QOS_GRP_MEMORY
+		WAIT_QOS_GRP_NODES
+		WAIT_QOS_GRP_SUB_JOB
+		WAIT_QOS_GRP_WALL
+		WAIT_QOS_MAX_CPUS_PER_JOB
+		WAIT_QOS_MAX_CPUS_MINS_PER_JOB
+		WAIT_QOS_MAX_NODE_PER_JOB
+		WAIT_QOS_MAX_WALL_PER_JOB
+		WAIT_QOS_MAX_CPU_PER_USER
+		WAIT_QOS_MAX_JOB_PER_USER
+		WAIT_QOS_MAX_NODE_PER_USER
+		WAIT_QOS_MAX_SUB_JOB
+		WAIT_QOS_MIN_CPUS
+		WAIT_ASSOC_GRP_CPU
+		WAIT_ASSOC_GRP_CPU_MIN
+		WAIT_ASSOC_GRP_CPU_RUN_MIN
+		WAIT_ASSOC_GRP_JOB
+		WAIT_ASSOC_GRP_MEMORY
+		WAIT_ASSOC_GRP_NODES
+		WAIT_ASSOC_GRP_SUB_JOB
+		WAIT_ASSOC_GRP_WALL
+		WAIT_ASSOC_MAX_JOBS
+		WAIT_ASSOC_MAX_CPUS_PER_JOB
+		WAIT_ASSOC_MAX_CPU_MINS_PER_JOB
+		WAIT_ASSOC_MAX_NODE_PER_JOB
+		WAIT_ASSOC_MAX_WALL_PER_JOB
+		WAIT_ASSOC_MAX_SUB_JOB
+		WAIT_MAX_REQUEUE
+		WAIT_ARRAY_TASK_LIMIT
 
 	cdef enum select_jobdata_type:
 		SELECT_JOBDATA_GEOMETRY
@@ -187,6 +227,8 @@ cdef extern from 'slurm/slurm.h' nogil:
 		SELECT_JOBDATA_START_LOC
 		SELECT_JOBDATA_USER_NAME
 		SELECT_JOBDATA_CONFIRMED
+		SELECT_JOBDATA_CLEANING
+		SELECT_JOBDATA_NETWORK
 
 	cdef enum select_nodedata_type:
 		SELECT_NODEDATA_BITMAP_SIZE
@@ -197,6 +239,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		SELECT_NODEDATA_PTR
 		SELECT_NODEDATA_EXTRA_INFO
 		SELECT_NODEDATA_RACK_MP
+		SELECT_NODEDATA_MEM_ALLOC
 		
 	cdef enum select_node_cnt:
 		SELECT_GET_NODE_SCALING
@@ -206,6 +249,36 @@ cdef extern from 'slurm/slurm.h' nogil:
 		SELECT_APPLY_NODE_MAX_OFFSET
 		SELECT_SET_NODE_CNT
 		SELECT_SET_MP_CNT
+
+	cdef enum acct_gather_profile_info:
+		ACCT_GATHER_PROFILE_DIR
+		ACCT_GATHER_PROFILE_DEFAULT
+		ACCT_GATHER_PROFILE_RUNNING
+
+	cdef enum jobacct_data_type:
+		JOBACCT_DATA_TOTAL
+		JOBACCT_DATA_PIPE
+		JOBACCT_DATA_RUSAGE
+		JOBACCT_DATA_MAX_VSIZE
+		JOBACCT_DATA_MAX_VSIZE_ID
+		JOBACCT_DATA_TOT_VSIZE
+		JOBACCT_DATA_MAX_RSS
+		JOBACCT_DATA_MAX_RSS_ID
+		JOBACCT_DATA_TOT_RSS
+		JOBACCT_DATA_MAX_PAGES
+		JOBACCT_DATA_MAX_PAGES_ID
+		JOBACCT_DATA_TOT_PAGES
+		JOBACCT_DATA_MIN_CPU
+		JOBACCT_DATA_MIN_CPU_ID
+		JOBACCT_DATA_TOT_CPU
+		JOBACCT_DATA_ACT_CPUFREQ
+		JOBACCT_DATA_CONSUMED_ENERGY
+		JOBACCT_DATA_MAX_DISK_READ
+		JOBACCT_DATA_MAX_DISK_READ_ID
+		JOBACCT_DATA_TOT_DISK_READ
+		JOBACCT_DATA_MAX_DISK_WRITE
+		JOBACCT_DATA_MAX_DISK_WRITE_ID
+		JOBACCT_DATA_TOT_DISK_WRITE
 
 	cdef enum job_acct_types:
 		JOB_START
@@ -227,6 +300,8 @@ cdef extern from 'slurm/slurm.h' nogil:
 		ENERGY_DATA_JOULES_TASK
 		ENERGY_DATA_STRUCT
 		ENERGY_DATA_RECONFIG
+		ENERGY_DATA_PROFILE
+		ENERGY_DATA_LAST_POLL
 
 	ctypedef enum task_dist_states:
 		SLURM_DIST_CYCLIC = 1
@@ -239,6 +314,8 @@ cdef extern from 'slurm/slurm.h' nogil:
 		SLURM_DIST_BLOCK_BLOCK
 		SLURM_NO_LLLP_DIST
 		SLURM_DIST_UNKNOWN
+		SLURM_DIST_CYCLIC_CFULL
+		SLURM_DIST_BLOCK_CFULL
 
 	ctypedef task_dist_states task_dist_states_t
 
@@ -256,6 +333,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		CPU_BIND_LDRANK = 0x200
 		CPU_BIND_LDMAP = 0x400
 		CPU_BIND_LDMASK = 0x800
+		CPU_BIND_ONE_THREAD_PER_CORE = 0x2000
 		CPU_BIND_CPUSETS = 0x8000
 
 	ctypedef cpu_bind_type cpu_bind_type_t
@@ -322,8 +400,16 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t bf_depth_try_sum
 		uint32_t bf_queue_len
 		uint32_t bf_queue_len_sum
-		time_t   bf_when_last_cycle
+		time_t bf_when_last_cycle
 		uint32_t bf_active
+		uint32_t rpc_type_size
+		uint16_t *rpc_type_id
+		uint32_t *rpc_type_cnt
+		uint64_t *rpc_type_time
+		uint32_t rpc_user_size
+		uint32_t *rpc_user_id
+		uint32_t *rpc_user_cnt
+		uint64_t *rpc_user_time
 
 	ctypedef stats_info_response_msg stats_info_response_msg_t
 
@@ -381,27 +467,39 @@ cdef extern from 'slurm/slurm.h' nogil:
 	ctypedef dynamic_plugin_data dynamic_plugin_data_t
 
 	ctypedef struct acct_gather_energy:
-		uint32_t previous_consumed_energy
 		uint32_t base_consumed_energy
-		uint32_t base_watts		# lowest power consump of node, in watts 
-		uint32_t consumed_energy	# total energy consumed by node, in joules
-		uint32_t current_watts		# current power consump of node, in watts
+		uint32_t base_watts               # lowest power consump of node, in watts 
+		uint32_t consumed_energy          # total energy consumed by node, in joules
+		uint32_t current_watts            # current power consump of node, in watts
+		uint32_t previous_consumed_energy
+		time_t poll_time
 
 	ctypedef acct_gather_energy acct_gather_energy_t
 
+	ctypedef struct ext_sensors_data:
+		uint32_t consumed_energy
+		uint32_t temperature
+		time_t energy_update_time
+		uint32_t current_watts
+
+	ctypedef ext_sensors_data ext_sensors_data_t
+
 	ctypedef struct job_descriptor:
 		char *account
-		uint16_t acctg_freq
+		char *acctg_freq
 		char *alloc_node
 		uint16_t alloc_resp_port
 		uint32_t alloc_sid
 		uint32_t argc
 		char **argv
+		char *array_inx
+		void *array_bitmap
 		time_t begin_time
 		uint16_t ckpt_interval
 		char *ckpt_dir
 		char *comment
 		uint16_t contiguous
+		uint16_t core_spec
 		char *cpu_bind
 		uint16_t cpu_bind_type
 		char *dependency
@@ -414,6 +512,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t group_id
 		uint16_t immediate
 		uint32_t job_id
+		char *job_id_str
 		uint16_t kill_on_node_fail
 		char *licenses
 		uint16_t mail_type
@@ -430,7 +529,9 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *partition
 		uint16_t plane_size
 		uint32_t priority
+		uint32_t profile
 		char *qos
+		uint16_t reboot
 		char *resp_host
 		char *req_nodes
 		uint16_t requeue
@@ -444,6 +545,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t time_min
 		uint32_t user_id
 		uint16_t wait_all_nodes
+		uint16_t warn_flags
 		uint16_t warn_signal
 		uint16_t warn_time
 		char *work_dir
@@ -466,14 +568,13 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t pn_min_tmp_disk
 		uint16_t geometry[HIGHEST_DIMENSIONS]
 		uint16_t conn_type[HIGHEST_DIMENSIONS]
-		uint16_t reboot
 		uint16_t rotate
 		char *blrtsimage
 		char *linuximage
 		char *mloaderimage
 		char *ramdiskimage
 		uint32_t req_switch
-		select_jobinfo_t select_jobinfo
+		dynamic_plugin_data_t *select_jobinfo;
 		char *std_err
 		char *std_in
 		char *std_out
@@ -493,38 +594,52 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *accounting_storage_type
 		char *accounting_storage_user
 		uint16_t acctng_store_job_comment
+		void *acct_gather_conf
 		char *acct_gather_energy_type
+		char *acct_gather_profile_type
+		char *acct_gather_infiniband_type
+		char *acct_gather_filesystem_type
 		uint16_t acct_gather_node_freq
+		char *authinfo
 		char *authtype
 		char *backup_addr
 		char *backup_controller
 		uint16_t batch_start_timeout
 		time_t boot_time
 		char *checkpoint_type
+		char *chos_loc
+		char *core_spec_plugin
 		char *cluster_name
 		uint16_t complete_wait
 		char *control_addr
 		char *control_machine
+		uint32_t cpu_freq_def
 		char *crypto_type
-		uint32_t debug_flags
+		uint64_t debug_flags
 		uint32_t def_mem_per_cpu
 		uint16_t disable_root_jobs
+		uint16_t dynalloc_port
 		uint16_t enforce_part_limits
 		char *epilog
 		uint32_t epilog_msg_time
 		char *epilog_slurmctld
+		char *ext_sensors_type
+		uint16_t ext_sensors_freq
+		void *ext_sensors_conf
 		uint16_t fast_schedule
 		uint32_t first_job_id
+		uint16_t fs_dampening_factor
 		uint16_t get_env_timeout
 		char *gres_plugins
 		uint16_t group_info
 		uint32_t hash_val
 		uint16_t health_check_interval
+		uint16_t health_check_node_state
 		char * health_check_program
 		uint16_t inactive_limit
-		uint16_t job_acct_gather_freq
+		char* job_acct_gather_freq
 		char *job_acct_gather_type
-		uint16_t xres_access_freq
+		char *job_acct_gather_params
 		char *job_ckpt_dir
 		char *job_comp_host
 		char *job_comp_loc
@@ -532,22 +647,28 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t job_comp_port
 		char *job_comp_type
 		char *job_comp_user
+		char *job_container_plugin
 		char *job_credential_private_key
 		char *job_credential_public_certificate
 		uint16_t job_file_append
 		uint16_t job_requeue
 		char *job_submit_plugins
+		uint16_t keep_alive_time
 		uint16_t kill_on_bad_exit
 		uint16_t kill_wait
 		char *launch_type
+		char *layouts
 		char *licenses
 		char *licenses_used
+		uint16_t log_fmt
 		char *mail_prog
+		uint32_t max_array_sz
 		uint32_t max_job_cnt
 		uint32_t max_job_id
 		uint32_t max_mem_per_cpu
 		uint32_t max_step_cnt
-		uint32_t max_tasks_per_node
+		uint16_t max_tasks_per_node
+		uint16_t mem_limit_enforce
 		uint16_t min_job_age
 		char *mpi_default
 		char *mpi_params
@@ -564,6 +685,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t priority_favor_small
 		uint16_t priority_flags
 		uint32_t priority_max_age
+		char *priority_params
 		uint16_t priority_reset_period
 		char *priority_type
 		uint32_t priority_weight_age
@@ -576,15 +698,21 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *prolog
 		char *prolog_slurmctld
 		uint16_t propagate_prio_process
+		uint16_t prolog_flags
 		char *propagate_rlimits
 		char *propagate_rlimits_except
 		char *reboot_program
 		uint16_t reconfig_flags
+		char *requeue_exit
+		char *requeue_exit_hold
 		char *resume_program
 		uint16_t resume_rate
 		uint16_t resume_timeout
+		char *resv_epilog
 		uint16_t resv_over_run
+		char *resv_prolog
 		uint16_t ret2service
+		char *route_plugin
 		char *salloc_default_command
 		char *sched_logfile
 		uint16_t sched_log_level
@@ -604,16 +732,19 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t slurmctld_debug
 		char *slurmctld_logfile
 		char *slurmctld_pidfile
+		char *slurmctld_plugstack
 		uint32_t slurmctld_port
 		uint16_t slurmctld_port_count
 		uint16_t slurmctld_timeout
 		uint16_t slurmd_debug
 		char *slurmd_logfile
 		char *slurmd_pidfile
+		char *slurmd_plugstack
 		uint32_t slurmd_port
 		char *slurmd_spooldir
 		uint16_t slurmd_timeout
 		char *srun_epilog
+		uint16_t *srun_port_range
 		char *srun_prolog
 		char *state_save_location
 		char *suspend_exc_nodes
@@ -634,6 +765,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *unkillable_program
 		uint16_t unkillable_timeout
 		uint16_t use_pam
+		uint16_t use_spec_resources
 		char *version
 		uint16_t vsize_factor
 		uint16_t wait_time
@@ -647,76 +779,90 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *account
 		char *alloc_node
 		uint32_t alloc_sid
+		# void *arrray_bitmap
+		uint32_t array_job_id
+		uint32_t array_task_id
+		uint32_t array_max_tasks
+		char *array_task_str
 		uint32_t assoc_id
 		uint16_t batch_flag
 		char *batch_host
 		char *batch_script
+		uint16_t boards_per_node
 		char *command
 		char *comment
 		uint16_t contiguous
+		uint16_t core_spec
+		uint16_t cores_per_socket
 		uint16_t cpus_per_task
 		char *dependency
 		uint32_t derived_ec
 		time_t eligible_time
 		time_t end_time
 		char *exc_nodes
-		int *exc_node_inx
+		int32_t *exc_node_inx
 		uint32_t exit_code
 		char *features
 		char *gres
 		uint32_t group_id
 		uint32_t job_id
+		job_resources_t *job_resrcs
 		uint16_t job_state
 		char *licenses
 		uint32_t max_cpus
 		uint32_t max_nodes
-		uint16_t boards_per_node
-		uint16_t sockets_per_board
-		uint16_t sockets_per_node
-		uint16_t cores_per_socket
-		uint16_t threads_per_core
 		char *name
 		char *network
 		char *nodes
 		uint16_t nice
-		int *node_inx
+		int32_t *node_inx
 		uint16_t ntasks_per_core
 		uint16_t ntasks_per_node
 		uint16_t ntasks_per_socket
+		uint16_t ntasks_per_board
 		uint32_t num_nodes
 		uint32_t num_cpus
 		char *partition
 		uint32_t pn_min_memory
 		uint16_t pn_min_cpus
 		uint32_t pn_min_tmp_disk
+		time_t preempt_time
 		time_t pre_sus_time
 		uint32_t priority
+		uint32_t profile
 		char *qos
+		uint8_t reboot
 		char *req_nodes
-		int *req_node_inx
+		int32_t *req_node_inx
 		uint32_t req_switch
 		uint16_t requeue
 		time_t resize_time
 		uint16_t restart_cnt
 		char *resv_name
+		char *sched_nodes
 		dynamic_plugin_data_t *select_jobinfo
-		job_resources_t  *job_resrcs
 		uint16_t shared
 		uint16_t show_flags
+		uint16_t sockets_per_board
+		uint16_t sockets_per_node
 		time_t start_time
 		char *state_desc
 		uint16_t state_reason
+		char *std_err
+		char *std_in
+		char *std_out
 		time_t submit_time
 		time_t suspend_time
 		uint32_t time_limit
 		uint32_t time_min
+		uint16_t threads_per_core
 		uint32_t user_id
-		time_t 	preempt_time
 		uint32_t wait4switch
 		char *wckey
 		char *work_dir
 
 	ctypedef job_info slurm_job_info_t
+	ctypedef slurm_job_info_t job_info_t
 
 	ctypedef struct job_info_msg:
 		time_t last_update
@@ -755,19 +901,25 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef struct partition_info:
 		char *allow_alloc_nodes
+		char *allow_accounts
 		char *allow_groups
+		char *allow_qos
 		char *alternate
+		uint16_t cr_type
 		uint32_t def_mem_per_cpu
 		uint32_t default_time
+		char *deny_accounts
+		char *deny_qos
 		uint16_t flags
 		uint32_t grace_time
+		uint32_t max_cpus_per_node
 		uint32_t max_mem_per_cpu
 		uint32_t max_nodes
 		uint16_t max_share
 		uint32_t max_time
 		uint32_t min_nodes
 		char *name
-		int *node_inx
+		int32_t *node_inx
 		char *nodes
 		uint16_t preempt_mode
 		uint16_t priority
@@ -791,53 +943,88 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef struct resource_allocation_response_msg:
 		uint32_t job_id
+		char *alias_list
+		uint16_t *cpus_per_node
+		uint32_t *cpu_count_reps
+		uint32_t error_code
+		uint32_t node_cnt
+		char *node_list
+		uint32_t num_cpu_groups
+		char *partition
+		uint32_t pn_min_memory
+		dynamic_plugin_data_t *select_jobinfo
+
+	ctypedef resource_allocation_response_msg resource_allocation_response_msg_t
+
+	ctypedef struct job_alloc_info_response_msg:
+		uint32_t job_id
 		char *node_list
 		uint32_t num_cpu_groups
 		uint16_t *cpus_per_node
 		uint32_t *cpu_count_reps
 		uint32_t node_cnt
+		#slurm_addr_t *node_addr
 		uint32_t error_code
-		select_jobinfo_t *select_jobinfo
-		uint32_t pn_min_memory
+		dynamic_plugin_data_t *select_jobinfo
 
-	ctypedef resource_allocation_response_msg resource_allocation_response_msg_t
+	ctypedef job_alloc_info_response_msg job_alloc_info_response_msg_t
 
 	ctypedef struct node_info:
 		char *arch
 		uint16_t boards
 		time_t boot_time
 		uint16_t cores
+		uint16_t core_spec_cnt
+		uint32_t cpu_load
 		uint16_t cpus
+		char *cpu_spec_list
+		acct_gather_energy_t *energy
+		ext_sensors_data_t *ext_sensors
 		char *features
 		char *gres
-		uint32_t cpu_load
+		char *gres_drain
+		char *gres_used
+		uint32_t mem_spec_limit
 		char *name
 		char *node_addr
 		char *node_hostname
-		uint16_t node_state
+		uint32_t node_state
 		char *os
 		uint32_t real_memory
 		char *reason
 		time_t reason_time
 		uint32_t reason_uid
+		dynamic_plugin_data_t *select_nodeinfo
 		time_t slurmd_start_time
 		uint16_t sockets
 		uint16_t threads
 		uint32_t tmp_disk
 		uint32_t weight
-		acct_gather_energy_t *energy
-		dynamic_plugin_data_t *select_nodeinfo
+		char *version
 
 	ctypedef node_info node_info_t
+	
+	ctypedef struct node_info_msg:
+		time_t last_update
+		uint32_t node_scaling
+		uint32_t record_count
+		node_info_t *node_array
+
+	ctypedef node_info_msg node_info_msg_t
 
 	ctypedef struct front_end_info:
+		char *allow_groups
+		char *allow_users
 		time_t boot_time
+		char *deny_groups
+		char *deny_users
 		char *name
-		uint16_t node_state
+		uint32_t node_state
 		char *reason
 		time_t reason_time
 		uint32_t reason_uid
 		time_t slurmd_start_time
+		char *version
 
 	ctypedef front_end_info front_end_info_t
 
@@ -848,14 +1035,6 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef front_end_info_msg front_end_info_msg_t
 	
-	ctypedef struct node_info_msg:
-		time_t last_update
-		uint32_t node_scaling
-		uint32_t record_count
-		node_info_t *node_array
-
-	ctypedef node_info_msg node_info_msg_t
-
 	#
 	# NOTE: If setting node_addr and/or node_hostname then comma 
 	#       separate names and include an equal number of node_names 
@@ -867,7 +1046,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *node_addr
 		char *node_hostname
 		char *node_names
-		uint16_t node_state
+		uint32_t node_state
 		char *reason
 		uint32_t reason_uid
 		uint32_t weight
@@ -876,7 +1055,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef struct slurm_update_front_end_msg:
 		char *name
-		uint16_t node_state
+		uint32_t node_state
 		char *reason
 		uint32_t reason_uid
 
@@ -922,6 +1101,8 @@ cdef extern from 'slurm/slurm.h' nogil:
 	ctypedef slurmd_status_msg slurmd_status_t
 
 	ctypedef struct job_step_info_t:
+		uint32_t array_job_id
+		uint32_t array_task_id
 		char *ckpt_dir
 		uint16_t ckpt_interval
 		char *gres
@@ -929,7 +1110,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *name
 		char *network
 		char *nodes
-		int *node_inx
+		int32_t *node_inx
 		uint32_t num_cpus
 		uint32_t cpu_freq
 		uint32_t num_tasks
@@ -938,6 +1119,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		time_t run_time
 		dynamic_plugin_data_t *select_jobinfo
 		time_t start_time
+		uint16_t state
 		uint32_t step_id
 		uint32_t time_limit
 		uint32_t user_id
@@ -986,12 +1168,12 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *accounts
 		time_t end_time
 		char *features
-		uint16_t flags
+		uint32_t flags
 		char *licenses
 		char *name
 		uint32_t node_cnt
 		uint32_t core_cnt
-		int *node_inx
+		int32_t *node_inx
 		char *node_list
 		char *partition
 		time_t start_time
@@ -1011,14 +1193,14 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t duration
 		time_t end_time
 		char *features
-		uint16_t flags
+		uint32_t flags
 		char *licenses
 		char *name
 		uint32_t core_cnt
 		uint32_t *node_cnt
 		char *node_list
 		char *partition
-		time_t   start_time
+		time_t start_time
 		char *users
 
 	ctypedef resv_desc_msg resv_desc_msg_t
@@ -1046,6 +1228,27 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef trigger_info_msg trigger_info_msg_t
 
+	ctypedef struct slurm_license_info:
+		char *name
+		uint32_t total
+		uint32_t in_use
+		uint32_t available
+		uint8_t remote
+
+	ctypedef slurm_license_info slurm_license_info_t;
+
+	ctypedef struct license_info_msg:
+		time_t last_update
+		uint32_t num_lic
+		slurm_license_info_t *lic_array
+
+	ctypedef license_info_msg license_info_msg_t
+
+	ctypedef struct job_array_resp_msg_t:
+		uint32_t job_array_count
+		char **job_array_id
+		uint32_t *error_code
+
 	ctypedef struct reservation_name_msg:
 		char *name
 
@@ -1062,7 +1265,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef struct block_job_info_t:
 		char *cnodes
-		int *cnode_inx
+		int32_t *cnode_inx
 		uint32_t job_id
 		void *job_ptr
 		uint32_t user_id
@@ -1074,12 +1277,12 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t conn_type[HIGHEST_DIMENSIONS]
 		uint32_t cnode_cnt
 		uint32_t cnode_err_cnt
-		int *ionode_inx
+		int32_t *ionode_inx
 		char *ionode_str
 		List job_list
 		char *linuximage
 		char *mloaderimage
-		int *mp_inx
+		int32_t *mp_inx
 		char *mp_str
 		uint16_t node_use
 		char *ramdiskimage
@@ -1104,6 +1307,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 	ctypedef struct suspend_msg:
 		uint16_t op
 		uint32_t job_id
+		char *job_id_str
 
 	ctypedef suspend_msg suspend_msg_t
 
@@ -1111,17 +1315,18 @@ cdef extern from 'slurm/slurm.h' nogil:
 	# List
 	#
 	
-	cdef extern void * slurm_list_append (List l, void *x)
+	cdef extern void *slurm_list_append (List l, void *x)
 	cdef extern int slurm_list_count (List l)
 	cdef extern List slurm_list_create (ListDelF f)
 	cdef extern void slurm_list_destroy (List l)
-	cdef extern void * slurm_list_find (ListIterator i, ListFindF f, void *key)
+	cdef extern void *slurm_list_find (ListIterator i, ListFindF f, void *key)
 	cdef extern int slurm_list_is_empty (List l)
 	cdef extern ListIterator slurm_list_iterator_create (List l)
 	cdef extern void slurm_list_iterator_reset (ListIterator i)
 	cdef extern void slurm_list_iterator_destroy (ListIterator i)
-	cdef extern void * slurm_list_next (ListIterator i)
+	cdef extern void *slurm_list_next (ListIterator i)
 	cdef extern void slurm_list_sort (List l, ListCmpF f)
+	cdef extern void *slurm_list_pop (List l)
 
 	#
 	# Control Config Read/Print/Update
@@ -1131,8 +1336,9 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern int slurm_load_ctl_conf (time_t, slurm_ctl_conf **)
 	cdef extern void slurm_free_ctl_conf (slurm_ctl_conf_t *)
 	cdef extern void slurm_print_ctl_conf (FILE *, slurm_ctl_conf_t *)
+	cdef extern void slurm_write_ctl_conf (slurm_ctl_conf_t* slurm_ctl_conf_ptr, node_info_msg_t* node_info_ptr, partition_info_msg_t* part_info_ptr)
 	cdef extern void *slurm_ctl_conf_2_key_pairs (slurm_ctl_conf_t*)
-	cdef extern void slurm_print_ctl_2_key_pairs (slurm_ctl_conf_t *)
+	#cdef extern void slurm_print_ctl_2_key_pairs (slurm_ctl_conf_t *)
 	cdef extern int slurm_load_slurmd_status (slurmd_status_t **)
 	cdef extern void slurm_free_slurmd_status (slurmd_status_t *)
 	cdef extern int slurm_print_slurmd_status (FILE *, slurmd_status_t **)
@@ -1188,9 +1394,13 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	cdef extern void slurm_free_job_info_msg (job_info_msg_t *)
 	cdef extern int slurm_get_end_time (uint32_t, time_t *)
+	cdef extern void slurm_get_job_stderr(char *buf, int buf_size, job_info_t * job_ptr)
+	cdef extern void slurm_get_job_stdin(char *buf, int buf_size, job_info_t * job_ptr)
+	cdef extern void slurm_get_job_stdout(char *buf, int buf_size, job_info_t * job_ptr)
 	cdef extern long slurm_get_rem_time (uint32_t)
 	cdef extern int slurm_job_node_ready (uint32_t)
 	cdef extern int slurm_load_job (job_info_msg_t **, uint32_t, uint16_t)
+	cdef extern int slurm_load_job_user (job_info_msg_t **job_info_msg_pptr, uint32_t user_id, uint16_t show_flags)
 	cdef extern int slurm_load_jobs (time_t, job_info_msg_t **, uint16_t)
 	cdef extern int slurm_notify_job (uint32_t, char *)
 	cdef extern int slurm_pid2jobid (uint32_t, uint32_t *)
@@ -1198,6 +1408,8 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern void slurm_print_job_info_msg (FILE *, job_info_msg_t *, int)
 	cdef extern char *slurm_sprint_job_info (slurm_job_info_t *, int)
 	cdef extern int slurm_update_job (job_desc_msg_t *)
+	cdef extern int slurm_update_job2 (job_desc_msg_t * job_msg, job_array_resp_msg_t **resp)
+	cdef extern uint32_t slurm_xlate_job_id (char *job_id_str)
 
 	#
 	# Ping/Reconfigure/Shutdown
@@ -1208,24 +1420,28 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern int slurm_shutdown (uint16_t)
 	cdef extern int slurm_takeover ()
 	cdef extern int slurm_set_debug_level (uint32_t)
-	cdef extern int slurm_set_debugflags (uint32_t, uint32_t debug_flags_minus)
+	cdef extern int slurm_set_debugflags (uint64_t debug_flags_plus, uint64_t debug_flags_minus)
 	cdef extern int slurm_set_schedlog_level (uint32_t)
 
+	cdef extern int slurm_load_licenses (time_t, license_info_msg_t **, uint16_t)
+	cdef extern void slurm_free_license_info_msg (license_info_msg_t *)
+	
 	#
 	# Job/Job Step Signaling
 	#
 
 	cdef extern int slurm_kill_job (uint32_t, uint16_t, uint16_t)
 	cdef extern int slurm_kill_job_step (uint32_t, uint32_t, uint16_t)
+	cdef extern int slurm_kill_job2 (char *, uint16_t, uint16_t)
+	cdef extern int slurm_kill_job_step2 (char *, uint16_t, uint16_t)
 	cdef extern int slurm_signal_job (uint32_t , uint16_t)
-	cdef extern int slurm_signal_job_step (uint32_t, uint32_t, uint16_t)
+	cdef extern int slurm_signal_job_step (uint32_t, uint32_t, uint32_t)
 
 	#
 	# Job Completion/Terminate
 	#
 
 	cdef extern int slurm_complete_job (uint32_t, uint32_t)
-	cdef extern int slurm_terminate_job (uint32_t)
 	cdef extern int slurm_terminate_job_step (uint32_t, uint32_t)
 
 	#
@@ -1233,8 +1449,12 @@ cdef extern from 'slurm/slurm.h' nogil:
 	#
 
 	cdef extern int slurm_suspend (uint32_t)
+	cdef extern int slurm_suspend2 (char *job_id, job_array_resp_msg_t **resp)
 	cdef extern int slurm_resume (uint32_t)
-	cdef extern int slurm_requeue (uint32_t)
+	cdef extern int slurm_resume2 (char *job_id, job_array_resp_msg_t **resp)
+	cdef extern void slurm_free_job_array_resp (job_array_resp_msg_t *resp)
+	cdef extern int slurm_requeue (uint32_t, uint32_t)
+	cdef extern int slurm_requeue2 (char *job_id, uint32_t state, job_array_resp_msg_t **resp)
 
 	#
 	# Checkpoint
@@ -1244,6 +1464,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern int slurm_checkpoint_disable (uint32_t, uint32_t)
 	cdef extern int slurm_checkpoint_enable (uint32_t, uint32_t)
 	cdef extern int slurm_checkpoint_create (uint32_t, uint32_t, uint16_t, char*)
+	cdef extern int slurm_checkpoint_requeue (uint32_t job_id, uint16_t max_wait, char *image_dir)
 	cdef extern int slurm_checkpoint_vacate (uint32_t, uint32_t, uint16_t, char *)
 	cdef extern int slurm_checkpoint_restart (uint32_t, uint32_t, uint16_t, char *)
 	cdef extern int slurm_checkpoint_complete (uint32_t, uint32_t, time_t, uint32_t, char *)
@@ -1256,10 +1477,12 @@ cdef extern from 'slurm/slurm.h' nogil:
 	#
 
 	cdef extern int slurm_load_node (time_t, node_info_msg_t **, uint16_t)
+	cdef extern int slurm_load_node_single (node_info_msg_t **resp, char *node_name, uint16_t show_flags)
+	cdef extern int slurm_get_node_energy (char *host, uint16_t delta, acct_gather_energy_t **acct_gather_energy)
 	cdef extern void slurm_free_node_info_msg (node_info_msg_t *)
 	cdef extern void slurm_print_node_info_msg (FILE *, node_info_msg_t *, int)
-	#cdef extern void slurm_print_node_table (FILE *, node_info_t *, int)
-	#cdef extern char *slurm_sprint_node_table (node_info_t *, int)
+	cdef extern void slurm_print_node_table (FILE *, node_info_t *, int)
+	cdef extern char *slurm_sprint_node_table (node_info_t *, int)
 	cdef extern void slurm_init_update_node_msg (update_node_msg_t *)
 	cdef extern int slurm_update_node (update_node_msg_t *)
 
@@ -1288,22 +1511,23 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern int slurm_get_triggers (trigger_info_msg_t **)
 	cdef extern int slurm_pull_trigger (trigger_info_t *)
 	cdef extern void slurm_free_trigger_msg (trigger_info_msg_t *)
+	cdef extern void slurm_init_trigger_msg (trigger_info_t *trigger_info_msg)
 
 	#
 	# Hostlists
 	#
 
 	cdef extern hostlist_t slurm_hostlist_create (char *)
-	cdef extern void slurm_hostlist_destroy (hostlist_t hl)
 	cdef extern int slurm_hostlist_count (hostlist_t hl)
+	cdef extern void slurm_hostlist_destroy (hostlist_t hl)
 	cdef extern int slurm_hostlist_find (hostlist_t hl, char *)
 	cdef extern int slurm_hostlist_push (hostlist_t hl, char *)
 	cdef extern int slurm_hostlist_push_host (hostlist_t hl, char *)
 	cdef extern ssize_t slurm_hostlist_ranged_string (hostlist_t hl, size_t, char *)
 	cdef extern char *slurm_hostlist_ranged_string_malloc (hostlist_t hl)
 	cdef extern char *slurm_hostlist_ranged_string_xmalloc (hostlist_t hl)
-	cdef extern char *slurm_hostlist_shift (hostlist_t hl)
 	cdef extern void slurm_hostlist_uniq (hostlist_t hl)
+	cdef extern char *slurm_hostlist_shift (hostlist_t hl)
 
 	#
 	# Topologly
@@ -1338,3 +1562,6 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef void slurm_init_update_front_end_msg (update_front_end_msg_t * update_front_end_msg)
 	cdef extern int slurm_update_front_end (update_front_end_msg_t * front_end_msg)
 
+	#
+	# End
+	#
