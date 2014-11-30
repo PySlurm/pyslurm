@@ -1730,29 +1730,9 @@ cdef class job:
 				Job_dict[u'resize_time'] = self._job_ptr.job_array[i].resize_time
 				Job_dict[u'restart_cnt'] = self._job_ptr.job_array[i].restart_cnt
 				Job_dict[u'resv_name'] = slurm.stringOrNone(self._job_ptr.job_array[i].resv_name, '')
-<<<<<<< HEAD
 
-				Job_dict[u'ionodes'] = self.__get_select_jobinfo(SELECT_JOBDATA_IONODES)
-				Job_dict[u'block_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_BLOCK_ID)
-				Job_dict[u'blrts_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_BLRTS_IMAGE)
-				Job_dict[u'linux_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_LINUX_IMAGE)
-				Job_dict[u'mloader_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_MLOADER_IMAGE)
-				Job_dict[u'ramdisk_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_RAMDISK_IMAGE)
-				Job_dict[u'cnode_cnt'] = self.__get_select_jobinfo(SELECT_JOBDATA_NODE_CNT)
-				Job_dict[u'resv_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_RESV_ID)
-				Job_dict[u'rotate'] = bool(self.__get_select_jobinfo(SELECT_JOBDATA_ROTATE))
-				Job_dict[u'conn_type'] = get_conn_type_string(self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
-				Job_dict[u'altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
-				Job_dict[u'reboot'] = self.__get_select_jobinfo(SELECT_JOBDATA_REBOOT)
-
-				#Job_dict[u'cpus_allocated'] = {}
-				#for node_name in Job_dict[u'nodes']:
-				#	Job_dict[u'cpus_allocated'][node_name] = self.__cpus_allocated_on_node(node_name)
-
-=======
 				Job_dict[u'sockets_per_board'] = self._job_ptr.job_array[i].sockets_per_board
 				Job_dict[u'sockets_per_node'] = self._job_ptr.job_array[i].sockets_per_node
->>>>>>> slurm-14.11
 				Job_dict[u'shared'] = self._job_ptr.job_array[i].shared
 				Job_dict[u'show_flags'] = self._job_ptr.job_array[i].show_flags
 				Job_dict[u'start_time'] = self._job_ptr.job_array[i].start_time
