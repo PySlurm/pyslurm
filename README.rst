@@ -9,12 +9,20 @@ Overview
 
 Currently `PySlurm` is under development to move from it's thin layer on top of the Slurm C API to an object orientated interface.
 
+<<<<<<< HEAD
 The current branch is based on the Slurm 2.6.0 API
+=======
+The current branch is based on the Slurm 14.11.0-0 API
+>>>>>>> slurm-14.11
 
 Prerequistes
 =============
 
+<<<<<<< HEAD
 This version has been tested with Slurm 2.6.0, Cython 0.15.1 and Python 2.7
+=======
+This version has been tested with Slurm 14.11.0-0, Cython 0.21.1 and Python 2.7.4
+>>>>>>> slurm-14.11
 
 * [Slurm] http://www.schedmd.com
 * [Python] http://www.python.org
@@ -55,7 +63,7 @@ directory or where the Slurm libraries and Slurm include files are :
 Documentation
 =============
 
-`Sphinx <http://www.sphinx-doc.org>`_ (needs to be installe) is currently used to generate the 
+`Sphinx <http://www.sphinx-doc.org>`_ (needs to be installed) is currently used to generate the 
 documentation from the reStructuredText based doc strings from the module once it is built 
 and can be regenerated at any time :
 

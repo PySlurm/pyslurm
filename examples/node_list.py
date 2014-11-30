@@ -4,7 +4,7 @@ def display(node_dict):
 
 	if node_dict:
 
-		date_fields = [ 'boot_time', 'slurmd_start_time' ]
+		date_fields = [ 'boot_time', 'slurmd_start_time', 'last_update', 'reason_time' ]
 
 		print "-" * 80
 		for key, value in node_dict.iteritems():

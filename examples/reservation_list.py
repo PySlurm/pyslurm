@@ -11,7 +11,6 @@ def display(res_dict):
 
 		for key, value in res_dict.iteritems():
 
-			print "Res ID : %s" % (key)
 			for res_key in sorted(value.iterkeys()):
 
 				if res_key in date_fields:
@@ -21,8 +20,6 @@ def display(res_dict):
 					else:
 						ddate = pyslurm.epoch2date(value[res_key])
 						print "\t%-20s : %s" % (res_key, ddate)
-				elif res_key == 'flags':
-						print "\t%-20s : %s" % (res_key, pyslurm.get_res_state(value[res_key]))
 				else:
 						print "\t%-20s : %s" % (res_key, value[res_key])
 

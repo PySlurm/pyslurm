@@ -22,8 +22,8 @@ logging.basicConfig(level=20)
 # PySlurm Version
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
-__version__ = "2.6.3-0pre2"
-__slurm_hex_version__ = "0x0206"
+__version__ = "14.11.0-0"
+__slurm_hex_version__ = "0x0e0b00"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
@@ -67,9 +67,9 @@ def makeExtension(extName):
 		extName,
 		[extPath],
 		include_dirs = ['%s' % SLURM_INC, '.'],   # adding the '.' to include_dirs is CRUCIAL!!
-		library_dirs = ['%s' % SLURM_LIB], 
-		libraries = ['slurm'],
-		runtime_library_dirs = ['%s/lib' % SLURM_LIB],
+		library_dirs = ['%s' % SLURM_LIB, '%s/slurm' % SLURM_LIB], 
+		libraries = ['slurmdb'],
+		runtime_library_dirs = ['%s/' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
 		extra_objects = [],
 		extra_compile_args = [],
 		extra_link_args = [],
@@ -92,12 +92,18 @@ def read_inc_version(fname):
 		if line.find("#define SLURM_VERSION_NUMBER") == 0:
 			hex = line.split(" ")[2].strip()
 			info("Build - Detected Slurm include file version - %s" % hex)
+	f.close()
 
 	return hex
 
 def clean():
 
-	"""Cleanup build directory and temporary files"""
+	"""
+	Cleanup build directory and temporary files
+	
+	I wonder if disutils.dir_util.remove_tree should be used instead ?
+	
+        """
 
 	info("Clean - checking for objects to clean")
 	if os.path.isdir("build/"):
@@ -108,7 +114,7 @@ def clean():
 			fatal("Clean - failed to remove pyslurm build/ directory !") 
 			sys.exit(-1)
 
-	files = [ "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi" ]
+	files = [ "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi", "pyslurm/pyslurm.so" ]
 
 	for file in files:
 
@@ -141,16 +147,18 @@ if sys.version_info[:2] < (2, 6):
 
 compiler_dir = os.path.join(get_python_lib(prefix=''), 'src/pyslurm/')
 
+CyVersion_min = "0.21"
 try:
 	from Cython.Distutils import build_ext
 	from Cython.Compiler.Version import version as CyVersion
 
 	info("Cython version %s installed\n" % CyVersion)
 
-	if CyVersion < "0.15":
-		fatal("Please use Cython version >= 0.15")
+	if CyVersion < CyVersion_min:
+		fatal("Please use Cython version >= %s" % CyVersion_min)
 except:
 	fatal("Cython (www.cython.org) is required to build PySlurm")
+	fatal("Please use Cython version >= %s" % CyVersion_min)
 
 #
 # Set default Slurm directory to /usr
@@ -174,7 +182,7 @@ if args[1] == 'clean':
 
 	clean()
 
-if args[1] == 'build':
+if args[1] == 'build' or args[1] == 'build_ext':
 
 	#
 	# Call clean up of temporary build objects
@@ -223,8 +231,8 @@ if args[1] == 'build':
 		info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
 		usage()
 
-	if read_inc_version("%s/slurm/slurm.h" % SLURM_INC)[:len(__slurm_hex_version__)] != __slurm_hex_version__:
-		fatal("Build - Incorrect slurm version detected, Pyslurm needs Slurm-2.6.0")
+	if read_inc_version("%s/slurm/slurm.h" % SLURM_INC) != __slurm_hex_version__:
+		fatal("Build - Incorrect slurm version detected, Pyslurm needs Slurm-%s" % __version__)
 		sys.exit(-1)
 
 	if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
