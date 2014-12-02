@@ -1702,7 +1702,7 @@ cdef class job:
 				Job_dict[u'max_nodes'] = self._job_ptr.job_array[i].max_nodes
 				Job_dict[u'name'] = slurm.stringOrNone(self._job_ptr.job_array[i].name, '')
 				Job_dict[u'network'] = slurm.stringOrNone(self._job_ptr.job_array[i].network, '')
-				Job_dict[u'nodes'] = slurm.listOrNone(self._job_ptr.job_array[i].nodes, ',')
+				Job_dict[u'nodes'] = slurm.stringOrNone(self._job_ptr.job_array[i].nodes, '')
 				Job_dict[u'nice'] = self._job_ptr.job_array[i].nice
 
 				#if self._job_ptr.job_array[i].node_inx[0] != -1:
@@ -1766,7 +1766,7 @@ cdef class job:
 				Job_dict[u'altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
 
 				Job_dict[u'cpus_allocated'] = {}
-				for node_name in Job_dict[u'nodes']:
+				for node_name in Job_dict[u'nodes'].split(','):
 					Job_dict[u'cpus_allocated'][node_name] = self.__cpus_allocated_on_node(node_name)
 
 				Jobs[job_id] = Job_dict
