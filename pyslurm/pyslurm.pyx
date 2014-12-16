@@ -1767,7 +1767,7 @@ cdef class job:
 
 				Job_dict[u'cpus_allocated'] = {}
 				if Job_dict[u'nodes']:
-					for node_name in Job_dict[u'nodes'].split(','):
+					for node_name in Job_dict[u'nodes'].split(","):
 						Job_dict[u'cpus_allocated'][node_name] = self.__cpus_allocated_on_node(node_name)
 
 				Jobs[job_id] = Job_dict
