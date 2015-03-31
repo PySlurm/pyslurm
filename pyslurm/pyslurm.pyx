@@ -2573,6 +2573,35 @@ cdef class hostlist:
 	cpdef get(self):
 		return self.__get()
 
+	cpdef get_list(self):
+		u"""Get the list of hostnames composing the hostlist. For example
+		with a hostlist created with "tux[1-3]" -> [ 'tux1', tux2', 'tux3' ].
+
+		:returns: the list of hostnames in case of success or None on error.
+		:rtype: list
+		"""
+
+		cdef:
+			char *hostlist_s = NULL
+
+		host_list = None
+
+		if self.hl is not NULL:
+			# make a copy of self.hl since slurm.slurm_hostlist_shift() is
+			# destructive.
+			hostlist_s = slurm.slurm_hostlist_ranged_string_xmalloc(self.hl)
+			if hostlist_s is not NULL:
+				hl = slurm.slurm_hostlist_create(hostlist_s)
+				host_list = []
+				nb_hosts = slurm.slurm_hostlist_count(hl)
+				for host_id in range(nb_hosts):
+					host_list.append(slurm.slurm_hostlist_shift(hl))
+				slurm.xfree(hostlist_s)
+				slurm.slurm_hostlist_destroy(hl)
+
+		return host_list
+
+
 	cpdef __get(self):
 
 		cdef:
