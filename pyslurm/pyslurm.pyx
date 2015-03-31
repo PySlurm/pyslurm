@@ -1521,7 +1521,10 @@ cdef class job:
 	def __cinit__(self):
 		self._job_ptr = NULL
 		self._lastUpdate = 0
-		self._ShowFlags = 0
+		# SHOW_DETAIL flag notably make slurm allocate and fill
+		# (job_resources_t *)job_resrcs structure member of
+		# slurm_job_info_t, with all resources details of the job.
+		self._ShowFlags = SHOW_DETAIL
 		self._JobDict = {}
 
 		self.get()
