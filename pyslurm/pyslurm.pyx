@@ -48,12 +48,12 @@ except ImportError:
 cimport slurm
 include "bluegene.pxi"
 include "slurm_defines.pxi"
+include "slurm_version.pxi"
 
 #
 # Slurm Macros as Cython inline functions
 #
 
-cdef inline SLURM_VERSION_NUMBER(): return slurm.SLURM_VERSION_NUMBER
 cdef inline SLURM_VERSION_MAJOR(a): return ((a >> 16) & 0xff)
 cdef inline SLURM_VERSION_MINOR(a): return ((a >>  8) & 0xff)
 cdef inline SLURM_VERSION_MICRO(a): return (a & 0xff)

@@ -125,7 +125,7 @@ def clean():
 			fatal("Clean - failed to remove pyslurm build/ directory !") 
 			sys.exit(-1)
 
-	files = [ "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi", "pyslurm/pyslurm.so" ]
+	files = [ "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi", "pyslurm/pyslurm.so", "pyslurm/slurm_version.pxi" ]
 
 	for file in files:
 
@@ -255,6 +255,17 @@ if args[1] == 'build' or args[1] == 'build_ext':
 		if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
 			info("Build - Cannot locate the Slurm shared library in %s" % SLURM_LIB)
 			usage()
+
+	# Slurm version 
+
+	info("Build - Writing Slurm version to pyslurm/slurm_version.pxi")
+	try:
+		f = open("pyslurm/slurm_version.pxi", "w")
+		f.write("SLURM_VERSION_NUMBER = %s\n" % SLURM_INC_VER)
+		f.close()
+	except:
+		fatal("Build - Unable to write Slurm version to pyslurm/slurm_version.pxi")
+		sys.exit(-1)
 
 	# BlueGene Types
 
