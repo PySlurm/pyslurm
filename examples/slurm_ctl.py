@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
 import pyslurm
+import sys
 
-a = pyslurm.config()
-ctl_dict = a.get()
+try:
+	a = pyslurm.config()
+	ctl_dict = a.get()
+except ValueError as e:
+	print 'Error - %s' % (e)
+	sys.exit(-1)
 
 # Process the sorted SLURM configuration dictionary
 
@@ -34,4 +39,3 @@ if ctl_dict.has_key('key_pairs'):
 	for key in sorted(ctl_dict['key_pairs'].iterkeys()):
 		print "\t%-35s : %s" % (key, ctl_dict['key_pairs'][key])
 
-#print a.key_pairs()

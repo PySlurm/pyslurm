@@ -2,13 +2,13 @@
 
 import pyslurm
 
-TrigID = 5
+TrigID = 3
 a = pyslurm.trigger()
-rc = a.clear(TrigID)
 
-if rc != 0:
-	rc = pyslurm.slurm_get_errno()
-	print "Unable to clear trigger : %s" % pyslurm.slurm_strerror(rc)
+try:
+	a.clear(TrigID)
+except ValueError as e:
+        print "Unable to clear trigger : %s" % (e)
 else:
 	print "TriggerID (%s) cleared" % TrigID 
 

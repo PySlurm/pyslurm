@@ -2,9 +2,10 @@
 
 import pyslurm
 
-rc, Time = pyslurm.slurm_checkpoint_able(6,0,0)
-if rc != 0:
-	print "Error : %s" % pyslurm.slurm_strerror(rc)
+try:
+	time = pyslurm.slurm_checkpoint_able(2,0)
+except ValueError as e:
+        print 'Checkpointable job failed - %s' % (e)
 else:
-	print "Job can be checkpointed"
+	print "Job can be checkpointed at %" % time
 

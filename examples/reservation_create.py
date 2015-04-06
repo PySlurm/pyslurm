@@ -6,7 +6,7 @@ import string
 import time
 import datetime
 
-dstring = "2013-12-31T18:00:00"
+dstring = "2020-12-31T18:00:00"
 dpattern = "%Y-%m-%dT%H:%M:%S"
 start_epoch = int(time.mktime(time.strptime(dstring, dpattern)))
 
@@ -17,40 +17,39 @@ res_dict["users"] = "root"
 res_dict["start_time"] = start_epoch
 res_dict["duration"] = 600
 
-resid = a.create(res_dict)
-rc = pyslurm.slurm_get_errno()
-if rc != 0:
-	print "Failed - Error : %s" % pyslurm.slurm_strerror(pyslurm.slurm_get_errno())
-	#sys.exit(-1)
+try:
+	resid = a.create(res_dict)
+except ValueError as e:
+        print 'Reservation creation failed - %s' % (e)
 else:
 	print "Success - Created reservation %s\n" % resid
 
-res_dict = a.get()
-if res_dict.has_key(resid):
+	res_dict = a.get()
+	if res_dict.has_key(resid):
 
-	date_fields = [ 'end_time', 'start_time' ]
+		date_fields = [ 'end_time', 'start_time' ]
 
-	value = res_dict[resid]
-	print "Res ID : %s" % (resid)
-	for res_key in sorted(value.iterkeys()):
+		value = res_dict[resid]
+		print "Res ID : %s" % (resid)
+		for res_key in sorted(value.iterkeys()):
 
-		if res_key in date_fields:
+			if res_key in date_fields:
 
-			if value[res_key] == 0:
-				print "\t%-20s : N/A" % (res_key)
+				if value[res_key] == 0:
+					print "\t%-20s : N/A" % (res_key)
+				else:
+					ddate = pyslurm.epoch2date(value[res_key])
+					print "\t%-20s : %s" % (res_key, ddate)
 			else:
-				ddate = pyslurm.epoch2date(value[res_key])
-				print "\t%-20s : %s" % (res_key, ddate)
-		else:
-				print "\t%-20s : %s" % (res_key, value[res_key])
+					print "\t%-20s : %s" % (res_key, value[res_key])
 
+		print "-" * 80
+
+	else:
+		print "No reservation %s found !" % resid
+		sys.exit(-1)
+
+	print "\n"
+	print "%s" % ' All Reservations '.center(80, '-')
+	a.print_reservation_info_msg()
 	print "-" * 80
-
-else:
-        print "No reservation %s found !" % resid
-	sys.exit(-1)
-
-print "\n"
-print "%s" % ' All Reservations '.center(80, '-')
-a.print_reservation_info_msg()
-print "-" * 80

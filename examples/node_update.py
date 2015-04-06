@@ -23,11 +23,11 @@ Node_dict = {
 		'reason': 'API test'
 	}
 
-a = pyslurm.node()
-rc = a.update(Node_dict)
-
-if rc == -1:
-	print "Error : %s" % pyslurm.slurm_strerror(pyslurm.slurm_get_errno())
-elif rc == 0:
+try:
+	a = pyslurm.node()
+	rc = a.update(Node_dict)
+except ValueError as e:
+	print 'Node Update error - %s' % (e)
+else:
 	print "Node %s successfully updated" % Node_dict["node_names"]
 

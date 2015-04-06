@@ -21,9 +21,9 @@ logging.basicConfig(level=20)
 
 # PySlurm Version
 
-#VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
-__version__ = "2.5.6-1"
-__slurm_hex_version__ = "0x0205"
+__version__ = "2.6.0"
+__min_slurm_hex_version__ = "0x020600"
+__max_slurm_hex_version__ = "0x020605"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
@@ -67,9 +67,9 @@ def makeExtension(extName):
 		extName,
 		[extPath],
 		include_dirs = ['%s' % SLURM_INC, '.'],   # adding the '.' to include_dirs is CRUCIAL!!
-		library_dirs = ['%s' % SLURM_LIB], 
-		libraries = ['slurm'],
-		runtime_library_dirs = ['%s/lib' % SLURM_LIB],
+		library_dirs = ['%s' % SLURM_LIB, '%s/slurm' % SLURM_LIB], 
+		libraries = ['slurmdb'],
+		runtime_library_dirs = ['%s/' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
 		extra_objects = [],
 		extra_compile_args = [],
 		extra_link_args = [],
@@ -84,31 +84,40 @@ def read(fname):
 def read_inc_version(fname):
 
 	"""Read the supplied include file and extract slurm version number
-	in the line #define SLURM_VERSION_NUMBER 0x020500 """
+	in the line #define SLURM_VERSION_NUMBER 0x020600 """
 
 	hex = ''
 	f = open(fname, "r")
 	for line in f:
 		if line.find("#define SLURM_VERSION_NUMBER") == 0:
 			hex = line.split(" ")[2].strip()
-			info("Build - Detected Slurm include file version - %s" % hex)
+			info("Build - Detected Slurm include file version - %s (%s)" % (hex, inc_vers2str(hex)))
 
 	return hex
+
+def inc_vers2str(hex_inc_version):
+
+	"""Return a slurm version number string decoded from the bit shifted components of the 
+           slurm version hex string supplied in slurm.h"""
+
+	a = int(hex_inc_version,16)
+	b = ( a >> 16 & 0xff, a >> 8 & 0xff, a & 0xff)
+	return '.'.join(map(str,b))
 
 def clean():
 
 	"""Cleanup build directory and temporary files"""
 
-	info("Clean - checking for objects to clean")
+	info("Clean - Checking for objects to clean")
 	if os.path.isdir("build/"):
-		info("Clean - removing pyslurm build temp directory ...")
+		info("Clean - Removing pyslurm build temp directory ...")
 		try:
 			shutil.rmtree("build/")
 		except:
-			fatal("Clean - failed to remove pyslurm build/ directory !") 
+			fatal("Clean - Failed to remove pyslurm build/ directory !") 
 			sys.exit(-1)
 
-	files = [ "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi" ]
+	files = [ "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi", "pyslurm/slurm_version.pxi" ]
 
 	for file in files:
 
@@ -116,16 +125,16 @@ def clean():
 
 			if os.path.isfile(file):
 				try:
-					info("Clean - removing %s temp file" % file)
+					info("Clean - Removing %s temp file" % file)
 					os.unlink(file)
 				except:
-					fatal("Clean - failed to remove %s temp file" % file)
+					fatal("Clean - Failed to remove %s temp file" % file)
 					sys.exit(-1)
 			else:
 				fatal("Clean - %s temp file not a file !" % file)
 				sys.exit(-1)
 
-	info("Clean - completed")
+	info("Clean - Completed")
 
 #
 # Main section
@@ -223,8 +232,11 @@ if args[1] == 'build':
 		info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
 		usage()
 
-	if read_inc_version("%s/slurm/slurm.h" % SLURM_INC)[:len(__slurm_hex_version__)] != __slurm_hex_version__:
-		fatal("Build - Incorrect slurm version detected, Pyslurm needs Slurm-2.5.x")
+	# Test for supported min and max Slurm versions 
+
+        SLURM_INC_VER = read_inc_version("%s/slurm/slurm.h" % SLURM_INC)
+	if (int(SLURM_INC_VER,16) < int(__min_slurm_hex_version__,16)) or (int(SLURM_INC_VER,16) > int(__max_slurm_hex_version__,16)):
+		fatal("Build - Incorrect slurm version detected, require Slurm-%s to slurm-%s" % (inc_vers2str(__min_slurm_hex_version__), inc_vers2str(__max_slurm_hex_version__)))
 		sys.exit(-1)
 
 	if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
@@ -233,6 +245,17 @@ if args[1] == 'build':
 		if not os.path.exists("%s/libslurm.so" % SLURM_LIB):
 			info("Build - Cannot locate the Slurm shared library in %s" % SLURM_LIB)
 			usage()
+
+	# Slurm version 
+
+	info("Build - Writing Slurm version to pyslurm/slurm_version.pxi")
+	try:
+		f = open("pyslurm/slurm_version.pxi", "w")
+		f.write("SLURM_VERSION_NUMBER = %s\n" % SLURM_INC_VER)
+		f.close()
+	except:
+		fatal("Build - Unable to write Slurm version to pyslurm/slurm_version.pxi")
+		sys.exit(-1)
 
 	# BlueGene Types
 
@@ -248,7 +271,7 @@ if args[1] == 'build':
 			f.write("DEF BGQ=%d\n" % BGQ)
 			f.close()
 		except:
-			fatal("Build - Unable to write Blue Gene type to pyslurm/bluegene.pxd")
+			fatal("Build - Unable to write Blue Gene type to pyslurm/bluegene.pxi")
 			sys.exit(-1)
 
 # Get the list of extensions
