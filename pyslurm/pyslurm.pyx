@@ -1521,7 +1521,10 @@ cdef class job:
 	def __cinit__(self):
 		self._job_ptr = NULL
 		self._lastUpdate = 0
-		self._ShowFlags = 0
+		# SHOW_DETAIL flag notably make slurm allocate and fill
+		# (job_resources_t *)job_resrcs structure member of
+		# slurm_job_info_t, with all resources details of the job.
+		self._ShowFlags = SHOW_DETAIL
 		self._JobDict = {}
 
 		self.get()
@@ -1766,8 +1769,10 @@ cdef class job:
 				Job_dict[u'altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
 
 				Job_dict[u'cpus_allocated'] = {}
-				if Job_dict[u'nodes']:
-					for node_name in Job_dict[u'nodes'].split(","):
+				if self._record.nodes is not NULL:
+					hl = hostlist()
+					hl.create(self._record.nodes)
+					for node_name in hl.get_list():
 						Job_dict[u'cpus_allocated'][node_name] = self.__cpus_allocated_on_node(node_name)
 
 				Jobs[job_id] = Job_dict
@@ -2572,6 +2577,35 @@ cdef class hostlist:
 
 	cpdef get(self):
 		return self.__get()
+
+	cpdef get_list(self):
+		u"""Get the list of hostnames composing the hostlist. For example
+		with a hostlist created with "tux[1-3]" -> [ 'tux1', tux2', 'tux3' ].
+
+		:returns: the list of hostnames in case of success or None on error.
+		:rtype: list
+		"""
+
+		cdef:
+			char *hostlist_s = NULL
+
+		host_list = None
+
+		if self.hl is not NULL:
+			# make a copy of self.hl since slurm.slurm_hostlist_shift() is
+			# destructive.
+			hostlist_s = slurm.slurm_hostlist_ranged_string_xmalloc(self.hl)
+			if hostlist_s is not NULL:
+				hl = slurm.slurm_hostlist_create(hostlist_s)
+				host_list = []
+				nb_hosts = slurm.slurm_hostlist_count(hl)
+				for host_id in range(nb_hosts):
+					host_list.append(slurm.slurm_hostlist_shift(hl))
+				slurm.xfree(hostlist_s)
+				slurm.slurm_hostlist_destroy(hl)
+
+		return host_list
+
 
 	cpdef __get(self):
 
