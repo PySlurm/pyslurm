@@ -20,8 +20,13 @@ def list_users(job_dict):
 
 if __name__ == "__main__":
 
-	pyslurmjob = pyslurm.job()
-	jobs = pyslurmjob.get()
+	try:
+		pyslurmjob = pyslurm.job()
+		jobs = pyslurmjob.get()
+	except ValueError as e:
+        	print 'Job query failed - %s' % (e)
+		sys.exit(1)
+
 	users = list_users(jobs)
 
 	delim =  "+-------------------------------------------+-----------+------------+---------------+-----------------+--------------+--------------+"

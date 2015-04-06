@@ -8,8 +8,9 @@ part_dict['Name'] = 'compute'
 part_dict['State'] = 'DOWN'
 part_dict['Reason'] = 'API test'
 
-a = pyslurm.slurm_update_partition(part_dict)
-if a == -1:
-	print "Failed %s" % pyslurm.slurm_strerror(pyslurm.slurm_get_errno())
+try:
+	a = pyslurm.slurm_update_partition(part_dict)
+except ValueError as e:
+        print 'Partition update failed - %s' % (e)
 else:
-	print "Successful !"
+	print "Partition update successful !"rint "Successful !"

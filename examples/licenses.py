@@ -25,19 +25,21 @@ if __name__ == "__main__":
 	import pyslurm
 	import time
 
-	licenses = pyslurm.licenses()
+	try:
+		licenses = pyslurm.licenses()
+		lic = licenses.get()
+		old = licenses.lastUpdate()
+		new = old
+		display(lic)
 
-        lic = licenses.get()
-        old = licenses.lastUpdate()
-	new = old
-        display(lic)
-
-        while 1:
-           time.sleep(1)
-           lic = licenses.get()
-           new = licenses.lastUpdate()
-           if new > old:
-              old  = new
-              print "*****************"
-              display(lic)
-              print "*****************"
+		while 1:
+			time.sleep(1)
+			lic = licenses.get()
+			new = licenses.lastUpdate()
+			if new > old:
+				old  = new
+				print "*****************"
+				display(lic)
+				print "*****************"
+	except ValueError as e:
+		print "License error : %s" % (e)

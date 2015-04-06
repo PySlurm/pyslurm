@@ -39,16 +39,18 @@ def display(block_dict):
 if __name__ == "__main__":
 
 	a = pyslurm.block()
-	a.load()
-	block_dict = a.get()
-
-	if len(block_dict) > 0:
-
-		display(block_dict)
-		print
-		print "Block IDs - %s" % a.ids()
-		print
-
+	try:
+		a.load()
+		block_dict = a.get()
+	except ValueError as e:
+		print 'Block query failed - %s' % (e)
 	else:
-		print "No Blocks found !"
+		if len(block_dict) > 0:
 
+			display(block_dict)
+			print
+			print "Block IDs - %s" % a.ids()
+			print
+
+		else:
+			print "No Blocks found !"

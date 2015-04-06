@@ -31,18 +31,21 @@ if __name__ == "__main__":
 
 	import pyslurm
 
-	Nodes = pyslurm.node()
-	node_dict = Nodes.get()
+	try:
 
-	if len(node_dict) > 0:
+		Nodes = pyslurm.node()
+		node_dict = Nodes.get()
 
-		display(node_dict)
+		if len(node_dict) > 0:
 
-		print
-		print "Node IDs - %s" % Nodes.ids()
+			display(node_dict)
 
-	else:
+			print
+			print "Node IDs - %s" % Nodes.ids()
+
+		else:
 	
-		print "No Nodes found !"
+			print "No Nodes found !"
 
-	
+        except ValueError as e:
+                print 'Error - %s' % (e)

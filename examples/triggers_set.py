@@ -56,10 +56,10 @@ trigDict = {
 		'program':   '/tmp/test.sh'
 	}
 
-a = pyslurm.trigger()
-rc = a.set(trigDict)
-if rc != 0:
-	rc = pyslurm.slurm_get_errno()
-	print "Unable to set trigger : %s" % pyslurm.slurm_strerror(rc)
+try:
+	a = pyslurm.trigger()
+	a.set(trigDict)
+except ValueError as e:
+        print 'Trigger set failed - %s' % (e)
 else:
-	print "Trigger (%s) set !" % rc
+	print "Trigger set !"

@@ -36,7 +36,10 @@ if __name__ == "__main__":
 	import pyslurm
 	import time
 
-	stats = pyslurm.statistics()
-        s = stats.get()
-        display(s)
+	try:
+		stats = pyslurm.statistics()
+		s = stats.get()
+		display(s)
+	except ValueError as e:
+		print 'Error - %s' % (e)
 

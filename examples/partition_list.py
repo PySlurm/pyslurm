@@ -33,18 +33,18 @@ if __name__ == "__main__":
 	import pyslurm
 	import time
 
-	a = pyslurm.partition()
-	part_dict = a.get()
-
-	if len(part_dict) > 0:
-
-		display(part_dict)
-
-		print
-		print "Partition IDs - %s" % a.ids()
-		print
+	try:
+		a = pyslurm.partition()
+		part_dict = a.get()
+	except ValueError as e:
+		print 'Partition error - %s' % (e)
 	else:
-	
-		print "No partitions found !"
+		if len(part_dict) > 0:
 
+			display(part_dict)
 
+			print
+			print "Partition IDs - %s" % a.ids()
+			print
+		else:
+			print "No partitions found !"

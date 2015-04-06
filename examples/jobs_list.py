@@ -40,29 +40,32 @@ def display(job_dict):
 
 if __name__ == "__main__":
 
-	a = pyslurm.job()
-	jobs = a.get()
+	try:
+		a = pyslurm.job()
+		jobs = a.get()
 
-	if len(jobs) > 0:
+		if len(jobs) > 0:
 
-		display(jobs)
+			display(jobs)
 
-		print
-		print "Number of Jobs - %s" % len(jobs)
-		print
+			print
+			print "Number of Jobs - %s" % len(jobs)
+			print
 
-		pending = a.find('job_state', 'PENDING')
-		running = a.find('job_state', 'RUNNING')
+			pending = a.find('job_state', 'PENDING')
+			running = a.find('job_state', 'RUNNING')
 
-		#print "%s" % a.find('state_reason', 'HOLD')
+			#print "%s" % a.find('state_reason', 'HOLD')
 
-		print "Number of pending jobs - %s" % len(pending)
-		print "Number of running jobs - %s" % len(running)
-		print
+			print "Number of pending jobs - %s" % len(pending)
+			print "Number of running jobs - %s" % len(running)
+			print
 		
-		print "JobIDs in Running state - %s" % running
-		print
-	else:
+			print "JobIDs in Running state - %s" % running
+			print
+		else:
 	
-		print "No jobs found !"
+			print "No jobs found !"
+	except ValueError as e:
+		print 'Partition update failed - %s' % (e)
 

@@ -28,15 +28,14 @@ def display(res_dict):
 
 if __name__ == "__main__":
 
-	a = pyslurm.reservation()
-	res_dict = a.get()
+	try:
+		a = pyslurm.reservation()
+		res_dict = a.get()
 
-	if len(res_dict) > 0:
-
-		display(res_dict)
-
-		print "Res IDs - %s" % a.ids()
-
-	else:
-		print "No reservations found !"
-
+		if len(res_dict) > 0:
+			display(res_dict)
+			print "Res IDs - %s" % a.ids()
+		else:
+			print "No reservations found !"
+	except ValueError as e:
+		print 'Error - %s' % (e)
