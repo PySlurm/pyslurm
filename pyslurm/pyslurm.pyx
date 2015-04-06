@@ -1766,8 +1766,9 @@ cdef class job:
 			errCode = slurm.slurm_load_jobs(self._job_ptr.last_update, &new_job_ptr, self._ShowFlags)
 			if errCode == 0:
 				slurm.slurm_free_job_info_msg(self._job_ptr)
-			elif errCode == 1900: # NO CHANGE IN DATA
-				return 1900
+			elif slurm.slurm_get_errno() == 1900:
+				errCode = 0
+				new_job_ptr = self._job_ptr
 		else:
 			last_time = <time_t>NULL
 			new_job_ptr = NULL
@@ -1779,8 +1780,6 @@ cdef class job:
 		else:
 			apiError = slurm.slurm_get_errno()
 			raise ValueError(slurm.slurm_strerror(apiError), apiError)
-
-		return errCode
 
 	def get(self):
 
@@ -2216,7 +2215,7 @@ cdef class node:
 			errCode = slurm.slurm_load_node(self._Node_ptr.last_update, &new_node_info_ptr, self._ShowFlags)
 			if errCode == 0:	# SLURM_SUCCESS
 				slurm.slurm_free_node_info_msg(self._Node_ptr)
-			elif slurm.slurm_get_errno() == 1900:	# SLURM_NO_CHANGE_IN_DATA = 1900
+			elif slurm.slurm_get_errno() == 1900:	# SLURM_NO_CHANGE_IN_DATA
 				errCode = 0
 				new_node_info_ptr = self._Node_ptr
 		else:
@@ -3109,8 +3108,7 @@ cdef class reservation:
 			errCode = slurm.slurm_load_reservations(self._Res_ptr.last_update, &new_reserve_info_ptr)
 			if errCode == 0: # SLURM_SUCCESS
 				slurm.slurm_free_reservation_info_msg(self._Res_ptr)
-			elif slurm.slurm_get_errno() == 1900:
-				# SLURM_NO_CHANGE_IN_DATA (1900)
+			elif slurm.slurm_get_errno() == 1900:	# SLURM_NO_CHANGE_IN_DATA
 				errCode = 0
 				new_reserve_info_ptr = self._Res_ptr
 		else:
