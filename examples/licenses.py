@@ -29,6 +29,7 @@ if __name__ == "__main__":
 		licenses = pyslurm.licenses()
 		lic = licenses.get()
 		old = licenses.lastUpdate()
+
 		new = old
 		display(lic)
 
