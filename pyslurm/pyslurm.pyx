@@ -4676,7 +4676,7 @@ cdef class licenses:
 
 		self.__load()
 
-	cpdef int __load(self):
+	cpdef int __load(self) except? -1:
 
 		u"""Load slurm controller licenses information.
 		"""
@@ -4684,23 +4684,28 @@ cdef class licenses:
 		cdef:
 			slurm.license_info_msg_t *_new_msg = NULL
 			time_t last_time = <time_t>NULL
+			int apiError = 0
 			int errCode = 0
 
 		if self._msg is not NULL:
 			errCode = slurm.slurm_load_licenses(self._lastUpdate, &_new_msg, self._ShowFlags)
 			if errCode == 0:
 				slurm.slurm_free_license_info_msg(self._msg)
+			elif slurm.slurm_get_errno() == 1900:
+				errCode = 0
+				_new_msg = self._msg
 		else:
 			last_time = <time_t>NULL
+			_new_msg = NULL
 			errCode = slurm.slurm_load_licenses(last_time, &_new_msg, self._ShowFlags)
 
 		if errCode == 0:
 			if _new_msg.last_update > self._lastUpdate :
 				self._msg = _new_msg
 				self._lastUpdate = self._msg.last_update
-		_new_msg = NULL
-
-		return errCode
+		else:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
 	def lastUpdate(self):
 
