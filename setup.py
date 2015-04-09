@@ -158,7 +158,7 @@ if sys.version_info[:2] < (2, 6):
 
 compiler_dir = os.path.join(get_python_lib(prefix=''), 'src/pyslurm/')
 
-CyVersion_min = "0.21"
+CyVersion_min = "0.15"
 try:
 	from Cython.Distutils import build_ext
 	from Cython.Compiler.Version import version as CyVersion
