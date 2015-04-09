@@ -574,7 +574,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *mloaderimage
 		char *ramdiskimage
 		uint32_t req_switch
-		dynamic_plugin_data_t *select_jobinfo;
+		dynamic_plugin_data_t *select_jobinfo
 		char *std_err
 		char *std_in
 		char *std_out
@@ -1235,7 +1235,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t available
 		uint8_t remote
 
-	ctypedef slurm_license_info slurm_license_info_t;
+	ctypedef slurm_license_info slurm_license_info_t
 
 	ctypedef struct license_info_msg:
 		time_t last_update
