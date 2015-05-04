@@ -3270,17 +3270,24 @@ def slurm_create_reservation(dict reservation_dict={}):
 		int_value = reservation_dict[u'flags']
 		resv_msg.flags = int_value
 
-	resid = slurm.slurm_create_reservation(&resv_msg)
+	if reservation_dict[u'name'] is not '':
+		name = reservation_dict[u'name']
+		resv_msg.name = name
 
-	resID = ''
-	if resid is not NULL:
-		resID = resid
-		free(resid)
+	resid = slurm.slurm_create_reservation(&resv_msg)
 
 	if free_users == 1:
 		slurm.xfree(resv_msg.users)
 	if free_accounts == 1:
 		slurm.xfree(resv_msg.accounts)
+
+	resID = ''
+	if resid is not NULL:
+		resID = resid
+		free(resid)
+	else:
+		apiError = slurm.slurm_get_errno()
+		raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
 	return u"%s" % resID
 
