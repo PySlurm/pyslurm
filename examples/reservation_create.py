@@ -16,6 +16,7 @@ res_dict["node_cnt"] = 1
 res_dict["users"] = "root"
 res_dict["start_time"] = start_epoch
 res_dict["duration"] = 600
+res_dict["name"] = "res_test"
 
 try:
 	resid = a.create(res_dict)
