@@ -4021,6 +4021,152 @@ cdef class front_end:
 		self._FrontEndDict = FENode
 
 #
+# QOS Class
+#
+
+cdef class qos:
+
+	u"""Class to access/update slurm qos information.
+	"""
+
+	cdef:
+		void *dbconn
+		dict _QOSDict
+		slurm.List _QOSList
+
+	def __cinit__(self):
+		self.dbconn = <void *>NULL
+		self._QOSDict = {}
+
+	def __dealloc__(self):
+		self.__destroy()
+
+	cpdef __destroy(self):
+
+		u"""Free the memory allocated by load QOS method.
+		"""
+
+		self._QOSDict = {}
+
+	def load(self):
+
+		u"""Load slurm front end node information.
+		"""
+
+		self.__load()
+
+	cpdef int __load(self) except? -1:
+
+		u"""Load slurm QOS list.
+		"""
+
+		cdef slurm.slurmdb_qos_cond_t *new_qos_cond = NULL
+		cdef int apiError = 0
+		cdef void* dbconn = slurm.slurmdb_connection_get()
+		cdef slurm.List QOSList = slurm.slurmdb_qos_get(dbconn, new_qos_cond)
+
+		if QOSList is NULL:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
+		else:
+			self._QOSList = QOSList
+
+		slurm.slurmdb_connection_close(&dbconn)
+
+		return 0
+
+	def lastUpdate(self):
+
+		u"""Return last time (sepoch seconds) the node data was updated.
+
+		:returns: epoch seconds
+		:rtype: `integer`
+		"""
+
+		return self._lastUpdate
+
+	def ids(self):
+
+		u"""Return the node IDs from retrieved data.
+
+		:returns: Dictionary of node IDs
+		:rtype: `dict`
+		"""
+
+		return self._QOSDict.keys()
+
+	def get(self):
+
+		u"""Get slurm front end node information.
+
+		:returns: Dictionary whose key is the Topology ID
+		:rtype: `dict`
+		"""
+
+		self.__load()
+		self.__get()
+
+		return self._QOSDict
+
+	cpdef __get(self):
+
+		cdef:
+			slurm.List qos_list = NULL
+			slurm.ListIterator iters = NULL
+			int i = 0
+			int listNum = 0
+			dict Q_dict = {}
+
+		if self._QOSList is not NULL:
+
+			listNum = slurm.slurm_list_count(self._QOSList)
+			iters = slurm.slurm_list_iterator_create(self._QOSList)
+
+			for i from 0 <= i < listNum:
+				qos = <slurm.slurmdb_qos_rec_t *>slurm.slurm_list_next(iters)
+				name = qos.name
+
+				# QOS infos
+				QOS_info = {}
+
+				if name is not NULL:
+					QOS_info[u'description'] = slurm.stringOrNone(qos.description, '')
+					QOS_info[u'flags'] = qos.flags
+					QOS_info[u'grace_time'] = qos.grace_time
+					QOS_info[u'grp_cpu_mins'] = qos.grp_cpu_mins
+					QOS_info[u'grp_cpu_run_mins'] = qos.grp_cpu_run_mins
+					QOS_info[u'grp_cpus'] = qos.grp_cpus
+					QOS_info[u'grp_jobs'] = qos.grp_jobs
+					QOS_info[u'grp_mem'] = qos.grp_mem
+					QOS_info[u'grp_nodes'] = qos.grp_nodes
+					QOS_info[u'grp_submit_jobs'] = qos.grp_submit_jobs
+					QOS_info[u'grp_wall'] = qos.grp_wall
+					QOS_info[u'max_cpu_mins_pj'] = qos.max_cpu_mins_pj
+					QOS_info[u'max_cpu_mins_pj'] = qos.max_cpu_mins_pj
+					QOS_info[u'max_cpu_run_mins_pu'] = qos.max_cpu_run_mins_pu
+					QOS_info[u'max_cpus_pj'] = qos.max_cpus_pj
+					QOS_info[u'max_cpus_pu'] = qos.max_cpus_pu
+					QOS_info[u'max_jobs_pu'] = qos.max_jobs_pu
+					QOS_info[u'max_nodes_pj'] = qos.max_nodes_pj
+					QOS_info[u'max_nodes_pu'] = qos.max_nodes_pu
+					QOS_info[u'max_submit_jobs_pu'] = qos.max_submit_jobs_pu
+					QOS_info[u'max_wall_pj'] = qos.max_wall_pj
+					#QOS_info[u'*preempt_bitstr'] =
+					#QOS_info[u'preempt_list'] = qos.preempt_list
+					QOS_info[u'preempt_mode'] = get_preempt_mode(qos.preempt_mode)
+					QOS_info[u'priority'] = qos.priority
+					QOS_info[u'usage_factor'] = qos.usage_factor
+					QOS_info[u'usage_thres'] = qos.usage_thres
+
+				if name is not NULL:
+					Q_dict[name] = QOS_info
+
+			slurm.slurm_list_iterator_destroy(iters)
+			slurm.slurm_list_destroy(self._QOSList)
+
+		self._QOSDict = Q_dict
+
+#
 # Helper functions to convert numerical States
 #
 

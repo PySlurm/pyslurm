@@ -1566,3 +1566,67 @@ cdef extern from 'slurm/slurm.h' nogil:
 	#
 	# End
 	#
+
+#
+# Main Slurmdb API
+#
+
+cdef extern from 'slurm/slurmdb.h' nogil:
+	ctypedef struct slurmdb_qos_rec:
+		char *description
+		uint32_t id
+		uint32_t flags
+		uint32_t grace_time
+		uint64_t grp_cpu_mins
+		uint64_t grp_cpu_run_mins
+		uint32_t grp_cpus
+		uint32_t grp_jobs
+		uint32_t grp_mem
+		uint32_t grp_nodes
+		uint32_t grp_submit_jobs
+		uint32_t grp_wall
+		uint64_t max_cpu_mins_pj
+		uint64_t max_cpu_run_mins_pu
+		uint32_t max_cpus_pj
+		uint32_t max_cpus_pu
+		uint32_t max_jobs_pu
+		uint32_t max_nodes_pj
+		uint32_t max_nodes_pu
+		uint32_t max_submit_jobs_pu
+		uint32_t max_wall_pj
+		char *name
+		bitstr_t *preempt_bitstr
+		List preempt_list
+		uint16_t preempt_mode
+		uint32_t priority
+		void *usage # assoc_mgr_qos_usage_t
+		double usage_factor
+		double usage_thres
+
+	ctypedef slurmdb_qos_rec slurmdb_qos_rec_t
+
+	ctypedef struct slurmdb_qos_cond:
+		List description_list;
+		List id_list;
+		List name_list;
+		uint16_t preempt_mode;
+		uint16_t with_deleted;
+
+	ctypedef slurmdb_qos_cond slurmdb_qos_cond_t
+
+	#
+	# Accounting Storage
+	#
+
+	cdef extern void *slurmdb_connection_get ()
+	cdef extern int slurmdb_connection_close (void **db_conn)
+	cdef extern List slurmdb_config_get (void *db_conn)
+
+	#
+	# QOS
+	#
+
+	cdef extern int slurmdb_qos_add(void *db_conn, uint32_t uid, List qos_list)
+	cdef extern List slurmdb_qos_get(void *db_conn, slurmdb_qos_cond_t *qos_cond)
+	cdef extern List slurmdb_qos_modify(void *db_conn, slurmdb_qos_cond_t *qos_cond, slurmdb_qos_rec_t *qos)
+	cdef extern List slurmdb_qos_remove(void *db_conn, slurmdb_qos_cond_t *qos_cond)
