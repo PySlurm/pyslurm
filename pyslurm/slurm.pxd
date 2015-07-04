@@ -1606,11 +1606,11 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 	ctypedef slurmdb_qos_rec slurmdb_qos_rec_t
 
 	ctypedef struct slurmdb_qos_cond:
-		List description_list;
-		List id_list;
-		List name_list;
-		uint16_t preempt_mode;
-		uint16_t with_deleted;
+		List description_list
+		List id_list
+		List name_list
+		uint16_t preempt_mode
+		uint16_t with_deleted
 
 	ctypedef slurmdb_qos_cond slurmdb_qos_cond_t
 
