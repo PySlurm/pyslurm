@@ -17,7 +17,7 @@ Prerequistes
 This version has been tested with :
 
 	* Slurm 14.11.5-14.11.7, Cython 0.15.1 and Python 2.6.6
-	* Slurm 14.11.5-14.11.7, Cython 0.22.0 and Python 2.7.4
+	* Slurm 14.11.5-14.11.8, Cython 0.22.1 and Python 2.7.4
 
 * [Slurm] http://www.schedmd.com
 * [Python] http://www.python.org
