@@ -16,9 +16,8 @@ def controller_up(controller=1):
 if __name__ == "__main__":
 
 	print "\n"
-	print "PySLURM\t%s" % (pyslurm.version())
-	print "SLURM\t%s-%s-%s\n" % (pyslurm.slurm_version())
-	print "SLURM API\t%s-%s-%s\n" % (pyslurm.slurm_api_version())
+	print "PySLURM   : %s" % (pyslurm.version())
+	print "SLURM API : %s-%s-%s\n" % (pyslurm.slurm_api_version())
 
 	host = socket.gethostname()
 	print "Checking host.....%s\n" % host

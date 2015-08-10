@@ -21,6 +21,10 @@ def display(node_dict):
 						print "\t%-17s : %s" % (part_key, ddate)
 				elif ('reason_uid' in part_key and value['reason'] is None):
 					print "\t%-17s :" % part_key
+				elif ('cpu_load' in part_key):
+					print "\t%-17s : %3.2f" % (part_key, (float(value['cpu_load'])/100))
+				elif (value[part_key] == pyslurm.NO_VAL):
+					print "\t%-17s : N/A" % (part_key)
 				else: 
 					print "\t%-17s : %s" % (part_key, value[part_key])
 

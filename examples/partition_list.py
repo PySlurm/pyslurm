@@ -19,9 +19,9 @@ def display(part_dict):
 					else:
 						valStr = value[part_key]
 
-				elif part_key in [ 'max_nodes', 'max_time']:
+				elif part_key in [ 'max_nodes', 'max_time', 'max_cpus_per_node']:
 
-					if value[part_key] == 0xffffffff:
+					if value[part_key] == pyslurm.INFINITE:
 						valStr = "Unlimited"
 
 				print "\t%-20s : %s" % (part_key, valStr)
