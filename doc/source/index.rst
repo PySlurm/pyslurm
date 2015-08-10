@@ -10,7 +10,7 @@ PySlurm: Slurm Interface to python
 :Date: |today|
 :Version: |version|
 
-This module provides a low-level wrapper around the Slurm C-API using Cython.
+This module provides a low-level Python wrapper around the Slurm C-API using Cython.
 
 Contents
 ========
@@ -19,43 +19,76 @@ Contents
    :maxdepth: 2
    :numbered:
 
+Block Class
+***********
+
 .. autoclass:: pyslurm.block
    :members:
+
+Config Class
+************
 
 .. autoclass:: pyslurm.config
    :members:
 
+FrontEnd Class
+**************
+
 .. autoclass:: pyslurm.front_end
    :members:
+
+HostList Class
+**************
 
 .. autoclass:: pyslurm.hostlist
    :members:
 
+Job Class
+*********
+
 .. autoclass:: pyslurm.job
    :members:
+
+JobStep Class
+*************
 
 .. autoclass:: pyslurm.jobstep
    :members:
 
+Node Class
+**********
+
 .. autoclass:: pyslurm.node
    :members:
+
+Partition Class
+***************
 
 .. autoclass:: pyslurm.partition
    :members:
 
+Reservation Class
+*****************
+
 .. autoclass:: pyslurm.reservation
    :members:
+
+Statistics Class
+****************
 
 .. autoclass:: pyslurm.statistics
    :members:
 
+Topology Class
+**************
+
 .. autoclass:: pyslurm.topology
    :members:
 
-.. autoclass:: pyslurm.trigger
-   :members:
+Trigger Class
+*************
 
-.. automodule:: pyslurm.pyslurm
+.. autoclass:: pyslurm.trigger
    :members:
 
 Indices and tables

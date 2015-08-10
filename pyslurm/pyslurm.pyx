@@ -60,6 +60,29 @@ cdef inline SLURM_VERSION_MICRO(a): return (a & 0xff)
 cdef inline SLURM_VERSION_NUM(a):   return (((SLURM_VERSION_MAJOR(a)) << 16) + ((SLURM_VERSION_MINOR(a)) << 8) + (SLURM_VERSION_MICRO(a)))
 
 #
+# SLURM_ID_HASH
+# Description:
+#  Creates a hash of a Slurm JOBID and STEPID
+#  The JOB STEP ID is multiplied by 10,000,000,000
+#  to move it out of the range of the JOB ID.
+#  This allows viewers to easily read the JOB ID and JOB STEP ID
+#  merely by looking at the numbers.  The JOB STEP ID should be
+#  separated from the JOB ID by some number of zeros in most cases.
+#  Example:
+#   JOB ID = 123
+#   JOB STEP ID = 456
+#   ID_HASH = 4560000000123
+#
+# IN  _jobid -- SLURM's JOB ID (uint32_t)
+# IN  _stepid -- SLURM's JOB STEP ID (uint32_t)
+# RET id_hash -- (uint64_t)
+#
+
+cdef inline SLURM_ID_HASH(_jobid, _stepid): return <uint64_t>(<uint64_t>_stepid * SLURM_ID_HASH_NUM + _jobid)
+cdef inline SLURM_ID_HASH_JOB_ID(hash_id): return <uint32_t>(hash_id % SLURM_ID_HASH_NUM)
+cdef inline SLURM_ID_HASH_STEP_ID(hash_id): return <uint32_t>(hash_id / SLURM_ID_HASH_NUM)
+
+#
 # Misc helper inline functions
 #
 
@@ -78,6 +101,7 @@ cdef inline IS_JOB_STARTED(int _X): return ((_X & JOB_STATE_BASE) >  JOB_PENDING
 cdef inline IS_JOB_FINISHED(int _X): return ((_X & JOB_STATE_BASE) >  JOB_SUSPENDED)
 cdef inline IS_JOB_COMPLETED(int _X): return (IS_JOB_FINISHED(_X) and ((_X & JOB_COMPLETING) == 0))
 cdef inline IS_JOB_RESIZING(int _X): return (_X & JOB_RESIZING)
+cdef inline IS_JOB_REQUEUED(int _X): return (_X & JOB_REQUEUE)
 
 cdef inline IS_NODE_UNKNOWN(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_UNKNOWN)
 cdef inline IS_NODE_DOWN(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_DOWN)
@@ -87,6 +111,7 @@ cdef inline IS_NODE_ERROR(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_
 cdef inline IS_NODE_MIXED(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_MIXED)
 cdef inline IS_NODE_FUTURE(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_FUTURE)
 
+cdef inline IS_NODE_CLOUD(int _X): return (_X & NODE_STATE_CLOUD)
 cdef inline IS_NODE_DRAIN(int _X): return (_X & NODE_STATE_DRAIN)
 cdef inline IS_NODE_DRAINING(int _X): return ((_X & NODE_STATE_DRAIN) or (IS_NODE_ALLOCATED(_X) or IS_NODE_ERROR(_X) or IS_NODE_MIXED(_X)))
 cdef inline IS_NODE_DRAINED(int _X): return (IS_NODE_DRAIN(_X) and IS_NODE_DRAINING(_X) != 0)
@@ -378,6 +403,7 @@ cdef class config:
 
 			self.__lastUpdate = self.__Config_ptr.last_update
 
+			Ctl_dict[u'accounting_storage_tres'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_tres, '')
 			Ctl_dict[u'accounting_storage_enforce'] = self.__Config_ptr.accounting_storage_enforce
 			Ctl_dict[u'accounting_storage_backup_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_backup_host, '')
 			Ctl_dict[u'accounting_storage_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_host, '')
@@ -397,6 +423,7 @@ cdef class config:
 			Ctl_dict[u'backup_addr'] = slurm.stringOrNone(self.__Config_ptr.backup_addr, '')
 			Ctl_dict[u'backup_controller'] = slurm.stringOrNone(self.__Config_ptr.backup_controller, '')
 			Ctl_dict[u'batch_start_timeout'] = self.__Config_ptr.batch_start_timeout
+			Ctl_dict[u'bb_type'] = slurm.stringOrNone(self.__Config_ptr.bb_type, '')
 			Ctl_dict[u'boot_time'] = self.__Config_ptr.boot_time
 			Ctl_dict[u'checkpoint_type'] = slurm.stringOrNone(self.__Config_ptr.checkpoint_type, '')
 			Ctl_dict[u'chos_loc'] = slurm.stringOrNone(self.__Config_ptr.chos_loc, '')
@@ -406,11 +433,12 @@ cdef class config:
 			Ctl_dict[u'control_addr'] = slurm.stringOrNone(self.__Config_ptr.control_addr, '')
 			Ctl_dict[u'control_machine'] = slurm.stringOrNone(self.__Config_ptr.control_machine, '')
 			Ctl_dict[u'cpu_freq_def'] = self.__Config_ptr.cpu_freq_def
+			Ctl_dict[u'cpu_freq_govs'] = self.__Config_ptr.cpu_freq_govs
 			Ctl_dict[u'crypto_type'] = slurm.stringOrNone(self.__Config_ptr.crypto_type, '')
 			Ctl_dict[u'debug_flags'] = self.__Config_ptr.debug_flags
 			Ctl_dict[u'def_mem_per_cpu'] = self.__Config_ptr.def_mem_per_cpu
 			Ctl_dict[u'disable_root_jobs'] = bool(self.__Config_ptr.disable_root_jobs)
-			Ctl_dict[u'dynalloc_port'] = bool(self.__Config_ptr.dynalloc_port)
+			Ctl_dict[u'eio_timeout'] = self.__Config_ptr.eio_timeout
 			Ctl_dict[u'enforce_part_limits'] = bool(self.__Config_ptr.enforce_part_limits)
 			Ctl_dict[u'epilog'] = slurm.stringOrNone(self.__Config_ptr.epilog, '')
 			Ctl_dict[u'epilog_msg_time'] = self.__Config_ptr.epilog_msg_time
@@ -446,6 +474,7 @@ cdef class config:
 			Ctl_dict[u'keep_alive_time'] = self.__Config_ptr.keep_alive_time
 			Ctl_dict[u'kill_on_bad_exit'] = bool(self.__Config_ptr.kill_on_bad_exit)
 			Ctl_dict[u'kill_wait'] = self.__Config_ptr.kill_wait
+			Ctl_dict[u'launch_params'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
 			Ctl_dict[u'launch_type'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
 			Ctl_dict[u'licenses'] = __get_licenses(self.__Config_ptr.licenses)
 			Ctl_dict[u'licenses_used'] = __get_licenses(self.__Config_ptr.licenses_used)
@@ -457,15 +486,19 @@ cdef class config:
 			Ctl_dict[u'max_mem_per_cpu'] = self.__Config_ptr.max_mem_per_cpu
 			Ctl_dict[u'max_step_cnt'] = self.__Config_ptr.max_step_cnt
 			Ctl_dict[u'max_tasks_per_node'] = self.__Config_ptr.max_tasks_per_node
+			Ctl_dict[u'mem_limit_enforce'] = self.__Config_ptr.mem_limit_enforce
 			Ctl_dict[u'min_job_age'] = self.__Config_ptr.min_job_age
 			Ctl_dict[u'mpi_default'] = slurm.stringOrNone(self.__Config_ptr.mpi_default, '')
 			Ctl_dict[u'mpi_params'] = slurm.stringOrNone(self.__Config_ptr.mpi_params, '')
+			Ctl_dict[u'msg_aggr_params'] = slurm.stringOrNone(self.__Config_ptr.msg_aggr_params, '')
 			Ctl_dict[u'msg_timeout'] = self.__Config_ptr.msg_timeout
 			Ctl_dict[u'next_job_id'] = self.__Config_ptr.next_job_id
 			Ctl_dict[u'node_prefix']  = slurm.stringOrNone(self.__Config_ptr.node_prefix, '')
 			Ctl_dict[u'over_time_limit'] = self.__Config_ptr.over_time_limit
 			Ctl_dict[u'plugindir'] = slurm.stringOrNone(self.__Config_ptr.plugindir, '')
 			Ctl_dict[u'plugstack'] = slurm.stringOrNone(self.__Config_ptr.plugstack, '')
+			Ctl_dict[u'power_parameters'] = slurm.stringOrNone(self.__Config_ptr.power_parameters, '')
+			Ctl_dict[u'power_plugin'] = slurm.stringOrNone(self.__Config_ptr.power_plugin, '')
 			Ctl_dict[u'preempt_mode'] = get_preempt_mode(self.__Config_ptr.preempt_mode)
 			Ctl_dict[u'preempt_type'] = slurm.stringOrNone(self.__Config_ptr.preempt_type, '')
 			Ctl_dict[u'priority_decay_hl'] = self.__Config_ptr.priority_decay_hl
@@ -484,6 +517,7 @@ cdef class config:
 			Ctl_dict[u'private_data'] = self.__Config_ptr.private_data
 			Ctl_dict[u'proctrack_type'] = slurm.stringOrNone(self.__Config_ptr.proctrack_type, '')
 			Ctl_dict[u'prolog'] = slurm.stringOrNone(self.__Config_ptr.prolog, '')
+			Ctl_dict[u'prolog_epilog_timeout'] = self.__Config_ptr.prolog_epilog_timeout
 			Ctl_dict[u'prolog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.prolog_slurmctld, '')
 			Ctl_dict[u'propagate_prio_process'] = self.__Config_ptr.propagate_prio_process
 			Ctl_dict[u'prolog_flags'] = self.__Config_ptr.prolog_flags
@@ -544,6 +578,7 @@ cdef class config:
 			Ctl_dict[u'task_plugin_param'] = self.__Config_ptr.task_plugin_param
 			Ctl_dict[u'task_prolog'] = slurm.stringOrNone(self.__Config_ptr.task_prolog, '')
 			Ctl_dict[u'tmp_fs'] = slurm.stringOrNone(self.__Config_ptr.tmp_fs, '')
+			Ctl_dict[u'topology_param'] = slurm.stringOrNone(self.__Config_ptr.topology_param, '')
 			Ctl_dict[u'topology_plugin'] = slurm.stringOrNone(self.__Config_ptr.topology_plugin, '')
 			Ctl_dict[u'track_wckey'] = self.__Config_ptr.track_wckey
 			Ctl_dict[u'tree_width'] = self.__Config_ptr.tree_width
@@ -804,6 +839,7 @@ cdef class partition:
 				Part_dict[u'preempt_mode'] = slurm.slurm_preempt_mode_string(self._record.preempt_mode)
 
 				Part_dict[u'priority'] = self._record.priority
+				Part_dict[u'qos_char'] = slurm.stringOrNone(self._record.qos_char, '')
 				Part_dict[u'state_up'] = get_partition_state(self._record.state_up)
 				Part_dict[u'total_cpus'] = self._record.total_cpus
 				Part_dict[u'total_nodes'] = self._record.total_nodes
@@ -1830,13 +1866,18 @@ cdef class job:
 				Job_dict[u'batch_flag'] = self._job_ptr.job_array[i].batch_flag
 				Job_dict[u'batch_host'] = slurm.stringOrNone(self._job_ptr.job_array[i].batch_host, '')
 				Job_dict[u'batch_script'] = slurm.stringOrNone(self._job_ptr.job_array[i].batch_script, '')
+				Job_dict[u'bitflags'] = self._job_ptr.job_array[i].bitflags
 				Job_dict[u'boards_per_node'] = self._job_ptr.job_array[i].boards_per_node
+				Job_dict[u'burst_buffer'] = slurm.stringOrNone(self._job_ptr.job_array[i].burst_buffer, '')
 				Job_dict[u'command'] = slurm.stringOrNone(self._job_ptr.job_array[i].command, '')
 				Job_dict[u'comment'] = slurm.stringOrNone(self._job_ptr.job_array[i].comment, '')
 				Job_dict[u'contiguous'] = bool(self._job_ptr.job_array[i].contiguous)
 				Job_dict[u'core_spec'] = self._job_ptr.job_array[i].core_spec
 				Job_dict[u'cores_per_socket'] = self._job_ptr.job_array[i].cores_per_socket
 				Job_dict[u'cpus_per_task'] = self._job_ptr.job_array[i].cpus_per_task
+				Job_dict[u'cpu_freq_min'] = self._job_ptr.job_array[i].cpu_freq_min
+				Job_dict[u'cpu_freq_max'] = self._job_ptr.job_array[i].cpu_freq_max
+				Job_dict[u'cpu_freq_gov'] = self._job_ptr.job_array[i].cpu_freq_gov
 				Job_dict[u'dependency'] = slurm.stringOrNone(self._job_ptr.job_array[i].dependency, '')
 				Job_dict[u'derived_ec'] = self._job_ptr.job_array[i].derived_ec
 				Job_dict[u'eligible_time'] = self._job_ptr.job_array[i].eligible_time
@@ -1872,6 +1913,7 @@ cdef class job:
 				Job_dict[u'pn_min_memory'] = self._job_ptr.job_array[i].pn_min_memory
 				Job_dict[u'pn_min_cpus'] = self._job_ptr.job_array[i].pn_min_cpus
 				Job_dict[u'pn_min_tmp_disk'] = self._job_ptr.job_array[i].pn_min_tmp_disk
+				Job_dict[u'power_flags'] = self._job_ptr.job_array[i].power_flags
 				Job_dict[u'preempt_time'] = self._job_ptr.job_array[i].preempt_time
 				Job_dict[u'pre_sus_time'] = self._job_ptr.job_array[i].pre_sus_time
 				Job_dict[u'priority'] = self._job_ptr.job_array[i].priority
@@ -1889,6 +1931,7 @@ cdef class job:
 				Job_dict[u'sockets_per_node'] = self._job_ptr.job_array[i].sockets_per_node
 				Job_dict[u'shared'] = self._job_ptr.job_array[i].shared
 				Job_dict[u'show_flags'] = self._job_ptr.job_array[i].show_flags
+				Job_dict[u'sicp_mode'] = self._job_ptr.job_array[i].sicp_mode
 				Job_dict[u'start_time'] = self._job_ptr.job_array[i].start_time
 				Job_dict[u'state_desc'] = slurm.stringOrNone(self._job_ptr.job_array[i].state_desc, '')
 				#Job_dict[u'state_reason'] = get_job_state_reason(self._job_ptr.job_array[i].state_reason)
@@ -1901,6 +1944,7 @@ cdef class job:
 				Job_dict[u'time_limit'] = self._job_ptr.job_array[i].time_limit
 				Job_dict[u'time_min'] = self._job_ptr.job_array[i].time_min
 				Job_dict[u'threads_per_core'] = self._job_ptr.job_array[i].threads_per_core
+				Job_dict[u'tres_alloc_str'] = slurm.stringOrNone(self._job_ptr.job_array[i].tres_alloc_str, '')
 				Job_dict[u'user_id'] = self._job_ptr.job_array[i].user_id
 				Job_dict[u'wait4switch'] = self._job_ptr.job_array[i].wait4switch
 				Job_dict[u'wckey'] = slurm.stringOrNone(self._job_ptr.job_array[i].wckey, '')
@@ -2275,6 +2319,7 @@ cdef class node:
 			int i, total_used, cpus_per_node, rc
 			uint16_t alloc_cpus, err_cpus
 			uint32_t tmp_disk, node_state, node_scaling = 0
+			uint32_t currentWatts = 0
 			time_t last_update
 
 			dict Hosts = {}, Host_dict
@@ -2305,7 +2350,7 @@ cdef class node:
 			Host_dict['cpus'] = self._Node_ptr.node_array[i].cpus
 			Host_dict['cpu_load'] = self._Node_ptr.node_array[i].cpu_load
 			Host_dict['cpu_spec_list'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
-			# ADD ENERGY STRUCTURE HERE
+
 			Host_dict['features'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
 			Host_dict['gres'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres, '')
 			Host_dict['gres_drain'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres_drain, '')
@@ -2316,6 +2361,7 @@ cdef class node:
 			Host_dict['node_hostname'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_hostname, '')
 			Host_dict['node_state'] = get_node_state(self._Node_ptr.node_array[i].node_state)
 			Host_dict['os'] = slurm.stringOrNone(self._Node_ptr.node_array[i].os, '')
+			Host_dict['owner'] = self._Node_ptr.node_array[i].owner
 			Host_dict['real_memory'] = self._Node_ptr.node_array[i].real_memory
 			Host_dict['reason'] = slurm.stringOrNone(self._Node_ptr.node_array[i].reason, '')
 			Host_dict['reason_time'] = self._Node_ptr.node_array[i].reason_time
@@ -2331,10 +2377,20 @@ cdef class node:
 
 			Host_dict['energy'] = {}
 			Host_dict['energy']['base_watts'] = self._Node_ptr.node_array[i].energy.base_watts
-			Host_dict['energy']['current_watts'] = self._Node_ptr.node_array[i].energy.current_watts
+
+			currentWatts = self._Node_ptr.node_array[i].energy.current_watts
+			if currentWatts == NO_VAL:
+				Host_dict['energy']['current_watts'] = 0
+			else:
+				Host_dict['energy']['current_watts'] = currentWatts
+
 			Host_dict['energy']['consumed_energy'] = self._Node_ptr.node_array[i].energy.consumed_energy
 			Host_dict['energy']['base_consumed_energy'] = self._Node_ptr.node_array[i].energy.base_consumed_energy
 			Host_dict['energy']['previous_consumed_energy'] = self._Node_ptr.node_array[i].energy.previous_consumed_energy
+
+			# Power Managment
+
+			Host_dict['power_mgmt'] = {}
 
 			#
 			# NEED TO DO MORE WORK HERE ! SUCH AS NODE STATES AND CLUSTER/BG DETECTION
@@ -3160,16 +3216,18 @@ cdef class reservation:
 
 				name = self._Res_ptr.reservation_array[i].name
 				Res_dict[u'accounts'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].accounts, ',')
+				Res_dict[u'burst_buffer'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].burst_buffer, ',')
+				Res_dict[u'core_cnt'] = self._Res_ptr.reservation_array[i].core_cnt
 				Res_dict[u'end_time'] = self._Res_ptr.reservation_array[i].end_time
 				Res_dict[u'features'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].features, ',')
-				#Res_dict[u'flags'] = get_res_state(self._Res_ptr.reservation_array[i].flags)
 				Res_dict[u'flags'] = slurm.slurm_reservation_flags_string(self._Res_ptr.reservation_array[i].flags)
 				Res_dict[u'licenses'] = __get_licenses(self._Res_ptr.reservation_array[i].licenses)
 				Res_dict[u'node_cnt'] = self._Res_ptr.reservation_array[i].node_cnt
-				Res_dict[u'core_cnt'] = self._Res_ptr.reservation_array[i].core_cnt
 				Res_dict[u'node_list'] = slurm.stringOrNone(self._Res_ptr.reservation_array[i].node_list, ',')
 				Res_dict[u'partition'] = slurm.stringOrNone(self._Res_ptr.reservation_array[i].partition, '')
 				Res_dict[u'start_time'] = self._Res_ptr.reservation_array[i].start_time
+				Res_dict[u'resv_watts'] = self._Res_ptr.reservation_array[i].resv_watts
+				Res_dict[u'tres_str'] = slurm.stringOrNone(self._Res_ptr.reservation_array[i].tres_str, '')
 				Res_dict[u'users'] = slurm.listOrNone(self._Res_ptr.reservation_array[i].users, ',')
 
 				Reservations[name] = Res_dict
@@ -3759,6 +3817,97 @@ cdef class topology:
 			slurm.slurm_print_topo_info_msg(slurm.stdout, self._topo_info_ptr, self._ShowFlags)
 
 #
+# PowerCapping
+#
+
+cdef class powercap:
+
+	u"""Class to access powercap information. 
+	"""
+
+	cdef:
+		slurm.powercap_info_msg_t *_msg
+		dict _pwrDict
+
+	def __cinit__(self):
+		self._msg = NULL
+		self._pwrDict = {}
+
+	def __dealloc__(self):
+		self.__destroy()
+
+	cpdef __destroy(self):
+
+		u"""Free the memory allocated by __load method. 
+		"""
+
+		if self._msg is not NULL:
+			slurm.slurm_free_powercap_info_msg(self._msg)
+
+	def load(self):
+
+		u"""Load powercap information.
+		"""
+
+		self.__load()
+
+	cpdef int __load(self) except? -1:
+		
+		u"""Load powercap information.
+		"""
+
+		cdef:
+			int apiError = 0
+			int errCode = 0
+
+		if self._msg is not NULL:
+			slurm.slurm_free_powercap_info_msg(self._msg)
+
+		errCode = slurm.slurm_load_powercap(&self._msg)
+		if errCode != 0:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
+
+		return errCode
+
+	def get(self):
+
+		u"""Get powercap information.
+
+		:returns: Dictionary of powercap information
+		:rtype: `dict`
+		"""
+
+		self.__load()
+		self.__get()
+
+		return self._pwrDict
+
+	cpdef __get(self):
+
+		cdef:
+			dict pwrDict = {}
+
+		if self._msg is not NULL:
+
+			pwrDict[u'power_cap'] = self._msg.power_cap
+			pwrDict[u'power_floor'] = self._msg.power_floor
+			pwrDict[u'power_change'] = self._msg.power_change
+			pwrDict[u'min_watts'] = self._msg.min_watts
+			pwrDict[u'cur_max_watts'] = self._msg.cur_max_watts
+			pwrDict[u'adj_max_watts'] = self._msg.adj_max_watts
+			pwrDict[u'max_watts'] = self._msg.max_watts
+
+		self._pwrDict = pwrDict
+
+	#
+	# slurm_update_powercap - issue RPC to update powercapping cap 
+	# IN powercap_msg - description of powercapping updates
+	# RET 0 on success, otherwise return -1 and set errno to indicate the error
+	#
+	#extern int slurm_update_powercap (update_powercap_msg_t * powercap_msg)
+
+#
 # Statistics 
 #
 
@@ -3880,7 +4029,7 @@ cdef class statistics:
 		#extern int slurm_reset_statistics (stats_info_request_msg_t *req)
 		"""
 
-		self._req.command_id = 1  # STAT_COMMAND_RESET
+		self._req.command_id = 1 # STAT_COMMAND_RESET
 
 		cdef int apiError = 0
 		cdef int errCode = slurm.slurm_reset_statistics(<slurm.stats_info_request_msg_t*>&self._req)
@@ -3980,7 +4129,7 @@ cdef class front_end:
 
 	def get(self):
 
-		u"""Get slurm front end node information.
+		u"""Get front end node information.
 
 		:returns: Dictionary whose key is the Topology ID
 		:rtype: `dict`
@@ -4220,7 +4369,7 @@ cdef inline dict __get_licenses(char *licenses):
 
 def get_connection_type(int inx):
 
-	u"""Returns a tuple that represents the slurm block connection type.
+	u"""Returns a string that represents the slurm block connection type.
 
 	:param int ResType: Slurm block connection type
 
@@ -4241,7 +4390,7 @@ def get_connection_type(int inx):
 
 def get_node_use(int inx):
 
-	u"""Returns a tuple that represents the block node mode.
+	u"""Returns a string that represents the block node mode.
 
 	:param int ResType: Slurm block node usage
 
@@ -4379,22 +4528,29 @@ cdef inline object __get_trigger_type(uint32_t TriggerType):
 
 def get_res_state(uint16_t inx):
 
-	u"""Returns a tuple that represents the state of the slurm reservation.
+	u"""Returns a string that represents the state of the slurm reservation.
 
 	:param int flags: Slurm reservation flags
 
-		- RESERVE_FLAG_MAINT         0x0001
-		- RESERVE_FLAG_NO_MAINT      0x0002
-		- RESERVE_FLAG_DAILY         0x0004
-		- RESERVE_FLAG_NO_DAILY      0x0008
-		- RESERVE_FLAG_WEEKLY        0x0010
-		- RESERVE_FLAG_NO_WEEKLY     0x0020
-		- RESERVE_FLAG_IGN_JOBS      0x0040
-		- RESERVE_FLAG_NO_IGN_JOB    0x0080
-		- RESERVE_FLAG_LIC_ONLY      0x0100
-		- RESERVE_FLAG_NO_LIC_ONLY   0x0200
-		- RESERVE_FLAG_OVERLAP       0x4000
-		- RESERVE_FLAG_SPEC_NODES    0x8000
+		- RESERVE_FLAG_MAINT            0x00000001
+		- RESERVE_FLAG_NO_MAINT         0x00000002
+		- RESERVE_FLAG_DAILY            0x00000004
+		- RESERVE_FLAG_NO_DAILY         0x00000008
+		- RESERVE_FLAG_WEEKLY           0x00000010
+		- RESERVE_FLAG_NO_WEEKLY        0x00000020
+		- RESERVE_FLAG_IGN_JOBS         0x00000040
+		- RESERVE_FLAG_NO_IGN_JOB       0x00000080
+		- RESERVE_FLAG_ANY_NODES        0x00000100
+		- RESERVE_FLAG_NO_ANY_NODES     0x00000200
+		- RESERVE_FLAG_STATIC           0x00000400
+		- RESERVE_FLAG_NO_STATIC        0x00000800
+		- RESERVE_FLAG_PART_NODES       0x00001000
+		- RESERVE_FLAG_NO_PART_NODES    0x00002000
+		- RESERVE_FLAG_OVERLAP          0x00004000
+		- RESERVE_FLAG_SPEC_NODES       0x00008000
+		- RESERVE_FLAG_FIRST_CORES      0x00010000
+		- RESERVE_FLAG_TIME_FLOAT       0x00020000
+		- RESERVE_FLAG_REPLACE          0x00040000
 
 	:returns: Reservation state string
 	:rtype: `string`
@@ -4408,27 +4564,56 @@ def get_res_state(uint16_t inx):
 def get_debug_flags(uint32_t inx):
 
 	u"""
-	Returns a tuple that represents the slurm debug flags.
+	Returns a string that represents the slurm debug flags.
 
 	:param int flags: Slurm debug flags
 
-		- DEBUG_FLAG_SELECT_TYPE    0x00000001
-		- DEBUG_FLAG_STEPS          0x00000002
-		- DEBUG_FLAG_TRIGGERS       0x00000004
-		- DEBUG_FLAG_CPU_BIND       0x00000008
-		- DEBUG_FLAG_WIKI           0x00000010
-		- DEBUG_FLAG_NO_CONF_HASH   0x00000020
-		- DEBUG_FLAG_GRES           0x00000040
-		- DEBUG_FLAG_BG_PICK        0x00000080
-		- DEBUG_FLAG_BG_WIRES       0x00000100
-		- DEBUG_FLAG_BG_ALGO        0x00000200
-		- DEBUG_FLAG_BG_ALGO_DEEP   0x00000400
-		- DEBUG_FLAG_PRIO           0x00000800
-		- DEBUG_FLAG_BACKFILL       0x00001000
-		- DEBUG_FLAG_GANG           0x00002000
-		- DEBUG_FLAG_RESERVATION    0x00004000
-		- DEBUG_FLAG_FRONT_END      0x00008000
-		- DEBUG_FLAG_NO_REALTIME    0x00010000
+		- DEBUG_FLAG_SELECT_TYPE   0x0000000000000001
+		- DEBUG_FLAG_STEPS         0x0000000000000002
+		- DEBUG_FLAG_TRIGGERS      0x0000000000000004
+		- DEBUG_FLAG_CPU_BIND      0x0000000000000008
+		- DEBUG_FLAG_WIKI          0x0000000000000010
+		- DEBUG_FLAG_NO_CONF_HASH  0x0000000000000020
+		- DEBUG_FLAG_GRES          0x0000000000000040
+		- DEBUG_FLAG_BG_PICK       0x0000000000000080
+		- DEBUG_FLAG_BG_WIRES      0x0000000000000100
+		- DEBUG_FLAG_BG_ALGO       0x0000000000000200
+		- DEBUG_FLAG_BG_ALGO_DEEP  0x0000000000000400
+		- DEBUG_FLAG_PRIO          0x0000000000000800
+		- DEBUG_FLAG_BACKFILL      0x0000000000001000
+		- DEBUG_FLAG_GANG          0x0000000000002000
+		- DEBUG_FLAG_RESERVATION   0x0000000000004000
+		- DEBUG_FLAG_FRONT_END     0x0000000000008000
+		- DEBUG_FLAG_NO_REALTIME   0x0000000000010000
+		- DEBUG_FLAG_SWITCH        0x0000000000020000
+		- DEBUG_FLAG_ENERGY        0x0000000000040000
+		- DEBUG_FLAG_EXT_SENSORS   0x0000000000080000
+		- DEBUG_FLAG_LICENSE       0x0000000000100000
+		- DEBUG_FLAG_PROFILE       0x0000000000200000
+		- DEBUG_FLAG_INFINIBAND    0x0000000000400000
+		- DEBUG_FLAG_FILESYSTEM    0x0000000000800000
+		- DEBUG_FLAG_JOB_CONT      0x0000000001000000
+		- DEBUG_FLAG_TASK          0x0000000002000000
+		- DEBUG_FLAG_PROTOCOL      0x0000000004000000
+		- DEBUG_FLAG_BACKFILL_MAP  0x0000000008000000
+		- DEBUG_FLAG_TRACE_JOBS    0x0000000010000000
+		- DEBUG_FLAG_ROUTE         0x0000000020000000
+		- DEBUG_FLAG_DB_ASSOC      0x0000000040000000
+		- DEBUG_FLAG_DB_EVENT      0x0000000080000000
+		- DEBUG_FLAG_DB_JOB        0x0000000100000000
+		- DEBUG_FLAG_DB_QOS        0x0000000200000000
+		- DEBUG_FLAG_DB_QUERY      0x0000000400000000
+		- DEBUG_FLAG_DB_RESV       0x0000000800000000
+		- DEBUG_FLAG_DB_RES        0x0000001000000000
+		- DEBUG_FLAG_DB_STEP       0x0000002000000000
+		- DEBUG_FLAG_DB_USAGE      0x0000004000000000
+		- DEBUG_FLAG_DB_WCKEY      0x0000008000000000
+		- DEBUG_FLAG_BURST_BUF     0x0000010000000000
+		- DEBUG_FLAG_CPU_FREQ      0x0000020000000000
+		- DEBUG_FLAG_POWER         0x0000040000000000
+		- DEBUG_FLAG_SICP          0x0000080000000000
+		- DEBUG_FLAG_DB_ARCHIVE    0x0000100000000000
+		- DEBUG_FLAG_DB_TRES       0x0000200000000000
 
 	:returns: Debug flag string
 	:rtype: `string`
@@ -4492,7 +4677,7 @@ cdef inline list __get_debug_flags(uint32_t flags):
 
 def get_node_state(uint16_t inx):
 
-	u"""Returns a tuple that represents the state of the slurm node.
+	u"""Returns a string that represents the state of the slurm node.
 
 	:param int inx: Slurm node state
 
@@ -4504,7 +4689,7 @@ def get_node_state(uint16_t inx):
 
 def get_rm_partition_state(int inx):
 
-	u"""Returns a tuple that represents the partition state.
+	u"""Returns a string that represents the partition state.
 
 	:param int inx: Slurm partition state
 
@@ -4536,7 +4721,7 @@ cdef inline object __get_rm_partition_state(int inx):
 
 def get_preempt_mode(uint16_t inx):
 
-	u"""Returns a tuple that represents the preempt mode.
+	u"""Returns a string that represents the preempt mode.
 
 	:param int inx: Slurm preempt mode
 
@@ -4585,7 +4770,7 @@ def get_partition_state(uint16_t inx):
 
 cdef inline object __get_partition_state(int inx, int extended=0):
 
-	u"""Returns a string that represents the state of the slurm partition.
+	u"""Returns a string that represents the state of the partition.
 
 	:param int inx: Slurm partition type
 	:param int extended:
@@ -4644,7 +4829,7 @@ cdef inline object __get_partition_state(int inx, int extended=0):
 
 def get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 
-	u"""Returns a tuple of the partition mode
+	u"""Returns a string represents the state of the partition mode.
 
 	:param int inx: Slurm partition mode
 
@@ -4690,6 +4875,16 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 	else:
 		mode[u'Shared'] = 1
 
+	if (flags & PART_FLAG_LLN):
+		mode[u'LLN'] = 1
+	else:
+		mode[u'LLN'] = 0
+
+	if (flags & PART_FLAG_EXCLUSIVE_USER):
+		mode[u'ExclusiveUser'] = 1
+	else:
+		mode[u'ExclusiveUser'] = 0
+
 	return mode
 
 def get_conn_type_string(uint16_t inx):
@@ -4731,7 +4926,8 @@ def get_job_state(uint16_t inx):
 		- JOB_TIMEOUT     6
 		- JOB_NODE_FAIL   7
 		- JOB_PREEMPTED   8
-		- JOB_END         9
+		- JOB_BOOT_FAIL   10
+		- JOB_END         11
 
 	:returns: Job state string
 	:rtype: `string`

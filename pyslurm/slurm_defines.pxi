@@ -1,5 +1,5 @@
 #
-# SLURM enums
+# Expose SLURM enums/defines to Python Space
 #
 
 JOB_PENDING = slurm.JOB_PENDING
@@ -51,7 +51,50 @@ WAIT_QOS_THRES = slurm.WAIT_QOS_THRES                       # required QOS thres
 WAIT_QOS_JOB_LIMIT = slurm.WAIT_QOS_JOB_LIMIT               # QOS job limit reached
 WAIT_QOS_RESOURCE_LIMIT = slurm.WAIT_QOS_RESOURCE_LIMIT     # QOS resource limit reached
 WAIT_QOS_TIME_LIMIT = slurm.WAIT_QOS_TIME_LIMIT             # QOS time limit reached
+WAIT_POWER_NOT_AVAIL = slurm.WAIT_POWER_NOT_AVAIL
+WAIT_POWER_RESERVED = slurm.WAIT_POWER_RESERVED
 WAIT_BLOCK_MAX_ERR = slurm.WAIT_BLOCK_MAX_ERR
+WAIT_BLOCK_D_ACTION = slurm.WAIT_BLOCK_D_ACTION                         # BLUEGENE Block is being freed, can't allow more jobs.
+WAIT_CLEANING = slurm.WAIT_CLEANING                                     # If a job is requeued and it is still cleaning up from the last run.
+WAIT_PROLOG = slurm.WAIT_PROLOG                                         # Prolog is running
+WAIT_QOS = slurm.WAIT_QOS                                               # QOS not allowed
+WAIT_ACCOUNT = slurm.WAIT_ACCOUNT                                       # Account not allowed
+WAIT_DEP_INVALID = slurm.WAIT_DEP_INVALID                               # Dependency condition invalid or never satisfied
+WAIT_QOS_GRP_CPU = slurm.WAIT_QOS_GRP_CPU                               # QOS GrpCpus exceeded
+WAIT_QOS_GRP_CPU_MIN = slurm.WAIT_QOS_GRP_CPU_MIN                       # QOS GrpCPUMins exceeded
+WAIT_QOS_GRP_CPU_RUN_MIN = slurm.WAIT_QOS_GRP_CPU_RUN_MIN               # QOS GrpCPURunMins exceeded
+WAIT_QOS_GRP_JOB = slurm.WAIT_QOS_GRP_JOB                               # QOS GrpJobs exceeded
+WAIT_QOS_GRP_MEMORY = slurm.WAIT_QOS_GRP_MEMORY                         # QOS GrpMemory exceeded
+WAIT_QOS_GRP_NODES = slurm.WAIT_QOS_GRP_NODES                           # QOS GrpNodes exceeded
+WAIT_QOS_GRP_SUB_JOB = slurm.WAIT_QOS_GRP_SUB_JOB                       # QOS GrpSubmitJobs exceeded
+WAIT_QOS_GRP_WALL = slurm.WAIT_QOS_GRP_WALL                             # QOS GrpWall exceeded
+WAIT_QOS_MAX_CPUS_PER_JOB = slurm.WAIT_QOS_MAX_CPUS_PER_JOB             # QOS MaxCpusPerJob exceeded
+WAIT_QOS_MAX_CPU_MINS_PER_JOB = slurm.WAIT_QOS_MAX_CPU_MINS_PER_JOB     # QOS MaxCpusMinsPerJob exceeded
+WAIT_QOS_MAX_NODE_PER_JOB = slurm.WAIT_QOS_MAX_NODE_PER_JOB             # QOS MaxNodesPerJob exceeded
+WAIT_QOS_MAX_WALL_PER_JOB = slurm.WAIT_QOS_MAX_WALL_PER_JOB             # QOS MaxWallDurationPerJob exceeded
+WAIT_QOS_MAX_CPU_PER_USER = slurm.WAIT_QOS_MAX_CPU_PER_USER             # QOS MaxCpusPerUser exceeded
+WAIT_QOS_MAX_JOB_PER_USER = slurm.WAIT_QOS_MAX_JOB_PER_USER             # QOS MaxJobsPerUser exceeded
+WAIT_QOS_MAX_NODE_PER_USER = slurm.WAIT_QOS_MAX_NODE_PER_USER           # QOS MaxNodesPerUser exceeded
+WAIT_QOS_MAX_SUB_JOB = slurm.WAIT_QOS_MAX_SUB_JOB                       # QOS MaxSubmitJobsPerUser exceeded
+WAIT_QOS_MIN_CPUS = slurm.WAIT_QOS_MIN_CPUS                             # QOS MinCPUsPerJob not reached
+WAIT_ASSOC_GRP_CPU = slurm.WAIT_ASSOC_GRP_CPU                           # ASSOC GrpCpus exceeded
+WAIT_ASSOC_GRP_CPU_MIN = slurm.WAIT_ASSOC_GRP_CPU_MIN                   # ASSOC GrpCPUMins exceeded
+WAIT_ASSOC_GRP_CPU_RUN_MIN = slurm.WAIT_ASSOC_GRP_CPU_RUN_MIN           # ASSOC GrpCPURunMins exceeded
+WAIT_ASSOC_GRP_JOB = slurm.WAIT_ASSOC_GRP_JOB                           # ASSOC GrpJobs exceeded
+WAIT_ASSOC_GRP_MEMORY = slurm.WAIT_ASSOC_GRP_MEMORY                     # ASSOC GrpMemory exceeded
+WAIT_ASSOC_GRP_NODES = slurm.WAIT_ASSOC_GRP_NODES                       # ASSOC GrpNodes exceeded
+WAIT_ASSOC_GRP_SUB_JOB = slurm.WAIT_ASSOC_GRP_SUB_JOB                   # ASSOC GrpSubmitJobs exceeded
+WAIT_ASSOC_GRP_WALL = slurm.WAIT_ASSOC_GRP_WALL                         # ASSOC GrpWall exceeded
+WAIT_ASSOC_MAX_JOBS = slurm.WAIT_ASSOC_MAX_JOBS                         # ASSOC MaxJobs exceeded
+WAIT_ASSOC_MAX_CPUS_PER_JOB = slurm.WAIT_ASSOC_MAX_CPUS_PER_JOB         # ASSOC MaxCpusPerJob exceeded
+WAIT_ASSOC_MAX_CPU_MINS_PER_JOB = slurm.WAIT_ASSOC_MAX_CPU_MINS_PER_JOB # ASSOC MaxCpusMinsPerJob exceeded
+WAIT_ASSOC_MAX_NODE_PER_JOB = slurm.WAIT_ASSOC_MAX_NODE_PER_JOB         # ASSOC MaxNodesPerJob exceeded
+WAIT_ASSOC_MAX_WALL_PER_JOB = slurm.WAIT_ASSOC_MAX_WALL_PER_JOB         # ASSOC MaxWallDurationPerJob exceeded
+WAIT_ASSOC_MAX_SUB_JOB = slurm.WAIT_ASSOC_MAX_SUB_JOB                   # ASSOC MaxSubmitJobsPerUser exceeded
+WAIT_MAX_REQUEUE = slurm.WAIT_MAX_REQUEUE                               # MAX_BATCH_REQUEUE reached
+WAIT_ARRAY_TASK_LIMIT = slurm.WAIT_ARRAY_TASK_LIMIT                     # job array running task limit
+WAIT_BURST_BUFFER_RESOURCE = slurm.WAIT_BURST_BUFFER_RESOURCE           # Burst buffer resources
+WAIT_BURST_BUFFER_STAGING = slurm.WAIT_BURST_BUFFER_STAGING             # Burst buffer file stage-in
 
 NODE_STATE_UNKNOWN = slurm.NODE_STATE_UNKNOWN
 NODE_STATE_DOWN = slurm.NODE_STATE_DOWN
@@ -114,18 +157,25 @@ SELECT_NAV_MODE = slurm.SELECT_NAV_MODE
 # SLURM defines
 #
 
-#SLURM_VERSION_NUMBER = slurm.SLURM_VERSION_NUMBER
-
 INFINITE = 0xffffffff
+INFINITE64 = 0xffffffffffffffff
 NO_VAL = 0xfffffffe
+NO_VAL64 = 0xfffffffffffffffe
+
+SLURM_BATCH_SCRIPT = 0xfffffffe
+SLURM_EXTERN_CONT = 0xffffffff
+
+DEFAULT_EIO_SHUTDOWN_WAIT = 60
+
+SLURM_ID_HASH_NUM = 10000000000
 
 MAX_TASKS_PER_NODE = 128
 SLURM_SSL_SIGNATURE_LENGTH = 128
 
-SLURM_BATCH_SCRIPT = 0xfffffffe
-
 SHOW_ALL = 0x0001
 SHOW_DETAIL = 0x0002
+SHOW_DETAIL2 = 0x0004
+SHOW_MIXED = 0x0008
 
 JOB_STATE_BASE = 0x00ff
 JOB_STATE_FLAGS = 0xff00
@@ -135,6 +185,8 @@ JOB_RESIZING = 0x2000
 JOB_SPECIAL_EXIT = 0x1000
 JOB_REQUEUE_HOLD = 0x0800
 JOB_REQUEUE = 0x0400
+JOB_STOPPED = 0x0200
+JOB_LAUNCH_FAILED = 0x0100
 
 READY_JOB_ERROR = -1
 READY_JOB_FATAL = -2
@@ -145,11 +197,19 @@ MAIL_JOB_BEGIN = 0x0001
 MAIL_JOB_END = 0x0002
 MAIL_JOB_FAIL = 0x0004
 MAIL_JOB_REQUEUE = 0x0008
+MAIL_JOB_TIME100 = 0x0010
+MAIL_JOB_TIME90 = 0x0020
+MAIL_JOB_TIME80 = 0x0040
+MAIL_JOB_TIME50 = 0x0080
+MAIL_JOB_STAGE_OUT = 0x0100
 
-NICE_OFFSET = 1000
+NICE_OFFSET = 10000
 
 NODE_STATE_BASE = 0x00ff
 NODE_STATE_FLAGS = 0xff00
+NODE_STATE_NET = 0x0010
+NODE_STATE_RES = 0x0020
+NODE_STATE_UNDRAIN = 0x0040
 NODE_STATE_CLOUD = 0x0080
 NODE_RESUME = 0x0100
 NODE_STATE_DRAIN = 0x0200
@@ -177,6 +237,9 @@ RESERVE_FLAG_PART_NODES = 0x1000
 RESERVE_FLAG_NO_PART_NODES = 0x2000
 RESERVE_FLAG_OVERLAP = 0x4000
 RESERVE_FLAG_SPEC_NODES = 0x8000
+RESERVE_FLAG_FIRST_CORES = 0x00010000
+RESERVE_FLAG_TIME_FLOAT = 0x0002000
+RESERVE_FLAG_REPLACE = 0x00040000
 
 PARTITION_SUBMIT = 0x01
 PARTITION_SCHED = 0x02
@@ -184,26 +247,56 @@ PARTITION_SCHED = 0x02
 PARTITION_DOWN = PARTITION_SUBMIT
 PARTITION_UP = (PARTITION_SUBMIT | PARTITION_SCHED)
 PARTITION_DRAIN = PARTITION_SCHED
-PARTITION_INACTIVE = 0x0000
+PARTITION_INACTIVE = 0x00
 
 PART_FLAG_DEFAULT = 0x0001
 PART_FLAG_HIDDEN = 0x0002
 PART_FLAG_NO_ROOT = 0x0004
 PART_FLAG_ROOT_ONLY = 0x0008
 PART_FLAG_REQ_RESV = 0x0010
+PART_FLAG_LLN = 0x0020
+PART_FLAG_EXCLUSIVE_USER = 0x0040
+
 PART_FLAG_DEFAULT_CLR = 0x0100
 PART_FLAG_HIDDEN_CLR = 0x0200
 PART_FLAG_NO_ROOT_CLR = 0x0400
 PART_FLAG_ROOT_ONLY_CLR = 0x0800
 PART_FLAG_REQ_RESV_CLR = 0x1000
+PART_FLAG_LLN_CLR = 0x2000
+PART_FLAG_EXC_USER_CLR = 0x4000
 
 CPU_FREQ_RANGE_FLAG = 0x80000000
 CPU_FREQ_LOW = 0x80000001
 CPU_FREQ_MEDIUM = 0x80000002
 CPU_FREQ_HIGH = 0x80000003
+CPU_FREQ_HIGHM1 = 0x80000004
+CPU_FREQ_CONSERVATIVE = 0x88000000
+CPU_FREQ_ONDEMAND = 0x84000000
+CPU_FREQ_PERFORMANCE = 0x82000000
+CPU_FREQ_POWERSAVE = 0x81000000
+CPU_FREQ_USERSPACE = 0x80800000
+CPU_FREQ_GOV_MASK = 0x8ff00000
+CPU_FREQ_PERFORMANCE_OLD = 0x80000005
+CPU_FREQ_POWERSAVE_OLD = 0x80000006
+CPU_FREQ_USERSPACE_OLD = 0x80000007
+CPU_FREQ_ONDEMAND_OLD = 0x80000008
+CPU_FREQ_CONSERVATIVE_OLD = 0x80000009
 
 MEM_PER_CPU = 0x80000000
 SHARED_FORCE = 0x8000
+
+CR_CPU = 0x0001
+CR_SOCKET = 0x0002
+CR_CORE = 0x0004
+CR_BOARD = 0x0008
+CR_MEMORY = 0x0010
+CR_OTHER_CONS_RES = 0x0020
+CR_NHC_STEP_NO = 0x0040
+CR_NHC_NO = 0x0080
+CR_ONE_TASK_PER_CORE = 0x0100
+CR_PACK_NODES = 0x0200
+CR_CORE_DEFAULT_DIST_BLOCK = 0x1000
+CR_LLN = 0x4000
 
 PRIVATE_DATA_JOBS = 0x0001         # job/step data is private
 PRIVATE_DATA_NODE = 0x0002         # node data is private
@@ -212,6 +305,7 @@ PRIVATE_DATA_USAGE = 0x0008        # accounting usage data is private
 PRIVATE_DATA_USERS = 0x0010        # accounting user data is private
 PRIVATE_DATA_ACCOUNTS = 0x0020     # accounting account data is private
 PRIVATE_DATA_RESERVATIONS = 0x0040 # reservation data is private
+PRIVATE_CLOUD_NODES = 0x0080       # hide powered down nodes in cloud
 
 PRIORITY_RESET_NONE = 0x0000      # never clear
 PRIORITY_RESET_NOW = 0x0001       # clear now (when slurmctld restarts)
@@ -221,10 +315,15 @@ PRIORITY_RESET_MONTHLY = 0x0004   # clear monthly on first at 00:00
 PRIORITY_RESET_QUARTERLY = 0x0005 # clear quarterly on first at 00:00
 PRIORITY_RESET_YEARLY = 0x0006    # clear yearly on first at 00:00
 
-PROP_PRIO_OFF = 0x0000 # Do not propagage user nice value
-PROP_PRIO_ON = 0x0001  # Propagate user nice value
-PROP_PRIO_NICER = 0x0002
-PRIORITY_FLAGS_ACCRUE_ALWAYS = 0x0001
+PROP_PRIO_OFF = 0x0000   # Do not propagage user nice value
+PROP_PRIO_ON = 0x0001    # Propagate user nice value
+PROP_PRIO_NICER = 0x0002 # Insure that user tasks have a nice value that is higher than slurmd
+
+PRIORITY_FLAGS_ACCRUE_ALWAYS = 0x0001     # Flag to always accrue age priority to pending jobs ignoring dependencies or holds
+PRIORITY_FLAGS_SIZE_RELATIVE = 0x0004     # Enable job size measurement relative to its time limit
+PRIORITY_FLAGS_DEPTH_OBLIVIOUS = 0x0008   # Flag to use depth oblivious formula for computing hierarchical fairshare
+PRIORITY_FLAGS_CALCULATE_RUNNING = 0x0010 # Calculate priorities for running jobs, not only the pending jobs
+PRIORITY_FLAGS_FAIR_TREE = 0x0020         # Prioritize by level in account hierarchy
 
 DEBUG_FLAG_SELECT_TYPE = 0x00000001
 DEBUG_FLAG_STEPS = 0x00000002
@@ -260,12 +359,6 @@ PREEMPT_MODE_GANG = 0x8000
 RECONFIG_KEEP_PART_INFO = 0x0001
 RECONFIG_KEEP_PART_STAT = 0x0002
 
-SYSTEM_DIMENSIONS = 3
-HIGHEST_DIMENSIONS = 5
-
-STAT_COMMAND_RESET = 0x0000
-STAT_COMMAND_GET = 0x0001
-
 TRIGGER_FLAG_PERM = 0x0001
 
 TRIGGER_RES_TYPE_JOB = 0x0001
@@ -298,6 +391,20 @@ TRIGGER_TYPE_PRI_DB_RES_OP = 0x00080000
 
 STAT_COMMAND_RESET = 0x0000
 STAT_COMMAND_GET = 0x0001
+
+BB_SIZE_IN_NODES = 0x10000000
+BB_STATE_ALLOCATED = 0x0001
+BB_STATE_STAGING_IN = 0x0002
+BB_STATE_STAGED_IN = 0x0003
+BB_STATE_RUNNING = 0x0004
+BB_STATE_SUSPEND = 0x0005
+BB_STATE_STAGING_OUT = 0x0010
+BB_STATE_STAGED_OUT = 0x0011
+BB_STATE_TEARDOWN = 0x0012
+BB_STATE_COMPLETE = 0x0020
+
+SYSTEM_DIMENSIONS = 1
+HIGHEST_DIMENSIONS = 5
 
 #
 # Blue Gene Type Block Settings
