@@ -412,6 +412,7 @@ PROP_PRIO_ON = 0x0001    # Propagate user nice value
 PROP_PRIO_NICER = 0x0002 # Insure that user tasks have a nice value that is higher than slurmd
 
 PRIORITY_FLAGS_ACCRUE_ALWAYS = 0x0001     # Flag to always accrue age priority to pending jobs ignoring dependencies or holds
+PRIORITY_FLAGS_MAX_TRES = 0x0002          # Calcuate billed_tres as the MAX of TRES on a node rather than the sum or TRES
 PRIORITY_FLAGS_SIZE_RELATIVE = 0x0004     # Enable job size measurement relative to its time limit
 PRIORITY_FLAGS_DEPTH_OBLIVIOUS = 0x0008   # Flag to use depth oblivious formula for computing hierarchical fairshare
 PRIORITY_FLAGS_CALCULATE_RUNNING = 0x0010 # Calculate priorities for running jobs, not only the pending jobs
