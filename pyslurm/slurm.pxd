@@ -208,6 +208,98 @@ cdef extern from 'slurm/slurm.h' nogil:
 		WAIT_ARRAY_TASK_LIMIT
 		WAIT_BURST_BUFFER_RESOURCE
 		WAIT_BURST_BUFFER_STAGING
+		FAIL_BURST_BUFFER_OP
+		WAIT_POWER_NOT_AVAIL
+		WAIT_POWER_RESERVED
+		WAIT_ASSOC_GRP_UNK
+		WAIT_ASSOC_GRP_UNK_MIN
+		WAIT_ASSOC_GRP_UNK_RUN_MIN
+		WAIT_ASSOC_MAX_UNK_PER_JOB
+		WAIT_ASSOC_MAX_UNK_PER_NODE
+		WAIT_ASSOC_MAX_UNK_MINS_PER_JOB
+		WAIT_ASSOC_MAX_CPU_PER_NODE
+		WAIT_ASSOC_GRP_MEM_MIN
+		WAIT_ASSOC_GRP_MEM_RUN_MIN
+		WAIT_ASSOC_MAX_MEM_PER_JOB
+		WAIT_ASSOC_MAX_MEM_PER_NODE
+		WAIT_ASSOC_MAX_MEM_MINS_PER_JOB
+		WAIT_ASSOC_GRP_NODE_MIN
+		WAIT_ASSOC_GRP_NODE_RUN_MIN
+		WAIT_ASSOC_MAX_NODE_MINS_PER_JOB
+		WAIT_ASSOC_GRP_ENERGY
+		WAIT_ASSOC_GRP_ENERGY_MIN
+		WAIT_ASSOC_GRP_ENERGY_RUN_MIN
+		WAIT_ASSOC_MAX_ENERGY_PER_JOB
+		WAIT_ASSOC_MAX_ENERGY_PER_NODE
+		WAIT_ASSOC_MAX_ENERGY_MINS_PER_JOB
+		WAIT_ASSOC_GRP_GRES
+		WAIT_ASSOC_GRP_GRES_MIN
+		WAIT_ASSOC_GRP_GRES_RUN_MIN
+		WAIT_ASSOC_MAX_GRES_PER_JOB
+		WAIT_ASSOC_MAX_GRES_PER_NODE
+		WAIT_ASSOC_MAX_GRES_MINS_PER_JOB
+		WAIT_ASSOC_GRP_LIC
+		WAIT_ASSOC_GRP_LIC_MIN
+		WAIT_ASSOC_GRP_LIC_RUN_MIN
+		WAIT_ASSOC_MAX_LIC_PER_JOB
+		WAIT_ASSOC_MAX_LIC_MINS_PER_JOB
+		WAIT_ASSOC_GRP_BB
+		WAIT_ASSOC_GRP_BB_MIN
+		WAIT_ASSOC_GRP_BB_RUN_MIN
+		WAIT_ASSOC_MAX_BB_PER_JOB
+		WAIT_ASSOC_MAX_BB_PER_NODE
+		WAIT_ASSOC_MAX_BB_MINS_PER_JOB
+		WAIT_QOS_GRP_UNK
+		WAIT_QOS_GRP_UNK_MIN
+		WAIT_QOS_GRP_UNK_RUN_MIN
+		WAIT_QOS_MAX_UNK_PER_JOB
+		WAIT_QOS_MAX_UNK_PER_NODE
+		WAIT_QOS_MAX_UNK_PER_USER
+		WAIT_QOS_MAX_UNK_MINS_PER_JOB
+		WAIT_QOS_MIN_UNK
+		WAIT_QOS_MAX_CPU_PER_NODE
+		WAIT_QOS_GRP_MEM_MIN
+		WAIT_QOS_GRP_MEM_RUN_MIN
+		WAIT_QOS_MAX_MEM_MINS_PER_JOB
+		WAIT_QOS_MAX_MEM_PER_JOB
+		WAIT_QOS_MAX_MEM_PER_NODE
+		WAIT_QOS_MAX_MEM_PER_USER
+		WAIT_QOS_MIN_MEM
+		WAIT_QOS_GRP_ENERGY
+		WAIT_QOS_GRP_ENERGY_MIN
+		WAIT_QOS_GRP_ENERGY_RUN_MIN
+		WAIT_QOS_MAX_ENERGY_PER_JOB
+		WAIT_QOS_MAX_ENERGY_PER_NODE
+		WAIT_QOS_MAX_ENERGY_PER_USER
+		WAIT_QOS_MAX_ENERGY_MINS_PER_JOB
+		WAIT_QOS_MIN_ENERGY
+		WAIT_QOS_GRP_NODE_MIN
+		WAIT_QOS_GRP_NODE_RUN_MIN
+		WAIT_QOS_MAX_NODE_MINS_PER_JOB
+		WAIT_QOS_MIN_NODE
+		WAIT_QOS_GRP_GRES
+		WAIT_QOS_GRP_GRES_MIN
+		WAIT_QOS_GRP_GRES_RUN_MIN
+		WAIT_QOS_MAX_GRES_PER_JOB
+		WAIT_QOS_MAX_GRES_PER_NODE
+		WAIT_QOS_MAX_GRES_PER_USER
+		WAIT_QOS_MAX_GRES_MINS_PER_JOB
+		WAIT_QOS_MIN_GRES
+		WAIT_QOS_GRP_LIC
+		WAIT_QOS_GRP_LIC_MIN
+		WAIT_QOS_GRP_LIC_RUN_MIN
+		WAIT_QOS_MAX_LIC_PER_JOB
+		WAIT_QOS_MAX_LIC_PER_USER
+		WAIT_QOS_MAX_LIC_MINS_PER_JOB
+		WAIT_QOS_MIN_LIC
+		WAIT_QOS_GRP_BB
+		WAIT_QOS_GRP_BB_MIN
+		WAIT_QOS_GRP_BB_RUN_MIN
+		WAIT_QOS_MAX_BB_PER_JOB
+		WAIT_QOS_MAX_BB_PER_NODE
+		WAIT_QOS_MAX_BB_PER_USER
+		WAIT_QOS_MAX_BB_MINS_PER_JOB
+		WAIT_QOS_MIN_BB
 
 	cdef enum select_jobdata_type:
 		SELECT_JOBDATA_GEOMETRY
@@ -454,7 +546,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t bf_backfilled_jobs
 		uint32_t bf_last_backfilled_jobs
 		uint32_t bf_cycle_counter
-		uint32_t bf_cycle_sum
+		uint64_t bf_cycle_sum
 		uint32_t bf_cycle_last
 		uint32_t bf_cycle_max
 		uint32_t bf_last_depth
@@ -659,6 +751,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *std_err
 		char *std_in
 		char *std_out
+		uint64_t *tres_req_cnt
 		uint32_t wait4switch
 		char *wckey
 
@@ -781,6 +874,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t priority_weight_js
 		uint32_t priority_weight_part
 		uint32_t priority_weight_qos
+		char *priority_weight_tres
 		uint16_t private_data
 		char *proctrack_type
 		char *prolog
@@ -886,6 +980,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t contiguous
 		uint16_t core_spec
 		uint16_t cores_per_socket
+		double billable_tres
 		uint16_t cpus_per_task
 		uint32_t cpu_freq_min
 		uint32_t cpu_freq_max
@@ -902,7 +997,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t group_id
 		uint32_t job_id
 		job_resources_t *job_resrcs
-		uint16_t job_state
+		uint32_t job_state
 		char *licenses
 		uint32_t max_cpus
 		uint32_t max_nodes
@@ -953,6 +1048,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t time_limit
 		uint32_t time_min
 		uint16_t threads_per_core
+		char *tres_req_str
 		char *tres_alloc_str
 		uint32_t user_id
 		uint32_t wait4switch
@@ -971,7 +1067,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef struct sicp_info:
 		uint32_t job_id
-		uint16_t job_state
+		uint32_t job_state
 
 	ctypedef sicp_info sicp_info_t
 
@@ -1015,6 +1111,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *allow_groups
 		char *allow_qos
 		char *alternate
+		char *billing_weights_str
 		uint16_t cr_type
 		uint32_t def_mem_per_cpu
 		uint32_t default_time
@@ -1037,6 +1134,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t state_up
 		uint32_t total_cpus
 		uint32_t total_nodes
+		char *tres_fmt_str
 
 	ctypedef partition_info partition_info_t
 
@@ -1102,6 +1200,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t cores
 		uint16_t core_spec_cnt
 		uint32_t cpu_load
+		uint32_t free_mem
 		uint16_t cpus
 		char *cpu_spec_list
 		acct_gather_energy_t *energy
@@ -1128,6 +1227,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint16_t threads
 		uint32_t tmp_disk
 		uint32_t weight
+		char *tres_fmt_str
 		char *version
 
 	ctypedef node_info node_info_t
@@ -1292,7 +1392,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		time_t run_time
 		dynamic_plugin_data_t *select_jobinfo
 		time_t start_time
-		uint16_t state
+		uint32_t state
 		uint32_t step_id
 		uint32_t task_dist
 		uint32_t time_limit
@@ -1430,62 +1530,18 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char **job_array_id
 		uint32_t *error_code
 
-	ctypedef struct slurm_cache_user_info:
-		uint16_t admin_level
-		char *default_acct
-		char *default_wckey
-		char *name
-		char *old_name
-		uint32_t uid
+	ctypedef struct assoc_mgr_info_msg_t:
+		List assoc_list
+		List qos_list
+		uint32_t tres_cnt
+		char **tres_names
+		List user_list
 
-	ctypedef slurm_cache_user_info slurm_cache_user_info_t
-
-	ctypedef struct slurm_cache_assoc_info:
-		char *acct
-		char *cluster
-		uint32_t def_qos_id
-		uint64_t grp_cpu_mins
-		uint64_t grp_cpu_run_mins
-		uint32_t grp_cpus
-		uint32_t grp_jobs
-		uint32_t grp_mem
-		uint32_t grp_nodes
-		uint32_t grp_submit_jobs
-		uint32_t grp_wall
-		uint32_t id
-		uint16_t is_def
-		uint32_t lft
-		uint64_t max_cpu_mins_pj
-		uint64_t max_cpu_run_mins
-		uint32_t max_cpus_pj
-		uint32_t max_jobs
-		uint32_t max_nodes_pj
-		uint32_t max_submit_jobs
-		uint32_t max_wall_pj
-		char *parent_acct
-		uint32_t parent_id
-		char *partition
-		uint32_t rgt
-		uint32_t shares_raw
-		uint32_t uid
-		char *user
-		double grp_used_cpu_run_secs
-		uint32_t grp_used_cpus
-		uint32_t grp_used_mem
-		uint32_t grp_used_nodes
-		double grp_used_wall
-		uint64_t usage_raw
-
-	ctypedef slurm_cache_assoc_info slurm_cache_assoc_info_t
-
-	ctypedef struct cache_info_msg:
-		time_t time_stamp
-		uint32_t num_users
-		uint32_t num_assocs
-		slurm_cache_user_info_t  *cache_user_array
-		slurm_cache_assoc_info_t *cache_assoc_array
-
-	ctypedef cache_info_msg cache_info_msg_t
+	ctypedef struct assoc_mgr_info_request_msg_t:
+		List acct_list
+		uint32_t flags
+		List qos_list
+		List user_list
 
 	ctypedef struct network_callerid_msg:
 		unsigned char ip_src[16]
@@ -1565,29 +1621,36 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint64_t used_cnt
 
 	ctypedef struct burst_buffer_resv_t:
+		char *account
 		uint32_t array_job_id
 		uint32_t array_task_id
+		time_t create_time
 		uint32_t gres_cnt
 		burst_buffer_gres_t *gres_ptr
 		uint32_t job_id
 		char *name
+		char *partition
+		char *qos
 		uint64_t size
 		uint16_t state
-		time_t state_time
 		uint32_t user_id
+
+	ctypedef struct burst_buffer_use_t:
+		uint32_t user_id
+		uint64_t used
 
 	ctypedef struct burst_buffer_info_t:
 		char *allow_users
+		char *default_pool
+		char *create_buffer
 		char *deny_users
+		char *destroy_buffer
+		uint32_t flags
 		char *get_sys_state
 		uint64_t granularity
 		uint32_t gres_cnt
 		burst_buffer_gres_t *gres_ptr
-		uint64_t job_size_limit
 		char *name
-		uint16_t private_data
-		uint32_t prio_boost_alloc
-		uint32_t prio_boost_use
 		uint32_t stage_in_timeout
 		uint32_t stage_out_timeout
 		char *start_stage_in
@@ -1596,9 +1659,10 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *stop_stage_out
 		uint64_t total_space
 		uint64_t used_space
-		uint64_t user_size_limit
-		uint32_t  record_count
+		uint32_t  buffer_count
 		burst_buffer_resv_t *burst_buffer_resv_ptr
+		uint32_t use_count
+		burst_buffer_use_t *burst_buffer_use_ptr
 
 	ctypedef struct burst_buffer_info_msg_t:
 		burst_buffer_info_t *burst_buffer_array
@@ -1725,8 +1789,9 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern int slurm_load_licenses (time_t, license_info_msg_t **, uint16_t)
 	cdef extern void slurm_free_license_info_msg (license_info_msg_t *)
 
-	cdef extern int slurm_load_cache (cache_info_msg_t **, uint16_t)
-	cdef extern void slurm_free_cache_info_msg (cache_info_msg_t *)
+	cdef extern int slurm_load_assoc_mgr_info (assoc_mgr_info_request_msg_t *, assoc_mgr_info_msg_t **)
+	cdef extern void slurm_free_assoc_mgr_info_msg (assoc_mgr_info_msg_t *)
+	cdef extern void slurm_free_assoc_mgr_info_request_msg (assoc_mgr_info_request_msg_t *)
 	
 	#
 	# Job/Job Step Signaling
@@ -1893,34 +1958,55 @@ cdef extern from 'slurm/slurm.h' nogil:
 #
 
 cdef extern from 'slurm/slurmdb.h' nogil:
+
+	ctypedef struct slurmdb_qos_usage_t:
+		List job_list
+		uint32_t grp_used_jobs
+		uint32_t grp_used_submit_jobs
+		uint64_t *grp_used_tres
+		uint64_t *grp_used_tres_run_secs
+		double grp_used_wall
+		double norm_priority
+		uint32_t tres_cnt
+		long double usage_raw
+		long double *usage_tres_raw
+		List user_limit_list
+
 	ctypedef struct slurmdb_qos_rec:
 		char *description
 		uint32_t id
 		uint32_t flags
 		uint32_t grace_time
-		uint64_t grp_cpu_mins
-		uint64_t grp_cpu_run_mins
-		uint32_t grp_cpus
 		uint32_t grp_jobs
-		uint32_t grp_mem
-		uint32_t grp_nodes
 		uint32_t grp_submit_jobs
+		char *grp_tres
+		uint64_t *grp_tres_ctld
+		char *grp_tres_mins
+		uint64_t *grp_tres_mins_ctld
+		char *grp_tres_run_mins
+		uint64_t *grp_tres_run_mins_ctld
 		uint32_t grp_wall
-		uint64_t max_cpu_mins_pj
-		uint64_t max_cpu_run_mins_pu
-		uint32_t max_cpus_pj
-		uint32_t max_cpus_pu
 		uint32_t max_jobs_pu
-		uint32_t max_nodes_pj
-		uint32_t max_nodes_pu
 		uint32_t max_submit_jobs_pu
+		char *max_tres_mins_pj
+		uint64_t *max_tres_mins_pj_ctld
+		char *max_tres_pj
+		uint64_t *max_tres_pj_ctld
+		char *max_tres_pn
+		uint64_t *max_tres_pn_ctld
+		char *max_tres_pu
+		uint64_t *max_tres_pu_ctld
+		char *max_tres_run_mins_pu
+		uint64_t *max_tres_run_mins_pu_ctld
 		uint32_t max_wall_pj
+		char *min_tres_pj
+		uint64_t *min_tres_pj_ctld
 		char *name
 		bitstr_t *preempt_bitstr
 		List preempt_list
 		uint16_t preempt_mode
 		uint32_t priority
-		void *usage # assoc_mgr_qos_usage_t
+		slurmdb_qos_usage_t *usage
 		double usage_factor
 		double usage_thres
 

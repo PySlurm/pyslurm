@@ -514,8 +514,9 @@ cdef class config:
 			Ctl_dict[u'priority_weight_js'] = self.__Config_ptr.priority_weight_js
 			Ctl_dict[u'priority_weight_part'] = self.__Config_ptr.priority_weight_part
 			Ctl_dict[u'priority_weight_qos'] = self.__Config_ptr.priority_weight_qos
-			Ctl_dict[u'private_data'] = self.__Config_ptr.private_data
 			Ctl_dict[u'proctrack_type'] = slurm.stringOrNone(self.__Config_ptr.proctrack_type, '')
+			Ctl_dict[u'private_data'] = self.__Config_ptr.private_data
+			Ctl_dict[u'priority_weight_tres'] = slurm.stringOrNone(self.__Config_ptr.priority_weight_tres, '')
 			Ctl_dict[u'prolog'] = slurm.stringOrNone(self.__Config_ptr.prolog, '')
 			Ctl_dict[u'prolog_epilog_timeout'] = self.__Config_ptr.prolog_epilog_timeout
 			Ctl_dict[u'prolog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.prolog_slurmctld, '')
@@ -812,7 +813,7 @@ cdef class partition:
 				Part_dict[u'allow_groups'] = slurm.listOrNone(self._record.allow_groups, ',')
 				Part_dict[u'allow_qos'] = slurm.listOrNone(self._record.allow_qos, ',')
 				Part_dict[u'alternate'] = slurm.stringOrNone(self._record.alternate, '')
-
+				Part_dict[u'billing_wights_str'] = slurm.stringOrNone(self._record.billing_weights_str, '')
 				Part_dict[u'cr_type'] = self._record.cr_type
 				Part_dict[u'def_mem_per_cpu'] = self._record.def_mem_per_cpu
 				Part_dict[u'default_time'] = __convertDefaultTime(self._record.default_time)
@@ -843,6 +844,7 @@ cdef class partition:
 				Part_dict[u'state_up'] = get_partition_state(self._record.state_up)
 				Part_dict[u'total_cpus'] = self._record.total_cpus
 				Part_dict[u'total_nodes'] = self._record.total_nodes
+				Part_dict[u'tres_fmt_str'] = slurm.stringOrNone(self._record.tres_fmt_str, '')
 
 				Partition[u"%s" % name] = Part_dict
 
@@ -1874,6 +1876,7 @@ cdef class job:
 				Job_dict[u'contiguous'] = bool(self._job_ptr.job_array[i].contiguous)
 				Job_dict[u'core_spec'] = self._job_ptr.job_array[i].core_spec
 				Job_dict[u'cores_per_socket'] = self._job_ptr.job_array[i].cores_per_socket
+				Job_dict[u'billable_tres'] = self._job_ptr.job_array[i].billable_tres
 				Job_dict[u'cpus_per_task'] = self._job_ptr.job_array[i].cpus_per_task
 				Job_dict[u'cpu_freq_min'] = self._job_ptr.job_array[i].cpu_freq_min
 				Job_dict[u'cpu_freq_max'] = self._job_ptr.job_array[i].cpu_freq_max
@@ -1944,6 +1947,7 @@ cdef class job:
 				Job_dict[u'time_limit'] = self._job_ptr.job_array[i].time_limit
 				Job_dict[u'time_min'] = self._job_ptr.job_array[i].time_min
 				Job_dict[u'threads_per_core'] = self._job_ptr.job_array[i].threads_per_core
+				Job_dict[u'tres_req_str'] = slurm.stringOrNone(self._job_ptr.job_array[i].tres_req_str, '')
 				Job_dict[u'tres_alloc_str'] = slurm.stringOrNone(self._job_ptr.job_array[i].tres_alloc_str, '')
 				Job_dict[u'user_id'] = self._job_ptr.job_array[i].user_id
 				Job_dict[u'wait4switch'] = self._job_ptr.job_array[i].wait4switch
@@ -2349,6 +2353,7 @@ cdef class node:
 			Host_dict['core_spec_cnt'] = self._Node_ptr.node_array[i].core_spec_cnt
 			Host_dict['cpus'] = self._Node_ptr.node_array[i].cpus
 			Host_dict['cpu_load'] = self._Node_ptr.node_array[i].cpu_load
+			Host_dict['free_mem'] = self._Node_ptr.node_array[i].free_mem
 			Host_dict['cpu_spec_list'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
 
 			Host_dict['features'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
@@ -2371,6 +2376,7 @@ cdef class node:
 			Host_dict['threads'] = self._Node_ptr.node_array[i].threads
 			Host_dict['tmp_disk'] = self._Node_ptr.node_array[i].tmp_disk
 			Host_dict['weight'] = self._Node_ptr.node_array[i].weight
+			Host_dict['tres_fmt_str'] = slurm.stringOrNone(self._Node_ptr.node_array[i].tres_fmt_str, '')
 			Host_dict['version'] = slurm.stringOrNone(self._Node_ptr.node_array[i].version, '')
 
 			# Energy statistics
@@ -4164,6 +4170,7 @@ cdef class front_end:
 				FE_dict[u'reason_time'] = self._FrontEndNode_ptr.front_end_array[i].reason_time
 				FE_dict[u'reason_uid'] = self._FrontEndNode_ptr.front_end_array[i].reason_uid
 				FE_dict[u'slurmd_start_time'] = self._FrontEndNode_ptr.front_end_array[i].slurmd_start_time
+				FE_dict[u'version'] = slurm.stringOrNone(self._FrontEndNode_ptr.front_end_array[i].version, '')
 
 				FENode[name] = FE_dict
 
@@ -4175,7 +4182,7 @@ cdef class front_end:
 
 cdef class qos:
 
-	u"""Class to access/update slurm qos information.
+	u"""Class to access/update slurm QOS information.
 	"""
 
 	cdef:
@@ -4192,14 +4199,14 @@ cdef class qos:
 
 	cpdef __destroy(self):
 
-		u"""Free the memory allocated by load QOS method.
+		u"""QOS Destructor method.
 		"""
 
 		self._QOSDict = {}
 
 	def load(self):
 
-		u"""Load slurm front end node information.
+		u"""Load slurm QOS information.
 		"""
 
 		self.__load()
@@ -4226,7 +4233,7 @@ cdef class qos:
 
 	def lastUpdate(self):
 
-		u"""Return last time (sepoch seconds) the node data was updated.
+		u"""Return last time (sepoch seconds) the QOS data was updated.
 
 		:returns: epoch seconds
 		:rtype: `integer`
@@ -4236,9 +4243,9 @@ cdef class qos:
 
 	def ids(self):
 
-		u"""Return the node IDs from retrieved data.
+		u"""Return the QOS IDs from retrieved data.
 
-		:returns: Dictionary of node IDs
+		:returns: Dictionary of QOS IDs
 		:rtype: `dict`
 		"""
 
@@ -4246,9 +4253,9 @@ cdef class qos:
 
 	def get(self):
 
-		u"""Get slurm front end node information.
+		u"""Get slurm QOS information.
 
-		:returns: Dictionary whose key is the Topology ID
+		:returns: Dictionary whose key is the QOS ID
 		:rtype: `dict`
 		"""
 
@@ -4282,30 +4289,38 @@ cdef class qos:
 					QOS_info[u'description'] = slurm.stringOrNone(qos.description, '')
 					QOS_info[u'flags'] = qos.flags
 					QOS_info[u'grace_time'] = qos.grace_time
-					QOS_info[u'grp_cpu_mins'] = qos.grp_cpu_mins
-					QOS_info[u'grp_cpu_run_mins'] = qos.grp_cpu_run_mins
-					QOS_info[u'grp_cpus'] = qos.grp_cpus
 					QOS_info[u'grp_jobs'] = qos.grp_jobs
-					QOS_info[u'grp_mem'] = qos.grp_mem
-					QOS_info[u'grp_nodes'] = qos.grp_nodes
 					QOS_info[u'grp_submit_jobs'] = qos.grp_submit_jobs
+					QOS_info[u'grp_tres'] = slurm.stringOrNone(qos.grp_tres, '')
+					#QOS_info[u'grp_tres_ctld']
+					QOS_info[u'grp_tres_mins'] = slurm.stringOrNone(qos.grp_tres_mins, '')
+					#QOS_info[u'grp_tres_mins_ctld']
+					QOS_info[u'grp_tres_run_mins'] = slurm.stringOrNone(qos.grp_tres_run_mins, '')
+					#QOS_info[u'grp_tres_run_mins_ctld']
 					QOS_info[u'grp_wall'] = qos.grp_wall
-					QOS_info[u'max_cpu_mins_pj'] = qos.max_cpu_mins_pj
-					QOS_info[u'max_cpu_mins_pj'] = qos.max_cpu_mins_pj
-					QOS_info[u'max_cpu_run_mins_pu'] = qos.max_cpu_run_mins_pu
-					QOS_info[u'max_cpus_pj'] = qos.max_cpus_pj
-					QOS_info[u'max_cpus_pu'] = qos.max_cpus_pu
 					QOS_info[u'max_jobs_pu'] = qos.max_jobs_pu
-					QOS_info[u'max_nodes_pj'] = qos.max_nodes_pj
-					QOS_info[u'max_nodes_pu'] = qos.max_nodes_pu
 					QOS_info[u'max_submit_jobs_pu'] = qos.max_submit_jobs_pu
+					QOS_info[u'max_tres_mins_pj'] = slurm.stringOrNone(qos.max_tres_mins_pj, '')
+					#QOS_info[u'max_tres_min_pj_ctld']
+					QOS_info[u'max_tres_pj'] = slurm.stringOrNone(qos.max_tres_pj, '')
+					#QOS_info[u'max_tres_min_pj_ctld']
+					QOS_info[u'max_tres_pn'] = slurm.stringOrNone(qos.max_tres_pn, '')
+					#QOS_info[u'max_tres_min_pn_ctld']
+					QOS_info[u'max_tres_pu'] = slurm.stringOrNone(qos.max_tres_pu, '')
+					#QOS_info[u'max_tres_min_pu_ctld']
+					QOS_info[u'max_tres_run_mins_pu'] = slurm.stringOrNone(qos.max_tres_run_mins_pu, '')
 					QOS_info[u'max_wall_pj'] = qos.max_wall_pj
+					QOS_info[u'min_tres_pj'] = slurm.stringOrNone(qos.min_tres_pj, '')
+					#QOS_info[u'min_tres_pj_ctld']
+					QOS_info[u'name'] = slurm.stringOrNone(name, '')
 					#QOS_info[u'*preempt_bitstr'] =
 					#QOS_info[u'preempt_list'] = qos.preempt_list
 					QOS_info[u'preempt_mode'] = get_preempt_mode(qos.preempt_mode)
 					QOS_info[u'priority'] = qos.priority
 					QOS_info[u'usage_factor'] = qos.usage_factor
 					QOS_info[u'usage_thres'] = qos.usage_thres
+
+					# NB - Need to add code to decode types of grp_tres_ctld (uint64t list) etc
 
 				if name is not NULL:
 					Q_dict[name] = QOS_info
