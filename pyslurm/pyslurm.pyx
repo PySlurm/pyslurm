@@ -4197,23 +4197,18 @@ cdef inline dict __get_licenses(char *licenses):
 	:rtype: `dict`
 	"""
 
-	cdef:
-		int i = 0
-		char *split_char = ':'
-		dict licDict = {}
-
 	if (licenses is NULL):
-		return licDict
+		return {}
 
 	cdef:
+		dict licDict = {}
+		int i = 0
 		list alist = slurm.listOrNone(licenses, ',')
 		int listLen = len(alist)
 
 	if alist:
-		if '*' in licenses:
-			split_char = '*'
 		for i in range(listLen):
-			key, value = alist[i].split(split_char)
+			key, value = alist[i].split(':')
 			licDict[u"%s" % key] = value
 
 	return licDict
