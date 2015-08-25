@@ -2272,9 +2272,16 @@ cdef class node:
 			slurm.node_info_t *node_ptr
 			slurm.select_nodeinfo_t *select_node_ptr
 
+			char *cloud_str = ""
+			char *comp_str = ""
+			char *drain_str = ""
+			char *power_str = ""
 			int i, total_used, cpus_per_node, rc
 			uint16_t alloc_cpus, err_cpus
 			uint32_t tmp_disk, node_state, node_scaling = 0
+			uint32_t my_state
+			#unit32_t cluster_flags = slurmdb_setup_cluster_flags()
+			uint32_t currentWatts = 0
 			time_t last_update
 
 			dict Hosts = {}, Host_dict
@@ -2294,6 +2301,8 @@ cdef class node:
 			cpus_per_node = 1
 
 			total_used = self._Node_ptr.node_array[i].cpus
+			if (node_scaling):
+				cpus_per_node = total_used / node_scaling
 
 			name = self._Node_ptr.node_array[i].name
 
@@ -2305,7 +2314,6 @@ cdef class node:
 			Host_dict['cpus'] = self._Node_ptr.node_array[i].cpus
 			Host_dict['cpu_load'] = self._Node_ptr.node_array[i].cpu_load
 			Host_dict['cpu_spec_list'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
-			# ADD ENERGY STRUCTURE HERE
 			Host_dict['features'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
 			Host_dict['gres'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres, '')
 			Host_dict['gres_drain'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres_drain, '')
@@ -2314,7 +2322,6 @@ cdef class node:
 			Host_dict['name'] = slurm.stringOrNone(self._Node_ptr.node_array[i].name, '')
 			Host_dict['node_addr'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_addr, '')
 			Host_dict['node_hostname'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_hostname, '')
-			Host_dict['node_state'] = get_node_state(self._Node_ptr.node_array[i].node_state)
 			Host_dict['os'] = slurm.stringOrNone(self._Node_ptr.node_array[i].os, '')
 			Host_dict['real_memory'] = self._Node_ptr.node_array[i].real_memory
 			Host_dict['reason'] = slurm.stringOrNone(self._Node_ptr.node_array[i].reason, '')
@@ -2331,37 +2338,67 @@ cdef class node:
 
 			Host_dict['energy'] = {}
 			Host_dict['energy']['base_watts'] = self._Node_ptr.node_array[i].energy.base_watts
-			Host_dict['energy']['current_watts'] = self._Node_ptr.node_array[i].energy.current_watts
+
+			currentWatts = self._Node_ptr.node_array[i].energy.current_watts
+			if currentWatts == NO_VAL:
+				Host_dict['energy']['current_watts'] = 0
+			else:
+				Host_dict['energy']['current_watts'] = currentWatts
+
 			Host_dict['energy']['consumed_energy'] = self._Node_ptr.node_array[i].energy.consumed_energy
 			Host_dict['energy']['base_consumed_energy'] = self._Node_ptr.node_array[i].energy.base_consumed_energy
 			Host_dict['energy']['previous_consumed_energy'] = self._Node_ptr.node_array[i].energy.previous_consumed_energy
 
-			#
-			# NEED TO DO MORE WORK HERE ! SUCH AS NODE STATES AND CLUSTER/BG DETECTION
-			#
+			# Power Managment
+
+			Host_dict['power_mgmt'] = {}
+
+			# Enhanced node state - src/api/node_info.c
+
+			node_state = self._Node_ptr.node_array[i].node_state
+			my_state = node_state
+
+			if (my_state & NODE_STATE_CLOUD):
+				my_state &= (~NODE_STATE_CLOUD)
+				cloud_str = "+CLOUD"
+
+			if (my_state & NODE_STATE_COMPLETING):
+				my_state &= (~NODE_STATE_COMPLETING)
+				comp_str = "+COMPLETING"
+
+			if (my_state & NODE_STATE_DRAIN):
+				my_state &= (~NODE_STATE_DRAIN)
+				drain_str = "+DRAIN"
+			
+			if (my_state & NODE_STATE_FAIL):
+				my_state &= (~NODE_STATE_FAIL)
+				drain_str = "+FAIL"
+
+			if (my_state & NODE_STATE_POWER_SAVE):
+				my_state &= (~NODE_STATE_POWER_SAVE)
+				power_str = "+POWER"
 
 			if self._Node_ptr.node_array[i].select_nodeinfo is not NULL:
 
-				node_state = self._Node_ptr.node_array[i].node_state
-
 				rc, alloc_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, NODE_STATE_ALLOCATED)
-				if not alloc_cpus and (IS_NODE_ALLOCATED(node_state) or IS_NODE_COMPLETING(node_state)):
-					alloc_cpus = Host_dict['cpus']
-				else:
-					alloc_cpus *= cpus_per_node
+				#if (cluster_flags & CLUSTER_FLAG_BG):
+					#if not alloc_cpus and (IS_NODE_ALLOCATED(node_state) or IS_NODE_COMPLETING(node_state)):
+					#	alloc_cpus = Host_dict['cpus']
+					#else:
+					#	alloc_cpus *= cpus_per_node
 				total_used -= alloc_cpus
 
-				rc, err_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, node_state)
-
+				rc, err_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, NODE_STATE_ERROR)
 				#if (cluster_flags & CLUSTER_FLAG_BG):
-				if 1:
-					err_cpus *= cpus_per_node
+				#	err_cpus *= cpus_per_node
 				total_used -= err_cpus
 
-				#rc, test = self.__get_select_nodeinfo(SELECT_NODEDATA_STR, node_state)
-				#if rc:
-				#	print "%s" % test
+				if ((alloc_cpus and err_cpus) or (total_used and (total_used != self._Node_ptr.node_array[i].cpus))):
+					my_state &= NODE_STATE_FLAGS
+					my_state |= NODE_STATE_MIXED
 
+			state_str = "%s%s%s%s%s" % (get_node_state(my_state), cloud_str, comp_str, drain_str, power_str)
+			Host_dict['state'] = state_str
 			Host_dict['err_cpus'] = err_cpus
 			Host_dict['alloc_cpus'] = alloc_cpus
 			Host_dict['total_cpus'] = total_used
