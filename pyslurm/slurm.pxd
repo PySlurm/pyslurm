@@ -349,7 +349,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	ctypedef mem_bind_type mem_bind_type_t
 	
-	ctypedef enum connection_type:
+	cdef enum connection_type:
 		SELECT_MESH
 		SELECT_TORUS
 		SELECT_NAV
@@ -359,7 +359,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		SELECT_HTC_V
 		SELECT_HTC_L 
 
-	ctypedef enum node_use_type:
+	cdef enum node_use_type:
 		SELECT_COPROCESSOR_MODE
 		SELECT_VIRTUAL_NODE_MODE
 		SELECT_NAV_MODE
