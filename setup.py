@@ -105,7 +105,7 @@ def inc_vers2str(hex_inc_version):
 
 	a = int(hex_inc_version,16)
 	b = ( a >> 16 & 0xff, a >> 8 & 0xff, a & 0xff)
-	return '.'.join(map(str,b))
+	return '{0:02d}.{1:02d}.{2:02d}'.format(*b)
 
 def clean():
 
