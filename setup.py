@@ -22,7 +22,7 @@ logging.basicConfig(level=20)
 # PySlurm Version
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
-__version__ = "15.08.0-0rc1"
+__version__ = "15.08.0"
 __min_slurm_hex_version__ = "0x0f0800"
 __max_slurm_hex_version__ = "0x0f0800"
 
