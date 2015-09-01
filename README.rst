@@ -9,7 +9,7 @@ Overview
 
 Currently `PySlurm` is under development to move from it's thin layer on top of the Slurm C API to an object orientated interface.
 
-The current branch is based on the Slurm 14.11.5 to 14.11.8 API 
+The current branch is based on the Slurm 14.11.5 to 14.11.8 API with 14.11.9 tentative support.
 
 Prerequistes
 =============
