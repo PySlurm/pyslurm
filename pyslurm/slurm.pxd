@@ -420,6 +420,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		ENERGY_DATA_LAST_POLL
 		ENERGY_DATA_SENSOR_CNT
 		ENERGY_DATA_NODE_ENERGY
+		ENERGY_DATA_NODE_ENERGY_UP
 
 	ctypedef enum task_dist_states:
 		SLURM_DIST_CYCLIC = 0x0001
