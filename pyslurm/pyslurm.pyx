@@ -2402,6 +2402,7 @@ cdef class node:
 
 			state_str = "%s%s%s%s%s" % (get_node_state(my_state), cloud_str, comp_str, drain_str, power_str)
 			Host_dict['state'] = state_str
+			Host_dict['alloc_memory'] = alloc_mem
 			Host_dict['err_cpus'] = err_cpus
 			Host_dict['alloc_cpus'] = alloc_cpus
 			Host_dict['total_cpus'] = total_used
