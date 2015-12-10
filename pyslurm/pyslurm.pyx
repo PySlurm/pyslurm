@@ -2296,6 +2296,9 @@ cdef class node:
 
 			self._record = self._Node_ptr.node_array[i]
 
+			if self._record.name is NULL:
+				break
+
 			Host_dict = {}
 			alloc_cpus = err_cpus = 0
 			cpus_per_node = 1
