@@ -2273,6 +2273,7 @@ cdef class node:
 			int i, total_used, cpus_per_node, rc
 			uint16_t alloc_cpus, err_cpus
 			uint32_t tmp_disk, node_state, node_scaling = 0
+			uint32_t alloc_mem
 			time_t last_update
 
 			dict Hosts = {}, Host_dict
@@ -2291,7 +2292,7 @@ cdef class node:
 				break
 
 			Host_dict = {}
-			alloc_cpus = err_cpus = 0
+			alloc_mem = alloc_cpus = err_cpus = 0
 			cpus_per_node = 1
 
 			total_used = self._Node_ptr.node_array[i].cpus
@@ -2345,6 +2346,8 @@ cdef class node:
 
 				node_state = self._Node_ptr.node_array[i].node_state
 
+				rc, alloc_mem = self.__get_select_nodeinfo(SELECT_NODEDATA_MEM_ALLOC, NODE_STATE_ALLOCATED)
+
 				rc, alloc_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, NODE_STATE_ALLOCATED)
 				if not alloc_cpus and (IS_NODE_ALLOCATED(node_state) or IS_NODE_COMPLETING(node_state)):
 					alloc_cpus = Host_dict['cpus']
@@ -2363,6 +2366,7 @@ cdef class node:
 				#if rc:
 				#	print "%s" % test
 
+			Host_dict['alloc_memory'] = alloc_mem
 			Host_dict['err_cpus'] = err_cpus
 			Host_dict['alloc_cpus'] = alloc_cpus
 			Host_dict['total_cpus'] = total_used
@@ -2409,6 +2413,7 @@ cdef class node:
 
 			int retval = 0, length = 0
 			uint16_t retval16 = 0
+			uint32_t retval32 = 0
 			char *retvalStr
 			char *tmp_str
 
@@ -2419,6 +2424,12 @@ cdef class node:
 			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &retval16)
 			if retval == 0:
 				return retval, retval16
+
+		if dataType == SELECT_NODEDATA_MEM_ALLOC:
+
+			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &retval32)
+			if retval == 0:
+				return retval, retval32
 
 		if dataType == SELECT_NODEDATA_BITMAP:
 
