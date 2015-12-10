@@ -2432,7 +2432,7 @@ cdef class node:
 
 			if self._Node_ptr.node_array[i].select_nodeinfo is not NULL:
 
-				rc, alloc_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_MEM_ALLOC, NODE_STATE_ALLOCATED)
+				rc, alloc_mem = self.__get_select_nodeinfo(SELECT_NODEDATA_MEM_ALLOC, NODE_STATE_ALLOCATED)
 
 				rc, alloc_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, NODE_STATE_ALLOCATED)
 				#if (cluster_flags & CLUSTER_FLAG_BG):
