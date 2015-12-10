@@ -2193,8 +2193,6 @@ cdef class node:
 		self._ShowFlags = 0
 		self._NodeDict = {}
 
-		self.get()
-
 	def __dealloc__(self):
 		self.__destroy()
 
