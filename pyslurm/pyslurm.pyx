@@ -2278,6 +2278,7 @@ cdef class node:
 			uint16_t alloc_cpus, err_cpus
 			uint32_t tmp_disk, node_state, node_scaling = 0
 			uint32_t my_state, alloc_mem
+			uint32_t currentWatts = 0
 			time_t last_update
 
 			dict Hosts = {}, Host_dict
