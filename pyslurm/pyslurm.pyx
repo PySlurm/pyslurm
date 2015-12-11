@@ -2270,10 +2270,14 @@ cdef class node:
 			slurm.node_info_t *node_ptr
 			slurm.select_nodeinfo_t *select_node_ptr
 
+			char *cloud_str = ""
+			char *comp_str = ""
+			char *drain_str = ""
+			char *power_str = ""
 			int i, total_used, cpus_per_node, rc
 			uint16_t alloc_cpus, err_cpus
 			uint32_t tmp_disk, node_state, node_scaling = 0
-			uint32_t alloc_mem
+			uint32_t my_state, alloc_mem
 			time_t last_update
 
 			dict Hosts = {}, Host_dict
@@ -2348,6 +2352,33 @@ cdef class node:
 
 			Host_dict['power_mgmt'] = {}
 
+			# Enhanced node state - src/api/node_info.c
+
+			comp_str = comp_str = drain_str = power_str = ''
+
+			node_state = self._Node_ptr.node_array[i].node_state
+			my_state = node_state
+
+			if (my_state & NODE_STATE_CLOUD):
+				my_state &= (~NODE_STATE_CLOUD)
+				cloud_str = "+CLOUD"
+
+			if (my_state & NODE_STATE_COMPLETING):
+				my_state &= (~NODE_STATE_COMPLETING)
+				comp_str = "+COMPLETING"
+
+			if (my_state & NODE_STATE_DRAIN):
+				my_state &= (~NODE_STATE_DRAIN)
+				drain_str = "+DRAIN"
+			
+			if (my_state & NODE_STATE_FAIL):
+				my_state &= (~NODE_STATE_FAIL)
+				drain_str = "+FAIL"
+
+			if (my_state & NODE_STATE_POWER_SAVE):
+				my_state &= (~NODE_STATE_POWER_SAVE)
+				power_str = "+POWER"
+
 			#
 			# NEED TO DO MORE WORK HERE ! SUCH AS NODE STATES AND CLUSTER/BG DETECTION
 			#
@@ -2376,6 +2407,8 @@ cdef class node:
 				#if rc:
 				#	print "%s" % test
 
+			state_str = "%s%s%s%s%s" % (get_node_state(my_state), cloud_str, comp_str, drain_str, power_str)
+			Host_dict['state'] = state_str
 			Host_dict['alloc_memory'] = alloc_mem
 			Host_dict['err_cpus'] = err_cpus
 			Host_dict['alloc_cpus'] = alloc_cpus
