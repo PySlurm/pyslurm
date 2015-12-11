@@ -2344,6 +2344,10 @@ cdef class node:
 			Host_dict['energy']['base_consumed_energy'] = self._Node_ptr.node_array[i].energy.base_consumed_energy
 			Host_dict['energy']['previous_consumed_energy'] = self._Node_ptr.node_array[i].energy.previous_consumed_energy
 
+			# Power Managment
+
+			Host_dict['power_mgmt'] = {}
+
 			#
 			# NEED TO DO MORE WORK HERE ! SUCH AS NODE STATES AND CLUSTER/BG DETECTION
 			#
