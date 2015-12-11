@@ -2301,6 +2301,8 @@ cdef class node:
 			cpus_per_node = 1
 
 			total_used = self._Node_ptr.node_array[i].cpus
+			if (node_scaling):
+				cpus_per_node = total_used / node_scaling
 
 			name = self._Node_ptr.node_array[i].name
 
@@ -2312,7 +2314,6 @@ cdef class node:
 			Host_dict['cpus'] = self._Node_ptr.node_array[i].cpus
 			Host_dict['cpu_load'] = self._Node_ptr.node_array[i].cpu_load
 			Host_dict['cpu_spec_list'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
-			# ADD ENERGY STRUCTURE HERE
 			Host_dict['features'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
 			Host_dict['gres'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres, '')
 			Host_dict['gres_drain'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres_drain, '')
@@ -2380,33 +2381,27 @@ cdef class node:
 				my_state &= (~NODE_STATE_POWER_SAVE)
 				power_str = "+POWER"
 
-			#
-			# NEED TO DO MORE WORK HERE ! SUCH AS NODE STATES AND CLUSTER/BG DETECTION
-			#
 
 			if self._Node_ptr.node_array[i].select_nodeinfo is not NULL:
-
-				node_state = self._Node_ptr.node_array[i].node_state
 
 				rc, alloc_mem = self.__get_select_nodeinfo(SELECT_NODEDATA_MEM_ALLOC, NODE_STATE_ALLOCATED)
 
 				rc, alloc_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, NODE_STATE_ALLOCATED)
-				if not alloc_cpus and (IS_NODE_ALLOCATED(node_state) or IS_NODE_COMPLETING(node_state)):
-					alloc_cpus = Host_dict['cpus']
-				else:
-					alloc_cpus *= cpus_per_node
+				#if (cluster_flags & CLUSTER_FLAG_BG):
+					#if not alloc_cpus and (IS_NODE_ALLOCATED(node_state) or IS_NODE_COMPLETING(node_state)):
+					#	alloc_cpus = Host_dict['cpus']
+					#else:
+					#	alloc_cpus *= cpus_per_nod
 				total_used -= alloc_cpus
 
 				rc, err_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, node_state)
-
 				#if (cluster_flags & CLUSTER_FLAG_BG):
-				if 1:
-					err_cpus *= cpus_per_node
+				#	err_cpus *= cpus_per_node
 				total_used -= err_cpus
 
-				#rc, test = self.__get_select_nodeinfo(SELECT_NODEDATA_STR, node_state)
-				#if rc:
-				#	print "%s" % test
+				if ((alloc_cpus and err_cpus) or (total_used and (total_used != self._Node_ptr.node_array[i].cpus))):
+					my_state &= NODE_STATE_FLAGS
+					my_state |= NODE_STATE_MIXED
 
 			state_str = "%s%s%s%s%s" % (get_node_state(my_state), cloud_str, comp_str, drain_str, power_str)
 			Host_dict['state'] = state_str
