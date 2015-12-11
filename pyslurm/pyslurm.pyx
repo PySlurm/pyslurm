@@ -2333,7 +2333,13 @@ cdef class node:
 
 			Host_dict['energy'] = {}
 			Host_dict['energy']['base_watts'] = self._Node_ptr.node_array[i].energy.base_watts
-			Host_dict['energy']['current_watts'] = self._Node_ptr.node_array[i].energy.current_watts
+
+			currentWatts = self._Node_ptr.node_array[i].energy.current_watts
+			if currentWatts == NO_VAL:
+				Host_dict['energy']['current_watts'] = 0
+			else:
+				Host_dict['energy']['current_watts'] = currentWatts
+
 			Host_dict['energy']['consumed_energy'] = self._Node_ptr.node_array[i].energy.consumed_energy
 			Host_dict['energy']['base_consumed_energy'] = self._Node_ptr.node_array[i].energy.base_consumed_energy
 			Host_dict['energy']['previous_consumed_energy'] = self._Node_ptr.node_array[i].energy.previous_consumed_energy
