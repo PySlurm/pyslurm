@@ -67,5 +67,5 @@ if __name__ == "__main__":
 	
 			print "No jobs found !"
 	except ValueError as e:
-		print 'Partition update failed - %s' % (e)
+		print 'Job query failed - %s' % (e)
 
