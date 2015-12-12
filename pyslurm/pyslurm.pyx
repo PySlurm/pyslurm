@@ -4250,8 +4250,6 @@ cdef inline dict __get_licenses(char *licenses):
 	if (licenses is NULL):
 		return {}
 
-	print "%s" % licenses
-
 	cdef:
 		dict licDict = {}
 		int i = 0
