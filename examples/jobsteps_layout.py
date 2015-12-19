@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+
 import pyslurm
 
 def display(steps):
@@ -7,21 +11,21 @@ def display(steps):
 
 	for job, job_step in sorted(steps.iteritems()):
 
-		print "Job: %s" % job
+		print("Job: {0}".format(job))
 		for step, step_dict in job_step.iteritems():
 
-			print "\tStep: %s" % step
+			print("\tStep: {0}".format(step))
                		for task, value in sorted(step_dict.iteritems()):
 
 				if task in date_fields:
 
 					if value == 0:
-						print "\t\t%-20s : N/A" % (task)
+						print("\t\t{0:<20} : N/A".format(task))
 					else:
 						ddate = pyslurm.epoch2date(value)
-						print "\t\t%-20s : %s" % (task, ddate)
+						print("\t\t{0:<20} : {1}".format(task, ddate))
 				else:
-					print "\t\t%-20s : %s" % (task, value)
+					print("\t\t{0:<20} : {1}".format(task, value))
 
 if __name__ == "__main__":
 

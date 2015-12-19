@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pyslurm
 
 try:
 	a = pyslurm.job()
-	#print pyslurm.slurm_job_cpus_allocated_on_node("shivling")
 
 	jobs =  a.get()
-	print jobs
+	print(jobs)
 except ValueError as e:
-	print 'Job list error - %s' % (e)
+	print("Job list error - {0}".format(e.args[0]))

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pyslurm
 import sys
 from time import sleep
@@ -38,8 +40,8 @@ if __name__ == "__main__":
 	block_dict = a.get()
 	lastUpdate = a.lastUpdate()
 
-	print "Loaded Slurm block data at %s" % pyslurm.epoch2date(lastUpdate)
-	print "Waiting for updated data ... polling every %s second" % interval
+	print("Loaded Slurm block data at {0}".format(pyslurm.epoch2date(lastUpdate)))
+	print("Waiting for updated data ... polling every {0} second".format(interval))
 
 	sleep(0.5)
 
@@ -50,21 +52,21 @@ if __name__ == "__main__":
 		if newUpdate > lastUpdate:
 
 			lastUpdate = a.lastUpdate()
-			print "Block data update time changed - %s" % pyslurm.epoch2date(lastUpdate)
+			print("Block data update time changed - {0}".format(pyslurm.epoch2date(lastUpdate)))
 
 			b = DictDiffer(block_dict, new_dict)
 			if b.changed():
-				print "\tChanged block %s" % b.changed()
+				print("\tChanged block {0}".format(b.changed()))
 				change = 1
 			if b.added():
-				print "\tAdded block %s" % b.added()
+				print("\tAdded block {0}".format(b.added()))
 				change = 1
 			if b.removed():
-				print "\tRemoved block %s" % b.removed()
+				print("\tRemoved block {0}".format(b.removed()))
 				change = 1
 
 			if change == 0:
-				print "\tBut no data was changed !"
+				print("\tBut no data was changed !")
 			change = 0
 
 			block_dict = new_dict

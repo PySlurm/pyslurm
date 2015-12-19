@@ -15,6 +15,8 @@
    Some states are not valid on a Blue Gene
 """
 
+from __future__ import print_function
+
 import pyslurm
 
 Node_dict = {
@@ -27,6 +29,6 @@ try:
 	a = pyslurm.node()
 	rc = a.update(Node_dict)
 except ValueError as e:
-	print 'Node Update error - %s' % (e)
+	print("Node Update error - {0}".format(e.args[0]))
 else:
-	print "Node %s successfully updated" % Node_dict["node_names"]
+	print("Node {0} successfully updated".format(Node_dict["node_names"]))
