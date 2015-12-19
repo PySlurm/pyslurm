@@ -46,6 +46,8 @@ ctypedef struct trigger_info:
 	char *   program
 """
 
+from __future__ import print_function
+
 import pyslurm
 
 trigDict = {
@@ -60,6 +62,6 @@ try:
 	a = pyslurm.trigger()
 	a.set(trigDict)
 except ValueError as e:
-        print 'Trigger set failed - %s' % (e)
+        print("Trigger set failed - {0}".format(e.args[0]))
 else:
-	print "Trigger set !"
+	print("Trigger set !")
