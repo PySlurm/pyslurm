@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pyslurm
 import sys
 
@@ -19,24 +21,24 @@ def display(job_dict):
 
 		for key, value in sorted(job_dict.iteritems()):
 
-			print "JobID %s :" % key
+			print("JobID {0} :".format(key))
 			for part_key in sorted(value.iterkeys()):
 
 				if part_key in time_fields:
-					print "\t%-20s : Infinite" % (part_key)
+					print("\t{0:<20} : Infinite".format(part_key))
 					continue
 
 				if part_key in date_fields:
 
 					if value[part_key] == 0:
-						print "\t%-20s : N/A" % (part_key)
+						print("\t{0:<20} : N/A".format(part_key))
 					else:
 						ddate = pyslurm.epoch2date(value[part_key])
-						print "\t%-20s : %s" % (part_key, ddate)
+						print("\t{0:<20} : {1}".format(part_key, ddate))
 				else:
-					print "\t%-20s : %s" % (part_key, value[part_key])
+					print("\t{0:<20} : {1}".format(part_key, value[part_key]))
 				
-			print "-" * 80
+			print("-" * 80)
 
 if __name__ == "__main__":
 
@@ -48,24 +50,24 @@ if __name__ == "__main__":
 
 			display(jobs)
 
-			print
-			print "Number of Jobs - %s" % len(jobs)
-			print
+			print()
+			print("Number of Jobs - {0}".format(len(jobs)))
+			print()
 
 			pending = a.find('job_state', 'PENDING')
 			running = a.find('job_state', 'RUNNING')
+			held = a.find('job_state', 'RUNNING')
 
-			#print "%s" % a.find('state_reason', 'HOLD')
-
-			print "Number of pending jobs - %s" % len(pending)
-			print "Number of running jobs - %s" % len(running)
-			print
+			print("Number of pending jobs - {0}".format(len(pending)))
+			print("Number of running jobs - {0}".format(len(running)))
+			print()
 		
-			print "JobIDs in Running state - %s" % running
-			print
+			print("JobIDs in Running state - {0}".format(running))
+			print("JobIDs in Pending state - {0}".format(pending))
+			print()
 		else:
 	
-			print "No jobs found !"
+			print("No jobs found !")
 	except ValueError as e:
-		print 'Job query failed - %s' % (e)
+		print("Job query failed - {0}".format(e.args[0]))
 

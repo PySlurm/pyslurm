@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pyslurm
 
 try:
@@ -12,6 +14,6 @@ try:
 	a.update(res_dict)
 
 except ValueError as e:
-	print 'Error - %s' % (e)
+	printl("Error - {0}".format(e.args[0]))
 else:
-	print "Reservation %s updated" % res_dict["name"]
+	print("Reservation {0} updated".format(res_dict["name"]))

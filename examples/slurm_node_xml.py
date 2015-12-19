@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from optparse import OptionParser
 
 import pyslurm
@@ -18,7 +20,7 @@ stdout_orig = sys.stdout
 def loadavg(host, rrd=""):
 
 	loadavg = "/proc/loadavg"
-	load_rrd = '%s/%s_loadavg.rrd' % (rrd, host)
+	load_rrd = '{0}/{1}_loadavg.rrd'.format(rrd, host)
 
 	try:
 		f = open(loadavg, 'r').readline().strip()
@@ -32,16 +34,16 @@ def loadavg(host, rrd=""):
 
 	if rrd != "":
 		if not os.path.exists(load_rrd):
-			os.system('/usr/bin/rrdtool create %s --step 60 \
+			os.system("/usr/bin/rrdtool create {0} --step 60 \
 					DS:loadl1:GAUGE:120:0:U \
 					DS:loadl5:GAUGE:120:0:U \
 					DS:loadl15:GAUGE:120:0:U \
 					RRA:AVERAGE:0.5:1:2160 \
 					RRA:AVERAGE:0.5:5:2016 \
 					RRA:AVERAGE:0.5:15:2880 \
-					RRA:AVERAGE:0.5:60:8760' % load_rrd)
+					RRA:AVERAGE:0.5:60:8760".format(load_rrd))
 
-		os.system('/usr/bin/rrdtool update %s N:%s:%s:%s' % (load_rrd, avg1min, avg5min, avg15min))
+		os.system("/usr/bin/rrdtool update {0} N:{1}:{2}:{3}".format(load_rrd, avg1min, avg5min, avg15min))
 
 	return avg1min, avg5min, avg15min, running, total
 
@@ -97,6 +99,7 @@ if __name__ == '__main__':
 
 	lock_file = "/var/tmp/slurm_node_xml.lck"
 	if os.path.exists(lock_file):
+		print("Previous lock file ({0}) exists !".format(lock_file))
 		sys.exit()
 	else:
 		open(lock_file,'w').close()
@@ -105,7 +108,7 @@ if __name__ == '__main__':
 	if options.rrd:
 		rrd = options.directory
 
-	node_file = r'%s/%s.xml' % (options.directory, my_host)
+	node_file = r'{0}/{1}.xml'.format(options.directory, my_host)
 	if not options.output:
 		stdout_orig = sys.stdout
 		sys.stdout = open(node_file, 'w')
@@ -113,48 +116,45 @@ if __name__ == '__main__':
 	now = int(time.time())
 	sys.stdout.write('<?xml version="1.0" encoding="iso-8859-1" ?>\n')
 	sys.stdout.write("<node>\n")
-	sys.stdout.write("\t<name>%s</name>\n" % my_host)
-	sys.stdout.write("\t<lastUpdate>%s</lastUpdate>\n" % now)
+	sys.stdout.write("\t<name>{0}</name>\n".format(my_host))
+	sys.stdout.write("\t<lastUpdate>{0}</lastUpdate>\n".format(now))
 
 	Average = loadavg(my_host, rrd)
-	sys.stdout.write("\t<loadAvg>%s,%s,%s</loadAvg>\n" % (Average[0], Average[1], Average[2]))
+	sys.stdout.write("\t<loadAvg>{0},{1},{2}</loadAvg>\n".format(Average[0], Average[1], Average[2]))
 
 	Uptime = uptime(my_host, rrd)
-	sys.stdout.write("\t<upTime>%s,%s</upTime>\n" % (Uptime[0], Uptime[1]))
+	sys.stdout.write("\t<upTime>{0},{1}</upTime>\n".format(Uptime[0], Uptime[1]))
 
 	Memory = meminfo(my_host, rrd)
-	sys.stdout.write("\t<memTotal>%s</memTotal>\n" % Memory['MemTotal'])
-	sys.stdout.write("\t<memFree>%s</memFree>\n" % Memory['MemFree'])
-	sys.stdout.write("\t<cached>%s</cached>\n" % Memory['Cached'])
-	sys.stdout.write("\t<buffers>%s</buffers>\n" % Memory['Buffers'])
+	sys.stdout.write("\t<memTotal>{0}</memTotal>\n".format(Memory['MemTotal']))
+	sys.stdout.write("\t<memFree>{0}</memFree>\n".format(Memory['MemFree']))
+	sys.stdout.write("\t<cached>{0}</cached>\n".format(Memory['Cached']))
+	sys.stdout.write("\t<buffers>{0}</buffers>\n".format(Memory['Buffers']))
 
 	a = pyslurm.slurm_load_slurmd_status()
-	print a
-	if len(a) > 0:
-		sys.stdout.write("\t<slurmd>\n")
-		sys.stdout.write("\t\t<booted>%s</booted>\n" % a[0])
-		sys.stdout.write("\t\t<lastCtldUpdate>%s</lastCtldUpdate>\n" % a[1])
-		sys.stdout.write("\t\t<pid>%s</pid>\n" % a[2])
-		sys.stdout.write("\t\t<jobSteps>%s</jobSteps>\n" % a[3])
-		sys.stdout.write("\t\t<version>%s</version>\n" % a[4])
-		sys.stdout.write("\t</slurmd>\n")
+	if a:
+		for host, data in a.iteritems():
+			sys.stdout.write("\t<slurmd>\n")
+                	for key, value in data.iteritems():
+				sys.stdout.write("\t\t<{0}>{1}</{0}>\n".format(key,value,key))
+			sys.stdout.write("\t</slurmd>\n")
 
-	a, b = pyslurm.slurm_load_jobs()
-	jobs = pyslurm.get_job_data(b)
+	a = pyslurm.job()
+	jobs = a.get()
 
 	now = int(time.time())
 	PiDs = {}
 	for key, value in jobs.iteritems():
 
-		jobid = value[1]
-		if value[6] == "Running":
+		jobid = key
+		if value['job_state'] == "RUNNING":
 			userid = pwd.getpwuid(value[4])[0]
-			nodes = value[14].split(',')
+			nodes = value['alloc_node'].split(',')
 
 			if my_host in nodes:
 				PiDs[jobid] = []
 
-			a = os.popen('/bin/ps --noheaders -u %s -o pid,ppid,size,rss,vsize,pcpu,args' % userid, 'r')
+			a = os.popen('/bin/ps --noheaders -u {0} -o pid,ppid,size,rss,vsize,pcpu,args'.format(userid), 'r')
 			for lines in a:
 				line = lines.split()
 				command = " ".join(line[6:])
@@ -171,16 +171,16 @@ if __name__ == '__main__':
 		sys.stdout.write("\t<jobs>\n")
 		for job, value in PiDs.iteritems():
 			sys.stdout.write("\t\t<job>\n")
-			sys.stdout.write("\t\t\t<id>%s</id>\n" % job)
+			sys.stdout.write("\t\t\t<id>{0}</id>\n".format(job))
 			for pid in value:
 				sys.stdout.write("\t\t\t<process>\n")
-				sys.stdout.write("\t\t\t\t<pid>%s</pid>\n" % pid[0])
-				sys.stdout.write("\t\t\t\t<ppid>%s</ppid>\n" % pid[1])
-				sys.stdout.write("\t\t\t\t<size>%s</size>\n" % pid[2])
-				sys.stdout.write("\t\t\t\t<rss>%s</rss>\n" % pid[3])
-				sys.stdout.write("\t\t\t\t<vsize>%s</vsize>\n" % pid[4])
-				sys.stdout.write("\t\t\t\t<pcpu>%s</pcpu>\n" % pid[5])
-				sys.stdout.write("\t\t\t\t<args><![CDATA[%s]]></args>\n" % pid[6])
+				sys.stdout.write("\t\t\t\t<pid>{0}</pid>\n".format(pid[0]))
+				sys.stdout.write("\t\t\t\t<ppid>{0}</ppid>\n".format(pid[1]))
+				sys.stdout.write("\t\t\t\t<size>{0}</size>\n".format(pid[2]))
+				sys.stdout.write("\t\t\t\t<rss>{0}</rss>\n".format(pid[3]))
+				sys.stdout.write("\t\t\t\t<vsize>{0}</vsize>\n".format(pid[4]))
+				sys.stdout.write("\t\t\t\t<pcpu>{0}</pcpu>\n".format(pid[5]))
+				sys.stdout.write("\t\t\t\t<args><![CDATA[{0}]]></args>\n".format(pid[6]))
 				sys.stdout.write("\t\t\t</process>\n")
 			sys.stdout.write("\t\t</job>\n")
 
@@ -188,8 +188,6 @@ if __name__ == '__main__':
 
 	sys.stdout.write("</node>\n")
 	sys.stdout.flush()
-
-	pyslurm.slurm_free_job_info_msg(b)
 
 	if not options.output:
 		sys.stdout.close()

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pyslurm
 from time import gmtime, strftime
 
@@ -7,9 +9,9 @@ try:
 	a = pyslurm.topology()
 	b = a.get()
 except ValueError as e:
-	print 'Topology error - %s' % (e)
+	print("Topology error - {0}".format(e.args[0]))
 else:
 	if not b:
-		print "No toplogy found"
+		print("No toplogy found")
 	else:
-		print b
+		print(b)

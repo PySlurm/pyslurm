@@ -1,24 +1,25 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 def display(lic_dict):
 
 	if lic_dict:
 
-		print licenses.ids()
-		print "State last updated : %s" % pyslurm.epoch2date(licenses.lastUpdate())
-		print "-" * 80
+		print("State last updated : {0}".format(pyslurm.epoch2date(licenses.lastUpdate())))
+		print('{0:*^80}'.format(''))
+
 		for key, value in lic_dict.iteritems():
 
-			print "%s :" % (key)
+			print("{0} :".format(key))
 			for part_key in sorted(value.iterkeys()):
 
-				print "\t%-17s : %s" % (part_key, value[part_key])
+				print("\t{0:<17} : {1}".format(part_key, value[part_key]))
 
-			print "-" * 80
+			print('{0:*^80}'.format(''))
 	else:
 		
-		print "No Licenses found !"
-
+		print("No Licenses found !")
 
 if __name__ == "__main__":
 
@@ -40,12 +41,12 @@ if __name__ == "__main__":
 			new = licenses.lastUpdate()
 			if new > old:
 				old  = new
-				print "*****************"
+				print('{0:*^80}'.format(''))
 				display(lic)
-				print "*****************"
+				print('{0:*^80}'.format(''))
 	except ValueError as e:
-		print "License error : %s" % (e)
+		print("License error : {0}".format(e.args[0]))
 		sys.exit(-1)
 	except KeyboardInterrupt:
-		print "Exiting...."
+		print("Exiting....")
 		sys.exit()

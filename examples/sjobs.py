@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pyslurm
 import sys
 from pwd import getpwnam, getpwuid
@@ -24,15 +26,15 @@ if __name__ == "__main__":
 		pyslurmjob = pyslurm.job()
 		jobs = pyslurmjob.get()
 	except ValueError as e:
-        	print 'Job query failed - %s' % (e)
+        	print("Job query failed - {0}".format(e.args[0]))
 		sys.exit(1)
 
 	users = list_users(jobs)
 
 	delim =  "+-------------------------------------------+-----------+------------+---------------+-----------------+--------------+--------------+"
-	print delim
-	print "|                USER (NAME)                | CPUS USED | NODES USED | CPU REQUESTED | NODES REQUESTED | JOBS RUNNING | JOBS PENDING |"
-	print delim
+	print(delim)
+	print("|                USER (NAME)                | CPUS USED | NODES USED | CPU REQUESTED | NODES REQUESTED | JOBS RUNNING | JOBS PENDING |")
+	print(delim)
 
 	total_procs_request = 0
 	total_nodes_request = 0
@@ -60,8 +62,8 @@ if __name__ == "__main__":
 
 			if not user:
 				user = jobs[jobid]["user_id"]
-				gecos = "%s" % getpwuid(user)[4]
-				user = "%s" % user
+				gecos = "{0}".format(getpwuid(user)[4])
+				user = "{0}".format(user)
 
 			if jobs[jobid]["job_state"] == "PENDING":
 				pending = pending + 1
@@ -80,9 +82,9 @@ if __name__ == "__main__":
 		total_job_running = total_job_running + running
 		total_job_pending = total_job_pending + pending
 
-		print "|%9s (%30s) | %9d | %10d | %13d | %15d | %12d | %12d |" % (user.upper(), gecos, procs_used, nodes_used, procs_request, nodes_request, running, pending)
+		print("|{0:>9} ({1:30}) | {2:>9d} | {3:>10d} | {4:>13d} | {5:>15d} | {6:>12d} | {7:>12d} |".format(user.upper(), gecos, procs_used, nodes_used, procs_request, nodes_request, running, pending))
 
-	print delim
-	print "|                   TOTAL                   | %9d | %10d | %13d | %15d | %12d | %12d |" % (total_procs_used, total_nodes_used, total_procs_request, total_nodes_request, total_job_running, total_job_pending)
-	print delim
+	print(delim)
+	print("|                   TOTAL                   | {0:>9d} | {1:>10d} | {2:>13d} | {3:>15d} | {4:>12d} | {5:>12d} |".format(total_procs_used, total_nodes_used, total_procs_request, total_nodes_request, total_job_running, total_job_pending))
+	print(delim)
 

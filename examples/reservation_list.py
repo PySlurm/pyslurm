@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pyslurm
 import datetime
 
@@ -11,20 +13,20 @@ def display(res_dict):
 
 		for key, value in res_dict.iteritems():
 
-			print "%s :" % key
+			print("{0} :".format(key))
 			for res_key in sorted(value.iterkeys()):
 
 				if res_key in date_fields:
 
 					if value[res_key] == 0:
-						print "\t%-20s : N/A" % (res_key)
+						print("\t{0:<20} : N/A".format(res_key))
 					else:
 						ddate = pyslurm.epoch2date(value[res_key])
-						print "\t%-20s : %s" % (res_key, ddate)
+						print("\t{0:<20} : {1}".format(res_key, ddate))
 				else:
-						print "\t%-20s : %s" % (res_key, value[res_key])
+						print("\t{0:<20} : {1}".format(res_key, value[res_key]))
 
-		print "-" * 80
+		print('{0:*^80}'.format(''))
 		
 
 if __name__ == "__main__":
@@ -35,8 +37,8 @@ if __name__ == "__main__":
 
 		if len(res_dict) > 0:
 			display(res_dict)
-			print "Res IDs - %s" % a.ids()
+			print("Res IDs - {0}".format(a.ids()))
 		else:
-			print "No reservations found !"
+			print("No reservations found !")
 	except ValueError as e:
-		print 'Error - %s' % (e)
+		print("Error - {0}".format(e.args[0]))
