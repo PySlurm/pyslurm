@@ -193,7 +193,7 @@ def slurm_api_version():
 
 	return (SLURM_VERSION_MAJOR(version), SLURM_VERSION_MINOR(version), SLURM_VERSION_MICRO(version))
 
-cpdef list slurm_load_slurmd_status():
+cpdef dict slurm_load_slurmd_status():
 
 	u"""Issue RPC to get and load the status of Slurmd daemon.
 
