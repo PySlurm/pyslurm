@@ -244,7 +244,7 @@ if args[1] == 'build' or args[1] == 'build_ext':
 
 	# Test for supported min and max Slurm versions 
 
-        SLURM_INC_VER = read_inc_version("%s/slurm/slurm.h" % SLURM_INC)
+	SLURM_INC_VER = read_inc_version("%s/slurm/slurm.h" % SLURM_INC)
 	if (int(SLURM_INC_VER,16) < int(__min_slurm_hex_version__,16)) or (int(SLURM_INC_VER,16) > int(__max_slurm_hex_version__,16)):
 		fatal("Build - Incorrect slurm version detected, require Slurm-%s to slurm-%s" % (inc_vers2str(__min_slurm_hex_version__), inc_vers2str(__max_slurm_hex_version__)))
 		sys.exit(-1)
