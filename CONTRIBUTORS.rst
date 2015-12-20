@@ -9,3 +9,4 @@ Contributors
 * Stephan Gorget
 * Rémi Palancher
 * Mark Roberts
+* Giovanni Torres
