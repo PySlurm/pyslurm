@@ -684,7 +684,7 @@ cdef class partition:
 
 		return self._PartDict.get(partID, {})
 
-	def find(self, char *name='', val=''):
+	def find(self, name='', val=''):
 
 		u"""Search for a property and associated value in the retrieved partition data.
 
@@ -1758,7 +1758,7 @@ cdef class job:
 
 		return self._JobDict.get(jobID, {})
 
-	def find(self, char *name='', val=''):
+	def find(self, name='', val=''):
 
 		u"""Search for a property and associated value in the retrieved job data.
 
@@ -3170,7 +3170,7 @@ cdef class reservation:
 
 		return self._ResDict.get(resID, {})
 
-	def find(self, char *name='', val=''):
+	def find(self, name='', val=''):
 
 		u"""Search for a property and associated value in the retrieved reservation data
 
@@ -3556,7 +3556,7 @@ cdef class block:
 
 		return self._BlockDict.get(blockID, {})
 
-	def find(self, char *name='', val=''):
+	def find(self, name='', val=''):
 
 		u"""Search for a property and associated value in the retrieved block data.
 
