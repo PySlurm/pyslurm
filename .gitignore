@@ -6,10 +6,11 @@ build/
 
 #doc/
 
-# Igmore Temporary Build Files #
+# Ignore Temporary Build Files #
 
 pyslurm/pyslurm.c
 pyslurm/bluegene.pxi
+pyslurm/slurm_version.pxi
 pyslurm/*.py~
 pyslurm/*.pyc
 pyslurm/*.pyx~
