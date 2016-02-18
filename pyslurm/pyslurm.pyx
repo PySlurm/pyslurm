@@ -1394,25 +1394,6 @@ cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0) except? -1:
 
 	return errCode
 
-cpdef int slurm_terminate_job(uint32_t JobID=0) except? -1:
-
-	u"""Terminate a running slurm job step.
-
-	:param int JobID: Job identifier (default=0)
-
-	:returns: 0 for success or -1 for error and set slurm errno
-	:rtype: `integer`
-	"""
-
-	cdef int apiError = 0
-	cdef int errCode = slurm.slurm_terminate_job(JobID)
-
-	if errCode != 0:
-		apiError = slurm.slurm_get_errno()
-		raise ValueError(slurm.slurm_strerror(apiError), apiError)
-
-	return errCode
-
 cpdef int slurm_notify_job(uint32_t JobID=0, char* Msg='') except? -1:
 
 	u"""Notify a message to a running slurm job step.

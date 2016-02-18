@@ -23,7 +23,7 @@ logging.basicConfig(level=20)
 
 __version__ = "2.6.0"
 __min_slurm_hex_version__ = "0x020600"
-__max_slurm_hex_version__ = "0x020605"
+__max_slurm_hex_version__ = "0x020609"
 
 def fatal(logstring, code=1):
 	logger.error("Fatal: " + logstring)
