@@ -3,4 +3,5 @@ Contributors
 ===================
 
 * Mark Roberts
-* Stephan Gorget
+* Stephan Gorget (past author)
+* Giovanni Torres
