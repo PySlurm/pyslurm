@@ -2,7 +2,7 @@
 PySlurm: Slurm interface for Python
 ***********************************
 
-:Authors: Mark Roberts <mark@gingergeeks.co.uk> and Stephan Gorget <phantez@gmail.com>
+:Authors: Mark Roberts <mark@gingergeeks.co.uk> and Giovanni Torres <giovanni.torres@gmail.com>
 
 Overview
 ========
