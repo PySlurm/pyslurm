@@ -2956,9 +2956,7 @@ cdef class trigger:
 			char *JobId
 			int  errCode = -1
 
-		memset(&trigger_set, 0, sizeof(slurm.trigger_info_t))
-
-		trigger_set.user_id = 0
+		slurm.slurm_init_trigger_msg(&trigger_set)
 
 		if 'jobid' in trigger_dict:
 
