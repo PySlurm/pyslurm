@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future_ import print_function
+from __future__ import print_function
 
 import pyslurm
 
