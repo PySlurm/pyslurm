@@ -4411,7 +4411,11 @@ cdef inline dict __get_licenses(char *licenses):
 
 	if alist:
 		for i in range(listLen):
-			key, value = alist[i].split(':')
+			value = 1
+			try:
+				key, value = alist[i].split(':')
+			except:
+				key = alist[i]
 			licDict[u"%s" % key] = value
 
 	return licDict
