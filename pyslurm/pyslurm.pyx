@@ -2191,7 +2191,7 @@ cdef class node:
 
 	cdef:
 		slurm.node_info_msg_t *_Node_ptr
-		slurm.node_info_t _record
+		slurm.node_info_t *_record
 		slurm.time_t _lastUpdate
 		uint16_t _ShowFlags
 		dict _NodeDict
@@ -2351,7 +2351,7 @@ cdef class node:
 
 		for i in range(self._Node_ptr.record_count):
 
-			self._record = self._Node_ptr.node_array[i]
+			self._record = &self._Node_ptr.node_array[i]
 
 			if self._record.name is NULL:
 				break
@@ -2360,57 +2360,57 @@ cdef class node:
 			alloc_mem = alloc_cpus = err_cpus = 0
 			cpus_per_node = 1
 
-			total_used = self._Node_ptr.node_array[i].cpus
+			total_used = self._record.cpus
 			if (node_scaling):
 				cpus_per_node = total_used / node_scaling
 
-			name = self._Node_ptr.node_array[i].name
+			name = self._record.name
 
-			Host_dict['arch'] = slurm.stringOrNone(self._Node_ptr.node_array[i].arch, '')
-			Host_dict['boards'] = self._Node_ptr.node_array[i].boards
-			Host_dict['boot_time'] = self._Node_ptr.node_array[i].boot_time
-			Host_dict['cores'] = self._Node_ptr.node_array[i].cores
-			Host_dict['core_spec_cnt'] = self._Node_ptr.node_array[i].core_spec_cnt
-			Host_dict['cpus'] = self._Node_ptr.node_array[i].cpus
-			Host_dict['cpu_load'] = self._Node_ptr.node_array[i].cpu_load
-			Host_dict['cpu_spec_list'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
-			Host_dict['features'] = slurm.listOrNone(self._Node_ptr.node_array[i].features, '')
-			Host_dict['free_mem'] = self._Node_ptr.node_array[i].free_mem
-			Host_dict['gres'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres, '')
-			Host_dict['gres_drain'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres_drain, '')
-			Host_dict['gres_used'] = slurm.listOrNone(self._Node_ptr.node_array[i].gres_used, '')
-			Host_dict['mem_spec_limit'] = self._Node_ptr.node_array[i].mem_spec_limit
-			Host_dict['name'] = slurm.stringOrNone(self._Node_ptr.node_array[i].name, '')
-			Host_dict['node_addr'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_addr, '')
-			Host_dict['node_hostname'] = slurm.stringOrNone(self._Node_ptr.node_array[i].node_hostname, '')
-			Host_dict['os'] = slurm.stringOrNone(self._Node_ptr.node_array[i].os, '')
-			Host_dict['owner'] = self._Node_ptr.node_array[i].owner
-			Host_dict['real_memory'] = self._Node_ptr.node_array[i].real_memory
-			Host_dict['reason'] = slurm.stringOrNone(self._Node_ptr.node_array[i].reason, '')
-			Host_dict['reason_time'] = self._Node_ptr.node_array[i].reason_time
-			Host_dict['reason_uid'] = self._Node_ptr.node_array[i].reason_uid
-			Host_dict['slurmd_start_time'] = self._Node_ptr.node_array[i].slurmd_start_time
-			Host_dict['sockets'] = self._Node_ptr.node_array[i].sockets
-			Host_dict['threads'] = self._Node_ptr.node_array[i].threads
-			Host_dict['tmp_disk'] = self._Node_ptr.node_array[i].tmp_disk
-			Host_dict['weight'] = self._Node_ptr.node_array[i].weight
-			Host_dict['tres_fmt_str'] = slurm.stringOrNone(self._Node_ptr.node_array[i].tres_fmt_str, '')
-			Host_dict['version'] = slurm.stringOrNone(self._Node_ptr.node_array[i].version, '')
+			Host_dict['arch'] = slurm.stringOrNone(self._record.arch, '')
+			Host_dict['boards'] = self._record.boards
+			Host_dict['boot_time'] = self._record.boot_time
+			Host_dict['cores'] = self._record.cores
+			Host_dict['core_spec_cnt'] = self._record.core_spec_cnt
+			Host_dict['cpus'] = self._record.cpus
+			Host_dict['cpu_load'] = self._record.cpu_load
+			Host_dict['cpu_spec_list'] = slurm.listOrNone(self._record.features, '')
+			Host_dict['features'] = slurm.listOrNone(self._record.features, '')
+			Host_dict['free_mem'] = self._record.free_mem
+			Host_dict['gres'] = slurm.listOrNone(self._record.gres, '')
+			Host_dict['gres_drain'] = slurm.listOrNone(self._record.gres_drain, '')
+			Host_dict['gres_used'] = slurm.listOrNone(self._record.gres_used, '')
+			Host_dict['mem_spec_limit'] = self._record.mem_spec_limit
+			Host_dict['name'] = slurm.stringOrNone(self._record.name, '')
+			Host_dict['node_addr'] = slurm.stringOrNone(self._record.node_addr, '')
+			Host_dict['node_hostname'] = slurm.stringOrNone(self._record.node_hostname, '')
+			Host_dict['os'] = slurm.stringOrNone(self._record.os, '')
+			Host_dict['owner'] = self._record.owner
+			Host_dict['real_memory'] = self._record.real_memory
+			Host_dict['reason'] = slurm.stringOrNone(self._record.reason, '')
+			Host_dict['reason_time'] = self._record.reason_time
+			Host_dict['reason_uid'] = self._record.reason_uid
+			Host_dict['slurmd_start_time'] = self._record.slurmd_start_time
+			Host_dict['sockets'] = self._record.sockets
+			Host_dict['threads'] = self._record.threads
+			Host_dict['tmp_disk'] = self._record.tmp_disk
+			Host_dict['weight'] = self._record.weight
+			Host_dict['tres_fmt_str'] = slurm.stringOrNone(self._record.tres_fmt_str, '')
+			Host_dict['version'] = slurm.stringOrNone(self._record.version, '')
 
 			# Energy statistics
 
 			Host_dict['energy'] = {}
-			Host_dict['energy']['base_watts'] = self._Node_ptr.node_array[i].energy.base_watts
+			Host_dict['energy']['base_watts'] = self._record.energy.base_watts
 
-			currentWatts = self._Node_ptr.node_array[i].energy.current_watts
+			currentWatts = self._record.energy.current_watts
 			if currentWatts == NO_VAL:
 				Host_dict['energy']['current_watts'] = 0
 			else:
 				Host_dict['energy']['current_watts'] = currentWatts
 
-			Host_dict['energy']['consumed_energy'] = self._Node_ptr.node_array[i].energy.consumed_energy
-			Host_dict['energy']['base_consumed_energy'] = self._Node_ptr.node_array[i].energy.base_consumed_energy
-			Host_dict['energy']['previous_consumed_energy'] = self._Node_ptr.node_array[i].energy.previous_consumed_energy
+			Host_dict['energy']['consumed_energy'] = self._record.energy.consumed_energy
+			Host_dict['energy']['base_consumed_energy'] = self._record.energy.base_consumed_energy
+			Host_dict['energy']['previous_consumed_energy'] = self._record.energy.previous_consumed_energy
 
 			# Power Managment
 
@@ -2418,7 +2418,8 @@ cdef class node:
 
 			# Enhanced node state - src/api/node_info.c
 
-			node_state = self._Node_ptr.node_array[i].node_state
+			comp_str = drain_str = power_str = ''
+			node_state = self._record.node_state
 			my_state = node_state
 
 			if (my_state & NODE_STATE_CLOUD):
@@ -2441,7 +2442,7 @@ cdef class node:
 				my_state &= (~NODE_STATE_POWER_SAVE)
 				power_str = "+POWER"
 
-			if self._Node_ptr.node_array[i].select_nodeinfo is not NULL:
+			if self._record.select_nodeinfo is not NULL:
 
 				rc, alloc_mem = self.__get_select_nodeinfo(SELECT_NODEDATA_MEM_ALLOC, NODE_STATE_ALLOCATED)
 
@@ -2458,7 +2459,7 @@ cdef class node:
 				#	err_cpus *= cpus_per_node
 				total_used -= err_cpus
 
-				if ((alloc_cpus and err_cpus) or (total_used and (total_used != self._Node_ptr.node_array[i].cpus))):
+				if ((alloc_cpus and err_cpus) or (total_used and (total_used != self._record.cpus))):
 					my_state &= NODE_STATE_FLAGS
 					my_state |= NODE_STATE_MIXED
 
@@ -2470,6 +2471,8 @@ cdef class node:
 			Host_dict['total_cpus'] = total_used
 
 			Hosts[u'%s' % name] = Host_dict
+			Host_dict = {}
+			self._record = NULL
 
 		self._NodeDict = Hosts
 
@@ -2521,12 +2524,14 @@ cdef class node:
 
 			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &retval16)
 			if retval == 0:
+				nodeinfo = NULL
 				return retval, retval16
 
 		if dataType == SELECT_NODEDATA_MEM_ALLOC:
 
 			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &retval32)
 			if retval == 0:
+				nodeinfo = NULL
 				return retval, retval32
 
 		if dataType == SELECT_NODEDATA_BITMAP:
@@ -2549,6 +2554,7 @@ cdef class node:
 		if dataType == SELECT_NODEDATA_PTR:
 			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &tmp_ptr)
 			if retval == 0:
+				nodeinfo = NULL
 				# opaque data as dict 
 				pass
 
