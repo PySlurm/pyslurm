@@ -125,7 +125,7 @@ def clean():
 			fatal("Clean - failed to remove pyslurm build/ directory !") 
 			sys.exit(-1)
 
-	files = [ "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi", "pyslurm/pyslurm.so", "pyslurm/slurm_version.pxi" ]
+	files = [ "pyslurm/__init__.pyc", "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi", "pyslurm/pyslurm.so", "pyslurm/slurm_version.pxi" ]
 
 	for file in files:
 
