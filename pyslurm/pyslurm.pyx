@@ -4463,7 +4463,7 @@ cdef inline object __get_node_use(uint32_t NodeType):
 
 def get_trigger_res_type(uint16_t inx):
 
-	u"""Returns a tuple that represents the slurm trigger res type.
+	u"""Returns a string that represents the slurm trigger res type.
 
 	:param int ResType: Slurm trigger res state
 
@@ -4501,7 +4501,7 @@ cdef inline object __get_trigger_res_type(uint16_t ResType):
 
 def get_trigger_type(uint32_t inx):
 
-	u"""Returns a tuple that represents the state of the slurm trigger.
+	u"""Returns a string that represents the state of the slurm trigger.
 
 	:param int TriggerType: Slurm trigger type
 
