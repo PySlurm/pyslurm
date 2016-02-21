@@ -35,7 +35,7 @@ def display(res_dict):
 		if value['start_time'] <= now and value['end_time'] >= now:
 			resvState = "ACTIVE"
 		
-		print "\t%-20s : %s\n" % ("state", resvState)
+		print("\t%-20s : %s\n" % ("state", resvState))
 
 if __name__ == "__main__":
 
