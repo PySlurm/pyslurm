@@ -2016,11 +2016,11 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 # Slurm declarations not in slurm.h
 #
 
-cdef inline void* xmalloc(size_t __sz):
+cdef inline void* xmalloc(__sz):
 	return slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
 
-cdef inline xfree(char*__p):
-	slurm_xfree(<void **>&(__p), __FILE__, __LINE__, __FUNCTION__)
+cdef inline xfree(void *__p):
+	slurm_xfree(&__p, __FILE__, __LINE__, __FUNCTION__)
 
 cdef extern void slurm_accounting_enforce_string(uint16_t enforce, char *, int)
 cdef extern void slurm_api_clear_config()
