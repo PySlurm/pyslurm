@@ -351,7 +351,7 @@ cdef class config:
 			listNum = slurm.slurm_list_count(config_list)
 			iters = slurm.slurm_list_iterator_create(config_list)
 
-			for i from 0 <= i < listNum:
+			for i in range(listNum):
 
 				keyPairs = <config_key_pair_t *>slurm.slurm_list_next(iters)
 				name = keyPairs.name
@@ -604,7 +604,7 @@ cdef class config:
 
 				#listNum = slurm.slurm_list_count(config_list)
 				#iters = slurm.slurm_list_iterator_create(config_list)
-				#for i from 0 <= i < listNum:
+				#for i in range(listNum):
 
 					#keyPairs = <config_key_pair_t *>slurm.slurm_list_next(iters)
 					#name = keyPairs.name
@@ -802,7 +802,7 @@ cdef class partition:
 		if self._Partition_ptr is not NULL:
 
 			self._lastUpdate = self._Partition_ptr.last_update
-			for i from 0 <= i < self._Partition_ptr.record_count:
+			for i in range(self._Partition_ptr.record_count):
 
 				Part_dict = {}
 				self._record = self._Partition_ptr.partition_array[i]
@@ -1850,7 +1850,7 @@ cdef class job:
 
 		if self._job_ptr is not NULL:
 
-			for i from 0 <= i < self._job_ptr.record_count:
+			for i in range(self._job_ptr.record_count):
 
 				self._record = self._job_ptr.job_array[i]
 				job_id = self._job_ptr.job_array[i].job_id
@@ -1904,7 +1904,7 @@ cdef class job:
 				Job_dict[u'nice'] = self._job_ptr.job_array[i].nice
 
 				#if self._job_ptr.job_array[i].node_inx[0] != -1:
-				#	for x from 0 <= x < self._job_ptr.job_array[i].num_nodes
+				#	for i in range(self._job_ptr.job_array[i].num_nodes)
 
 				Job_dict[u'ntasks_per_core'] = self._job_ptr.job_array[i].ntasks_per_core
 				Job_dict[u'ntasks_per_node'] = self._job_ptr.job_array[i].ntasks_per_node
@@ -2340,7 +2340,7 @@ cdef class node:
 		node_scaling = self._Node_ptr.node_scaling
 		last_update  = self._Node_ptr.last_update
 
-		for i from 0 <= i < self._Node_ptr.record_count:
+		for i in range(self._Node_ptr.record_count):
 
 			self._record = self._Node_ptr.node_array[i]
 
@@ -2717,7 +2717,7 @@ cdef class jobstep:
 
 		if job_step_info_ptr is not NULL:
 
-			for i from 0 <= i < job_step_info_ptr.job_step_count:
+			for i in range(job_step_info_ptr.job_step_count):
 
 				job_id = job_step_info_ptr.job_steps[i].job_id
 				step_id = job_step_info_ptr.job_steps[i].step_id
@@ -2784,10 +2784,10 @@ cdef class jobstep:
 			Layout[u'task_dist'] = old_job_step_ptr.task_dist
 
 			Nodes = Layout[u'node_list'].split(',')
-			for i from 0 <= i < Node_cnt:
+			for i in range(Node_cnt):
 
 				Tids_list = []
-				for j from 0 <= j < old_job_step_ptr.tasks[i]:
+				for j in range(old_job_step_ptr.tasks[i]):
 
 					Tids_list.append(old_job_step_ptr.tids[i][j])
 
@@ -3025,7 +3025,7 @@ cdef class trigger:
 
 		if errCode == 0:
 
-			for i from 0 <= i < trigger_get.record_count:
+			for i in range(trigger_get.record_count):
 
 				trigger_id = trigger_get.trigger_array[i].trig_id
 
@@ -3255,7 +3255,7 @@ cdef class reservation:
 
 		if self._Res_ptr is not NULL:
 
-			for i from 0 <= i < self._Res_ptr.record_count:
+			for i in range(self._Res_ptr.record_count):
 
 				Res_dict = {}
 
@@ -3635,7 +3635,7 @@ cdef class block:
 
 			self._lastUpdate = self._block_ptr.last_update
 
-			for i from 0 <= i < self._block_ptr.record_count:
+			for i in range(self._block_ptr.record_count):
 
 				Block_dict = {}
 
@@ -3830,7 +3830,7 @@ cdef class topology:
 
 		if self._topo_info_ptr is not NULL:
 
-			for i from 0 <= i < self._topo_info_ptr.record_count:
+			for i in range(self._topo_info_ptr.record_count):
 
 				Topo_dict = {}
 
@@ -4049,7 +4049,7 @@ cdef class statistics:
 
 			Stats_dict[u'rpc_type_size'] = self._buf.rpc_type_size
 			tmp = {}
-			for i from 0 <= i < self._buf.rpc_type_size:
+			for i in range(self._buf.rpc_type_size):
 				tmp[self._buf.rpc_type_id[i]] = {}
 				tmp[self._buf.rpc_type_id[i]][u'rpc_type_cnt'] = self._buf.rpc_type_cnt[i]
 				tmp[self._buf.rpc_type_id[i]][u'rpc_type_time'] = self._buf.rpc_type_time[i]
@@ -4057,7 +4057,7 @@ cdef class statistics:
 
 			Stats_dict[u'rpc_user_size'] = self._buf.rpc_user_size
 			tmp = {}
-			for i from 0 <= i < self._buf.rpc_user_size:
+			for i in range(self._buf.rpc_user_size):
 				tmp[self._buf.rpc_user_id[i]] = {}
 				tmp[self._buf.rpc_user_id[i]][u'rpc_user_cnt'] = self._buf.rpc_user_cnt[i]
 				tmp[self._buf.rpc_user_id[i]][u'rpc_user_time'] = self._buf.rpc_user_time[i]
@@ -4194,7 +4194,7 @@ cdef class front_end:
 
 		if self._FrontEndNode_ptr is not NULL:
 
-			for i from 0 <= i < self._FrontEndNode_ptr.record_count:
+			for i in range(self._FrontEndNode_ptr.record_count):
 
 				FE_dict = {}
 
@@ -4317,7 +4317,7 @@ cdef class qos:
 			listNum = slurm.slurm_list_count(self._QOSList)
 			iters = slurm.slurm_list_iterator_create(self._QOSList)
 
-			for i from 0 <= i < listNum:
+			for i in range(listNum):
 				qos = <slurm.slurmdb_qos_rec_t *>slurm.slurm_list_next(iters)
 				name = qos.name
 
@@ -5149,7 +5149,7 @@ cdef class licenses:
 
 			if self._msg.num_lic:
 
-				for i from 0 <= i < self._msg.num_lic:
+				for i in range(self._msg.num_lic):
 
 					lic = {}
 					name = u"%s" % self._msg.lic_array[i].name
