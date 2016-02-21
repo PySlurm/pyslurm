@@ -3,10 +3,14 @@
 from __future__ import print_function
 
 import pyslurm
+import sys
 
+a = pyslurm.config()
+a.get()
 try:
 	a = pyslurm.config()
 	ctl_dict = a.get()
+	print("%s" % ctl_dict)
 except ValueError as e:
 	print("Error - {0}".format(e.args[0]))
 	sys.exit(-1)
