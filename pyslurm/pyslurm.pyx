@@ -2829,7 +2829,7 @@ cdef class hostlist:
 			errCode = slurm.slurm_hostlist_count(self.hl)
 		return errCode
 
-	cpdef int create(self, char* HostList=''):
+	cpdef int create(self, char *HostList=''):
 
 		# convert python byte string to C char
 		if self.hl is not NULL:
