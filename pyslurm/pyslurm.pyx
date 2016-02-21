@@ -905,7 +905,7 @@ def create_partition_dict():
 		u'AllocNodes': u''
 		}
 
-cpdef int slurm_create_partition(dict partition_dict={}):
+cpdef int slurm_create_partition(dict partition_dict):
 
 	u"""Create a slurm partition.
 
@@ -943,7 +943,7 @@ cpdef int slurm_create_partition(dict partition_dict={}):
 
 	return errCode
 
-cpdef int slurm_update_partition(dict partition_dict={}):
+cpdef int slurm_update_partition(dict partition_dict):
 
 	u"""Update a slurm partition.
 
@@ -2279,7 +2279,7 @@ cdef class node:
 
 		return errCode
 
-	cpdef update(self, dict node_dict={}):
+	cpdef update(self, dict node_dict):
 
 		u"""Update slurm node information.
 
@@ -2545,7 +2545,7 @@ cdef class node:
 
 		return retval, None
 
-def slurm_update_node(dict node_dict={}):
+def slurm_update_node(dict node_dict):
 
 	u"""Update slurm node information.
 
@@ -2928,7 +2928,7 @@ cdef class hostlist:
 
 cdef class trigger:
 
-	cpdef int set(self, dict trigger_dict={}):
+	cpdef int set(self, dict trigger_dict):
 
 		u"""Set or create a slurm trigger.
 
