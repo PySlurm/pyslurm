@@ -63,34 +63,6 @@ cdef inline boolToString(int value):
 	return u'True'
 
 #
-# Slurm declarations not in slurm.h
-#
-
-cdef inline void* xmalloc(size_t __sz):
-	return slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
-
-cdef inline xfree(char*__p):
-	slurm_xfree(<void **>&(__p), __FILE__, __LINE__, __FUNCTION__)
-
-cdef extern void slurm_accounting_enforce_string(uint16_t enforce, char *, int)
-cdef extern void slurm_api_clear_config()
-cdef extern void slurm_api_set_conf_file(char *)
-cdef extern char *slurm_bg_block_state_string(uint16_t)
-cdef extern char *slurm_conn_type_string(enum)
-cdef extern uint16_t slurm_get_preempt_mode()
-cdef extern char *slurm_job_reason_string(int inx)
-cdef extern int   slurm_job_state_num(char *state_name)
-cdef extern char *slurm_job_state_string(uint16_t inx)
-cdef extern char *slurm_node_state_string(uint32_t inx)
-cdef extern char *slurm_node_state_string_compact(uint32_t inx)
-cdef extern char *slurm_node_use_string(int)
-cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
-cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
-cdef extern char *slurm_reservation_flags_string(uint32_t flags)
-cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
-cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
-
-#
 # Slurm spank API - Love the name !
 #
 
@@ -2038,3 +2010,33 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 	cdef extern List slurmdb_qos_get(void *db_conn, slurmdb_qos_cond_t *qos_cond)
 	cdef extern List slurmdb_qos_modify(void *db_conn, slurmdb_qos_cond_t *qos_cond, slurmdb_qos_rec_t *qos)
 	cdef extern List slurmdb_qos_remove(void *db_conn, slurmdb_qos_cond_t *qos_cond)
+
+
+#
+# Slurm declarations not in slurm.h
+#
+
+cdef inline void* xmalloc(size_t __sz):
+	return slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
+
+cdef inline xfree(char*__p):
+	slurm_xfree(<void **>&(__p), __FILE__, __LINE__, __FUNCTION__)
+
+cdef extern void slurm_accounting_enforce_string(uint16_t enforce, char *, int)
+cdef extern void slurm_api_clear_config()
+cdef extern void slurm_api_set_conf_file(char *)
+cdef extern char *slurm_bg_block_state_string(uint16_t)
+cdef extern char *slurm_conn_type_string(enum)
+cdef extern uint16_t slurm_get_preempt_mode()
+cdef extern char *slurm_job_reason_string(int inx)
+cdef extern int   slurm_job_state_num(char *state_name)
+cdef extern char *slurm_job_state_string(uint16_t inx)
+cdef extern char *slurm_node_state_string(uint32_t inx)
+cdef extern char *slurm_node_state_string_compact(uint32_t inx)
+cdef extern char *slurm_node_use_string(int)
+cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
+cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
+cdef extern char *slurm_reservation_flags_string(uint32_t flags)
+cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
+cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
+cdef extern void slurm_free_stats_response_msg (stats_info_response_msg_t *msg)

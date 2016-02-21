@@ -3971,21 +3971,14 @@ cdef class statistics:
 	cdef:
 		slurm.stats_info_request_msg_t _req
 		slurm.stats_info_response_msg_t *_buf
-
 		dict _StatsDict
 
 	def __cinit__(self):
-		self._req.command_id = 0 # STAT_COMMAND_RESET
 		self._buf = NULL 
 		self._StatsDict = {}
 
-		self.__reset()
-
 	def __dealloc__(self):
-		self.__free()
-
-	cpdef __free(self):
-		pass
+		self._buf = NULL
 
 	def load(self):
 		return self.__load()
@@ -3995,6 +3988,8 @@ cdef class statistics:
 		u"""
 		#extern int  slurm_get_statistics (stats_info_response_msg_t **buf, stats_info_request_msg_t *req)
 		"""
+
+		self._req.command_id = STAT_COMMAND_GET
 
 		cdef int apiError = 0
 		cdef int errCode = slurm.slurm_get_statistics(&self._buf, <slurm.stats_info_request_msg_t*>&self._req)
@@ -4016,6 +4011,8 @@ cdef class statistics:
 		return self._StatsDict
 
 	cpdef __get(self):
+
+		self._req.command_id = STAT_COMMAND_GET
 
 		cdef:
 			dict Stats_dict = {}
@@ -4073,6 +4070,7 @@ cdef class statistics:
 				tmp[self._buf.rpc_user_id[i]][u'rpc_user_time'] = self._buf.rpc_user_time[i]
 			Stats_dict[u'rpc_user_stats'] = tmp
 
+		slurm.slurm_free_stats_response_msg(self._buf)
 		self._StatsDict = Stats_dict
 
 	def reset(self):
@@ -4084,7 +4082,7 @@ cdef class statistics:
 		#extern int slurm_reset_statistics (stats_info_request_msg_t *req)
 		"""
 
-		self._req.command_id = 1 # STAT_COMMAND_RESET
+		self._req.command_id = STAT_COMMAND_RESET
 
 		cdef int apiError = 0
 		cdef int errCode = slurm.slurm_reset_statistics(<slurm.stats_info_request_msg_t*>&self._req)
