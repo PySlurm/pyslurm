@@ -16,3 +16,4 @@ pyslurm/*.pyc
 pyslurm/*.pyx~
 pyslurm/*.pxi~
 pyslurm/*.pxd~
+pyslurm/*.so
