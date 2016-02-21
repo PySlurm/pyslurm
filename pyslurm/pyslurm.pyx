@@ -2845,6 +2845,7 @@ cdef class hostlist:
 		return self.__get()
 
 	cpdef get_list(self):
+
 		u"""Get the list of hostnames composing the hostlist. For example
 		with a hostlist created with "tux[1-3]" -> [ 'tux1', tux2', 'tux3' ].
 
@@ -2853,43 +2854,50 @@ cdef class hostlist:
 		"""
 
 		cdef:
+			slurm.hostlist_t hlist = NULL
 			char *hostlist_s = NULL
+			char *tmp_str = NULL
+			list host_list = None
+			unsigned int nb_hosts
+			unsigned int host_index
 
-		host_list = None
+		py_string = ''
 
 		if self.hl is not NULL:
-			# make a copy of self.hl since slurm.slurm_hostlist_shift() is
-			# destructive.
-			hostlist_s = slurm.slurm_hostlist_ranged_string_xmalloc(self.hl)
-			if hostlist_s is not NULL:
-				hl = slurm.slurm_hostlist_create(hostlist_s)
+			# make a copy of self.hl since slurm.slurm_hostlist_shift() is destructive.
+			tmp_str = slurm.slurm_hostlist_ranged_string_xmalloc(self.hl)
+			if tmp_str is not NULL:
+				hlist = slurm.slurm_hostlist_create(tmp_str)
+				nb_hosts = slurm.slurm_hostlist_count(hlist)
 				host_list = []
-				nb_hosts = slurm.slurm_hostlist_count(hl)
-				for host_id in range(nb_hosts):
-					host_list.append(slurm.slurm_hostlist_shift(hl))
-				slurm.xfree(hostlist_s)
-				slurm.slurm_hostlist_destroy(hl)
+				for host_index in range(nb_hosts):
+					hostlist_s = slurm.slurm_hostlist_shift(hlist)
+					py_string = hostlist_s
+					free(hostlist_s)
+					host_list.append(py_string)
+
+				slurm.xfree(tmp_str)
+				slurm.slurm_hostlist_destroy(hlist)
 
 		return host_list
-
 
 	cpdef __get(self):
 
 		cdef:
-			char *hostlist = NULL
+			char *hostlist_s = NULL
 			char *tmp_str = NULL
 
-		range_str = None
+		py_string = None
 		if self.hl is not NULL:
 			tmp_str = slurm.slurm_hostlist_ranged_string_xmalloc(self.hl)
 			if tmp_str is not NULL:
-				hostlist = <char *>malloc(strlen(tmp_str) + 1)
-				strcpy(hostlist, tmp_str)
+				hostlist_s = <char *>malloc(strlen(tmp_str) + 1)
+				strcpy(hostlist_s, tmp_str)
+				py_string = hostlist_s
+				free(hostlist_s)
 				slurm.xfree(tmp_str)
-				range_str = hostlist
-				hostlist = NULL
 
-		return range_str
+		return py_string
 
 	cpdef int find(self, char* Host):
 
@@ -2903,9 +2911,13 @@ cdef class hostlist:
 	cpdef pop(self):
 
 		# convert C char to python byte string
-		cdef char *host = ''
+		cdef char *Host = ''
+
+		host = None
 		if self.hl is not NULL:
-			host = slurm.slurm_hostlist_shift(self.hl)
+			Host = slurm.slurm_hostlist_shift(self.hl)
+			host = Host
+			free(Host)
 		return host
 
 	cpdef int push(self, char *Hosts):
