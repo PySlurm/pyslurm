@@ -850,7 +850,7 @@ cdef class partition:
 
 		self._PartDict = Partition
 
-	cpdef int update(self, dict Partition_dict = {}):
+	cpdef int update(self, dict Partition_dict):
 
 		u"""Update a slurm partition.
 
@@ -864,7 +864,7 @@ cdef class partition:
 
 		return errCode
 
-	cpdef int create(self, dict Partition_dict = {}):
+	cpdef int create(self, dict Partition_dict):
 
 		u"""Create a slurm partition.
 
