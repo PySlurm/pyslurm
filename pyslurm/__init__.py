@@ -11,7 +11,10 @@ import sys
 old_dlopen_flags = ''
 if hasattr(sys, "setdlopenflags"):
 	old_dlopen_flags = sys.getdlopenflags()
-	import DLFCN
+	try:
+		import DLFCN
+	except:
+		import dl as DLFCN
 	sys.setdlopenflags(old_dlopen_flags | DLFCN.RTLD_GLOBAL)
 
 from .pyslurm import *
