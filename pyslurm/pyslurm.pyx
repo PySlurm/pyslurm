@@ -16,6 +16,11 @@ from libc.stdlib cimport malloc, free
 
 from cpython cimport bool
 
+import time
+from datetime import datetime, timedelta
+
+from getopt import getopt, GetoptError
+
 cdef extern from 'stdlib.h':
 	ctypedef long long size_t
 
@@ -101,6 +106,126 @@ cdef inline IS_NODE_MAINT(int _X): return (_X & NODE_STATE_MAINT)
 ctypedef struct config_key_pair_t:
 	char *name
 	char *value
+
+sbatch_opts = "+ba:A:B:c:C:d:D:e:F:g:hHi:IJ:kL:m:M:n:N:o:Op:P:QRst:uU:vVw:x:"
+sbatch_long_opts = [ "account", "array", "batch", "extra-node-info" "cpus-per-task", \
+		"constraint", "dependency", "workdir", "error", "nodefile", "geometry", \
+		"help", "hold", "input", "immediate", "job-name", "no-kill", "licenses", \
+		"distribution", "cluster", "clusters", "tasks", "ntasks", "nodes", \
+		"output", "overcommit", "partition", "quiet", "no-rotate", "share", \
+		"time", "usage", "verbose", "version", "nodelist", "exclude", \
+		"acctg-freq", "begin", "blrts-image", "checkpoint", "checkpoint-dir", \
+		"cnload-image", "comment", "conn-type", "contiguous", "cores-per-socket", \
+		"cpu_bind", "exclusive", "export", "export-file", "get-user-env", "gres", \
+		"gid", "hint", "ioload-image", "jobid", "linux-image", "mail-type", \
+		"mail-user", "mem", "mem-per-cpu", "mem_bind", "mincores", "mincpus", \
+		"minsockets", "minthreads", "mloader-image", "network", "nice", \
+		"no-requeue", "ntasks-per-core", "ntasks-per-node", "ntasks-per-socke", \
+		"open-mode", "propagate", "profile", "qos", "ramdisk-image", "reboot", \
+		"requeue", "reservation", "signal", "sockets-per-node", "tasks-per-node", \
+		"time-min", "threads-per-core", "tmp", "uid", "wait-all-nodes", \
+		"wckey", "wrap", "switches", "ignore-pbs"]
+slurm_opt_dict = {
+		"-a": "--array",
+		"-A": "--account",
+		"-B": "--extra-node-info",
+		"-c": "--cpus-per-task",
+		"-C": "--constraint",
+		"-d": "--dependency",
+		"-D": "--workdir",
+		"-e": "--error",
+		"-F": "--nodefile",
+		"-g": "--geometry",
+		"-h": "--help",
+		"-H": "--hold",
+		"-i": "--input",
+		"-I": "--immediate",
+		"-J": "--job-name",
+		"-k": "--no-kill",
+		"-L": "--licenses",
+		"-m": "--distribution",
+		"-M": "--clusters",
+		"-n": "--ntasks",
+		"-N": "--nodes",
+		"-o": "--output",
+		"-O": "--overcommit",
+		"-p": "--partition",
+		"-P": "--0",
+		"-Q": "--quiet",
+		"-R": "--no-rotate",
+		"-s": "--share",
+		"-t": "--time",
+		"-u": "--usage",
+		"-U": "--0",
+		"-v": "--verbose",
+		"-V": "--version",
+		"-w": "--nodelist",
+		"-x": "--exclude",
+		}
+
+pbs_opts = "+a:A:c:C:e:hIj:J:k:l:m:M:N:o:p:q:r:S:t:u:v:VW:z"
+
+pbs_opts_long = [ "start_time", "account", "checkpoint", "working_dir", \
+		"error", "hold", "interactive", "join", "job_array", "keep", \
+		"resource_list", "mail_options", "mail_user_list", "job_name", \
+		"out", "priority", "destination", "rerunable", "script_path", "array", \
+		"running_user", "variable_list", "all_env", "attributes", "no_std" ]
+
+pbs_opts_dict = {
+	"-a": "--start_time",
+	"-A": "--account",
+	"-c": "--checkpoint",
+	"-C": "--working_dir",
+	"-e": "--error",
+	"-h": "--hold",
+	"-I": "--interactive",
+	"-j": "--join",
+	"-J": "--job_array",
+	"-k": "--keep",
+	"-l": "--resource_list",
+	"-m": "--mail_options",
+	"-M": "--mail_user_list",
+	"-N": "--job_name",
+	"-o": "--out",
+	"-p": "--priority",
+	"-q": "--destination",
+	"-r": "--rerunable",
+	"-S": "--script_path",
+	"-t": "--array",
+	"-u": "--running_user",
+	"-v": "--variable_list",
+	"-V": "--all_env",
+	"-W": "--attributes",
+	"-z": "--no_std",
+}
+
+pbs_slurm_opts_dict = {
+	"start_time": "begin",
+	"account": "account",
+	"checkpoint": "checkpoint",
+	"working_dir": "workdir",
+	"error": "error",
+	"hold": "hold",
+	"interactive": "-1",
+	"join": "-1",
+	"job_array": "array",
+	"array": "arrary",
+	"keep": "-1",
+	"resource_list": "-1",	# TODO:parse resource list
+	"mail_options": "m",
+	"mail_user_list": "mail-user",
+	"job_name": "job-name",
+	"out": "output",
+	"priority": "nice",
+	"destination": "partition",
+	"rerunable": "-1",
+	"script_path": "-1",
+	"running_user": "-1",
+	"variable_list": "variable_list",
+	"all_env": "-1",
+	"attributes": "attributes",
+	"no_std": "-1",
+}
 
 #
 # Cython Wrapper Functions
@@ -1331,6 +1456,923 @@ cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0, uint16_t S
 		raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
 	return errCode
+
+cdef slurm_env_array_merge_slurm(char ***dest_env, const char **c_environ):
+	"""merge environments start with SLURM.
+	"""
+	cdef int i = 0
+	while c_environ[i] != NULL:
+		env = c_environ[i]
+		if not env.startswith("SLURM"):
+			continue
+		env_split = env.split("=")
+		if len(env_split) != 2:
+			continue
+		slurm.slurm_env_array_overwrite(dest_env, env_split[0], env_split[1])
+
+def parse_time(time_str, int past):
+	"""parse sbatch time_begin format
+
+	Convert string to equivalent time_t value
+	 input formats:
+	   today or tomorrow
+	   midnight, noon, teatime (4PM)
+	   HH:MM[:SS] [AM|PM]
+	   MMDD[YY] or MM/DD[/YY] or MM.DD[.YY]
+	   MM/DD[/YY]-HH:MM[:SS]
+	   YYYY-MM-DD[THH:MM[:SS]]
+
+	   now + count [minutes | hours | days | weeks]
+
+	 Invalid input results in message to stderr and return value of zero
+	 NOTE: by default this will look into the future for the next time.
+	 if you want to look in the past set the past flag.
+	"""
+	if time_str.startswith("uts"):
+		uts = time_str[3:]
+		if not uts.isdigit():
+			return -1
+		uts = int(uts)
+		if uts < 1000000:
+			return -1
+		return uts
+
+	time_dict = { "year":-1, "month":-1, "mday":-1, "hour":-1, "min":-1, "sec":0 }
+	now = datetime.now()
+	pos = 0
+	while pos < len(time_str):
+		curr_char = time_str[pos]
+		substr = time_str[pos:]
+		if curr_char.isspace() or curr_char == '-' or curr_char == 'T':
+			continue
+		if substr.startswith("today"):
+			time_dict["year"] = now.year
+			time_dict["month"] = now.month
+			time_dict["mday"] = now.day
+			pos += 5
+			continue
+		elif substr.startswith("tomorrow"):
+			tomorrow = now + timedelta(days=1)
+			time_dict["year"] = tomorrow.year
+			time_dict["month"] = tomorrow.month
+			time_dict["mday"] = tomorrow.day
+			pos += 8
+			continue
+		elif substr.startswith("midnight"):
+			time_dict["hour"] = 0
+			time_dict["min"] = 0
+			time_dict["sec"] = 0
+			pos += 8
+			continue
+		elif substr.startswith("noon"):
+			time_dict["hour"] = 12
+			time_dict["min"] = 0
+			time_dict["sec"] = 0
+			pos += 4
+			continue
+		elif substr.startswith("teatime"):
+			time_dict["hour"] = 16
+			time_dict["min"] = 0
+			time_dict["sec"] = 0
+			pos += 7
+			continue
+		elif substr.startswith("now"):
+			seconds = 0
+			pos += 3
+			if len(substr.strip()) > 4:
+				if substr[3] != '+':
+					return -1
+				pos += 1
+				now_sub = substr[4:]
+				num = ''
+				for c in now_sub:
+					if c.isdigit():
+						num += c
+					else:
+						break
+				if len(num) == 0:
+					return -1
+				pos += len(num)
+				unit_sub = now_sub[len(num)]
+				num = int(num)
+				if unit_sub.startswith("minute"):
+					pos += 6
+					seconds = num * 60
+				elif unit_sub.startswith("minutes"):
+					pos += 7
+					seconds = num * 60
+				elif unit_sub.startswith("hour"):
+					pos += 4
+					seconds = num * 60 * 60
+				elif unit_sub.startswith("hours"):
+					pos += 5
+					seconds = num * 60 * 60
+				elif unit_sub.startswith("day"):
+					pos += 3
+					seconds = num * 60 * 60 * 24
+				elif unit_sub.startswith("days"):
+					pos += 4
+					seconds = num * 60 * 60 * 24
+				elif unit_sub.startswith("week"):
+					pos += 4
+					seconds = num * 60 * 60 * 24 * 7
+				elif unit_sub.startswith("weeks"):
+					pos += 5
+					seconds = num * 60 * 60 * 24 * 7
+				else:
+					return -1
+			later = now + timedelta(seconds=seconds)
+			time_dict["year"] = later.year
+			time_dict["month"] = later.month
+			time_dict["mday"] = later.day
+			time_dict["hour"] = later.hour
+			time_dict["min"] = later.minute
+			time_dict["sec"] = later.second
+			continue
+		elif substr[0].isdigit():
+			end = substr.find(' ')
+			pos += end
+			dt_str = substr[:end]
+			try:
+				later = None
+				if 'T' in dt_str:
+					if dt_str.count(':') == 1:
+						later = datetime.strptime(substr, "%Y-%m-%dT%H:%M")
+					if dt_str.count(':') == 2:
+						later = datetime.strptime(substr, "%Y-%m-%dT%H:%M:%S")
+				else:
+					if dt_str.count(':') == 1:
+						later = datetime.strptime(substr, "%H:%M")
+					if dt_str.count(':') == 2:
+						later = datetime.strptime(substr, "%H:%M:%S")
+				time_dict["year"] = later.year
+				time_dict["month"] = later.month
+				time_dict["mday"] = later.day
+				time_dict["hour"] = later.hour
+				time_dict["min"] = later.minute
+				time_dict["sec"] = later.second
+			except:
+				return -1
+		else:
+			return -1
+	if time_dict["hour"] == -1 and time_dict["month"] == -1:
+		return 0
+	elif time_dict["hour"] == -1 and time_dict["month"] != -1:
+		time_dict["hour"] = 0
+		time_dict["minute"] = 0
+	elif time_dict["hour"] != -1 and time_dict["month"] == -1:
+		if past or time_dict["hour"] > now.hour or \
+				(time_dict["hour"] == now.hour and time_dict["minute"] > now.minute):
+			time_dict["year"] = now.year
+			time_dict["month"] = now.month
+			time_dict["mday"] = now.day
+		else:
+			tomorrow = now + timedelta(days=1)
+			time_dict["year"] = tomorrow.year
+			time_dict["month"] = tomorrow.month
+			time_dict["mday"] = tomorrow.day
+	if time_dict["year"] == -1:
+		if past:
+			if time_dict["month"] > now.month:
+				time_dict["year"] = now.year - 1
+			else:
+				time_dict["year"] = now.year - 1
+		else:
+			time_str = now.year + '-' + time_dict["month"] + '-' + \
+					time_dict["mday"] + ' ' + \
+					time_dict["hour"] + ':' + time_dict["min"] + ':' + time_dict["sec"]
+			tmp_date = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+			if tmp_date > now:
+				time_dict["year"] = now.year
+			else:
+				time_dict["year"] = now.year + 1
+
+	time_str = time_dict["year"] + '-' + time_dict["month"] + '-' + \
+			time_dict["mday"] + ' ' + \
+			time_dict["hour"] + ':' + time_dict["min"] + ':' + time_dict["sec"]
+	try:
+		time_array = time.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+	except:
+		return -1
+	return int(time.mktime(time_array))
+
+def parse_script_options(script_body, job_desc):
+	def __get_arguments(options):
+		res = []
+		quote_char = None
+		escape_flag = False
+		curr_arg = ''
+		for c in options:
+			if escape_flag:
+				escape_flag = False
+			elif c == '\\':
+				escape_flag = True
+			elif quote_char is not None and c == quote_char:
+				quote_char = None
+			elif c == '\"' or c == '\'':
+				quote_char = c
+			elif c == '#':
+				break
+			elif c.isspace() and curr_arg != '':
+				res.append(curr_arg)
+				curr_arg = ''
+			curr_arg += c
+		if quote_char is not None:
+			return -1
+		return res
+
+	slurm_argv = []
+	pbs_argv = []
+	ignore_pbs = os.getenv('SBATCH_IGNORE_PBS')
+	if ignore_pbs is not None:
+		try:
+			ignore_pbs = int(job_desc.get('ignore-pbs', 0))
+		except ValueError:
+			return -1, "ignore-pbs option invalid, must be 0/1 which specifies " \
+					"ignore any \"#PBS\" options specified in the batch script."
+
+	for line in script_body.splitlines():
+		slurm_options = None
+		if line.startswith("#SBATCH"):
+			slurm_options = line[len("#SBATCH"):].strip()
+		elif line.startswith("#SLURM"):
+			slurm_options = line[len("#SLURM"):].strip()
+		elif ignore_pbs == 0 and line.startswith("#PBS"):
+			pbs_options = line[len("#PBS"):].strip()
+			args = __get_arguments(pbs_options)
+			if args != -1:
+				pbs_argv.extend(args)
+
+		if slurm_options is not None:
+			args = __get_arguments(slurm_options)
+			if args != -1:
+				slurm_argv.extend(args)
+	if len(slurm_argv) > 0:
+		try:
+			(opts, args) = getopt(slurm_argv, sbatch_opts, sbatch_long_opts)
+		except GetoptError:
+			return -1, "parse options in script file error."
+		for o, a in opts:
+			if not o.startswith("--"):
+				if o not in slurm_opt_dict:
+					return -1, "parse options in script file error."
+				o = slurm_opt_dict(o)
+
+			o = o[2:]
+			if o == "--no-requeue":
+				job_desc['requeue'] = 0
+				continue
+			if a == '' or a is None:
+				a = 1
+			job_desc[o] = a
+	if len(pbs_argv) > 0:
+		try:
+			(opts, args) = getopt(pbs_argv, pbs_opts, pbs_opts_long)
+		except GetoptError:
+			return -1, "parse options in script file error."
+		for o, a in opts:
+			if not o.startswith("--"):
+				if o not in pbs_opts_dict:
+					return -1, "parse options in script file error."
+				o = pbs_opts_dict(o)
+
+			o = o[2:]
+			o = pbs_slurm_opts_dict[o]
+			if o == "variable_list" and a != '' and a is not None:
+				if job_desc.get("export", '') != '':
+					job_desc["export"] += ','
+				job_desc["export"] += a
+			elif o == "attributes":
+				if a.startswith("umask="):
+					job_desc["umask"] = a[len("umask="):]
+				elif a.startswith("depend="):
+					job_desc["dependency"] = a[len("depend="):]
+			if a == '' or a is None:
+				a = 1
+			job_desc[o] = a
+
+
+def slurm_submit_batch_job (dict job_options):
+	u"""Submit a batch job.
+
+	:param dict job_options: Job desc dict
+
+	:returns: Error code/JobId - -1 for error others for job id
+	:rtype: `integer`
+	"""
+	# submit_response_msg_t**
+	cdef int job_id = 0
+	cdef slurm.job_desc_msg_t msg_desc
+	cdef slurm.submit_response_msg_t *resp
+
+	job_desc = {k:job_options[k] for k in job_options}
+	slurm.slurm_init_job_desc_msg(&msg_desc)
+
+	wrap = job_desc.get("wrap", '')
+	script = job_desc.get("script", '')
+	cdef char *c_argv[100]
+	if wrap != '':
+			wrap_script = "#!/bin/sh\n"
+			wrap_script += "# This script was created by pyslurm sbatch --wrap.\n\n"
+			wrap_script += wrap + "\n"
+			msg_desc.script = wrap_script
+	elif script != '' and os.path.exists(script) and os.path.isfile(script):
+		try:
+			f = open(script)
+		except:
+			return -1, "script option invalid, script file read error."
+		script_body = f.readall()
+		f.close()
+		if len(script_body.strip()) == 0:
+			return -1, "script option invalid, script file has no content."
+		elif not script_body.startswith("#!"):
+			return -1, "script option invalid, batch script's first" + \
+					"line must start with #! followed by the path" \
+					" to an interpreter. For instance: #!/bin/sh"
+		elif '\0' in script_body:
+			return -1, "script option invalid, script does not allow contain a NULL character."
+		elif "\r\n" in script_body:
+			return -1, "script option invalid, script contains DOS line breaks (\\r\\n)" \
+					"instead of expected UNIX line breaks (\\n)."
+
+		parse_script_options(script_body, job_desc)
+
+		msg_desc.script = script_body
+
+		script_argv = job_desc.get("script-argv", [])
+		msg_desc.argc = len(script_argv)
+		if msg_desc.argc  > 99:
+			return -1, "script has too many args"
+		idx = 0
+		for idx in range(len(script_argv)):
+			c_argv[idx] = script_argv[idx]
+		c_argv[idx+1] = NULL
+		msg_desc.argv = c_argv
+	else:
+		return -1, "You must specify a script to excute, by wrap or script option."
+
+	try:
+		umask = int(job_desc.get("umask", -1))
+	except ValueError:
+		return -1, "umask option invalid, must be between 0 and 0777."
+	if umask >= 0 and umask <= 0777:
+		# TODO: set umask env
+		pass
+
+	try:
+		job_id = int(job_desc.get("jobid", -1))
+	except ValueError:
+		return -1, "jobid option invalid, must be integer."
+	if job_id != -1:
+		msg_desc.job_id = job_id
+	gres = job_desc.get("gres", '')
+	if gres != '':
+		msg_desc.gres = gres
+	msg_desc.immediate = 0
+	try:
+		immediate = int(job_desc.get("immediate", 0))
+	except ValueError:
+		return -1, "immediate option invalid, must be 0/1"
+	if immediate != 0:
+		msg_desc.immediate = 1
+	msg_desc.reboot = 0
+	try:
+		reboot = int(job_desc.get("reboot", 0))
+	except ValueError:
+		return -1, "reboot option invalid, must be 0/1 which " \
+				"force the allocated nodes to reboot before starting the job."
+	if reboot != 0:
+		msg_desc.reboot = 1
+	array_inx = job_desc.get("array", '')
+	if array_inx != '':
+		msg_desc.array_inx = array_inx
+	account = job_desc.get("account", '')
+	if account != '':
+		msg_desc.account = account
+	real_time = -1
+	begin_time = job_desc.get("begin", '')
+	if begin_time != '':
+		real_time = parse_time(begin_time)
+		if real_time == -1:
+			return -1, "begin option invalid, " \
+					"can be midnight/noon/teatime(4pm)/" \
+					"YYYY-MM-DD[THH:MM[:SS]]/now+count(seconds/minutes/hours/days/weeks)."
+		msg_desc.begin_time = real_time
+	try:
+		hold = int(job_desc.get("hold", 0))
+	except ValueError:
+		return -1, "hold option invalid, must be 0/1 which specify " \
+				"the job is to be submitted in a held state (priority of zero)."
+	if hold != 0:
+		msg_desc.priority = 0
+	try:
+		no_kill = int(job_desc.get("no-kill", 0))
+	except ValueError:
+		return -1, "no-kill option invalid, must be 0/1 which set not automatically " \
+				"terminate a job of one of the nodes it has been  allocated  fails."
+	if no_kill != 0:
+		msg_desc.kill_on_node_fail = 0
+	comment = job_desc.get("comment", '')
+	if comment != '':
+		msg_desc.comment = comment
+	dependency = job_desc.get("dependency", '')
+	if dependency != '':
+		msg_desc.dependency = dependency
+	work_dir = job_desc.get("workdir", os.getcwd())
+	msg_desc.work_dir = work_dir
+	try:
+		msg_desc.user_id = int(job_desc.get("uid", os.getuid()))
+	except ValueError:
+		return -1, "uid option invalid."
+	try:
+		msg_desc.group_id = int(job_desc.get("gid", os.getgid()))
+	except ValueError:
+		return -1, "gid option invalid."
+	mail_type_str = job_desc.get("mail-type", '')
+	mail_type = 0
+	if mail_type_str == "BEGIN":
+		mail_type = slurm.MAIL_JOB_BEGIN
+	elif mail_type_str == "END":
+		mail_type = slurm.MAIL_JOB_END
+	elif mail_type_str == "FAIL":
+		mail_type = slurm.MAIL_JOB_FAIL
+	elif mail_type_str == "REQUEUE":
+		mail_type = slurm.MAIL_JOB_REQUEUE
+	elif mail_type_str == "ALL":
+		mail_type = slurm.MAIL_JOB_BEGIN | slurm.MAIL_JOB_END | slurm.MAIL_JOB_FAIL | slurm.MAIL_JOB_REQUEUE
+	if mail_type_str != '' and mail_type == 0:
+		return -1, "mail-type option invalid, must be BEGIN|END|FAIL|REQUEUE|ALL"
+	msg_desc.mail_type = mail_type
+	mail_user = job_desc.get("mail-user", '')
+	if mail_user != '':
+		msg_desc.mail_user = mail_user
+	try:
+		nice = int(job_desc.get("nice", 0))
+	except ValueError:
+		return -1, "nice option invalid, must be integer for job priority."
+	if nice != 0:
+		msg_desc.nice = slurm.NICE_OFFSET + nice
+	try:
+		requeue = int(job_desc.get("requeue", -1))
+	except ValueError:
+		return -1, "requeue option invalid, must be 0/1 which specifies " \
+				"that the batch job should be requeued after node failure."
+	if requeue != -1:
+		msg_desc.requeue = requeue
+	partition = job_desc.get("partition", '')
+	if partition != '':
+		msg_desc.partition = partition
+	try:
+		ntasks = int(job_desc.get("ntasks", -1))
+	except ValueError:
+		return -1, "ntasks option invalid, must be integer."
+	if ntasks > -1:
+		msg_desc.num_tasks = ntasks
+	try:
+		ntasks_per_node = job_desc.get("ntasks-per-node", 0)
+	except ValueError:
+		return -1, "ntasks-per-node option invalid, must be integer."
+	if ntasks_per_node != 0:
+		msg_desc.ntasks_per_node = ntasks_per_node
+	try:
+		min_nodes = job_desc.get("min-nodes", -1)
+		max_nodes = job_desc.get("max-nodes", -1)
+	except ValueError:
+		return -1, "min-nodes and max-nodes option invalid, must be integer."
+	if min_nodes != -1:
+		msg_desc.min_nodes = min_nodes
+		if max_nodes != -1:
+			msg_desc.max_nodes = max_nodes
+	elif ntasks == 0:
+		msg_desc.min_nodes = 0
+
+	try:
+		cpus_per_task = job_desc.get("cpus-per-task", -1)
+	except ValueError:
+		return -1, "cpus-per-task option invalid, must be interger."
+	if cpus_per_task > -1:
+		msg_desc.cpus_per_task = cpus_per_task
+
+	try:
+		overcommit = job_desc.get("overcommit", -1)
+	except ValueError:
+		return -1, "overcommit option invalid, must be integer for overcommit resources."
+	if overcommit > -1:
+		msg_desc.overcommit = overcommit
+		msg_desc.min_cpus = max(min_nodes, 1)
+	elif cpus_per_task > -1:
+		msg_desc.min_cpus = ntasks * cpus_per_task
+	elif ntasks > -1 and min_nodes == 0:
+		msg_desc.min_cpus = 0
+	else:
+		msg_desc.min_cpus = msg_desc.num_tasks
+
+	std_in = job_desc.get("input", "/dev/null")
+	msg_desc.std_in = std_in
+	std_outf = job_desc.get("output", '')
+	if std_outf != '':
+		msg_desc.std_out = std_outf
+	std_errf = job_desc.get("error", '')
+	if std_errf != '':
+		msg_desc.std_err = std_errf
+	wckey = job_desc.get("wckey", '')
+	if wckey != '':
+		msg_desc.wckey = wckey
+	licenses = job_desc.get("licenses", '')
+	if licenses != '':
+		msg_desc.licenses = licenses
+	msg_desc.shared = job_desc.get("share", 0)
+	qos = job_desc.get("qos", '')
+	if qos != '':
+		msg_desc.qos = qos
+	task_dist = slurm.SLURM_DIST_UNKNOWN
+	task_dist_str = job_desc.get("distribution", '')
+	lllp_dist = False
+	plane_dist = False
+	if ':' in task_dist_str:
+		lllp_dist = True
+	elif '=' in task_dist_str:
+		ind = task_dist_str.index('=')
+		msg_desc.plane_size = int(task_dist_str[ind+1])
+		plane_dist = True
+	if lllp_dist:
+		if task_dist_str == "cyclic:cyclic":
+			task_dist = slurm.SLURM_DIST_CYCLIC_CYCLIC
+		elif task_dist_str == "cyclic:block":
+			task_dist = slurm.SLURM_DIST_CYCLIC_BLOCK
+		elif task_dist_str == "block:block":
+			task_dist = slurm.SLURM_DIST_BLOCK_BLOCK
+		elif task_dist_str == "block:cyclic":
+			task_dist = slurm.SLURM_DIST_BLOCK_CYCLIC
+	elif plane_dist:
+		if task_dist_str.startswith("plane"):
+			task_dist = slurm.SLURM_DIST_PLANE
+	else:
+		if task_dist_str.startswith("cyclic"):
+			task_dist = slurm.SLURM_DIST_CYCLIC
+		elif task_dist_str.startswith("block"):
+			task_dist = slurm.SLURM_DIST_BLOCK
+		elif task_dist_str.startswith("arbitrary") or \
+				task_dist_str.startswith("hostfile"):
+			task_dist = slurm.SLURM_DIST_ARBITRARY
+	if task_dist_str != '' and task_dist == slurm.SLURM_DIST_UNKNOWN:
+		return -1, "distribution option invalid, must " \
+				"be block|cyclic|arbitrary|plane=<options>[:block|cyclic]"
+	msg_desc.task_dist = task_dist
+	# all|none|[energy[,|task[,|lustre[,|network]]]]
+	msg_desc.profile = slurm.ACCT_GATHER_PROFILE_NOT_SET
+	profile = job_desc.get("profile", '')
+	if profile == "none":
+		msg_desc.profile = slurm.ACCT_GATHER_PROFILE_NONE
+	elif profile == "all":
+		msg_desc.profile = slurm.ACCT_GATHER_PROFILE_ALL
+	else:
+		if "energy" in profile:
+			msg_desc.profile |= slurm.ACCT_GATHER_PROFILE_ENERGY
+		elif "task" in profile:
+			msg_desc.profile |= slurm.ACCT_GATHER_PROFILE_TASk
+		elif "lustre" in profile:
+			msg_desc.profile |= slurm.ACCT_GATHER_PROFILE_LUSTRE
+		elif "network" in profile:
+			msg_desc.profile |= slurm.ACCT_GATHER_PROFILE_NETWORK
+
+	try:
+		time_limit = int(job_desc.get("time", -1))
+	except:
+		return -1, "time option invalid, must be integer which set a limit " \
+				"on the total run time of the job allocation."
+	try:
+		time_min = int(job_desc.get("time-min", -1))
+	except:
+		return -1, "time-min option invalid, must be integer which " \
+				"set a minimum time limit on the job allocation."
+	if time_limit != -1:
+		msg_desc.time_limit = time_limit
+	if time_min != -1:
+		msg_desc.time_min = time_min
+
+	msg_desc.warn_signal = 0
+	msg_desc.warn_time = 0
+	warn_signal = job_desc.get("signal", '')
+	if warn_signal != '':
+		signal_sp = warn_signal.split('@')
+		signal_str = signal_sp[0].strip()
+		if len(signal_sp) > 1:
+			time_str = signal_sp[1]
+			if not time_str.isdigit():
+				return -1, "signal option invalid, must be sig_num>[@<sig_time>], " \
+						"sig_num can be signal number or name, sig_time 0~65535 seconds."
+			else:
+				msg_desc.warn_time = int(time_str)
+		else:
+			msg_desc.warn_time = 60
+
+		if signal_str.isdigit():
+			signal_num = int(signal_str)
+			if signal_num < 1 or signal_num > 0x0ffff:
+				return -1, "signal option invalid, must be sig_num>[@<sig_time>], " \
+						"sig_num can be signal number or name, sig_time 0~65535 seconds."
+			msg_desc.warn_signal = signal_num
+		else:
+			signal_dict = { "HUP": slurm.SIGHUP, "INT": slurm.SIGINT, "QUIT": slurm.SIGQUIT,
+					"KILL": slurm.SIGKILL, "TERM": slurm.SIGTERM, "USR1": slurm.SIGUSR1,
+					"USR2": slurm.SIGUSR2, "CONT": slurm.SIGCONT }
+			if signal_str.startswith("SIG"):
+				signal_str = signal_str[3:]
+			if signal_str not in signal_dict:
+				return -1, "signal option invalid, must be sig_num>[@<sig_time>], " \
+						"sig_num can be signal number or name, sig_time 0~65535 seconds."
+			else:
+				msg_desc.warn_signal = signal_dict[signal_str]
+
+	# Constraint options
+	try:
+		mincpus = int(job_desc.get("mincpus", -1))
+	except ValueError:
+		return -1, "mincpus option invalid, must be integer which specify " \
+				"a minimum number of logical cpus/processors per node."
+	if mincpus > -1:
+		msg_desc.pn_min_cpus = mincpus;
+	msg_desc.contiguous = 0
+	try:
+		contiguous = int(job_desc.get("contiguous", 0))
+	except ValueError:
+		return -1, "contiguous option invalid, must be 0/1 " \
+				"for allocated nodes must or not form a contiguous set."
+	if contiguous != 0:
+		msg_desc.contiguous = 1
+	try:
+		tmpdisk = int(job_desc.get("tmp", -1))
+	except ValueError:
+		return -1, "tmp option invalid, must be integer which " \
+				"specify a minimum amount of temporary disk space."
+	if tmpdisk > -1:
+		msg_desc.pn_min_tmp_disk = tmpdisk
+	resv = job_desc.get("reservation", '')
+	if resv != '':
+		msg_desc.reservation = resv
+	try:
+		realmem = job_desc.get("mem", -1)
+	except ValueError:
+		return -1, "mem option invalid, must be integer which " \
+				"specify the real memory required per node in MegaBytes."
+	try:
+		mempercpu = job_desc.get("mem-per-cpu", -1)
+	except ValueError:
+		return -1, "mem-per-cpu option invalid, must be integer which " \
+				"specify mimimum memory required per allocated CPU in MegaBytes."
+	if realmem > -1:
+		msg_desc.pn_min_memory = realmem
+	elif mempercpu > -1:
+		msg_desc.pn_min_memory = mempercpu | MEM_PER_CPU
+
+	# Affinity/Multi-core options
+	try:
+		sockets_per_node = job_desc.get("sockets-per-node", -1)
+	except ValueError:
+		return -1, "sockets-per-node optionin invalid, must be integer " \
+				"which restrict node selection to nodes with "\
+				"at least the specified number of sockets."
+	try:
+		cores_per_socket = job_desc.get("cores-per-socket", -1)
+	except ValueError:
+		return -1, "cores-per-socket option invalid, must be integer."
+	try:
+		threads_per_core = job_desc.get("threads-per-core", -1)
+	except ValueError:
+		return -1, "threads-per-core option invalid, must be integer " \
+				"which restrict  node selection to nodes with at least " \
+				"the specified number of threads per core."
+	if sockets_per_node != -1:
+		msg_desc.sockets_per_node = sockets_per_node
+	if cores_per_socket != -1:
+		msg_desc.cores_per_socket = cores_per_socket
+	if threads_per_core != -1:
+		msg_desc.threads_per_core = threads_per_core
+	try:
+		ntasks_per_socket = job_desc.get("ntasks-per-socket", -1)
+	except ValueError:
+		return -1, "ntasks-per-socket option invalid, must be integer which " \
+				"request the maximum ntasks be invoked on each socket."
+	try:
+		ntasks_per_core = job_desc.get("ntasks-per-core", -1)
+	except ValueError:
+		return -1, "ntasks-per-core option invalid, must be integer which " \
+				"request  the  maximum ntasks be invoked on each core."
+	if ntasks_per_socket > -1:
+		msg_desc.ntasks_per_socket = ntasks_per_socket
+	if ntasks_per_core > -1:
+		msg_desc.ntasks_per_core = ntasks_per_core
+	req_nodes = job_desc.get("nodelist", '')
+	if req_nodes != '':
+		msg_desc.req_nodes = req_nodes
+	exc_nodes = job_desc.get("exclude", '')
+	if exc_nodes != '':
+		msg_desc.exc_nodes = exc_nodes
+
+	msg_desc.environment = NULL;
+	export_env = job_desc.get("export", '')
+	try:
+		get_user_env = int(job_desc.get("get-user-env", 0))
+	except ValueError:
+		return -1, "get-user-env option invalid, must be 0/1."
+	cdef const char **c_environ = slurm.environ
+	cdef const char *merge_env[2]
+	merge_env[1] = NULL
+	if export_env == '' or export_env == "ALL":
+		slurm.slurm_env_array_merge(&msg_desc.environment, c_environ)
+	elif export_env == "NONE":
+		msg_desc.environment = slurm.slurm_env_array_create()
+		slurm_env_array_merge_slurm(&msg_desc.environment, c_environ)
+		get_user_env = 0
+	else:
+		curr_env = export_env
+		i = 0
+		while i < len(curr_env) and curr_env != '':
+			curr_char = curr_env[0]
+			if curr_char == "\'" or curr_char == "\"":
+				end = curr_env.find(curr_char, 1)
+				if end == -1:
+					return -1
+				i = end + 1
+			elif curr_char == ',':
+				env = curr_env[:i-1]
+				i = 0
+				curr_env = curr_env[i:]
+				if env.find('=') != -1:
+					merge_env[0] = env
+					slurm.slurm_env_array_merge(&msg_desc.environment, merge_env)
+				else:
+					iter_indx = 0
+					while c_environ[iter_indx] != NULL:
+						sys_env = c_environ[i]
+						if sys_env.startswith(env) and sys_env[len(env)] == '=':
+							merge_env[0] = sys_env
+							slurm.slurm_env_array_merge(&msg_desc.environment, merge_env)
+			else:
+				i += 1
+		slurm_env_array_merge_slurm(&msg_desc.environment, c_environ)
+		get_user_env = 0
+
+	if get_user_env >= 0:
+		slurm.slurm_env_array_overwrite(&msg_desc.environment,
+				"SLURM_GET_USER_ENV", "1")
+	if task_dist == slurm.SLURM_DIST_ARBITRARY:
+		slurm.slurm_env_array_overwrite(&msg_desc.environment,
+				"SLURM_ARBITRARY_NODELIST", msg_desc.req_nodes)
+
+	cdef int env_count = 0
+	while msg_desc.environment[env_count] != NULL:
+		env_count += 1
+	msg_desc.env_size = env_count
+
+	try:
+		msg_desc.wait_all_nodes = int(job_desc.get("wait-all-nodes", 0))
+	except ValueError:
+		return -1, "wait-all-nodes option invalid, must be 0/1 which controls " \
+				"when the execution of the command begins."
+	switches = job_desc.get("switches", '')
+	if switches != '':
+		switches_sp = switches.split('@')
+		if len(switches_sp) > 1:
+			wait4switch = switches_sp[1]
+			days = 0
+			hours = 0
+			minutes = 0
+			seconds = 0
+			try:
+				if '-' in wait4switch:
+					days = int(wait4switch.split('-')[0])
+					wait4switch = wait4switch.split('-')[1]
+				time_sp = wait4switch.split(':')
+				if len(time_sp) >= 3:
+					hours = int(time_sp[0])
+					minutes = int(time_sp[1])
+					seconds = int(time_sp[2])
+				elif len(time_sp) >= 2:
+					if days == 0:
+						minutes = int(time_sp[0])
+						seconds = int(time_sp[1])
+					else:
+						hours = int(time_sp[0])
+						minutes = int(time_sp[1])
+				else:
+					if days == 0:
+						minutes = int(time_sp[0])
+					else:
+						hours = int(time_sp[0])
+			except:
+				return -1, 'switches option invalid, must be count>[@<max-time>], ' \
+						'which defines the maximum count of switches desired for ' \
+						'the job allocation and optionally the maximum time to wait ' \
+						'for that number of switches. max-time can be "minutes", ' \
+						'"minutes:seconds", "hours:minutes:seconds",' \
+						'"days-hours", "days-hours:minutes" and "days-hours:minutes:seconds"'
+			msg_desc.wait4switch = ((days * 24 + hours) * 60 + minutes) * 60 + seconds
+		else:
+			msg_desc.wait4switch = -1
+		req_switch = switches_sp[0].strip()
+		if not req_switch.isdigit():
+			return -1, 'switches option invalid, must be count>[@<max-time>], ' \
+					'which defines the maximum count of switches desired for ' \
+					'the job allocation and optionally the maximum time to wait ' \
+					'for that number of switches. max-time can be "minutes", ' \
+					'"minutes:seconds", "hours:minutes:seconds",' \
+					'"days-hours", "days-hours:minutes" and "days-hours:minutes:seconds"'
+		msg_desc.req_switch = int(req_switch)
+
+	# TODO: set env, ref: sbatch-_opt_verify
+	cpu_bind = int(job_desc.get("cpu_bind", 0))
+	cpu_bind_type = int(job_desc.get("cpu_bind_type", 0))
+	if cpu_bind != 0:
+		msg_desc.cpu_bind = cpu_bind
+	if cpu_bind_type != 0:
+		msg_desc.cpu_bind_type = cpu_bind_type
+	mem_bind = int(job_desc.get("mem_bind", 0))
+	mem_bind_type = int(job_desc.get("mem_bind_type", 0))
+	if mem_bind != 0:
+		msg_desc.mem_bind = mem_bind
+	if mem_bind_type != 0:
+		msg_desc.mem_bind_type = mem_bind_type
+	network = job_desc.get("network", '')
+	if network != '':
+		msg_desc.network = network
+
+	blrtsimage = job_desc.get("blrtsimage", '')
+	linuximage = job_desc.get("linuximage", '')
+	mloaderimage = job_desc.get("mloaderimage", '')
+	ramdiskimage = job_desc.get("ramdiskimage", '')
+	if blrtsimage != '':
+		msg_desc.blrtsimage = blrtsimage
+	if linuximage != '':
+		msg_desc.linuximage = linuximage
+	if mloaderimage != '':
+		msg_desc.mloaderimage = mloaderimage
+	if ramdiskimage != '':
+		msg_desc.ramdiskimage = ramdiskimage
+
+	#if (opt.geometry[0] != (uint16_t) NO_VAL) {
+	#	int dims = slurmdb_setup_cluster_dims();
+
+	#	for (i=0; i<dims; i++)
+	#		desc->geometry[i] = opt.geometry[i];
+	#}
+	#memcpy(desc->conn_type, opt.conn_type, sizeof(desc->conn_type));
+
+	job_name = job_desc.get("job_name", '')
+	if job_name != '':
+		msg_desc.name = job_name
+	elif script != '':
+		msg_desc.name = script
+	else:
+		msg_desc.name = wrap
+
+	open_mode = job_desc.get("open-mode", '')
+	if open_mode != "append":
+		msg_desc.open_mode = slurm.OPEN_MODE_APPEND
+	elif open_mode != "truncate":
+		msg_desc.open_mode = slurm.OPEN_MODE_TRUNCATE
+	acctg_freq = job_desc.get("acctg-freq", '')
+	if acctg_freq != '':
+		msg_desc.acctg_freq = acctg_freq
+
+	ckpt_dir = job_desc.get("ckpt-dir", os.getcwd())
+	msg_desc.ckpt_dir = ckpt_dir
+	msg_desc.ckpt_interval = job_desc.get("ckpt_interval", 0)
+
+	#if (opt.spank_job_env_size) { /*char **/
+	#	desc->spank_job_env      = opt.spank_job_env;
+	#	desc->spank_job_env_size = opt.spank_job_env_size; /*u32*/
+	#}
+
+	# TODO: slusters support, set working_cluster_rec env
+	clusters = job_desc.get("clusters", '')
+	if clusters != '':
+		clusters_list = slurm.slurmdb_get_info_cluster(clusters)
+
+	retries = 0
+	while slurm.slurm_submit_batch_job(&msg_desc, &resp) < 0:
+		if slurm.errno == slurm.ESLURM_ERROR_ON_DESC_TO_RECORD_COPY:
+			msg = "Slurm job queue full, sleeping and retrying."
+		elif slurm.errno == slurm.ESLURM_NODES_BUSY:
+			msg = "Job step creation temporarily disabled, retrying."
+		elif slurm.errno == slurm.EAGAIN:
+			msg = "Slurm temporarily unable to accept job, sleeping and retrying."
+		else:
+			msg = None
+
+		if msg is None:
+			return -1, "submit job error."
+		if retries >= 15:
+			return -1, msg
+		retries += 1
+		time.sleep(retries)
+
+	job_id = resp.job_id
+	slurm.slurm_free_submit_response_response_msg(resp)
+
+	return job_id, "ok"
+
 
 cpdef int slurm_kill_job(uint32_t JobID=0, uint16_t Signal=0, uint16_t BatchFlag=0) except? -1:
 

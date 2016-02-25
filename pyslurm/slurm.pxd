@@ -9,8 +9,13 @@ from libc.stdint cimport int64_t
 
 from libc.stdlib cimport malloc, free
 
+from libc.errno cimport errno
+from libc.errno cimport EAGAIN
+
 from cpython cimport bool
 from cpython.version cimport PY_MAJOR_VERSION
+
+cdef extern char **environ
 
 cdef extern from 'stdlib.h':
 	ctypedef long size_t
@@ -31,6 +36,16 @@ cdef extern from 'time.h' nogil:
 
 cdef extern from *:
 	ctypedef char* const_char_ptr "const char*"
+
+cdef extern from 'signal.h':
+	enum: SIGHUP = 1
+	enum: SIGINT = 2
+	enum: SIGQUIT = 3
+	enum: SIGKILL = 9
+	enum: SIGUSR1 = 10
+	enum: SIGUSR2 = 12
+	enum: SIGTERM = 15
+	enum: SIGCONT = 18
 
 #
 # PySlurm helper functions
@@ -69,6 +84,9 @@ cdef inline void* xmalloc(size_t __sz):
 cdef inline xfree(char*__p):
 	slurm_xfree(<void **>&(__p), __FILE__, __LINE__, __FUNCTION__)
 
+cdef extern struct slurmdb_cluster_rec_t
+
+cdef extern slurmdb_cluster_rec_t *working_cluster_rec
 cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
 cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
 
@@ -93,18 +111,26 @@ cdef extern char *slurm_conn_type_string(int)
 cdef extern char *slurm_conn_type_string_full(uint16_t)
 cdef extern char *slurm_bg_block_state_string(uint16_t)
 
+cdef extern char **slurm_env_array_create()
+cdef extern void slurm_env_array_merge(char ***dest_array, const char **src_array)
+cdef extern int slurm_env_array_overwrite(char ***array_ptr, const char *name, const char *value)
+cdef extern int slurm_env_array_overwrite_fmt(char ***array_ptr, const char *name, const char *value_fmt, ...)
+#cdef extern void env_array_merge_slurm(char ***dest_array, const char **src_array)
+#cdef extern int envcount (char **env)
+
 #
 # Slurm spank API - Love the name !
 #
-
-cdef extern from 'slurm/spank.h' nogil:
-	cdef extern void slurm_verbose (char *, ...)
 
 #
 # Slurm error API
 #
 
 cdef extern from 'slurm/slurm_errno.h' nogil:
+
+	enum: ESLURM_ERROR_ON_DESC_TO_RECORD_COPY = 2007
+	enum: ESLURM_NODES_BUSY = 2016
+
 	cdef extern char * slurm_strerror (int)
 	cdef void slurm_seterrno (int)
 	cdef int slurm_get_errno ()
@@ -118,6 +144,15 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	enum: SYSTEM_DIMENSIONS = 4
 	enum: HIGHEST_DIMENSIONS = 5
+	enum: NICE_OFFSET = 10000
+
+	enum: MAIL_JOB_BEGIN = 0x0001
+	enum: MAIL_JOB_END = 0x0002
+	enum: MAIL_JOB_FAIL = 0x0004
+	enum: MAIL_JOB_REQUEUE = 0x0008
+
+	enum: OPEN_MODE_APPEND = 1
+	enum: OPEN_MODE_TRUNCATE = 2
 
 	cdef enum job_states:
 		JOB_PENDING
@@ -233,7 +268,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 	enum: ACCT_GATHER_PROFILE_NOT_SET = 0x00000000
 	enum: ACCT_GATHER_PROFILE_NONE = 0x00000001
 	enum: ACCT_GATHER_PROFILE_ENERGY = 0x00000002
-	enum: ACCT_GATHER_PROFILE_TASk = 0x00000004
+	enum: ACCT_GATHER_PROFILE_TASK = 0x00000004
 	enum: ACCT_GATHER_PROFILE_LUSTRE = 0x00000008
 	enum: ACCT_GATHER_PROFILE_NETWORK = 0x00000010
 	enum: ACCT_GATHER_PROFILE_ALL = 0xffffffff
@@ -270,7 +305,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		ENERGY_DATA_PROFILE
 		ENERGY_DATA_LAST_POLL
 
-	ctypedef enum task_dist_states:
+	cdef enum task_dist_states:
 		SLURM_DIST_CYCLIC = 1
 		SLURM_DIST_BLOCK
 		SLURM_DIST_ARBITRARY
@@ -311,7 +346,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		MEM_BIND_LOCAL = 0x20
 
 	ctypedef mem_bind_type mem_bind_type_t
-	
+
 	cdef enum connection_type:
 		SELECT_MESH
 		SELECT_TORUS
@@ -320,7 +355,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		SELECT_HTC_S
 		SELECT_HTC_D
 		SELECT_HTC_V
-		SELECT_HTC_L 
+		SELECT_HTC_L
 
 	cdef enum node_use_type:
 		SELECT_COPROCESSOR_MODE
@@ -415,7 +450,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		pass
 
 	ctypedef hostlist *hostlist_t
-	
+
 	ctypedef struct dynamic_plugin_data:
 		void *data
 		uint32_t plugin_id
@@ -540,6 +575,115 @@ cdef extern from 'slurm/slurm.h' nogil:
 		char *wckey
 
 	ctypedef job_descriptor job_desc_msg_t
+
+	ctypedef struct submit_response:
+		char *account
+		char *acctg_freq
+		char *alloc_node
+		uint16_t alloc_resp_port
+		uint32_t alloc_sid
+		uint32_t argc
+		char **argv
+		char *array_inx
+		void *array_bitmap
+		time_t begin_time
+		uint32_t bitflags
+		char *burst_buffer
+		uint16_t ckpt_interval
+		char *ckpt_dir
+		char *clusters
+		char *comment
+		uint16_t contiguous
+		uint16_t core_spec
+		char *cpu_bind
+		uint16_t cpu_bind_type
+		uint32_t cpu_freq_min
+		uint32_t cpu_freq_max
+		uint32_t cpu_freq_gov
+		time_t deadline
+		char *dependency
+		time_t end_time
+		char **environment
+		uint32_t env_size
+		char *exc_nodes
+		char *features
+		char *gres
+		uint32_t group_id
+		uint16_t immediate
+		uint32_t job_id
+		char * job_id_str
+		uint16_t kill_on_node_fail
+		char *licenses
+		uint16_t mail_type
+		char *mail_user
+		char *mcs_label
+		char *mem_bind
+		uint16_t mem_bind_type
+		char *name
+		char *network
+		uint32_t nice
+		uint32_t num_tasks
+		uint8_t open_mode
+		uint16_t other_port
+		uint8_t overcommit
+		char *partition
+		uint16_t plane_size
+		uint8_t power_flags
+		uint32_t priority
+		uint32_t profile
+		char *qos
+		uint16_t reboot
+		char *resp_host
+		char *req_nodes
+		uint16_t requeue
+		char *reservation
+		char *script
+		uint16_t shared
+		char **spank_job_env
+		uint32_t spank_job_env_size
+		uint32_t task_dist
+		uint32_t time_limit
+		uint32_t time_min
+		uint32_t user_id
+		uint16_t wait_all_nodes
+		uint16_t warn_flags
+		uint16_t warn_signal
+		uint16_t warn_time
+		char *work_dir
+		uint16_t cpus_per_task
+		uint32_t min_cpus
+		uint32_t max_cpus
+		uint32_t min_nodes
+		uint32_t max_nodes
+		uint16_t boards_per_node
+		uint16_t sockets_per_board
+		uint16_t sockets_per_node
+		uint16_t cores_per_socket
+		uint16_t threads_per_core
+		uint16_t ntasks_per_node
+		uint16_t ntasks_per_socket
+		uint16_t ntasks_per_core
+		uint16_t ntasks_per_board
+		uint16_t pn_min_cpus
+		uint32_t pn_min_memory
+		uint32_t pn_min_tmp_disk
+		uint16_t geometry[HIGHEST_DIMENSIONS]
+		uint16_t conn_type[HIGHEST_DIMENSIONS]
+		uint16_t rotate
+		char *blrtsimage
+		char *linuximage
+		char *mloaderimage
+		char *ramdiskimage
+		uint32_t req_switch
+		dynamic_plugin_data_t *select_jobinfo
+		char *std_err
+		char *std_in
+		char *std_out
+		uint64_t *tres_req_cnt
+		uint32_t wait4switch
+		char *wckey
+
+	ctypedef submit_response submit_response_msg_t
 
 	ctypedef struct slurm_ctl_conf:
 		time_t last_update
@@ -819,7 +963,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		uint32_t job_id
 		List pid_list
 		uint32_t step_id
-		
+
 	ctypedef struct job_step_stat_t:
 		jobacctinfo_t *jobacct
 		uint32_t num_tasks
@@ -932,7 +1076,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		front_end_info_t *front_end_array
 
 	ctypedef front_end_info_msg front_end_info_msg_t
-	
+
 	ctypedef struct node_info_msg:
 		time_t last_update
 		uint32_t node_scaling
@@ -1199,7 +1343,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 	#
 	# List
 	#
-	
+
 	cdef extern void * slurm_list_append (List l, void *x)
 	cdef extern int slurm_list_count (List l)
 	cdef extern List slurm_list_create (ListDelF f)
@@ -1288,6 +1432,13 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern char *slurm_sprint_job_info (slurm_job_info_t *, int)
 	cdef extern int slurm_update_job (job_desc_msg_t *)
 
+        #
+        # job submit
+        #
+
+	cdef extern int slurm_submit_batch_job (job_desc_msg_t *, submit_response_msg_t**)
+	cdef extern void slurm_free_submit_response_response_msg(submit_response_msg_t * msg)
+
 	#
 	# Ping/Reconfigure/Shutdown
 	#
@@ -1350,6 +1501,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 	#cdef extern char *slurm_sprint_node_table (node_info_t *, int)
 	cdef extern void slurm_init_update_node_msg (update_node_msg_t *)
 	cdef extern int slurm_update_node (update_node_msg_t *)
+	cdef extern void slurm_init_job_desc_msg(job_desc_msg_t * job_desc_msg)
 
 	#
 	# JobSteps
@@ -1425,3 +1577,6 @@ cdef extern from 'slurm/slurm.h' nogil:
 	cdef extern char *slurm_sprint_front_end_table (front_end_info_t * front_end_ptr, int one_liner)
 	cdef void slurm_init_update_front_end_msg (update_front_end_msg_t * update_front_end_msg)
 	cdef extern int slurm_update_front_end (update_front_end_msg_t * front_end_msg)
+
+cdef extern List slurmdb_get_info_cluster(char *cluster_name)
+
