@@ -2881,6 +2881,7 @@ cdef class job:
 
 			for i from 0 <= i < self._job_ptr.record_count:
 
+				Job_dict = {}
 				self._record = self._job_ptr.job_array[i]
 				job_id = self._job_ptr.job_array[i].job_id
 
@@ -3086,6 +3087,7 @@ cdef class job:
 
 		if self._job_ptr is not NULL:
 			slurm.slurm_free_job_info_msg(self._job_ptr)
+			self._job_ptr = NULL
 
 	def print_job_info_msg(self, int oneLiner=0):
 
