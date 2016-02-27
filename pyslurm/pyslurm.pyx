@@ -41,7 +41,7 @@ except ImportError:
 #except AttributeError:
 	## Python 3
 	#_unicode = __builtin__.str
-    
+
 #from cpython cimport PyErr_SetString, PyBytes_Check
 #from cpython cimport PyUnicode_Check, PyBytes_FromStringAndSize
 
@@ -163,7 +163,7 @@ cpdef tuple get_controllers():
 def is_controller(Host):
 
 	u"""Return slurm controller status for host.
- 
+
 	:param string Host: Name of host to check
 
 	:returns: None, primary or backup
@@ -361,7 +361,7 @@ cdef class config:
 				else:
 					value = None
 
-				keyDict[name] = value 
+				keyDict[name] = value
 
 			slurm.slurm_list_iterator_destroy(iters)
 
@@ -627,7 +627,7 @@ cdef class config:
 
 cdef class partition:
 
-	u"""Class to access/modify Slurm Partition Information. 
+	u"""Class to access/modify Slurm Partition Information.
 	"""
 
 	cdef:
@@ -648,7 +648,7 @@ cdef class partition:
 
 	cpdef __destroy(self):
 
-		u"""Free the slurm partition memory allocated by load partition method. 
+		u"""Free the slurm partition memory allocated by load partition method.
 		"""
 
 		if self._Partition_ptr is not NULL:
@@ -1593,7 +1593,7 @@ cpdef int slurm_checkpoint_complete(uint32_t JobID=0, uint32_t JobStep=0, time_t
 	:param int JobID: Job identifier
 	:param int JobStep: Job step identifier
 	:param int BeginTime: Begin time of checkpoint
-	:param int ErrorCode: Error code, highest value fore all complete calls is preserved 
+	:param int ErrorCode: Error code, highest value fore all complete calls is preserved
 	:param string ErrMsg: Error message, preserved for highest error code
 
 	:returns: 0 for success or a slurm error code
@@ -1617,7 +1617,7 @@ cpdef int slurm_checkpoint_task_complete(uint32_t JobID=0, uint32_t JobStep=0, u
 	:param int JobStep: Job step identifier
 	:param int TaskID: Task identifier
 	:param int BeginTime: Begin time of checkpoint
-	:param int ErrorCode: Error code, highest value fore all complete calls is preserved 
+	:param int ErrorCode: Error code, highest value fore all complete calls is preserved
 	:param string ErrMsg: Error message, preserved for highest error code
 
 	:returns: 0 for success or a slurm error code
@@ -1693,14 +1693,13 @@ cpdef int slurm_checkpoint_tasks(uint32_t JobID=0, uint16_t JobStep=0, uint16_t 
 
 cdef class job:
 
-	u"""Class to access/modify Slurm Job Information. 
+	u"""Class to access/modify Slurm Job Information.
 	"""
 
 	cdef:
 		slurm.job_info_msg_t *_job_ptr
 		slurm.slurm_job_info_t *_record
 		slurm.time_t _lastUpdate
-	
 		uint16_t _ShowFlags
 		dict _JobDict
 
@@ -1720,7 +1719,7 @@ cdef class job:
 
 	cpdef __destroy(self):
 
-		u"""Free the slurm job memory allocated by load partition method. 
+		u"""Free the slurm job memory allocated by load partition method.
 		"""
 
 		if self._job_ptr is not NULL:
@@ -1985,7 +1984,7 @@ cdef class job:
 
 		u"""Decode opaque data type jobinfo
 
-		INCOMPLETE PORT 
+		INCOMPLETE PORT
 		"""
 
 		cdef:
@@ -2015,7 +2014,6 @@ cdef class job:
 				return retval16
 
 		if dataType == SELECT_JOBDATA_NODE_CNT or dataType == SELECT_JOBDATA_RESV_ID:
-			
 			retval = slurm.slurm_get_select_jobinfo(jobinfo, dataType, &retval32)
 			if retval == 0:
 				jobinfo = NULL
@@ -2025,7 +2023,7 @@ cdef class job:
 			or dataType == SELECT_JOBDATA_IONODES or dataType == SELECT_JOBDATA_BLRTS_IMAGE \
 			or dataType == SELECT_JOBDATA_LINUX_IMAGE or dataType == SELECT_JOBDATA_MLOADER_IMAGE \
 			or dataType == SELECT_JOBDATA_RAMDISK_IMAGE or dataType == SELECT_JOBDATA_USER_NAME:
-		
+
 			# data-> char* needs to be freed with xfree
 
 			retval = slurm.slurm_get_select_jobinfo(jobinfo, dataType, &tmp_str)
@@ -2209,7 +2207,7 @@ cdef class node:
 
 	cpdef __destroy(self):
 
-		u"""Free the memory allocated by load node method. 
+		u"""Free the memory allocated by load node method.
 		"""
 
 		if self._Node_ptr is not NULL:
@@ -2249,7 +2247,7 @@ cdef class node:
 
 	def load(self):
 
-		u"""Load slurm node data. 
+		u"""Load slurm node data.
 		"""
 
 		self.__load()
@@ -2433,7 +2431,7 @@ cdef class node:
 			if (my_state & NODE_STATE_DRAIN):
 				my_state &= (~NODE_STATE_DRAIN)
 				drain_str = "+DRAIN"
-			
+
 			if (my_state & NODE_STATE_FAIL):
 				my_state &= (~NODE_STATE_FAIL)
 				drain_str = "+FAIL"
@@ -2651,7 +2649,7 @@ cdef class jobstep:
 
 	cpdef __destroy(self):
 
-		u"""Free the slurm job memory allocated by load jobstep method. 
+		u"""Free the slurm job memory allocated by load jobstep method.
 		"""
 
 		self._lastUpdate = 0
@@ -2704,8 +2702,8 @@ cdef class jobstep:
 
 	cpdef __get(self):
 
-		u"""Loads into details about job steps that satisfy the job_id 
-		and/or step_id specifications provided if the data has been 
+		u"""Loads into details about job steps that satisfy the job_id
+		and/or step_id specifications provided if the data has been
 		updated since the update_time specified.
 
 		:param int JobID: Job Identifier
@@ -2779,7 +2777,7 @@ cdef class jobstep:
 	cpdef __layout(self, uint32_t JobID, uint32_t StepID):
 
 		cdef:
-			slurm.slurm_step_layout_t *old_job_step_ptr 
+			slurm.slurm_step_layout_t *old_job_step_ptr
 			int i = 0, j = 0, Node_cnt = 0
 
 			dict Layout = {}
@@ -2807,7 +2805,7 @@ cdef class jobstep:
 					Tids_list.append(old_job_step_ptr.tids[i][j])
 
 				Node_list.append( [Nodes[i], Tids_list] )
-			
+
 			Layout[u'tasks'] = Node_list
 
 			slurm.slurm_job_step_layout_free(old_job_step_ptr)
@@ -2992,7 +2990,7 @@ cdef class trigger:
 				trigger_set.res_id = '*'
 			else:
 				trigger_set.res_id = trigger_dict[u'node']
-			
+
 		trigger_set.offset = 32768
 		if 'offset' in trigger_dict:
 			trigger_set.offset = trigger_set.offset + trigger_dict[u'offset']
@@ -3020,7 +3018,7 @@ cdef class trigger:
 
 		if event == 'reconfig':
 			trigger_set.trig_type = trigger_set.trig_type | TRIGGER_TYPE_RECONFIG  #0x0020
-		
+
 		while slurm.slurm_set_trigger(&trigger_set):
 
 			slurm.slurm_perror('slurm_set_trigger')
@@ -3127,7 +3125,7 @@ cdef class trigger:
 
 		memset(&trigger_pull, 0, sizeof(slurm.trigger_info_t))
 
-		trigger_pull.trig_id = TriggerID 
+		trigger_pull.trig_id = TriggerID
 		trigger_pull.user_id = UserID
 
 		if ID:
@@ -3148,7 +3146,7 @@ cdef class trigger:
 
 cdef class reservation:
 
-	u"""Class to access/update/delete slurm reservation Information. 
+	u"""Class to access/update/delete slurm reservation Information.
 	"""
 
 	cdef:
@@ -3491,7 +3489,7 @@ def slurm_delete_reservation(char* ResID=''):
 
 	cdef slurm.reservation_name_msg_t resv_msg
 
-	if not ResID: 
+	if not ResID:
 		return -1
 
 	resv_msg.name = ResID
@@ -3509,7 +3507,7 @@ def create_reservation_dict():
 
 	u"""Create and empty dict for use with create_reservation method.
 
-	Returns a dictionary that can be populated by the user an used for 
+	Returns a dictionary that can be populated by the user an used for
 	the update_reservation and create_reservation calls.
 
 	:returns: Empty Reservation dictionary
@@ -3534,7 +3532,7 @@ def create_reservation_dict():
 
 cdef class block:
 
-	u"""Class to access/update slurm block Information. 
+	u"""Class to access/update slurm block Information.
 	"""
 
 	cdef:
@@ -3776,7 +3774,7 @@ cdef class block:
 
 cdef class topology:
 
-	u"""Class to access/update slurm topology information. 
+	u"""Class to access/update slurm topology information.
 	"""
 
 	cdef:
@@ -3816,7 +3814,6 @@ cdef class topology:
 		self.__load()
 
 	cpdef int __load(self) except? -1:
-		
 		u"""Load slurm topology.
 		"""
 
@@ -3892,7 +3889,7 @@ cdef class topology:
 
 cdef class powercap:
 
-	u"""Class to access powercap information. 
+	u"""Class to access powercap information.
 	"""
 
 	cdef:
@@ -3908,7 +3905,7 @@ cdef class powercap:
 
 	cpdef __destroy(self):
 
-		u"""Free the memory allocated by __load method. 
+		u"""Free the memory allocated by __load method.
 		"""
 
 		if self._msg is not NULL:
@@ -3922,7 +3919,6 @@ cdef class powercap:
 		self.__load()
 
 	cpdef int __load(self) except? -1:
-		
 		u"""Load powercap information.
 		"""
 
@@ -3989,7 +3985,7 @@ cdef class statistics:
 		dict _StatsDict
 
 	def __cinit__(self):
-		self._buf = NULL 
+		self._buf = NULL
 		self._StatsDict = {}
 
 	def __dealloc__(self):
@@ -4116,7 +4112,7 @@ cdef class statistics:
 
 cdef class front_end:
 
-	u"""Class to access/update slurm front end node information. 
+	u"""Class to access/update slurm front end node information.
 	"""
 
 	cdef:
@@ -4137,8 +4133,7 @@ cdef class front_end:
 		self.__destroy()
 
 	cpdef __destroy(self):
-
-		u"""Free the memory allocated by load front end node method. 
+		u"""Free the memory allocated by load front end node method.
 		"""
 
 		if self._FrontEndNode_ptr is not NULL:
@@ -4152,10 +4147,9 @@ cdef class front_end:
 		self.__load()
 
 	cpdef int __load(self) except? -1:
-		
 		u"""Load slurm front end node.
 		"""
- 
+
 		cdef:
 			#slurm.front_end_info_msg_t *new_FrontEndNode_ptr = NULL
 			time_t last_time = <time_t>NULL
@@ -4730,7 +4724,7 @@ cdef inline list __get_debug_flags(uint32_t flags):
 
 	if (flags & DEBUG_FLAG_PRIO ):
 		debugFlags.append(u'Priority')
-               
+
 	if (flags & DEBUG_FLAG_RESERVATION):
 		debugFlags.append(u'Reservation')
 
@@ -5068,7 +5062,7 @@ class Dict(defaultdict):
 
 cdef class licenses:
 
-	u"""Class to access slurm controller license information. 
+	u"""Class to access slurm controller license information.
 	"""
 
 	cdef:
@@ -5088,7 +5082,7 @@ cdef class licenses:
 
 	cpdef __destroy(self):
 
-		u"""Free the memory allocated by load licenses method. 
+		u"""Free the memory allocated by load licenses method.
 		"""
 
 		if self._msg is not NULL:
@@ -5188,4 +5182,3 @@ cdef class licenses:
 					licenses[name] = lic
 
 		self._licDict = licenses
-
