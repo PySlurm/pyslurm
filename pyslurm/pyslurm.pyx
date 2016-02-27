@@ -6,12 +6,11 @@ import os
 
 from socket import gethostname
 from collections import defaultdict
+from pwd import getpwuid
 
 from libc.string cimport strlen, strcpy, memset, memcpy
-
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 from libc.stdint cimport int64_t, uint64_t
-
 from libc.stdlib cimport malloc, free
 
 from cpython cimport bool
@@ -3984,127 +3983,322 @@ cdef class statistics:
 		slurm.stats_info_response_msg_t *_buf
 		dict _StatsDict
 
+
 	def __cinit__(self):
 		self._buf = NULL
 		self._StatsDict = {}
 
+
 	def __dealloc__(self):
-		self._buf = NULL
+		pass
 
-	def load(self):
-		return self.__load()
 
-	cpdef int __load(self) except? -1:
-
-		u"""
-		#extern int  slurm_get_statistics (stats_info_response_msg_t **buf, stats_info_request_msg_t *req)
-		"""
-
-		self._req.command_id = STAT_COMMAND_GET
-
-		cdef int apiError = 0
-		cdef int errCode = slurm.slurm_get_statistics(&self._buf, <slurm.stats_info_request_msg_t*>&self._req)
-
-		if errCode != 0:
-			apiError = slurm.slurm_get_errno()
-			raise ValueError(slurm.slurm_strerror(apiError), apiError)
-
-		return errCode
-
-	def get(self):
-
+	cpdef dict get(self):
 		u"""Get slurm statistics information.
 
 		:rtype: `dict`
 		"""
 
-		self.__get()
-		return self._StatsDict
-
-	cpdef __get(self):
+		cdef:
+			int errCode
+			int apiError
+			uint32_t i
+			dict rpc_type_stats
+			dict rpc_user_stats
 
 		self._req.command_id = STAT_COMMAND_GET
 
-		cdef:
-			dict Stats_dict = {}
-			dict tmp = {}
-			int i = 0
-			int errCode = slurm.slurm_get_statistics(&self._buf, <slurm.stats_info_request_msg_t*>&self._req)
+		errCode = slurm.slurm_get_statistics(&self._buf,
+											 <slurm.stats_info_request_msg_t*>&self._req)
 
-		if self._buf is not NULL:
+		if errCode == slurm.SLURM_SUCCESS:
+			self._StatsDict[u'parts_packed'] = self._buf.parts_packed
+			self._StatsDict[u'req_time'] = self._buf.req_time
+			self._StatsDict[u'req_time_start'] = self._buf.req_time_start
+			self._StatsDict[u'server_thread_count'] = self._buf.server_thread_count
+			self._StatsDict[u'agent_queue_size'] = self._buf.agent_queue_size
 
-			Stats_dict[u'parts_packed'] = self._buf.parts_packed
-			Stats_dict[u'req_time'] = self._buf.req_time
-			Stats_dict[u'req_time_start'] = self._buf.req_time_start
-			Stats_dict[u'server_thread_count'] = self._buf.server_thread_count
-			Stats_dict[u'agent_queue_size'] = self._buf.agent_queue_size
-			Stats_dict[u'schedule_cycle_last'] = self._buf.schedule_cycle_last
-			Stats_dict[u'schedule_cycle_max'] = self._buf.schedule_cycle_max
-			Stats_dict[u'schedule_cycle_counter'] = self._buf.schedule_cycle_counter
-			Stats_dict[u'schedule_cycle_sum'] = self._buf.schedule_cycle_sum
-			Stats_dict[u'schedule_cycle_depth'] = self._buf.schedule_cycle_depth
-			Stats_dict[u'schedule_queue_len'] = self._buf.schedule_queue_len
-			Stats_dict[u'jobs_submitted'] = self._buf.jobs_submitted
-			Stats_dict[u'jobs_started'] = self._buf.jobs_started + self._buf.bf_last_backfilled_jobs
-			Stats_dict[u'jobs_completed'] = self._buf.jobs_completed
-			Stats_dict[u'jobs_canceled'] = self._buf.jobs_canceled
-			Stats_dict[u'jobs_failed'] = self._buf.jobs_failed
-			Stats_dict[u'bf_active'] = self._buf.bf_active
-			Stats_dict[u'bf_backfilled_jobs'] = self._buf.bf_backfilled_jobs
-			Stats_dict[u'bf_last_backfilled_jobs'] = self._buf.bf_last_backfilled_jobs
-			Stats_dict[u'bf_cycle_counter'] = self._buf.bf_cycle_counter
-			Stats_dict[u'bf_cycle_sum'] = self._buf.bf_cycle_sum
-			Stats_dict[u'bf_cycle_last'] = self._buf.bf_cycle_last
-			Stats_dict[u'bf_cycle_max'] = self._buf.bf_cycle_max
-			Stats_dict[u'bf_last_depth'] = self._buf.bf_last_depth
-			Stats_dict[u'bf_last_depth_try'] = self._buf.bf_last_depth_try
-			Stats_dict[u'bf_depth_sum'] = self._buf.bf_depth_sum
-			Stats_dict[u'bf_depth_try_sum'] = self._buf.bf_depth_try_sum
-			Stats_dict[u'bf_queue_len'] = self._buf.bf_queue_len
-			Stats_dict[u'bf_queue_len_sum'] = self._buf.bf_queue_len_sum
-			Stats_dict[u'bf_when_last_cycle'] = self._buf.bf_when_last_cycle
-			Stats_dict[u'bf_active'] = self._buf.bf_active
+			self._StatsDict[u'schedule_cycle_max'] = self._buf.schedule_cycle_max
+			self._StatsDict[u'schedule_cycle_last'] = self._buf.schedule_cycle_last
+			self._StatsDict[u'schedule_cycle_sum'] = self._buf.schedule_cycle_sum
+			self._StatsDict[u'schedule_cycle_counter'] = self._buf.schedule_cycle_counter
+			self._StatsDict[u'schedule_cycle_depth'] = self._buf.schedule_cycle_depth
+			self._StatsDict[u'schedule_queue_len'] = self._buf.schedule_queue_len
 
-			Stats_dict[u'rpc_type_size'] = self._buf.rpc_type_size
-			tmp = {}
+			self._StatsDict[u'jobs_submitted'] = self._buf.jobs_submitted
+			self._StatsDict[u'jobs_started'] = self._buf.jobs_started
+			self._StatsDict[u'jobs_completed'] = self._buf.jobs_completed
+			self._StatsDict[u'jobs_canceled'] = self._buf.jobs_canceled
+			self._StatsDict[u'jobs_failed'] = self._buf.jobs_failed
+
+			self._StatsDict[u'bf_backfilled_jobs'] = self._buf.bf_backfilled_jobs
+			self._StatsDict[u'bf_last_backfilled_jobs'] = self._buf.bf_last_backfilled_jobs
+			self._StatsDict[u'bf_cycle_counter'] = self._buf.bf_cycle_counter
+			self._StatsDict[u'bf_cycle_sum'] = self._buf.bf_cycle_sum
+			self._StatsDict[u'bf_cycle_last'] = self._buf.bf_cycle_last
+			self._StatsDict[u'bf_cycle_max'] = self._buf.bf_cycle_max
+			self._StatsDict[u'bf_last_depth'] = self._buf.bf_last_depth
+			self._StatsDict[u'bf_last_depth_try'] = self._buf.bf_last_depth_try
+			self._StatsDict[u'bf_depth_sum'] = self._buf.bf_depth_sum
+			self._StatsDict[u'bf_depth_try_sum'] = self._buf.bf_depth_try_sum
+			self._StatsDict[u'bf_queue_len'] = self._buf.bf_queue_len
+			self._StatsDict[u'bf_queue_len_sum'] = self._buf.bf_queue_len_sum
+			self._StatsDict[u'bf_when_last_cycle'] = self._buf.bf_when_last_cycle
+			self._StatsDict[u'bf_active'] = self._buf.bf_active
+
+			rpc_type_stats = {}
+
 			for i in range(self._buf.rpc_type_size):
-				tmp[self._buf.rpc_type_id[i]] = {}
-				tmp[self._buf.rpc_type_id[i]][u'rpc_type_cnt'] = self._buf.rpc_type_cnt[i]
-				tmp[self._buf.rpc_type_id[i]][u'rpc_type_time'] = self._buf.rpc_type_time[i]
-			Stats_dict[u'rpc_type_stats'] = tmp
+				rpc_type = self.__rpc_num2string(self._buf.rpc_type_id[i])
+				rpc_type_stats[rpc_type] = {}
+				rpc_type_stats[rpc_type][u'id'] = self._buf.rpc_type_id[i]
+				rpc_type_stats[rpc_type][u'count'] = self._buf.rpc_type_cnt[i]
+				rpc_type_stats[rpc_type][u'ave_time'] = (self._buf.rpc_type_time[i] /
+														 self._buf.rpc_type_cnt[i])
+				rpc_type_stats[rpc_type][u'total_time'] = self._buf.rpc_type_time[i]
+			self._StatsDict[u'rpc_type_stats'] = rpc_type_stats
 
-			Stats_dict[u'rpc_user_size'] = self._buf.rpc_user_size
-			tmp = {}
+			rpc_user_stats = {}
+
 			for i in range(self._buf.rpc_user_size):
-				tmp[self._buf.rpc_user_id[i]] = {}
-				tmp[self._buf.rpc_user_id[i]][u'rpc_user_cnt'] = self._buf.rpc_user_cnt[i]
-				tmp[self._buf.rpc_user_id[i]][u'rpc_user_time'] = self._buf.rpc_user_time[i]
-			Stats_dict[u'rpc_user_stats'] = tmp
+				rpc_user = getpwuid(self._buf.rpc_user_id[i])[0]
+				rpc_user_stats[rpc_user] = {}
+				rpc_user_stats[rpc_user]["id"] = self._buf.rpc_user_id[i]
+				rpc_user_stats[rpc_user]["count"] = self._buf.rpc_user_cnt[i]
+				rpc_user_stats[rpc_user]["ave_time"] = (self._buf.rpc_user_time[i] /
+														self._buf.rpc_user_cnt[i])
+				rpc_user_stats[rpc_user]["total_time"] = self._buf.rpc_user_time[i]
+			self._StatsDict[u'rpc_user_stats'] = rpc_user_stats
 
-		slurm.slurm_free_stats_response_msg(self._buf)
-		self._StatsDict = Stats_dict
-
-	def reset(self):
-		return self.__reset()
-
-	cpdef int __reset(self) except? -1:
-
-		"""
-		#extern int slurm_reset_statistics (stats_info_request_msg_t *req)
-		"""
-
-		self._req.command_id = STAT_COMMAND_RESET
-
-		cdef int apiError = 0
-		cdef int errCode = slurm.slurm_reset_statistics(<slurm.stats_info_request_msg_t*>&self._req)
-
-		if errCode == 0:
-			self._StatsDict = {}
+			slurm.slurm_free_stats_response_msg(self._buf)
+			self._buf = NULL
+			return self._StatsDict
 		else:
 			apiError = slurm.slurm_get_errno()
 			raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
-		return errCode
+
+	cpdef int reset(self):
+		"""
+		#extern int slurm_reset_statistics (stats_info_request_msg_t *req)
+		"""
+
+		cdef:
+			int apiError
+			int errCode
+
+		self._req.command_id = STAT_COMMAND_RESET
+		errCode = slurm.slurm_reset_statistics(<slurm.stats_info_request_msg_t*>&self._req)
+
+		if errCode == slurm.SLURM_SUCCESS:
+			return errCode
+		else:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
+
+
+	cpdef __rpc_num2string(self, uint16_t opcode):
+		cdef dict num2string
+
+		num2string = {
+			1001: "REQUEST_NODE_REGISTRATION_STATUS",
+			1002: "MESSAGE_NODE_REGISTRATION_STATUS",
+			1003: "REQUEST_RECONFIGURE",
+			1004: "RESPONSE_RECONFIGURE",
+			1005: "REQUEST_SHUTDOWN",
+			1006: "REQUEST_SHUTDOWN_IMMEDIATE",
+			1007: "RESPONSE_SHUTDOWN",
+			1008: "REQUEST_PING",
+			1009: "REQUEST_CONTROL",
+			1010: "REQUEST_SET_DEBUG_LEVEL",
+			1011: "REQUEST_HEALTH_CHECK",
+			1012: "REQUEST_TAKEOVER",
+			1013: "REQUEST_SET_SCHEDLOG_LEVEL",
+			1014: "REQUEST_SET_DEBUG_FLAGS",
+			1015: "REQUEST_REBOOT_NODES",
+			1016: "RESPONSE_PING_SLURMD",
+			1017: "REQUEST_ACCT_GATHER_UPDATE",
+			1018: "RESPONSE_ACCT_GATHER_UPDATE",
+			1019: "REQUEST_ACCT_GATHER_ENERGY",
+			1020: "RESPONSE_ACCT_GATHER_ENERGY",
+			1021: "REQUEST_LICENSE_INFO",
+			1022: "RESPONSE_LICENSE_INFO",
+
+			2001: "REQUEST_BUILD_INFO",
+			2002: "RESPONSE_BUILD_INFO",
+			2003: "REQUEST_JOB_INFO",
+			2004: "RESPONSE_JOB_INFO",
+			2005: "REQUEST_JOB_STEP_INFO",
+			2006: "RESPONSE_JOB_STEP_INFO",
+			2007: "REQUEST_NODE_INFO",
+			2008: "RESPONSE_NODE_INFO",
+			2009: "REQUEST_PARTITION_INFO",
+			2010: "RESPONSE_PARTITION_INFO",
+			2011: "REQUEST_ACCTING_INFO",
+			2012: "RESPONSE_ACCOUNTING_INFO",
+			2013: "REQUEST_JOB_ID",
+			2014: "RESPONSE_JOB_ID",
+			2015: "REQUEST_BLOCK_INFO",
+			2016: "RESPONSE_BLOCK_INFO",
+			2017: "REQUEST_TRIGGER_SET",
+			2018: "REQUEST_TRIGGER_GET",
+			2019: "REQUEST_TRIGGER_CLEAR",
+			2020: "RESPONSE_TRIGGER_GET",
+			2021: "REQUEST_JOB_INFO_SINGLE",
+			2022: "REQUEST_SHARE_INFO",
+			2023: "RESPONSE_SHARE_INFO",
+			2024: "REQUEST_RESERVATION_INFO",
+			2025: "RESPONSE_RESERVATION_INFO",
+			2026: "REQUEST_PRIORITY_FACTORS",
+			2027: "RESPONSE_PRIORITY_FACTORS",
+			2028: "REQUEST_TOPO_INFO",
+			2029: "RESPONSE_TOPO_INFO",
+			2030: "REQUEST_TRIGGER_PULL",
+			2031: "REQUEST_FRONT_END_INFO",
+			2032: "RESPONSE_FRONT_END_INFO",
+			2033: "REQUEST_SPANK_ENVIRONMENT",
+			2034: "RESPONCE_SPANK_ENVIRONMENT",
+			2035: "REQUEST_STATS_INFO",
+			2036: "RESPONSE_STATS_INFO",
+			2037: "REQUEST_BURST_BUFFER_INFO",
+			2038: "RESPONSE_BURST_BUFFER_INFO",
+			2039: "REQUEST_JOB_USER_INFO",
+			2040: "REQUEST_NODE_INFO_SINGLE",
+			2041: "REQUEST_POWERCAP_INFO",
+			2042: "RESPONSE_POWERCAP_INFO",
+			2043: "REQUEST_ASSOC_MGR_INFO",
+			2044: "RESPONSE_ASSOC_MGR_INFO",
+			2045: "REQUEST_SICP_INFO_DEFUNCT",
+			2046: "RESPONSE_SICP_INFO_DEFUNCT",
+			2047: "REQUEST_LAYOUT_INFO",
+			2048: "RESPONSE_LAYOUT_INFO",
+
+			3001: "REQUEST_UPDATE_JOB",
+			3002: "REQUEST_UPDATE_NODE",
+			3003: "REQUEST_CREATE_PARTITION",
+			3004: "REQUEST_DELETE_PARTITION",
+			3005: "REQUEST_UPDATE_PARTITION",
+			3006: "REQUEST_CREATE_RESERVATION",
+			3007: "RESPONSE_CREATE_RESERVATION",
+			3008: "REQUEST_DELETE_RESERVATION",
+			3009: "REQUEST_UPDATE_RESERVATION",
+			3010: "REQUEST_UPDATE_BLOCK",
+			3011: "REQUEST_UPDATE_FRONT_END",
+			3012: "REQUEST_UPDATE_LAYOUT",
+			3013: "REQUEST_UPDATE_POWERCAP",
+
+			4001: "REQUEST_RESOURCE_ALLOCATION",
+			4002: "RESPONSE_RESOURCE_ALLOCATION",
+			4003: "REQUEST_SUBMIT_BATCH_JOB",
+			4004: "RESPONSE_SUBMIT_BATCH_JOB",
+			4005: "REQUEST_BATCH_JOB_LAUNCH",
+			4006: "REQUEST_CANCEL_JOB",
+			4007: "RESPONSE_CANCEL_JOB",
+			4008: "REQUEST_JOB_RESOURCE",
+			4009: "RESPONSE_JOB_RESOURCE",
+			4010: "REQUEST_JOB_ATTACH",
+			4011: "RESPONSE_JOB_ATTACH",
+			4012: "REQUEST_JOB_WILL_RUN",
+			4013: "RESPONSE_JOB_WILL_RUN",
+			4014: "REQUEST_JOB_ALLOCATION_INFO",
+			4015: "RESPONSE_JOB_ALLOCATION_INFO",
+			4016: "REQUEST_JOB_ALLOCATION_INFO_LITE",
+			4017: "RESPONSE_JOB_ALLOCATION_INFO_LITE",
+			4018: "REQUEST_UPDATE_JOB_TIME",
+			4019: "REQUEST_JOB_READY",
+			4020: "RESPONSE_JOB_READY",
+			4021: "REQUEST_JOB_END_TIME",
+			4022: "REQUEST_JOB_NOTIFY",
+			4023: "REQUEST_JOB_SBCAST_CRED",
+			4024: "RESPONSE_JOB_SBCAST_CRED",
+
+			5001: "REQUEST_JOB_STEP_CREATE",
+			5002: "RESPONSE_JOB_STEP_CREATE",
+			5003: "REQUEST_RUN_JOB_STEP",
+			5004: "RESPONSE_RUN_JOB_STEP",
+			5005: "REQUEST_CANCEL_JOB_STEP",
+			5006: "RESPONSE_CANCEL_JOB_STEP",
+			5007: "REQUEST_UPDATE_JOB_STEP",
+			5008: "DEFUNCT_RESPONSE_COMPLETE_JOB_STEP",
+			5009: "REQUEST_CHECKPOINT",
+			5010: "RESPONSE_CHECKPOINT",
+			5011: "REQUEST_CHECKPOINT_COMP",
+			5012: "REQUEST_CHECKPOINT_TASK_COMP",
+			5013: "RESPONSE_CHECKPOINT_COMP",
+			5014: "REQUEST_SUSPEND",
+			5015: "RESPONSE_SUSPEND",
+			5016: "REQUEST_STEP_COMPLETE",
+			5017: "REQUEST_COMPLETE_JOB_ALLOCATION",
+			5018: "REQUEST_COMPLETE_BATCH_SCRIPT",
+			5019: "REQUEST_JOB_STEP_STAT",
+			5020: "RESPONSE_JOB_STEP_STAT",
+			5021: "REQUEST_STEP_LAYOUT",
+			5022: "RESPONSE_STEP_LAYOUT",
+			5023: "REQUEST_JOB_REQUEUE",
+			5024: "REQUEST_DAEMON_STATUS",
+			5025: "RESPONSE_SLURMD_STATUS",
+			5026: "RESPONSE_SLURMCTLD_STATUS",
+			5027: "REQUEST_JOB_STEP_PIDS",
+			5028: "RESPONSE_JOB_STEP_PIDS",
+			5029: "REQUEST_FORWARD_DATA",
+			5030: "REQUEST_COMPLETE_BATCH_JOB",
+			5031: "REQUEST_SUSPEND_INT",
+			5032: "REQUEST_KILL_JOB",
+			5033: "REQUEST_KILL_JOBSTEP",
+			5034: "RESPONSE_JOB_ARRAY_ERRORS",
+			5035: "REQUEST_NETWORK_CALLERID",
+			5036: "RESPONSE_NETWORK_CALLERID",
+			5037: "REQUEST_STEP_COMPLETE_AGGR",
+			5038: "REQUEST_TOP_JOB",
+
+			6001: "REQUEST_LAUNCH_TASKS",
+			6002: "RESPONSE_LAUNCH_TASKS",
+			6003: "MESSAGE_TASK_EXIT",
+			6004: "REQUEST_SIGNAL_TASKS",
+			6005: "REQUEST_CHECKPOINT_TASKS",
+			6006: "REQUEST_TERMINATE_TASKS",
+			6007: "REQUEST_REATTACH_TASKS",
+			6008: "RESPONSE_REATTACH_TASKS",
+			6009: "REQUEST_KILL_TIMELIMIT",
+			6010: "REQUEST_SIGNAL_JOB",
+			6011: "REQUEST_TERMINATE_JOB",
+			6012: "MESSAGE_EPILOG_COMPLETE",
+			6013: "REQUEST_ABORT_JOB",
+			6014: "REQUEST_FILE_BCAST",
+			6015: "TASK_USER_MANAGED_IO_STREAM",
+			6016: "REQUEST_KILL_PREEMPTED",
+			6017: "REQUEST_LAUNCH_PROLOG",
+			6018: "REQUEST_COMPLETE_PROLOG",
+			6019: "RESPONSE_PROLOG_EXECUTING",
+
+			7001: "SRUN_PING",
+			7002: "SRUN_TIMEOUT",
+			7003: "SRUN_NODE_FAIL",
+			7004: "SRUN_JOB_COMPLETE",
+			7005: "SRUN_USER_MSG",
+			7006: "SRUN_EXEC",
+			7007: "SRUN_STEP_MISSING",
+			7008: "SRUN_REQUEST_SUSPEND",
+
+			7201: "PMI_KVS_PUT_REQ",
+			7202: "PMI_KVS_PUT_RESP",
+			7203: "PMI_KVS_GET_REQ",
+			7204: "PMI_KVS_GET_RESP",
+
+			8001: "RESPONSE_SLURM_RC",
+			8002: "RESPONSE_SLURM_RC_MSG",
+
+			9001: "RESPONSE_FORWARD_FAILED",
+
+			10001: "ACCOUNTING_UPDATE_MSG",
+			10002: "ACCOUNTING_FIRST_REG",
+			10003: "ACCOUNTING_REGISTER_CTLD",
+
+			11001: "MESSAGE_COMPOSITE",
+			11002: "RESPONSE_MESSAGE_COMPOSITE" }
+
+		return num2string[opcode]
+
 
 #
 # Front End Node Class

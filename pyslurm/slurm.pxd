@@ -74,6 +74,10 @@ cdef extern from 'slurm/spank.h' nogil:
 #
 
 cdef extern from 'slurm/slurm_errno.h' nogil:
+	int SLURM_SUCCESS
+	int SLURM_ERROR
+	int SLURM_FAILURE
+
 	cdef extern char * slurm_strerror (int)
 	cdef void slurm_seterrno (int)
 	cdef int slurm_get_errno ()
