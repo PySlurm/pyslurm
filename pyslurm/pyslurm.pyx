@@ -4056,9 +4056,9 @@ cdef class statistics:
 				if self._buf.rpc_type_cnt[i] == 0:
 					rpc_type_stats[rpc_type][u'ave_time'] = 0
 				else:
-					rpc_type_stats[rpc_type][u'ave_time'] = (self._buf.rpc_type_time[i] /
-															 self._buf.rpc_type_cnt[i])
-				rpc_type_stats[rpc_type][u'total_time'] = self._buf.rpc_type_time[i]
+					rpc_type_stats[rpc_type][u'ave_time'] = int(self._buf.rpc_type_time[i] /
+																self._buf.rpc_type_cnt[i])
+				rpc_type_stats[rpc_type][u'total_time'] = int(self._buf.rpc_type_time[i])
 			self._StatsDict[u'rpc_type_stats'] = rpc_type_stats
 
 			rpc_user_stats = {}
@@ -4071,9 +4071,9 @@ cdef class statistics:
 				if self._buf.rpc_user_cnt[i] == 0:
 					rpc_user_stats[rpc_user][u"ave_time"] = 0
 				else:
-					rpc_user_stats[rpc_user][u"ave_time"] = (self._buf.rpc_user_time[i] /
-															 self._buf.rpc_user_cnt[i])
-				rpc_user_stats[rpc_user][u"total_time"] = self._buf.rpc_user_time[i]
+					rpc_user_stats[rpc_user][u"ave_time"] = int(self._buf.rpc_user_time[i] /
+																self._buf.rpc_user_cnt[i])
+				rpc_user_stats[rpc_user][u"total_time"] = int(self._buf.rpc_user_time[i])
 			self._StatsDict[u'rpc_user_stats'] = rpc_user_stats
 
 			slurm.slurm_free_stats_response_msg(self._buf)
