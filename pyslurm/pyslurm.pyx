@@ -4008,8 +4008,7 @@ cdef class statistics:
 
 		self._req.command_id = STAT_COMMAND_GET
 
-		errCode = slurm.slurm_get_statistics(&self._buf,
-											 <slurm.stats_info_request_msg_t*>&self._req)
+		errCode = slurm.slurm_get_statistics(&self._buf, <slurm.stats_info_request_msg_t*>&self._req)
 
 		if errCode == slurm.SLURM_SUCCESS:
 			self._StatsDict[u'parts_packed'] = self._buf.parts_packed
@@ -4056,8 +4055,7 @@ cdef class statistics:
 				if self._buf.rpc_type_cnt[i] == 0:
 					rpc_type_stats[rpc_type][u'ave_time'] = 0
 				else:
-					rpc_type_stats[rpc_type][u'ave_time'] = int(self._buf.rpc_type_time[i] /
-																self._buf.rpc_type_cnt[i])
+					rpc_type_stats[rpc_type][u'ave_time'] = int(self._buf.rpc_type_time[i] / self._buf.rpc_type_cnt[i])
 				rpc_type_stats[rpc_type][u'total_time'] = int(self._buf.rpc_type_time[i])
 			self._StatsDict[u'rpc_type_stats'] = rpc_type_stats
 
@@ -4071,8 +4069,7 @@ cdef class statistics:
 				if self._buf.rpc_user_cnt[i] == 0:
 					rpc_user_stats[rpc_user][u"ave_time"] = 0
 				else:
-					rpc_user_stats[rpc_user][u"ave_time"] = int(self._buf.rpc_user_time[i] /
-																self._buf.rpc_user_cnt[i])
+					rpc_user_stats[rpc_user][u"ave_time"] = int(self._buf.rpc_user_time[i] / self._buf.rpc_user_cnt[i])
 				rpc_user_stats[rpc_user][u"total_time"] = int(self._buf.rpc_user_time[i])
 			self._StatsDict[u'rpc_user_stats'] = rpc_user_stats
 
