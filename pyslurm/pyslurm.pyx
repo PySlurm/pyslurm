@@ -4053,8 +4053,11 @@ cdef class statistics:
 				rpc_type_stats[rpc_type] = {}
 				rpc_type_stats[rpc_type][u'id'] = self._buf.rpc_type_id[i]
 				rpc_type_stats[rpc_type][u'count'] = self._buf.rpc_type_cnt[i]
-				rpc_type_stats[rpc_type][u'ave_time'] = (self._buf.rpc_type_time[i] /
-														 self._buf.rpc_type_cnt[i])
+				if self._buf.rpc_type_cnt[i] == 0:
+					rpc_type_stats[rpc_type][u'ave_time'] = 0
+				else:
+					rpc_type_stats[rpc_type][u'ave_time'] = (self._buf.rpc_type_time[i] /
+															 self._buf.rpc_type_cnt[i])
 				rpc_type_stats[rpc_type][u'total_time'] = self._buf.rpc_type_time[i]
 			self._StatsDict[u'rpc_type_stats'] = rpc_type_stats
 
@@ -4065,8 +4068,11 @@ cdef class statistics:
 				rpc_user_stats[rpc_user] = {}
 				rpc_user_stats[rpc_user][u"id"] = self._buf.rpc_user_id[i]
 				rpc_user_stats[rpc_user][u"count"] = self._buf.rpc_user_cnt[i]
-				rpc_user_stats[rpc_user][u"ave_time"] = (self._buf.rpc_user_time[i] /
-														self._buf.rpc_user_cnt[i])
+				if self._buf.rpc_user_cnt[i] == 0:
+					rpc_user_stats[rpc_user][u"ave_time"] = 0
+				else:
+					rpc_user_stats[rpc_user][u"ave_time"] = (self._buf.rpc_user_time[i] /
+															 self._buf.rpc_user_cnt[i])
 				rpc_user_stats[rpc_user][u"total_time"] = self._buf.rpc_user_time[i]
 			self._StatsDict[u'rpc_user_stats'] = rpc_user_stats
 
