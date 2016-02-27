@@ -4063,11 +4063,11 @@ cdef class statistics:
 			for i in range(self._buf.rpc_user_size):
 				rpc_user = getpwuid(self._buf.rpc_user_id[i])[0]
 				rpc_user_stats[rpc_user] = {}
-				rpc_user_stats[rpc_user]["id"] = self._buf.rpc_user_id[i]
-				rpc_user_stats[rpc_user]["count"] = self._buf.rpc_user_cnt[i]
-				rpc_user_stats[rpc_user]["ave_time"] = (self._buf.rpc_user_time[i] /
+				rpc_user_stats[rpc_user][u"id"] = self._buf.rpc_user_id[i]
+				rpc_user_stats[rpc_user][u"count"] = self._buf.rpc_user_cnt[i]
+				rpc_user_stats[rpc_user][u"ave_time"] = (self._buf.rpc_user_time[i] /
 														self._buf.rpc_user_cnt[i])
-				rpc_user_stats[rpc_user]["total_time"] = self._buf.rpc_user_time[i]
+				rpc_user_stats[rpc_user][u"total_time"] = self._buf.rpc_user_time[i]
 			self._StatsDict[u'rpc_user_stats'] = rpc_user_stats
 
 			slurm.slurm_free_stats_response_msg(self._buf)
