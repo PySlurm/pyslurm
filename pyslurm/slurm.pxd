@@ -1721,8 +1721,8 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 	cdef extern int slurm_job_cpus_allocated_on_node_id (job_resources_t *, int)
 	cdef extern int slurm_job_cpus_allocated_on_node (job_resources_t *, char *)
-	cdef extern int slurm_job_cpus_allocated_str_on_node_id (char *cpus, size_t cpus_len, job_resources_t *job_resrcs_ptr, int node_id)
-	cdef extern int slurm_job_cpus_allocated_str_on_node (char *cpus, size_t cpus_len, job_resources_t *job_resrcs_ptr, const char *node_name)
+	cdef extern int slurm_job_cpus_allocated_str_on_node_id (char *, size_t, job_resources_t *, int)
+	cdef extern int slurm_job_cpus_allocated_str_on_node (char *, size_t, job_resources_t *, const_char_ptr)
 
 	#
 	# Job Control Config
@@ -1895,7 +1895,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 	# Burst Buffer
 	#
 
-	cdef extern char *slurm_burst_buffer_state_string (uint16_t state);
+	cdef extern char *slurm_burst_buffer_state_string (uint16_t state)
 	cdef extern int slurm_load_burst_buffer_info (burst_buffer_info_msg_t **burst_buffer_info_msg_pptr)
 	cdef extern void slurm_free_burst_buffer_info_msg (burst_buffer_info_msg_t *burst_buffer_info_msg)
 	cdef extern void slurm_print_burst_buffer_info_msg (FILE *out, burst_buffer_info_msg_t *info_ptr, int one_liner, int verbosity)
