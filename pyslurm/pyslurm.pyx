@@ -2188,33 +2188,24 @@ cdef class node:
 
 	cdef:
 		slurm.node_info_msg_t *_Node_ptr
-		slurm.node_info_t *_record
-		slurm.time_t _lastUpdate
 		uint16_t _ShowFlags
 		dict _NodeDict
+		slurm.time_t _lastUpdate
+
 
 	def __cinit__(self):
 		self._Node_ptr = NULL
-		self._lastUpdate = 0
 		self._ShowFlags = 0
-		self._NodeDict = {}
+		self._lastUpdate = 0
 
-		self.get()
 
 	def __dealloc__(self):
-		self.__destroy()
+		pass
 
-	cpdef __destroy(self):
-
-		u"""Free the memory allocated by load node method.
-		"""
-
-		if self._Node_ptr is not NULL:
-			slurm.slurm_free_node_info_msg(self._Node_ptr)
 
 	def lastUpdate(self):
 
-		u"""Return last time (sepoch seconds) the node data was updated.
+		u"""Return last time (epoch seconds) the node data was updated.
 
 		:returns: epoch seconds
 		:rtype: `integer`
@@ -2222,342 +2213,272 @@ cdef class node:
 
 		return self._lastUpdate
 
-	def ids(self):
 
+	cpdef ids(self):
 		u"""Return the node IDs from retrieved data.
 
 		:returns: Dictionary of node IDs
 		:rtype: `dict`
 		"""
+		cdef:
+			int rc
+			int apiError
+			uint32_t i
+			list all_nodes
 
-		return self._NodeDict.keys()
+		rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr, slurm.SHOW_ALL)
 
-	def find_id(self, NodeID=''):
+		if rc == slurm.SLURM_SUCCESS:
+			all_nodes = []
+			for i in range(self._Node_ptr.record_count):
+				all_nodes.append(self._Node_ptr.node_array[i].name)
+			slurm.slurm_free_node_info_msg(self._Node_ptr)
+			self._Node_ptr = NULL
+			return all_nodes
+		else:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
+
+	cpdef find_id(self, char *nodeID):
 		u"""Retrieve node ID data.
 
 		:param str nodeID: Node key string to search
 		:returns: Dictionary of values for given node
 		:rtype: `dict`
 		"""
+		return self.get_node(nodeID)
 
-		cdef char *nodeID = NodeID
-		return self._NodeDict.get(nodeID, {})
-
-	def load(self):
-
-		u"""Load slurm node data.
-		"""
-
-		self.__load()
-
-	cpdef int __load(self) except? -1:
-
-		u"""Load node data method.
-
-		:returns: Error value
-		:rtype: `integer`
-		"""
-
-		cdef:
-			slurm.node_info_msg_t *new_node_info_ptr = NULL
-			slurm.time_t last_time = <slurm.time_t>NULL
-			int apiError = 0, errCode = 0
-
-		if self._Node_ptr is not NULL:
-
-			errCode = slurm.slurm_load_node(self._Node_ptr.last_update, &new_node_info_ptr, self._ShowFlags)
-			if errCode == 0:	# SLURM_SUCCESS
-				slurm.slurm_free_node_info_msg(self._Node_ptr)
-			elif slurm.slurm_get_errno() == 1900:	# SLURM_NO_CHANGE_IN_DATA
-				errCode = 0
-				new_node_info_ptr = self._Node_ptr
-		else:
-			last_time = <time_t>NULL
-			errCode = slurm.slurm_load_node(last_time, &new_node_info_ptr, self._ShowFlags)
-
-		if errCode == 0:
-			self._Node_ptr = new_node_info_ptr
-			self._lastUpdate = self._Node_ptr.last_update
-		else:
-			apiError = slurm.slurm_get_errno()
-			raise ValueError(slurm.slurm_strerror(apiError), apiError)
-
-		return errCode
-
-	cpdef update(self, dict node_dict):
-
-		u"""Update slurm node information.
-
-		:param dict node_dict: A populated node dictionary, an empty one is created by create_node_dict
-
-		:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-		:rtype: `integer`
-		"""
-
-		return slurm_update_node(node_dict)
-
-	cpdef print_node_info_msg(self, int oneLiner=False):
-
-		u"""Output information about all slurm nodes.
-
-		:param int oneLiner: Print on one line - False (Default) or True
-		"""
-
-		if self._Node_ptr is not NULL:
-			slurm.slurm_print_node_info_msg(slurm.stdout, self._Node_ptr, oneLiner)
 
 	cpdef get(self):
+		u"""Get all slurm node information.
 
-		u"""Get slurm node information.
-
-		:returns: Data whose key is the node name.
+		:returns: Dictionary of dictionaries whose key is the node name.
 		:rtype: `dict`
 		"""
+		return self.get_node(NULL)
 
-		self.__load()
-		self.__get()
 
-		return self._NodeDict
+	cpdef get_node(self, char *nodeID):
+		u"""Get single slurm node information.
 
-	cpdef __get(self):
-
-		cdef:
-			slurm.node_info_t *node_ptr
-			slurm.select_nodeinfo_t *select_node_ptr
-
-			char *cloud_str = ""
-			char *comp_str = ""
-			char *drain_str = ""
-			char *power_str = ""
-			int i, total_used, cpus_per_node, rc
-			uint16_t alloc_cpus, err_cpus
-			uint32_t tmp_disk, node_state, node_scaling = 0
+		:param str nodeID: Node key string to search. Default NULL.
+		:returns: Dictionary of give node info data.
+		:rtype: `dict`
+		"""
+		"""
+			int cpus_per_node
+			uint32_t tmp_disk, node_scaling = 0
 			uint32_t my_state, alloc_mem
-			#unit32_t cluster_flags = slurmdb_setup_cluster_flags()
 			uint32_t currentWatts = 0
 			time_t last_update
 
 			dict Hosts = {}, Host_dict
+		"""
+		cdef:
+			int rc
+			int apiError
+			int total_used
+			char *cloud_str
+			char *comp_str
+			char *drain_str
+			char *power_str
+			uint16_t err_cpus
+			uint16_t alloc_cpus
+			uint32_t i
+			uint32_t alloc_mem
+			uint32_t node_state
+			slurm.node_info_t *record
+			dict Host_dict
 
-		if self._Node_ptr is NULL:
-			return Hosts
+		if nodeID == NULL:
+			rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr, SHOW_ALL)
+		else:
+			rc = slurm.slurm_load_node_single(&self._Node_ptr, nodeID, self._ShowFlags)
 
-		node_scaling = self._Node_ptr.node_scaling
-		last_update  = self._Node_ptr.last_update
+		if rc == slurm.SLURM_SUCCESS:
+			self._NodeDict = {}
+			self._lastUpdate = self._Node_ptr.last_update
+			node_scaling = self._Node_ptr.node_scaling
+			last_update  = self._Node_ptr.last_update
 
-		for i in range(self._Node_ptr.record_count):
+			for i in range(self._Node_ptr.record_count):
+				record = &self._Node_ptr.node_array[i]
+				Host_dict = {}
+				cloud_str = ""
+				comp_str = ""
+				drain_str = ""
+				power_str = ""
+				err_cpus = 0
+				alloc_cpus = 0
+				cpus_per_node = 1
 
-			self._record = &self._Node_ptr.node_array[i]
+				if record.name is NULL:
+					break
 
-			if self._record.name is NULL:
-				break
+				total_used = record.cpus
+				if (node_scaling):
+					cpus_per_node = total_used / node_scaling
 
-			Host_dict = {}
-			alloc_mem = alloc_cpus = err_cpus = 0
-			cpus_per_node = 1
+				Host_dict[u'arch'] = slurm.stringOrNone(record.arch, '')
+				Host_dict[u'boards'] = record.boards
+				Host_dict[u'boot_time'] = record.boot_time
+				Host_dict[u'cores'] = record.cores
+				Host_dict[u'core_spec_cnt'] = record.core_spec_cnt
+				Host_dict[u'cpus'] = record.cpus
+				Host_dict[u'cpu_load'] = record.cpu_load
+				Host_dict[u'cpu_spec_list'] = slurm.listOrNone(record.cpu_spec_list, '')
+				Host_dict[u'features'] = slurm.listOrNone(record.features, '')
+				Host_dict[u'free_mem'] = record.free_mem
+				Host_dict[u'gres'] = slurm.listOrNone(record.gres, '')
+				Host_dict[u'gres_drain'] = slurm.listOrNone(record.gres_drain, '')
+				Host_dict[u'gres_used'] = slurm.listOrNone(record.gres_used, '')
+				Host_dict[u'mem_spec_limit'] = record.mem_spec_limit
+				Host_dict[u'name'] = slurm.stringOrNone(record.name, '')
+				Host_dict[u'node_addr'] = slurm.stringOrNone(record.node_addr, '')
+				Host_dict[u'node_hostname'] = slurm.stringOrNone(record.node_hostname, '')
+				Host_dict[u'os'] = slurm.stringOrNone(record.os, '')
 
-			total_used = self._record.cpus
-			if (node_scaling):
-				cpus_per_node = total_used / node_scaling
+				if record.owner == NO_VAL:
+					Host_dict[u'owner'] = None
+				else:
+					Host_dict[u'owner'] = record.owner
 
-			name = self._record.name
+				Host_dict[u'real_memory'] = record.real_memory
+				Host_dict[u'slurmd_start_time'] = record.slurmd_start_time
+				Host_dict[u'sockets'] = record.sockets
+				Host_dict[u'threads'] = record.threads
+				Host_dict[u'tmp_disk'] = record.tmp_disk
+				Host_dict[u'weight'] = record.weight
+				Host_dict[u'tres_fmt_str'] = slurm.stringOrNone(record.tres_fmt_str, '')
+				Host_dict[u'version'] = slurm.stringOrNone(record.version, '')
 
-			Host_dict['arch'] = slurm.stringOrNone(self._record.arch, '')
-			Host_dict['boards'] = self._record.boards
-			Host_dict['boot_time'] = self._record.boot_time
-			Host_dict['cores'] = self._record.cores
-			Host_dict['core_spec_cnt'] = self._record.core_spec_cnt
-			Host_dict['cpus'] = self._record.cpus
-			Host_dict['cpu_load'] = self._record.cpu_load
-			Host_dict['cpu_spec_list'] = slurm.listOrNone(self._record.features, '')
-			Host_dict['features'] = slurm.listOrNone(self._record.features, '')
-			Host_dict['free_mem'] = self._record.free_mem
-			Host_dict['gres'] = slurm.listOrNone(self._record.gres, '')
-			Host_dict['gres_drain'] = slurm.listOrNone(self._record.gres_drain, '')
-			Host_dict['gres_used'] = slurm.listOrNone(self._record.gres_used, '')
-			Host_dict['mem_spec_limit'] = self._record.mem_spec_limit
-			Host_dict['name'] = slurm.stringOrNone(self._record.name, '')
-			Host_dict['node_addr'] = slurm.stringOrNone(self._record.node_addr, '')
-			Host_dict['node_hostname'] = slurm.stringOrNone(self._record.node_hostname, '')
-			Host_dict['os'] = slurm.stringOrNone(self._record.os, '')
-			Host_dict['owner'] = self._record.owner
-			Host_dict['real_memory'] = self._record.real_memory
-			Host_dict['reason'] = slurm.stringOrNone(self._record.reason, '')
-			Host_dict['reason_time'] = self._record.reason_time
-			Host_dict['reason_uid'] = self._record.reason_uid
-			Host_dict['slurmd_start_time'] = self._record.slurmd_start_time
-			Host_dict['sockets'] = self._record.sockets
-			Host_dict['threads'] = self._record.threads
-			Host_dict['tmp_disk'] = self._record.tmp_disk
-			Host_dict['weight'] = self._record.weight
-			Host_dict['tres_fmt_str'] = slurm.stringOrNone(self._record.tres_fmt_str, '')
-			Host_dict['version'] = slurm.stringOrNone(self._record.version, '')
+				Host_dict[u'reason'] = slurm.stringOrNone(record.reason, '')
+				if record.reason_time == 0:
+					Host_dict[u'reason_time'] = None
+				else:
+					Host_dict[u'reason_time'] = record.reason_time
 
-			# Energy statistics
+				if record.reason_uid == NO_VAL:
+					Host_dict[u'reason_uid'] = None
+				else:
+					Host_dict[u'reason_uid'] = record.reason_uid
 
-			Host_dict['energy'] = {}
-			Host_dict['energy']['base_watts'] = self._record.energy.base_watts
+				# Power Managment
+				Host_dict[u'power_mgmt'] = {}
+				if (not record.power or (record.power.cap_watts == NO_VAL)):
+					Host_dict[u'power_mgmt'][u"cap_watts"] = None
+				else:
+					Host_dict[u'power_mgmt'][u"cap_watts"] = record.power.cap_watts
 
-			currentWatts = self._record.energy.current_watts
-			if currentWatts == NO_VAL:
-				Host_dict['energy']['current_watts'] = 0
-			else:
-				Host_dict['energy']['current_watts'] = currentWatts
+				# Energy statistics
+				Host_dict[u'energy'] = {}
+				if (not record.energy or record.energy.current_watts == NO_VAL):
+					Host_dict[u'energy'][u'current_watts'] = 0
+					Host_dict[u'energy'][u'base_consumed_energy'] = 0
+					Host_dict[u'energy'][u'consumed_energy'] = 0
+				else:
+					Host_dict[u'energy'][u'current_watts'] = record.energy.current_watts
+					Host_dict[u'energy'][u'base_consumed_energy'] = int(record.energy.base_consumed_energy)
+					Host_dict[u'energy'][u'consumed_energy'] = int(record.energy.consumed_energy)
 
-			Host_dict['energy']['consumed_energy'] = self._record.energy.consumed_energy
-			Host_dict['energy']['base_consumed_energy'] = self._record.energy.base_consumed_energy
-			Host_dict['energy']['previous_consumed_energy'] = self._record.energy.previous_consumed_energy
+				Host_dict[u'energy'][u'base_watts'] = record.energy.base_watts
+				Host_dict[u'energy'][u'previous_consumed_energy'] = int(record.energy.previous_consumed_energy)
 
-			# Power Managment
+				node_state = record.node_state
+				if (node_state & NODE_STATE_CLOUD):
+					node_state &= (~NODE_STATE_CLOUD)
+					cloud_str = "+CLOUD"
 
-			Host_dict['power_mgmt'] = {}
+				if (node_state & NODE_STATE_COMPLETING):
+					node_state &= (~NODE_STATE_COMPLETING)
+					comp_str = "+COMPLETING"
 
-			# Enhanced node state - src/api/node_info.c
+				if (node_state & NODE_STATE_DRAIN):
+					node_state &= (~NODE_STATE_DRAIN)
+					drain_str = "+DRAIN"
 
-			comp_str = ""
-			drain_str = ""
-			power_str = ""
-			node_state = self._record.node_state
-			my_state = node_state
+				if (node_state & NODE_STATE_FAIL):
+					node_state &= (~NODE_STATE_FAIL)
+					drain_str = "+FAIL"
 
-			if (my_state & NODE_STATE_CLOUD):
-				my_state &= (~NODE_STATE_CLOUD)
-				cloud_str = "+CLOUD"
+				if (node_state & NODE_STATE_POWER_SAVE):
+					node_state &= (~NODE_STATE_POWER_SAVE)
+					power_str = "+POWER"
 
-			if (my_state & NODE_STATE_COMPLETING):
-				my_state &= (~NODE_STATE_COMPLETING)
-				comp_str = "+COMPLETING"
+				slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
+												SELECT_NODEDATA_SUBCNT,
+												NODE_STATE_ALLOCATED,
+												&alloc_cpus)
 
-			if (my_state & NODE_STATE_DRAIN):
-				my_state &= (~NODE_STATE_DRAIN)
-				drain_str = "+DRAIN"
-
-			if (my_state & NODE_STATE_FAIL):
-				my_state &= (~NODE_STATE_FAIL)
-				drain_str = "+FAIL"
-
-			if (my_state & NODE_STATE_POWER_SAVE):
-				my_state &= (~NODE_STATE_POWER_SAVE)
-				power_str = "+POWER"
-
-			if self._record.select_nodeinfo is not NULL:
-
-				rc, alloc_mem = self.__get_select_nodeinfo(SELECT_NODEDATA_MEM_ALLOC, NODE_STATE_ALLOCATED)
-
-				rc, alloc_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, NODE_STATE_ALLOCATED)
-				#if (cluster_flags & CLUSTER_FLAG_BG):
-					#if not alloc_cpus and (IS_NODE_ALLOCATED(node_state) or IS_NODE_COMPLETING(node_state)):
-					#	alloc_cpus = Host_dict['cpus']
-					#else:
-					#	alloc_cpus *= cpus_per_node
+				Host_dict[u'alloc_cpus'] = alloc_cpus
 				total_used -= alloc_cpus
 
-				rc, err_cpus = self.__get_select_nodeinfo(SELECT_NODEDATA_SUBCNT, NODE_STATE_ERROR)
-				#if (cluster_flags & CLUSTER_FLAG_BG):
-				#	err_cpus *= cpus_per_node
+				slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
+												SELECT_NODEDATA_SUBCNT,
+												NODE_STATE_ERROR,
+												&err_cpus)
+
+				Host_dict[u'err_cpus'] = err_cpus
 				total_used -= err_cpus
 
-				if ((alloc_cpus and err_cpus) or (total_used and (total_used != self._record.cpus))):
-					my_state &= NODE_STATE_FLAGS
-					my_state |= NODE_STATE_MIXED
+				if ((alloc_cpus and err_cpus) or (total_used and
+					(total_used != record.cpus))):
+					node_state &= NODE_STATE_FLAGS
+					node_state |= NODE_STATE_MIXED
 
-			state_str = "%s%s%s%s%s" % (get_node_state(my_state), cloud_str, comp_str, drain_str, power_str)
-			Host_dict['state'] = state_str
-			Host_dict['alloc_memory'] = alloc_mem
-			Host_dict['err_cpus'] = err_cpus
-			Host_dict['alloc_cpus'] = alloc_cpus
-			Host_dict['total_cpus'] = total_used
+				Host_dict[u'state'] = (slurm.slurm_node_state_string(node_state) +
+										   cloud_str + comp_str +
+										   drain_str + power_str)
 
-			Hosts[u'%s' % name] = Host_dict
-			Host_dict = {}
-			self._record = NULL
+				slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
+										  		SELECT_NODEDATA_MEM_ALLOC,
+										  		NODE_STATE_ALLOCATED,
+										  		&alloc_mem)
+				Host_dict[u'alloc_mem'] = alloc_mem
 
-		self._NodeDict = Hosts
+				self._NodeDict[u'%s' % record.name] = Host_dict
 
-	#/*
-	# * slurm_get_select_nodeinfo - get data from a select node credential
-	# * IN nodeinfo  - updated select node credential
-	# * IN data_type - type of data to enter into node credential
-	# * IN state     - state of node query
-	# * IN/OUT data  - the data to enter into node credential
-	# * RET 0 or -1 on error
-	# */
-	#extern int slurm_get_select_nodeinfo PARAMS(
-	#	(dynamic_plugin_data_t *nodeinfo, enum select_nodedata_type data_type,
-	#	 enum node_states state, void *data));
+			slurm.slurm_free_node_info_msg(self._Node_ptr)
+			self._Node_ptr = NULL
+			return self._NodeDict
+		else:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
-	#	SELECT_NODEDATA_BITMAP_SIZE,	/* data-> uint16_t */
-	#	SELECT_NODEDATA_SUBGRP_SIZE,	/* data-> uint16_t */
-	#	SELECT_NODEDATA_SUBCNT,		/* data-> uint16_t */
-	#	SELECT_NODEDATA_BITMAP,		/* data-> bitstr_t * needs to be
-	#					* freed with FREE_NULL_BITMAP */
-	#	SELECT_NODEDATA_STR,		/* data-> char *  needs to be
-	#					* freed with xfree */
-	#	SELECT_NODEDATA_PTR,		/* data-> select_nodeinfo_t *nodeinfo */
-	#	SELECT_NODEDATA_EXTRA_INFO,	/* data-> char *  needs to be
-	#					* freed with xfree */
-	#	SELECT_NODEDATA_RACK_MP		/* data-> char * needs to be
-	#					* freed with xfree */
 
-	cpdef __get_select_nodeinfo(self, uint32_t dataType, uint32_t State):
+	cpdef update(self, dict node_dict):
+		u"""Update slurm node information.
 
-		u"""
-			A WORK IN PROGRESS
+		:param dict node_dict: A populated node dictionary, an empty one is
+		created by create_node_dict
+
+		:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
+		:rtype: `integer`
 		"""
+		return slurm_update_node(node_dict)
 
+
+	cpdef print_node_info_msg(self, int oneLiner=False):
+		u"""Output information about all slurm nodes.
+
+		:param int oneLiner: Print on one line - False (Default) or True
+		"""
 		cdef:
-			slurm.dynamic_plugin_data_t *nodeinfo = <slurm.dynamic_plugin_data_t*>self._record.select_nodeinfo
-			slurm.select_nodeinfo_t *tmp_ptr
-			slurm.bitstr_t *tmp_bitmap = NULL
+			int rc
+			int apiError
 
-			int retval = 0, length = 0
-			uint16_t retval16 = 0
-			uint32_t retval32 = 0
-			char *retvalStr
-			char *tmp_str
+		rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr, SHOW_ALL)
 
-			dict Host_dict = {}
+		if rc == slurm.SLURM_SUCCESS:
+			slurm.slurm_print_node_info_msg(slurm.stdout, self._Node_ptr, oneLiner)
+			slurm.slurm_free_node_info_msg(self._Node_ptr)
+			self._Node_ptr = NULL
+		else:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
-		if dataType == SELECT_NODEDATA_SUBCNT or dataType == SELECT_NODEDATA_SUBGRP_SIZE or dataType == SELECT_NODEDATA_BITMAP_SIZE:
 
-			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &retval16)
-			if retval == 0:
-				nodeinfo = NULL
-				return retval, retval16
-
-		if dataType == SELECT_NODEDATA_MEM_ALLOC:
-
-			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &retval32)
-			if retval == 0:
-				nodeinfo = NULL
-				return retval, retval32
-
-		if dataType == SELECT_NODEDATA_BITMAP:
-
-			# data-> bitstr_t * needs to be freed with FREE_NULL_BITMAP
-
-			#retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &tmp_bitmap)
-			#if retval == 0:
-			#	Host_dict['bitstr'] = tmp_bitmap
-			return retval, None
-
-		elif dataType == SELECT_NODEDATA_STR:
-
-			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &tmp_str)
-			if retval == 0:
-				retvalStr = strcpy(<char *>slurm.xmalloc(strlen(tmp_str)+1), tmp_str)
-				slurm.xfree(tmp_str)
-				return retval, retvalStr
-
-		if dataType == SELECT_NODEDATA_PTR:
-			retval = slurm.slurm_get_select_nodeinfo(nodeinfo, dataType, State, &tmp_ptr)
-			if retval == 0:
-				nodeinfo = NULL
-				# opaque data as dict 
-				pass
-
-		return retval, None
 
 def slurm_update_node(dict node_dict):
 
