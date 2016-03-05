@@ -4,49 +4,49 @@ from __future__ import print_function
 
 def display(part_dict):
 
-	if len(part_dict) > 0:
+    if len(part_dict) > 0:
 
-		for key, value in part_dict.iteritems():
+        for key, value in part_dict.iteritems():
 
-			print("{0} :".format(key))
+            print("{0} :".format(key))
 
-			for part_key in sorted(value.iterkeys()):
+            for part_key in sorted(value.iterkeys()):
 
-				valStr = value[part_key]
+                valStr = value[part_key]
 
-				if 'default_time' in part_key:
+                if 'default_time' in part_key:
 
-					if isinstance(value[part_key], int):
-						valStr = "{0} minutes".format(value[part_key]/60)
-					else:
-						valStr = value[part_key]
+                    if isinstance(value[part_key], int):
+                        valStr = "{0} minutes".format(value[part_key]/60)
+                    else:
+                        valStr = value[part_key]
 
-				elif part_key in [ 'max_nodes', 'max_time', 'max_cpus_per_node']:
+                elif part_key in [ 'max_nodes', 'max_time', 'max_cpus_per_node']:
 
-					if value[part_key] == pyslurm.INFINITE:
-						valStr = "Unlimited"
+                    if value[part_key] == pyslurm.INFINITE:
+                        valStr = "Unlimited"
 
-				print("\t{0:<20} : {1}".format(part_key, valStr))
+                print("\t{0:<20} : {1}".format(part_key, valStr))
 
-			print('{0:*^80}'.format(''))
+            print('{0:*^80}'.format(''))
 
 if __name__ == "__main__":
 
-	import pyslurm
-	import time
+    import pyslurm
+    import time
 
-	try:
-		a = pyslurm.partition()
-		part_dict = a.get()
-	except ValueError as e:
-		print("Partition error - {0}".format(e.args[0]))
-	else:
-		if len(part_dict) > 0:
+    try:
+        a = pyslurm.partition()
+        part_dict = a.get()
+    except ValueError as e:
+        print("Partition error - {0}".format(e.args[0]))
+    else:
+        if len(part_dict) > 0:
 
-			display(part_dict)
+            display(part_dict)
 
-			print()
-			print("Partition IDs - {0}".format(a.ids()))
-			print()
-		else:
-			print("No partitions found !")
+            print()
+            print("Partition IDs - {0}".format(a.ids()))
+            print()
+        else:
+            print("No partitions found !")
