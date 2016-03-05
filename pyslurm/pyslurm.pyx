@@ -149,28 +149,61 @@ cdef inline IS_JOB_UPDATE_DB(slurm.slurm_job_info_t _X):
 # Defined node states
 #
 
-cdef inline IS_NODE_UNKNOWN(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_UNKNOWN)
-cdef inline IS_NODE_DOWN(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_DOWN)
-cdef inline IS_NODE_IDLE(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_IDLE)
-cdef inline IS_NODE_ALLOCATED(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_ALLOCATED)
-cdef inline IS_NODE_ERROR(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_ERROR)
-cdef inline IS_NODE_MIXED(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_MIXED)
-cdef inline IS_NODE_FUTURE(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_FUTURE)
+cdef inline IS_NODE_UNKNOWN(slurm.node_info_t _X):
+	return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_UNKNOWN
+
+cdef inline IS_NODE_DOWN(slurm.node_info_t _X):
+	return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_DOWN
+
+cdef inline IS_NODE_IDLE(slurm.node_info_t _X):
+	return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_IDLE
+
+cdef inline IS_NODE_ALLOCATED(slurm.node_info_t _X):
+	return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ALLOCATED
+
+cdef inline IS_NODE_ERROR(slurm.node_info_t _X):
+	return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ERROR
+
+cdef inline IS_NODE_MIXED(slurm.node_info_t _X):
+	return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_MIXED
+
+cdef inline IS_NODE_FUTURE(slurm.node_info_t _X):
+	return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_FUTURE
 
 #
 # Derived node states
 #
 
-cdef inline IS_NODE_CLOUD(int _X): return (_X & NODE_STATE_CLOUD)
-cdef inline IS_NODE_DRAIN(int _X): return (_X & NODE_STATE_DRAIN)
-cdef inline IS_NODE_DRAINING(int _X): return ((_X & NODE_STATE_DRAIN) or (IS_NODE_ALLOCATED(_X) or IS_NODE_ERROR(_X) or IS_NODE_MIXED(_X)))
-cdef inline IS_NODE_DRAINED(int _X): return (IS_NODE_DRAIN(_X) and IS_NODE_DRAINING(_X) != 0)
-cdef inline IS_NODE_COMPLETING(int _X): return (_X & NODE_STATE_COMPLETING)
-cdef inline IS_NODE_NO_RESPOND(int _X): return (_X & NODE_STATE_NO_RESPOND)
-cdef inline IS_NODE_POWER_SAVE(int _X): return (_X & NODE_STATE_POWER_SAVE)
-cdef inline IS_NODE_POWER_UP(int _X): return (_X & NODE_STATE_POWER_UP)
-cdef inline IS_NODE_FAIL(int _X): return (_X & NODE_STATE_FAIL)
-cdef inline IS_NODE_MAINT(int _X): return (_X & NODE_STATE_MAINT)
+cdef inline IS_NODE_CLOUD(slurm.node_info_t _X):
+	return _X.node_state & NODE_STATE_CLOUD
+
+cdef inline IS_NODE_DRAIN(slurm.node_info_t _X):
+	return _X.node_state & NODE_STATE_DRAIN
+
+cdef inline IS_NODE_DRAINING(slurm.node_info_t _X):
+	return (_X.node_state & NODE_STATE_DRAIN) and (IS_NODE_ALLOCATED(_X) or IS_NODE_ERROR(_X) or IS_NODE_MIXED(_X))
+
+cdef inline IS_NODE_DRAINED(slurm.node_info_t _X):
+	return IS_NODE_DRAIN(_X) and not IS_NODE_DRAINING(_X)
+
+cdef inline IS_NODE_COMPLETING(slurm.node_info_t _X):
+	return _X.node_state & NODE_STATE_COMPLETING
+
+cdef inline IS_NODE_NO_RESPOND(slurm.node_info_t _X):
+	return _X.node_state & NODE_STATE_NO_RESPOND
+
+cdef inline IS_NODE_POWER_SAVE(slurm.node_info_t _X):
+	return _X.node_state & NODE_STATE_POWER_SAVE
+
+cdef inline IS_NODE_FAIL(slurm.node_info_t _X):
+	return _X.node_state & NODE_STATE_FAIL
+
+cdef inline IS_NODE_POWER_UP(slurm.node_info_t _X):
+	return _X.node_state & NODE_STATE_POWER_UP
+
+cdef inline IS_NODE_MAINT(slurm.node_info_t _X):
+	return _X.node_state & NODE_STATE_MAINT
+
 
 ctypedef struct config_key_pair_t:
 	char *name
