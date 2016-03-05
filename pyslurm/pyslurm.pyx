@@ -2356,11 +2356,13 @@ cdef class node:
 		return self._lastUpdate
 
 	cpdef ids(self):
+
 		u"""Return the node IDs from retrieved data.
 
 		:returns: Dictionary of node IDs
 		:rtype: `dict`
 		"""
+
 		cdef:
 			int rc
 			int apiError
@@ -2381,6 +2383,7 @@ cdef class node:
 			raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
 	cpdef find_id(self, char *nodeID):
+
 		u"""Retrieve node ID data.
 
 		:param str nodeID: Node key string to search
@@ -2390,6 +2393,7 @@ cdef class node:
 		return self.get_node(nodeID)
 
 	cpdef get(self):
+
 		u"""Get all slurm node information.
 
 		:returns: Dictionary of dictionaries whose key is the node name.
@@ -2398,21 +2402,14 @@ cdef class node:
 		return self.get_node(NULL)
 
 	cpdef get_node(self, char *nodeID):
+
 		u"""Get single slurm node information.
 
 		:param str nodeID: Node key string to search. Default NULL.
 		:returns: Dictionary of give node info data.
 		:rtype: `dict`
 		"""
-		"""
-			int cpus_per_node
-			uint32_t tmp_disk, node_scaling = 0
-			uint32_t my_state, alloc_mem
-			uint32_t currentWatts = 0
-			time_t last_update
 
-			dict Hosts = {}, Host_dict
-		"""
 		cdef:
 			int rc
 			int apiError
@@ -2545,17 +2542,16 @@ cdef class node:
 					power_str = "+POWER"
 
 				slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
-												SELECT_NODEDATA_SUBCNT,
-												NODE_STATE_ALLOCATED,
-												&alloc_cpus)
+					SELECT_NODEDATA_SUBCNT,
+					NODE_STATE_ALLOCATED,
+					&alloc_cpus)
 
 				Host_dict[u'alloc_cpus'] = alloc_cpus
 				total_used -= alloc_cpus
 
 				slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
-												SELECT_NODEDATA_SUBCNT,
-												NODE_STATE_ERROR,
-												&err_cpus)
+							SELECT_NODEDATA_SUBCNT,
+							NODE_STATE_ERROR, &err_cpus)
 
 				Host_dict[u'err_cpus'] = err_cpus
 				total_used -= err_cpus
@@ -2566,13 +2562,13 @@ cdef class node:
 					node_state |= NODE_STATE_MIXED
 
 				Host_dict[u'state'] = (slurm.slurm_node_state_string(node_state) +
-										   cloud_str + comp_str +
-										   drain_str + power_str)
+					cloud_str + comp_str +
+					drain_str + power_str)
 
 				slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
-										  		SELECT_NODEDATA_MEM_ALLOC,
-										  		NODE_STATE_ALLOCATED,
-										  		&alloc_mem)
+					 		SELECT_NODEDATA_MEM_ALLOC,
+							NODE_STATE_ALLOCATED, &alloc_mem)
+
 				Host_dict[u'alloc_mem'] = alloc_mem
 
 				self._NodeDict[u'%s' % record.name] = Host_dict
@@ -2585,6 +2581,7 @@ cdef class node:
 			raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
 	cpdef update(self, dict node_dict):
+
 		u"""Update slurm node information.
 
 		:param dict node_dict: A populated node dictionary, an empty one is
@@ -2593,13 +2590,16 @@ cdef class node:
 		:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
 		:rtype: `integer`
 		"""
+
 		return slurm_update_node(node_dict)
 
 	cpdef print_node_info_msg(self, int oneLiner=False):
+
 		u"""Output information about all slurm nodes.
 
 		:param int oneLiner: Print on one line - False (Default) or True
 		"""
+
 		cdef:
 			int rc
 			int apiError
