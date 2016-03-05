@@ -10,16 +10,16 @@ import sys
 
 old_dlopen_flags = ''
 if hasattr(sys, "setdlopenflags"):
-	old_dlopen_flags = sys.getdlopenflags()
-	import DLFCN
-	sys.setdlopenflags(old_dlopen_flags | DLFCN.RTLD_GLOBAL)
+    old_dlopen_flags = sys.getdlopenflags()
+    import DLFCN
+    sys.setdlopenflags(old_dlopen_flags | DLFCN.RTLD_GLOBAL)
 
 from .pyslurm import *
 
 if old_dlopen_flags:
-	if hasattr(sys, "setdlopenflags"):
-		sys.setdlopenflags(old_dlopen_flags)
+    if hasattr(sys, "setdlopenflags"):
+        sys.setdlopenflags(old_dlopen_flags)
 
 __version__ = "15.08.2"
 def version():
-	return __version__
+    return __version__
