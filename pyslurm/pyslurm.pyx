@@ -845,7 +845,7 @@ cdef class partition:
 		:param string PartID: Name of slurm partition
 
 		:returns: 0 for success else set the slurm error code as appropriately.
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef:
@@ -943,7 +943,7 @@ cdef class partition:
 		:param dict partition_dict: A populated partition dictionary, an empty one is created by create_partition_dict
 
 		:returns: 0 for success, -1 for error, and the slurm error code is set appropriately.
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef int errCode = slurm_update_partition(Partition_dict)
@@ -957,7 +957,7 @@ cdef class partition:
 		:param dict partition_dict: A populated partition dictionary, an empty one can be created by create_partition_dict
 
 		:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-		:rtype: `int`
+		:rtype: `integer`
 		"""
 
 		cdef int errCode = slurm_create_partition(Partition_dict)
@@ -998,7 +998,7 @@ cpdef int slurm_create_partition(dict partition_dict):
 	:param dict partition_dict: A populated partition dictionary, an empty one is created by create_partition_dict
 
 	:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-	:rtype: `int`
+	:rtype: `integer`
 	"""
 
 	cdef:
@@ -3406,7 +3406,7 @@ def slurm_create_reservation(dict reservation_dict={}):
 	:param dict reservation_dict: A populated reservation dictionary, an empty one is created by create_reservation_dict
 
 	:returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
-	:rtype: `int`
+	:rtype: `string`
 	"""
 
 	cdef:
