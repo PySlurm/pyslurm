@@ -6,7 +6,6 @@ import os
 
 from socket import gethostname
 from collections import defaultdict
-from grp import getgrgid
 from pwd import getpwuid
 
 from libc.string cimport strlen, strcpy, memset, memcpy
@@ -31,7 +30,7 @@ cdef extern from 'time.h' nogil:
 	double difftime(time_t time1, time_t time2)
 	time_t time(time_t *t)
 
-cdef extern from "sys/wait.h":
+cdef extern from "sys/wait.h" nogil:
 	int WIFSIGNALED (int status)
 	int WTERMSIG (int status)
 	int WEXITSTATUS (int status)
@@ -1890,13 +1889,12 @@ cdef class job:
 
 		cdef:
 			char tmp_line[1024 * 128]
-			int i = 0
 			int rc
 			time_t end_time
 			time_t run_time
-			uint16_t retval16
 			uint16_t exit_status
 			uint16_t term_sig
+			uint32_t i
 			dict Job_dict
 
 		if jobid == NO_VAL:
@@ -1991,7 +1989,6 @@ cdef class job:
 				Job_dict[u'features'] = slurm.listOrNone(self._record.features, ',')
 				Job_dict[u'gres'] = slurm.listOrNone(self._record.gres, ',')
 				Job_dict[u'group_id'] = self._record.group_id
-				Job_dict[u'group_name'] = getgrgid(self._record.group_id)[0]
 
 				# JOB RESOURCES HERE
 				Job_dict[u'job_id'] = self._record.job_id
