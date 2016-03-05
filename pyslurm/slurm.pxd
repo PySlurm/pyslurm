@@ -48,7 +48,7 @@ cdef inline listOrNone(char* value, char* sep_char):
 		return value
 
 	return value.split(sep_char)
-	
+
 
 cdef inline stringOrNone(char* value, value2):
 	if value is NULL:
@@ -481,7 +481,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		ACCEL_BIND_CLOSEST_NIC = 0x08
 
 	ctypedef accel_bind_type accel_bind_type_t
-	
+
 	cdef enum connection_type:
 		SELECT_MESH
 		SELECT_TORUS
@@ -490,7 +490,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		SELECT_HTC_S
 		SELECT_HTC_D
 		SELECT_HTC_V
-		SELECT_HTC_L 
+		SELECT_HTC_L
 
 	cdef enum node_use_type:
 		SELECT_COPROCESSOR_MODE
@@ -593,7 +593,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 		pass
 
 	ctypedef hostlist *hostlist_t
-	
+
 	ctypedef struct dynamic_plugin_data:
 		void *data
 		uint32_t plugin_id
