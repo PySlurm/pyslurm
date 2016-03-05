@@ -1,11 +1,12 @@
 # cython: embedsignature=True
 # cython: profile=False
 
-import time
+import time as p_time
 import os
 
 from socket import gethostname
 from collections import defaultdict
+from grp import getgrgid
 from pwd import getpwuid
 
 from libc.string cimport strlen, strcpy, memset, memcpy
@@ -27,6 +28,13 @@ cdef extern from 'Python.h':
 
 cdef extern from 'time.h' nogil:
 	ctypedef long time_t
+	double difftime(time_t time1, time_t time2)
+	time_t time(time_t *t)
+
+cdef extern from "sys/wait.h":
+	int WIFSIGNALED (int status)
+	int WTERMSIG (int status)
+	int WEXITSTATUS (int status)
 
 try:
 	import __builtin__
@@ -82,25 +90,64 @@ cdef inline SLURM_ID_HASH_JOB_ID(hash_id): return <uint32_t>(hash_id % SLURM_ID_
 cdef inline SLURM_ID_HASH_STEP_ID(hash_id): return <uint32_t>(hash_id / SLURM_ID_HASH_NUM)
 
 #
-# Misc helper inline functions
+# Defined job states
 #
 
-cdef inline IS_JOB_PENDING(int _X): return ((_X & JOB_STATE_BASE) == JOB_PENDING)
-cdef inline IS_JOB_RUNNING(int _X): return ((_X & JOB_STATE_BASE) == JOB_RUNNING)
-cdef inline IS_JOB_SUSPENDED(int _X): return ((_X & JOB_STATE_BASE) == JOB_SUSPENDED)
-cdef inline IS_JOB_COMPLETE(int _X): return ((_X & JOB_STATE_BASE) == JOB_COMPLETE)
-cdef inline IS_JOB_CANCELLED(int _X): return ((_X & JOB_STATE_BASE) == JOB_CANCELLED)
-cdef inline IS_JOB_FAILED(int _X): return ((_X & JOB_STATE_BASE) == JOB_FAILED)
-cdef inline IS_JOB_TIMEOUT(int _X): return ((_X & JOB_STATE_BASE) == JOB_TIMEOUT)
-cdef inline IS_JOB_NODE_FAILED(int _X): return ((_X & JOB_STATE_BASE) == JOB_NODE_FAIL)
+cdef inline IS_JOB_PENDING(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) == JOB_PENDING
 
-cdef inline IS_JOB_COMPLETING(int _X): return (_X & JOB_COMPLETING)
-cdef inline IS_JOB_CONFIGURING(int _X): return (_X & JOB_CONFIGURING)
-cdef inline IS_JOB_STARTED(int _X): return ((_X & JOB_STATE_BASE) >  JOB_PENDING)
-cdef inline IS_JOB_FINISHED(int _X): return ((_X & JOB_STATE_BASE) >  JOB_SUSPENDED)
-cdef inline IS_JOB_COMPLETED(int _X): return (IS_JOB_FINISHED(_X) and ((_X & JOB_COMPLETING) == 0))
-cdef inline IS_JOB_RESIZING(int _X): return (_X & JOB_RESIZING)
-cdef inline IS_JOB_REQUEUED(int _X): return (_X & JOB_REQUEUE)
+cdef inline IS_JOB_RUNNING(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) == JOB_RUNNING
+
+cdef inline IS_JOB_SUSPENDED(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) == JOB_SUSPENDED
+
+cdef inline IS_JOB_COMPLETE(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) == JOB_COMPLETE
+
+cdef inline IS_JOB_CANCELLED(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) == JOB_CANCELLED
+
+cdef inline IS_JOB_FAILED(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) == JOB_FAILED
+
+cdef inline IS_JOB_TIMEOUT(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) == JOB_TIMEOUT
+
+cdef inline IS_JOB_NODE_FAILED(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) == JOB_NODE_FAIL
+
+#
+# Derived job states
+#
+
+cdef inline IS_JOB_COMPLETING(slurm.slurm_job_info_t _X):
+	return _X.job_state & JOB_COMPLETING
+
+cdef inline IS_JOB_CONFIGURING(slurm.slurm_job_info_t _X):
+	return _X.job_state & JOB_CONFIGURING
+
+cdef inline IS_JOB_STARTED(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) > JOB_PENDING
+
+cdef inline IS_JOB_FINISHED(slurm.slurm_job_info_t _X):
+	return (_X.job_state & JOB_STATE_BASE) > JOB_SUSPENDED
+
+cdef inline IS_JOB_COMPLETED(slurm.slurm_job_info_t _X):
+	return (IS_JOB_FINISHED(_X) and (_X.job_state & JOB_COMPLETING) == 0)
+
+cdef inline IS_JOB_RESIZING(slurm.slurm_job_info_t _X):
+	return _X.job_state & JOB_RESIZING
+
+cdef inline IS_JOB_REQUEUED(slurm.slurm_job_info_t _X):
+	return _X.job_state & JOB_REQUEUE
+
+cdef inline IS_JOB_UPDATE_DB(slurm.slurm_job_info_t _X):
+	return _X.job_state & JOB_UPDATE_DB
+
+#
+# Defined node states
+#
 
 cdef inline IS_NODE_UNKNOWN(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_UNKNOWN)
 cdef inline IS_NODE_DOWN(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_DOWN)
@@ -109,6 +156,10 @@ cdef inline IS_NODE_ALLOCATED(int _X): return ((_X & NODE_STATE_BASE) == NODE_ST
 cdef inline IS_NODE_ERROR(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_ERROR)
 cdef inline IS_NODE_MIXED(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_MIXED)
 cdef inline IS_NODE_FUTURE(int _X): return ((_X & NODE_STATE_BASE) == NODE_STATE_FUTURE)
+
+#
+# Derived node states
+#
 
 cdef inline IS_NODE_CLOUD(int _X): return (_X & NODE_STATE_CLOUD)
 cdef inline IS_NODE_DRAIN(int _X): return (_X & NODE_STATE_DRAIN)
@@ -1686,12 +1737,12 @@ cpdef int slurm_checkpoint_tasks(uint32_t JobID=0, uint16_t JobStep=0, uint16_t 
 
 	return errCode
 
+
 #
 # Slurm Job Class to Control Configuration Read/Update
 #
 
 cdef class job:
-
 	u"""Class to access/modify Slurm Job Information.
 	"""
 
@@ -1702,6 +1753,7 @@ cdef class job:
 		uint16_t _ShowFlags
 		dict _JobDict
 
+
 	def __cinit__(self):
 		self._job_ptr = NULL
 		self._lastUpdate = 0
@@ -1709,23 +1761,13 @@ cdef class job:
 		# (job_resources_t *)job_resrcs structure member of
 		# slurm_job_info_t, with all resources details of the job.
 		self._ShowFlags = SHOW_DETAIL
-		self._JobDict = {}
 
-		self.get()
 
 	def __dealloc__(self):
-		self.__destroy()
+		pass
 
-	cpdef __destroy(self):
-
-		u"""Free the slurm job memory allocated by load partition method.
-		"""
-
-		if self._job_ptr is not NULL:
-			slurm.slurm_free_job_info_msg(self._job_ptr)
 
 	def lastUpdate(self):
-
 		u"""Get the time (epoch seconds) the job data was updated.
 
 		:returns: epoch seconds
@@ -1734,18 +1776,35 @@ cdef class job:
 
 		return self._lastUpdate
 
-	def ids(self):
 
+	cpdef ids(self):
 		u"""Return the job IDs from retrieved data.
 
 		:returns: Dictionary of job IDs
 		:rtype: `dict`
 		"""
 
-		return self._JobDict.keys()
+		cdef:
+			int rc
+			int apiError
+			uint32_t i
+			list all_jobs
 
-	def find_id(self, int jobID):
+		rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, slurm.SHOW_ALL)
 
+		if rc == slurm.SLURM_SUCCESS:
+			all_jobs = []
+			for i in range(self._job_ptr.record_count):
+				all_jobs.append(self._job_ptr.job_array[i].job_id)
+			slurm.slurm_free_job_info_msg(self._job_ptr)
+			self._job_ptr = NULL
+			return all_jobs
+		else:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
+
+
+	cpdef find_id(self, uint32_t jobID):
 		u"""Retrieve job ID data.
 
 		:param int jobID: Job id key string to search
@@ -1753,10 +1812,10 @@ cdef class job:
 		:rtype: `dict`
 		"""
 
-		return self._JobDict.get(jobID, {})
+		return self.get_job(jobID)
+
 
 	def find(self, name='', val=''):
-
 		u"""Search for a property and associated value in the retrieved job data.
 
 		:param str name: key string to search
@@ -1765,107 +1824,93 @@ cdef class job:
 		:rtype: `list`
 		"""
 
-		cdef list retList = []
+		cdef:
+			list retList = []
+			dict _job_dict = {}
+
+		_job_dict = self.get()
 
 		if val != '':
-
-			for key, value in self._JobDict.items():
-
-				if self._JobDict[key][name] == val:
+			for key, value in _job_dict.items():
+				if _job_dict[key][name] == val:
 					retList.append(key)
 
 		return retList
 
-	def load(self):
 
-		u"""Load slurm job information.
-		"""
-
-		self.__load()
-
-	cpdef int __load(self) except? -1:
-
-		u"""Load slurm job information.
-
-		:returns: error Code
-		:rtype: `integer`
-		"""
-
-		cdef:
-			slurm.job_info_msg_t *new_job_ptr = NULL
-			slurm.time_t last_time = <slurm.time_t>NULL
-			int apiError = 0
-			int errCode = -1
-
-		if self._job_ptr is not NULL:
-			errCode = slurm.slurm_load_jobs(self._job_ptr.last_update, &new_job_ptr, self._ShowFlags)
-			if errCode == 0:
-				slurm.slurm_free_job_info_msg(self._job_ptr)
-			elif slurm.slurm_get_errno() == 1900:
-				errCode = 0
-				new_job_ptr = self._job_ptr
-		else:
-			last_time = <time_t>NULL
-			new_job_ptr = NULL
-			errCode = slurm.slurm_load_jobs(last_time, &new_job_ptr, self._ShowFlags)
-
-		if errCode == 0:
-			self._job_ptr = new_job_ptr
-			self._lastUpdate = self._job_ptr.last_update
-		else:
-			apiError = slurm.slurm_get_errno()
-			raise ValueError(slurm.slurm_strerror(apiError), apiError)
-
-	def get(self):
-
-		u"""Get the slurm job information.
+	cpdef get(self):
+		u"""Get all slurm jobs information.
 
 		:returns: Data where key is the job name, each entry contains a dictionary of job attributes
 		:rtype: `dict`
 		"""
+		return self.get_job(NO_VAL)
 
-		self.__load()
-		self.__get()
 
-		return self._JobDict
+	cpdef get_job(self, uint32_t jobid):
+		u"""Get single slurm job information.
 
-	cpdef __get(self):
-
-		u"""Get the slurm job information.
-
+		:param int jobid: Job id to search. Default NO_VAL.
 		:returns: Data where key is the job name, each entry contains a dictionary of job attributes
 		:rtype: `dict`
 		"""
 
 		cdef:
+			char tmp_line[1024 * 128]
 			int i = 0
-			int retval
+			int rc
+			time_t end_time
+			time_t run_time
 			uint16_t retval16
+			uint16_t exit_status
+			uint16_t term_sig
+			dict Job_dict
 
-			dict Jobs = {}
-			dict Job_dict = {}
+		if jobid == NO_VAL:
+			rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, SHOW_DETAIL | SHOW_DETAIL2)
+		else:
+			rc = slurm.slurm_load_job(&self._job_ptr, jobid, SHOW_DETAIL | SHOW_DETAIL2)
 
-		if self._job_ptr is not NULL:
+		if rc == slurm.SLURM_SUCCESS:
+			self._JobDict = {}
+			self._lastUpdate = self._job_ptr.last_update
+			exit_status = 0
+			term_sig = 0
 
 			for i in range(self._job_ptr.record_count):
-
 				self._record = &self._job_ptr.job_array[i]
-				job_id = self._record.job_id
-
 				Job_dict = {}
 
 				Job_dict[u'account'] = slurm.stringOrNone(self._record.account, '')
 				Job_dict[u'alloc_node'] = slurm.stringOrNone(self._record.alloc_node, '')
 				Job_dict[u'alloc_sid'] = self._record.alloc_sid
-				Job_dict[u'array_job_id'] = self._record.array_job_id
-				Job_dict[u'array_task_id'] = self._record.array_task_id
-				Job_dict[u'array_max_tasks'] = self._record.array_max_tasks
-				Job_dict[u'array_task_str'] = slurm.stringOrNone(self._record.array_task_str, '')
+
+				if self._record.array_job_id:
+					if self._record.array_task_str:
+						Job_dict[u'array_job_id'] = self._record.array_job_id
+						Job_dict[u'array_task_id'] = None
+						Job_dict[u'array_task_str'] = slurm.stringOrNone(self._record.array_task_str, '')
+					else:
+						Job_dict[u'array_job_id'] = self._record.array_job_id
+						Job_dict[u'array_task_id'] = self._record.array_task_id
+						Job_dict[u'array_task_str'] = None
+				else:
+					Job_dict[u'array_job_id'] = None
+					Job_dict[u'array_task_id'] = None
+					Job_dict[u'array_task_str'] = None
+
+				if self._record.array_max_tasks:
+					Job_dict[u'array_max_tasks'] = self._record.array_max_tasks
+				else:
+					Job_dict[u'array_max_tasks'] = None
+
 				Job_dict[u'assoc_id'] = self._record.assoc_id
 				Job_dict[u'batch_flag'] = self._record.batch_flag
 				Job_dict[u'batch_host'] = slurm.stringOrNone(self._record.batch_host, '')
 				Job_dict[u'batch_script'] = slurm.stringOrNone(self._record.batch_script, '')
+				Job_dict[u'billable_tres'] = self._record.billable_tres
 				Job_dict[u'bitflags'] = self._record.bitflags
+
 				Job_dict[u'boards_per_node'] = self._record.boards_per_node
 				Job_dict[u'burst_buffer'] = slurm.stringOrNone(self._record.burst_buffer, '')
 				Job_dict[u'command'] = slurm.stringOrNone(self._record.command, '')
@@ -1873,24 +1918,50 @@ cdef class job:
 				Job_dict[u'contiguous'] = bool(self._record.contiguous)
 				Job_dict[u'core_spec'] = self._record.core_spec
 				Job_dict[u'cores_per_socket'] = self._record.cores_per_socket
-				Job_dict[u'billable_tres'] = self._record.billable_tres
 				Job_dict[u'cpus_per_task'] = self._record.cpus_per_task
-				Job_dict[u'cpu_freq_min'] = self._record.cpu_freq_min
-				Job_dict[u'cpu_freq_max'] = self._record.cpu_freq_max
-				Job_dict[u'cpu_freq_gov'] = self._record.cpu_freq_gov
+
+				if self._record.cpu_freq_gov == NO_VAL:
+					Job_dict[u'cpu_freq_gov'] = None
+				else:
+					Job_dict[u'cpu_freq_gov'] = self._record.cpu_freq_min
+
+				if self._record.cpu_freq_max == NO_VAL:
+					Job_dict[u'cpu_freq_max'] = None
+				else:
+					Job_dict[u'cpu_freq_max'] = self._record.cpu_freq_min
+
+				if self._record.cpu_freq_min == NO_VAL:
+					Job_dict[u'cpu_freq_min'] = None
+				else:
+					Job_dict[u'cpu_freq_min'] = self._record.cpu_freq_min
+
 				Job_dict[u'dependency'] = slurm.stringOrNone(self._record.dependency, '')
-				Job_dict[u'derived_ec'] = self._record.derived_ec
+
+				if WIFSIGNALED(self._record.derived_ec):
+					term_sig = WTERMSIG(self._record.derived_ec)
+				else:
+					term_sig = 0
+
+				exit_status = WEXITSTATUS(self._record.derived_ec)
+				Job_dict[u'derived_ec'] = str(exit_status) + ":" + str(term_sig)
+
 				Job_dict[u'eligible_time'] = self._record.eligible_time
 				Job_dict[u'end_time'] = self._record.end_time
 				Job_dict[u'exc_nodes'] = slurm.listOrNone(self._record.exc_nodes, ',')
-				Job_dict[u'exit_code'] = self._record.exit_code
+
+				if WIFSIGNALED(self._record.exit_code):
+					term_sig = WTERMSIG(self._record.exit_code)
+
+				exit_status = WEXITSTATUS(self._record.exit_code)
+				Job_dict[u'exit_code'] = str(exit_status) + ":" + str(term_sig)
+
 				Job_dict[u'features'] = slurm.listOrNone(self._record.features, ',')
 				Job_dict[u'gres'] = slurm.listOrNone(self._record.gres, ',')
 				Job_dict[u'group_id'] = self._record.group_id
+				Job_dict[u'group_name'] = getgrgid(self._record.group_id)[0]
 
 				# JOB RESOURCES HERE
-
-				#Job_dict[u'job_state'] = get_job_state(self._record.job_state)
+				Job_dict[u'job_id'] = self._record.job_id
 				Job_dict[u'job_state'] = slurm.slurm_job_state_string(self._record.job_state)
 				Job_dict[u'licenses'] = __get_licenses(self._record.licenses)
 				Job_dict[u'max_cpus'] = self._record.max_cpus
@@ -1898,28 +1969,28 @@ cdef class job:
 				Job_dict[u'name'] = slurm.stringOrNone(self._record.name, '')
 				Job_dict[u'network'] = slurm.stringOrNone(self._record.network, '')
 				Job_dict[u'nodes'] = slurm.stringOrNone(self._record.nodes, '')
-				Job_dict[u'nice'] = self._record.nice
-
-				#if self._record.node_inx[0] != -1:
-				#	for i in range(self._record.num_nodes)
-
+				Job_dict[u'nice'] = (<int64_t>self._record.nice) - NICE_OFFSET
 				Job_dict[u'ntasks_per_core'] = self._record.ntasks_per_core
 				Job_dict[u'ntasks_per_node'] = self._record.ntasks_per_node
 				Job_dict[u'ntasks_per_socket'] = self._record.ntasks_per_socket
 				Job_dict[u'ntasks_per_board'] = self._record.ntasks_per_board
-				Job_dict[u'num_nodes'] = self._record.num_nodes
 				Job_dict[u'num_cpus'] = self._record.num_cpus
+				Job_dict[u'num_nodes'] = self._record.num_nodes
 				Job_dict[u'partition'] = self._record.partition
 				Job_dict[u'pn_min_memory'] = self._record.pn_min_memory
 				Job_dict[u'pn_min_cpus'] = self._record.pn_min_cpus
 				Job_dict[u'pn_min_tmp_disk'] = self._record.pn_min_tmp_disk
 				Job_dict[u'power_flags'] = self._record.power_flags
-				Job_dict[u'preempt_time'] = self._record.preempt_time
-				Job_dict[u'pre_sus_time'] = self._record.pre_sus_time
+
+				if self._record.preempt_time == 0:
+					Job_dict[u'preempt_time'] = None
+				else:
+					Job_dict[u'preempt_time'] = self._record.preempt_time
+
 				Job_dict[u'priority'] = self._record.priority
 				Job_dict[u'profile'] = self._record.profile
 				Job_dict[u'qos'] = slurm.stringOrNone(self._record.qos, '')
-				Job_dict[u'reboot'] = self.__get_select_jobinfo(SELECT_JOBDATA_REBOOT)
+				Job_dict[u'reboot'] = self._record.reboot
 				Job_dict[u'req_nodes'] = slurm.listOrNone(self._record.req_nodes, ',')
 				Job_dict[u'req_switch'] = self._record.req_switch
 				Job_dict[u'requeue'] = bool(self._record.requeue)
@@ -1927,18 +1998,57 @@ cdef class job:
 				Job_dict[u'restart_cnt'] = self._record.restart_cnt
 				Job_dict[u'resv_name'] = slurm.stringOrNone(self._record.resv_name, '')
 
-				Job_dict[u'sockets_per_board'] = self._record.sockets_per_board
-				Job_dict[u'sockets_per_node'] = self._record.sockets_per_node
-				Job_dict[u'shared'] = self._record.shared
+				if IS_JOB_PENDING(self._job_ptr.job_array[i]):
+					run_time = 0
+				elif IS_JOB_SUSPENDED(self._job_ptr.job_array[i]):
+					run_time = self._record.pre_sus_time
+				else:
+					if (IS_JOB_RUNNING(self._job_ptr.job_array[i]) or self._record.end_time == 0):
+						end_time = time(NULL)
+					else:
+						end_time = self._record.end_time
+
+					if self._record.suspend_time:
+						run_time = <time_t>difftime(end_time, (self._record.suspend_time + self._record.pre_sus_time))
+					else:
+						run_time = <time_t>difftime(end_time, self._record.start_time)
+
+				Job_dict[u'run_time'] = run_time
+
+				if self._record.shared == 0:
+					Job_dict[u'shared'] = u"0"
+				elif self._record.shared == 1:
+					Job_dict[u'shared'] = u"1"
+				elif self._record.shared == 2:
+					Job_dict[u'shared'] = u"USER"
+				else:
+					Job_dict[u'shared'] = u"OK"
+
 				Job_dict[u'show_flags'] = self._record.show_flags
 				Job_dict[u'sicp_mode'] = self._record.sicp_mode
+				Job_dict[u'sockets_per_board'] = self._record.sockets_per_board
+				Job_dict[u'sockets_per_node'] = self._record.sockets_per_node
 				Job_dict[u'start_time'] = self._record.start_time
-				Job_dict[u'state_desc'] = slurm.stringOrNone(self._record.state_desc, '')
-				#Job_dict[u'state_reason'] = get_job_state_reason(self._record.state_reason)
-				Job_dict[u'state_reason'] = slurm.slurm_job_reason_string(self._record.state_reason)
-				Job_dict[u'std_err'] = slurm.stringOrNone(self._record.std_err, '')
-				Job_dict[u'std_in'] = slurm.stringOrNone(self._record.std_in, '')
-				Job_dict[u'std_out'] = slurm.stringOrNone(self._record.std_out, '')
+
+				if self._record.state_desc:
+					Job_dict[u'state_reason'] = self._record.state_desc.replace(" ", "_")
+				else:
+					Job_dict[u'state_reason'] = slurm.slurm_job_reason_string(<slurm.job_state_reason>self._record.state_reason)
+
+				if self._record.batch_flag:
+					slurm.slurm_get_job_stderr(tmp_line, sizeof(tmp_line), self._record)
+					Job_dict[u'std_err'] = tmp_line
+
+					slurm.slurm_get_job_stdin(tmp_line, sizeof(tmp_line), self._record)
+					Job_dict[u'std_in'] = tmp_line
+
+					slurm.slurm_get_job_stdout(tmp_line, sizeof(tmp_line), self._record)
+					Job_dict[u'std_out'] = tmp_line
+				else:
+					Job_dict[u'std_err'] = None
+					Job_dict[u'std_in'] = None
+					Job_dict[u'std_out'] = None
+
 				Job_dict[u'submit_time'] = self._record.submit_time
 				Job_dict[u'suspend_time'] = self._record.suspend_time
 				Job_dict[u'time_limit'] = self._record.time_limit
@@ -1951,18 +2061,18 @@ cdef class job:
 				Job_dict[u'wckey'] = slurm.stringOrNone(self._record.wckey, '')
 				Job_dict[u'work_dir'] = slurm.stringOrNone(self._record.work_dir, '')
 
-				Job_dict[u'ionodes'] = self.__get_select_jobinfo(SELECT_JOBDATA_IONODES)
+				Job_dict[u'altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
 				Job_dict[u'block_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_BLOCK_ID)
 				Job_dict[u'blrts_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_BLRTS_IMAGE)
+				Job_dict[u'cnode_cnt'] = self.__get_select_jobinfo(SELECT_JOBDATA_NODE_CNT)
+				Job_dict[u'ionodes'] = self.__get_select_jobinfo(SELECT_JOBDATA_IONODES)
 				Job_dict[u'linux_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_LINUX_IMAGE)
 				Job_dict[u'mloader_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_MLOADER_IMAGE)
 				Job_dict[u'ramdisk_image'] = self.__get_select_jobinfo(SELECT_JOBDATA_RAMDISK_IMAGE)
-				Job_dict[u'cnode_cnt'] = self.__get_select_jobinfo(SELECT_JOBDATA_NODE_CNT)
 				Job_dict[u'resv_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_RESV_ID)
 				Job_dict[u'rotate'] = bool(self.__get_select_jobinfo(SELECT_JOBDATA_ROTATE))
-				#Job_dict[u'conn_type'] = get_conn_type_string(self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
+
 				Job_dict[u'conn_type'] = slurm.slurm_conn_type_string(self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
-				Job_dict[u'altered'] = self.__get_select_jobinfo(SELECT_JOBDATA_ALTERED)
 
 				Job_dict[u'cpus_allocated'] = {}
 				if self._record.nodes is not NULL:
@@ -1972,15 +2082,19 @@ cdef class job:
 					if host_list:
 						for node_name in host_list:
 							Job_dict[u'cpus_allocated'][node_name] = self.__cpus_allocated_on_node(node_name)
+					hl.destroy()
 
-				Jobs[job_id] = Job_dict
-				Job_dict = {}
-				self._record = NULL
+				self._JobDict[self._record.job_id] = Job_dict
 
-		self._JobDict = Jobs
+			slurm.slurm_free_job_info_msg(self._job_ptr)
+			self._job_ptr = NULL
+			return self._JobDict
+		else:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
+
 
 	cpdef __get_select_jobinfo(self, uint32_t dataType):
-
 		u"""Decode opaque data type jobinfo
 
 		INCOMPLETE PORT
@@ -1995,7 +2109,6 @@ cdef class job:
 			char *retvalStr = NULL
 			char *str
 			char *tmp_str
-
 			dict Job_dict = {}
 
 		if jobinfo is NULL:
@@ -2043,11 +2156,10 @@ cdef class job:
 				pass
 
 		jobinfo = NULL
-
 		return None
 
-	cpdef int __cpus_allocated_on_node_id(self, int nodeID=0):
 
+	cpdef int __cpus_allocated_on_node_id(self, int nodeID=0):
 		u"""Get the number of cpus allocated to a slurm job on a node by node name.
 
 		:param int nodeID: Numerical node ID
@@ -2061,8 +2173,8 @@ cdef class job:
 
 		return retval
 
-	cpdef int __cpus_allocated_on_node(self, char* nodeName=''):
 
+	cpdef int __cpus_allocated_on_node(self, char* nodeName=''):
 		u"""Get the number of cpus allocated to a slurm job on a node by node name.
 
 		:param string nodeName: Name of node
@@ -2076,23 +2188,35 @@ cdef class job:
 
 		return retval
 
-	cpdef __free(self):
 
+	cpdef __free(self):
 		u"""Release the storage generated by the slurm_get_job_steps function.
 		"""
 
 		if self._job_ptr is not NULL:
 			slurm.slurm_free_job_info_msg(self._job_ptr)
 
-	def print_job_info_msg(self, int oneLiner=0):
 
+	cpdef print_job_info_msg(self, int oneLiner=0):
 		u"""Prints the contents of the data structure describing all job step records loaded by the slurm_get_job_steps function.
 
 		:param int Flag: Default=0
 		"""
 
-		if self._job_ptr is not NULL:
+		cdef:
+			int rc
+			int apiError
+
+		rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, SHOW_ALL)
+
+		if rc == slurm.SLURM_SUCCESS:
 			slurm.slurm_print_job_info_msg(slurm.stdout, self._job_ptr, oneLiner)
+			slurm.slurm_free_job_info_msg(self._job_ptr)
+			self._job_ptr = NULL
+		else:
+			apiError = slurm.slurm_get_errno()
+			raise ValueError(slurm.slurm_strerror(apiError), apiError)
+
 
 def slurm_pid2jobid(uint32_t JobPID=0):
 
@@ -2949,7 +3073,7 @@ cdef class trigger:
 				errCode = slurm.slurm_get_errno()
 				return errCode
 
-			time.sleep(5)
+			p_time.sleep(5)
 
 		return 0
 
@@ -5151,8 +5275,8 @@ def epoch2date(epochSecs):
 	"""
 
 	try:
-		dateTime = time.gmtime(epochSecs)
-		return u"%s" % time.strftime("%a %b %d %H:%M:%S %Y", dateTime)
+		dateTime = p_time.gmtime(epochSecs)
+		return u"%s" % p_time.strftime("%a %b %d %H:%M:%S %Y", dateTime)
 	except:
 		pass
 
