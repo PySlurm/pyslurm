@@ -94,6 +94,11 @@ cdef extern from 'slurm/slurm.h' nogil:
     enum: SYSTEM_DIMENSIONS = 1
     enum: HIGHEST_DIMENSIONS = 5
 
+    long int INFINITE
+    long long int INFINITE64
+    long int NO_VAL
+    long long int NO_VAL64
+
     cdef enum job_states:
         JOB_PENDING
         JOB_RUNNING

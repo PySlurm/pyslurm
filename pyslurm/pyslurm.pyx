@@ -889,8 +889,8 @@ cdef class partition:
         """
 
         cdef:
-            int i = 0
-            unsigned int preempt_mode
+            uint32_t i
+            uint16_t preempt_mode
             dict Partition = {}
             dict Part_dict = {}
 
@@ -903,40 +903,90 @@ cdef class partition:
                 self._record = self._Partition_ptr.partition_array[i]
                 name = self._record.name
 
-                Part_dict[u'allow_accounts'] = slurm.listOrNone(self._record.allow_accounts, ',')
-                Part_dict[u'allow_alloc_nodes'] = slurm.listOrNone(self._record.allow_alloc_nodes, ',')
-                Part_dict[u'allow_groups'] = slurm.listOrNone(self._record.allow_groups, ',')
-                Part_dict[u'allow_qos'] = slurm.listOrNone(self._record.allow_qos, ',')
-                Part_dict[u'alternate'] = slurm.stringOrNone(self._record.alternate, '')
-                Part_dict[u'billing_wights_str'] = slurm.stringOrNone(self._record.billing_weights_str, '')
+                if self._record.allow_accounts or not self._record.deny_accounts:
+                    if (self._record.allow_accounts == NULL or
+                        self._record.allow_accounts[0] == "\0"):
+                        Part_dict[u'allow_accounts'] = u"ALL"
+                    else:
+                        Part_dict[u'allow_accounts'] = slurm.listOrNone(self._record.allow_accounts, ',')
+                    Part_dict[u'deny_accounts'] = None
+                else:
+                    Part_dict[u'allow_accounts'] = None
+                    Part_dict[u'deny_accounts'] = slurm.listOrNone(self._record.deny_accounts, ',')
+
+                if self._record.allow_alloc_nodes == NULL:
+                    Part_dict[u'allow_alloc_nodes'] = u"ALL"
+                else:
+                    Part_dict[u'allow_alloc_nodes'] = slurm.listOrNone(self._record.allow_alloc_nodes, ',')
+
+                if (self._record.allow_groups == NULL or
+                    self._record.allow_groups[0] == "\0"):
+                    Part_dict[u'allow_groups'] = u"ALL"
+                else:
+                    Part_dict[u'allow_groups'] = slurm.listOrNone(self._record.allow_groups, ',')
+
+                if self._record.allow_qos or not self._record.deny_qos:
+                    if (self._record.allow_qos == NULL or
+                        self._record.allow_qos[0] == "\0"):
+                        Part_dict[u'allow_qos'] = u"ALL"
+                    else:
+                        Part_dict[u'allow_qos'] = slurm.listOrNone(self._record.allow_qos, ',')
+                    Part_dict[u'deny_qos'] = None
+                else:
+                    Part_dict[u'allow_qos'] = None
+                    Part_dict[u'deny_qos'] = slurm.listOrNone(self._record.allow_qos, ',')
+
+                if self._record.alternate != NULL:
+                    Part_dict[u'alternate'] = slurm.stringOrNone(self._record.alternate, '')
+                else:
+                    Part_dict[u'alternate'] = None
+
+                Part_dict[u'billing_weights_str'] = slurm.stringOrNone(self._record.billing_weights_str, '')
                 Part_dict[u'cr_type'] = self._record.cr_type
                 Part_dict[u'def_mem_per_cpu'] = self._record.def_mem_per_cpu
-                Part_dict[u'default_time'] = __convertDefaultTime(self._record.default_time)
-                Part_dict[u'deny_accounts'] = slurm.listOrNone(self._record.deny_accounts, '')
-                Part_dict[u'deny_qos'] = slurm.listOrNone(self._record.deny_qos, '')
 
-                Part_dict[u'flags'] = get_partition_mode(self._record.flags)
+                if self._record.default_time == slurm.INFINITE:
+                    Part_dict[u'default_time'] = u"UNLIMITED"
+                elif self._record.default_time == slurm.NO_VAL:
+                    Part_dict[u'default_time'] = u"NONE"
+                else:
+                    Part_dict[u'default_time'] = self._record.default_time * 60
+
+                Part_dict[u'flags'] = get_partition_mode(self._record.flags,
+                                                         self._record.max_share)
                 Part_dict[u'grace_time'] = self._record.grace_time
-                Part_dict[u'max_cpus_per_node'] = self._record.max_cpus_per_node
+
+                if self._record.max_cpus_per_node == slurm.INFINITE:
+                    Part_dict[u'max_cpus_per_node'] = u"UNLIMITED"
+                else:
+                    Part_dict[u'max_cpus_per_node'] = self._record.max_cpus_per_node
+
                 Part_dict[u'max_mem_per_cpu'] = self._record.max_mem_per_cpu
-                Part_dict[u'max_nodes'] = self._record.max_nodes
+
+                if self._record.max_nodes == slurm.INFINITE:
+                    Part_dict[u'max_nodes'] = u"UNLIMITED"
+                else:
+                    Part_dict[u'max_nodes'] = self._record.max_nodes
+
                 Part_dict[u'max_share'] = self._record.max_share
-                Part_dict[u'max_time'] = self._record.max_time
+
+                if self._record.max_time == slurm.INFINITE:
+                    Part_dict[u'max_time'] = u"UNLIMITED"
+                else:
+                    Part_dict[u'max_time'] = self._record.max_time * 60
+
                 Part_dict[u'min_nodes'] = self._record.min_nodes
                 Part_dict[u'name'] = slurm.stringOrNone(self._record.name, '')
                 Part_dict[u'nodes'] = slurm.listOrNone(self._record.nodes, ',')
 
-                #preempt_mode = self._record.preempt_mode
-                #if ( preempt_mode == <unsigned int>NO_VAL ):
-                #   preempt_mode = slurm.slurm_get_preempt_mode()   # use cluster param
-                #preempt_mode = slurm.slurm_get_preempt_mode()
-                #Part_dict[u'preempt_mode'] = get_preempt_mode(preempt_mode)
-
-                Part_dict[u'preempt_mode'] = slurm.slurm_preempt_mode_string(self._record.preempt_mode)
+                preempt_mode = self._record.preempt_mode
+                if preempt_mode == <uint16_t> slurm.NO_VAL:
+                    preempt_mode = slurm.slurm_get_preempt_mode()
+                Part_dict[u'preempt_mode'] = slurm.slurm_preempt_mode_string(preempt_mode)
 
                 Part_dict[u'priority'] = self._record.priority
                 Part_dict[u'qos_char'] = slurm.stringOrNone(self._record.qos_char, '')
-                Part_dict[u'state_up'] = get_partition_state(self._record.state_up)
+                Part_dict[u'state'] = get_partition_state(self._record.state_up)
                 Part_dict[u'total_cpus'] = self._record.total_cpus
                 Part_dict[u'total_nodes'] = self._record.total_nodes
                 Part_dict[u'tres_fmt_str'] = slurm.stringOrNone(self._record.tres_fmt_str, '')
@@ -1885,13 +1935,13 @@ cdef class job:
         :returns: Data where key is the job name, each entry contains a dictionary of job attributes
         :rtype: `dict`
         """
-        return self.get_job(NO_VAL)
+        return self.get_job(slurm.NO_VAL)
 
     cpdef get_job(self, uint32_t jobid):
 
         u"""Get single slurm job information.
 
-        :param int jobid: Job id to search. Default NO_VAL.
+        :param int jobid: Job id to search. Default slurm.NO_VAL.
         :returns: Data where key is the job name, each entry contains a dictionary of job attributes
         :rtype: `dict`
         """
@@ -1906,7 +1956,7 @@ cdef class job:
             uint32_t i
             dict Job_dict
 
-        if jobid == NO_VAL:
+        if jobid == slurm.NO_VAL:
             rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, SHOW_DETAIL | SHOW_DETAIL2)
         else:
             rc = slurm.slurm_load_job(&self._job_ptr, jobid, SHOW_DETAIL | SHOW_DETAIL2)
@@ -1960,17 +2010,17 @@ cdef class job:
                 Job_dict[u'cores_per_socket'] = self._record.cores_per_socket
                 Job_dict[u'cpus_per_task'] = self._record.cpus_per_task
 
-                if self._record.cpu_freq_gov == NO_VAL:
+                if self._record.cpu_freq_gov == slurm.NO_VAL:
                     Job_dict[u'cpu_freq_gov'] = None
                 else:
                     Job_dict[u'cpu_freq_gov'] = self._record.cpu_freq_min
 
-                if self._record.cpu_freq_max == NO_VAL:
+                if self._record.cpu_freq_max == slurm.NO_VAL:
                     Job_dict[u'cpu_freq_max'] = None
                 else:
                     Job_dict[u'cpu_freq_max'] = self._record.cpu_freq_min
 
-                if self._record.cpu_freq_min == NO_VAL:
+                if self._record.cpu_freq_min == slurm.NO_VAL:
                     Job_dict[u'cpu_freq_min'] = None
                 else:
                     Job_dict[u'cpu_freq_min'] = self._record.cpu_freq_min
@@ -2491,7 +2541,7 @@ cdef class node:
                 Host_dict[u'node_hostname'] = slurm.stringOrNone(record.node_hostname, '')
                 Host_dict[u'os'] = slurm.stringOrNone(record.os, '')
 
-                if record.owner == NO_VAL:
+                if record.owner == slurm.NO_VAL:
                     Host_dict[u'owner'] = None
                 else:
                     Host_dict[u'owner'] = record.owner
@@ -2511,21 +2561,21 @@ cdef class node:
                 else:
                     Host_dict[u'reason_time'] = record.reason_time
 
-                if record.reason_uid == NO_VAL:
+                if record.reason_uid == slurm.NO_VAL:
                     Host_dict[u'reason_uid'] = None
                 else:
                     Host_dict[u'reason_uid'] = record.reason_uid
 
                 # Power Managment
                 Host_dict[u'power_mgmt'] = {}
-                if (not record.power or (record.power.cap_watts == NO_VAL)):
+                if (not record.power or (record.power.cap_watts == slurm.NO_VAL)):
                     Host_dict[u'power_mgmt'][u"cap_watts"] = None
                 else:
                     Host_dict[u'power_mgmt'][u"cap_watts"] = record.power.cap_watts
 
                 # Energy statistics
                 Host_dict[u'energy'] = {}
-                if (not record.energy or record.energy.current_watts == NO_VAL):
+                if (not record.energy or record.energy.current_watts == slurm.NO_VAL):
                     Host_dict[u'energy'][u'current_watts'] = 0
                     Host_dict[u'energy'][u'base_consumed_energy'] = 0
                     Host_dict[u'energy'][u'consumed_energy'] = 0
@@ -5093,15 +5143,15 @@ def get_partition_state(uint16_t inx):
     state = ""
     if inx:
         if inx == PARTITION_UP:
-            state = "up"
+            state = "UP"
         elif inx == PARTITION_DOWN:
-            state = "down"
+            state = "DOWN"
         elif inx == PARTITION_INACTIVE:
-            stats = "inactive"
+            stats = "INACTIVE"
         elif inx == PARTITION_DRAIN:
-            state = "drain"
+            state = "DRAIN"
         else:
-            state = "unknown"
+            state = "UNKNOWN"
 
     return state
 
@@ -5180,8 +5230,8 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 
     cdef:
         dict mode = {}
-        int force = max_share & SHARED_FORCE
-        int val = max_share & (~SHARED_FORCE)
+        uint16_t force = max_share & SHARED_FORCE
+        uint16_t val = max_share & (~SHARED_FORCE)
 
     if (flags & PART_FLAG_DEFAULT):
         mode[u'Default'] = 1
@@ -5206,11 +5256,11 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
     if val == 0:
         mode[u'Shared'] = u"EXCLUSIVE"
     elif force:
-        mode[u'Shared'] = u"FORCED"
+        mode[u'Shared'] = "FORCED:" + str(val)
     elif val == 1:
-        mode[u'Shared'] = 0
+        mode[u'Shared'] = u"NO"
     else:
-        mode[u'Shared'] = 1
+        mode[u'Shared'] = "YES:" + str(val)
 
     if (flags & PART_FLAG_LLN):
         mode[u'LLN'] = 1
