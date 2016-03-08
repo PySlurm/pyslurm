@@ -1,4 +1,3 @@
-
 # cython: embedsignature=True
 # cython: profile=False
 
@@ -32,7 +31,7 @@ cdef extern from 'time.h' nogil:
 cdef extern from *:
     ctypedef char* const_char_ptr "const char*"
 
-#ctypedef struct sockaddr_in slurm_addr_t
+# ctypedef struct sockaddr_in slurm_addr_t
 
 #
 # PySlurm helper functions
@@ -607,9 +606,9 @@ cdef extern from 'slurm/slurm.h' nogil:
 
     ctypedef struct acct_gather_energy:
         uint64_t base_consumed_energy
-        uint32_t base_watts               # lowest power consump of node, in watts 
-        uint64_t consumed_energy          # total energy consumed by node, in joules
-        uint32_t current_watts            # current power consump of node, in watts
+        uint32_t base_watts
+        uint64_t consumed_energy
+        uint32_t current_watts
         uint64_t previous_consumed_energy
         time_t poll_time
 
@@ -1077,7 +1076,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         uint32_t job_id
         List pid_list
         uint32_t step_id
-        
+
     ctypedef struct job_step_stat_t:
         jobacctinfo_t *jobacct
         uint32_t num_tasks
@@ -1171,7 +1170,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         uint16_t *cpus_per_node
         uint32_t *cpu_count_reps
         uint32_t node_cnt
-        #slurm_addr_t *node_addr
+        # slurm_addr_t *node_addr
         uint32_t error_code
         dynamic_plugin_data_t *select_jobinfo
 
@@ -1215,7 +1214,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         char *version
 
     ctypedef node_info node_info_t
-    
+
     ctypedef struct node_info_msg:
         time_t last_update
         uint32_t node_scaling
@@ -1248,8 +1247,8 @@ cdef extern from 'slurm/slurm.h' nogil:
     ctypedef front_end_info_msg front_end_info_msg_t
 
     #
-    # NOTE: If setting node_addr and/or node_hostname then comma 
-    #       separate names and include an equal number of node_names 
+    # NOTE: If setting node_addr and/or node_hostname then comma
+    #       separate names and include an equal number of node_names
     #
 
     ctypedef struct slurm_update_node_msg:
@@ -1677,14 +1676,17 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern int slurm_load_ctl_conf (time_t, slurm_ctl_conf **)
     cdef extern void slurm_free_ctl_conf (slurm_ctl_conf_t *)
     cdef extern void slurm_print_ctl_conf (FILE *, slurm_ctl_conf_t *)
-    cdef extern void slurm_write_ctl_conf (slurm_ctl_conf_t* slurm_ctl_conf_ptr, node_info_msg_t* node_info_ptr, partition_info_msg_t* part_info_ptr)
+    cdef extern void slurm_write_ctl_conf (slurm_ctl_conf_t* slurm_ctl_conf_ptr,
+                                           node_info_msg_t* node_info_ptr,
+                                           partition_info_msg_t* part_info_ptr)
     cdef extern void *slurm_ctl_conf_2_key_pairs (slurm_ctl_conf_t*)
-    #cdef extern void slurm_print_ctl_2_key_pairs (slurm_ctl_conf_t *)
+    # cdef extern void slurm_print_ctl_2_key_pairs (slurm_ctl_conf_t *)
     cdef extern int slurm_load_slurmd_status (slurmd_status_t **)
     cdef extern void slurm_free_slurmd_status (slurmd_status_t *)
     cdef extern int slurm_print_slurmd_status (FILE *, slurmd_status_t **)
     cdef extern void slurm_print_key_pairs (FILE *, void* key_pairs, char *)
-    cdef extern int slurm_get_statistics (stats_info_response_msg_t **buf, stats_info_request_msg_t *req)
+    cdef extern int slurm_get_statistics (stats_info_response_msg_t **buf,
+                                          stats_info_request_msg_t *req)
     cdef extern int slurm_reset_statistics (stats_info_request_msg_t *req)
 
     #
@@ -1694,7 +1696,7 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern void slurm_init_part_desc_msg (update_part_msg_t *)
     cdef extern int slurm_load_partitions (time_t, partition_info_msg_t **, uint16_t)
     cdef extern void slurm_free_partition_info_msg (partition_info_msg_t *)
-    cdef extern void slurm_print_partition_info_msg (FILE *, partition_info_msg_t *,int)
+    cdef extern void slurm_print_partition_info_msg (FILE *, partition_info_msg_t *, int)
     cdef extern void slurm_print_partition_info (FILE *, partition_info_t *, int)
     cdef extern char *slurm_sprint_partition_info (partition_info_t *, int)
     cdef extern int slurm_create_partition (update_part_msg_t *)
@@ -1719,8 +1721,9 @@ cdef extern from 'slurm/slurm.h' nogil:
     # Job/Node Info Selection
     #
 
-    cdef extern int slurm_get_select_jobinfo (dynamic_plugin_data_t *, int, void *) 
-    cdef extern int slurm_get_select_nodeinfo (dynamic_plugin_data_t *, uint32_t, uint32_t , void *)
+    cdef extern int slurm_get_select_jobinfo (dynamic_plugin_data_t *, int, void *)
+    cdef extern int slurm_get_select_nodeinfo (dynamic_plugin_data_t *,
+                                               uint32_t, uint32_t, void *)
 
     #
     # Job Resource Read/Print
@@ -1728,8 +1731,10 @@ cdef extern from 'slurm/slurm.h' nogil:
 
     cdef extern int slurm_job_cpus_allocated_on_node_id (job_resources_t *, int)
     cdef extern int slurm_job_cpus_allocated_on_node (job_resources_t *, char *)
-    cdef extern int slurm_job_cpus_allocated_str_on_node_id (char *, size_t, job_resources_t *, int)
-    cdef extern int slurm_job_cpus_allocated_str_on_node (char *, size_t, job_resources_t *, const_char_ptr)
+    cdef extern int slurm_job_cpus_allocated_str_on_node_id (char *, size_t,
+                                                             job_resources_t *, int)
+    cdef extern int slurm_job_cpus_allocated_str_on_node (char *, size_t,
+                                                          job_resources_t *, const_char_ptr)
 
     #
     # Job Control Config
@@ -1743,7 +1748,8 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern long slurm_get_rem_time (uint32_t)
     cdef extern int slurm_job_node_ready (uint32_t)
     cdef extern int slurm_load_job (job_info_msg_t **, uint32_t, uint16_t)
-    cdef extern int slurm_load_job_user (job_info_msg_t **job_info_msg_pptr, uint32_t user_id, uint16_t show_flags)
+    cdef extern int slurm_load_job_user (job_info_msg_t **job_info_msg_pptr,
+                                         uint32_t user_id, uint16_t show_flags)
     cdef extern int slurm_load_jobs (time_t, job_info_msg_t **, uint16_t)
     cdef extern int slurm_notify_job (uint32_t, char *)
     cdef extern int slurm_pid2jobid (uint32_t, uint32_t *)
@@ -1751,7 +1757,8 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern void slurm_print_job_info_msg (FILE *, job_info_msg_t *, int)
     cdef extern char *slurm_sprint_job_info (slurm_job_info_t *, int)
     cdef extern int slurm_update_job (job_desc_msg_t *)
-    cdef extern int slurm_update_job2 (job_desc_msg_t * job_msg, job_array_resp_msg_t **resp)
+    cdef extern int slurm_update_job2 (job_desc_msg_t * job_msg,
+                                       job_array_resp_msg_t **resp)
     cdef extern uint32_t slurm_xlate_job_id (char *job_id_str)
 
     #
@@ -1763,7 +1770,8 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern int slurm_shutdown (uint16_t)
     cdef extern int slurm_takeover ()
     cdef extern int slurm_set_debug_level (uint32_t)
-    cdef extern int slurm_set_debugflags (uint64_t debug_flags_plus, uint64_t debug_flags_minus)
+    cdef extern int slurm_set_debugflags (uint64_t debug_flags_plus,
+                                          uint64_t debug_flags_minus)
     cdef extern int slurm_set_schedlog_level (uint32_t)
 
     #
@@ -1773,10 +1781,11 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern int slurm_load_licenses (time_t, license_info_msg_t **, uint16_t)
     cdef extern void slurm_free_license_info_msg (license_info_msg_t *)
 
-    cdef extern int slurm_load_assoc_mgr_info (assoc_mgr_info_request_msg_t *, assoc_mgr_info_msg_t **)
+    cdef extern int slurm_load_assoc_mgr_info (assoc_mgr_info_request_msg_t *,
+                                               assoc_mgr_info_msg_t **)
     cdef extern void slurm_free_assoc_mgr_info_msg (assoc_mgr_info_msg_t *)
     cdef extern void slurm_free_assoc_mgr_info_request_msg (assoc_mgr_info_request_msg_t *)
-    
+
     #
     # Job/Job Step Signaling
     #
@@ -1785,7 +1794,7 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern int slurm_kill_job_step (uint32_t, uint32_t, uint16_t)
     cdef extern int slurm_kill_job2 (char *, uint16_t, uint16_t)
     cdef extern int slurm_kill_job_step2 (char *, uint16_t, uint16_t)
-    cdef extern int slurm_signal_job (uint32_t , uint16_t)
+    cdef extern int slurm_signal_job (uint32_t, uint16_t)
     cdef extern int slurm_signal_job_step (uint32_t, uint32_t, uint32_t)
 
     #
@@ -1819,7 +1828,8 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern int slurm_checkpoint_vacate (uint32_t, uint32_t, uint16_t, char *)
     cdef extern int slurm_checkpoint_restart (uint32_t, uint32_t, uint16_t, char *)
     cdef extern int slurm_checkpoint_complete (uint32_t, uint32_t, time_t, uint32_t, char *)
-    cdef extern int slurm_checkpoint_task_complete (uint32_t, uint32_t, uint32_t, time_t, uint32_t, char *)
+    cdef extern int slurm_checkpoint_task_complete (uint32_t, uint32_t,
+                                                    uint32_t, time_t, uint32_t, char *)
     cdef extern int slurm_checkpoint_error (uint32_t, uint32_t, uint32_t *, char **)
     cdef extern int slurm_checkpoint_tasks (uint32_t, uint16_t, time_t, char *, uint16_t, char *)
 
@@ -1828,8 +1838,11 @@ cdef extern from 'slurm/slurm.h' nogil:
     #
 
     cdef extern int slurm_load_node (time_t, node_info_msg_t **, uint16_t)
-    cdef extern int slurm_load_node_single (node_info_msg_t **resp, char *node_name, uint16_t show_flags)
-    cdef extern int slurm_get_node_energy (char *host, uint16_t delta, uint16_t *sensors_cnt, acct_gather_energy_t **energy)
+    cdef extern int slurm_load_node_single (node_info_msg_t **resp,
+                                            char *node_name, uint16_t show_flags)
+    cdef extern int slurm_get_node_energy (char *host, uint16_t delta,
+                                           uint16_t *sensors_cnt,
+                                           acct_gather_energy_t **energy)
     cdef extern void slurm_free_node_info_msg (node_info_msg_t *)
     cdef extern void slurm_print_node_info_msg (FILE *, node_info_msg_t *, int)
     cdef extern void slurm_print_node_table (FILE *, node_info_t *, int)
@@ -1841,12 +1854,15 @@ cdef extern from 'slurm/slurm.h' nogil:
     # JobSteps
     #
 
-    cdef extern int slurm_get_job_steps (time_t, uint32_t, uint32_t, job_step_info_response_msg_t **, uint16_t)
+    cdef extern int slurm_get_job_steps (time_t, uint32_t, uint32_t,
+                                         job_step_info_response_msg_t **, uint16_t)
     cdef extern void slurm_free_job_step_info_response_msg (job_step_info_response_msg_t *)
     cdef extern slurm_step_layout_t *slurm_job_step_layout_get (uint32_t, uint32_t)
     cdef extern void slurm_job_step_layout_free (slurm_step_layout *)
-    cdef extern int slurm_job_step_stat (uint32_t, uint32_t, char *, job_step_stat_response_msg_t **)
-    cdef extern int slurm_job_step_get_pids (uint32_t, uint32_t, char *, job_step_pids_response_msg_t **)
+    cdef extern int slurm_job_step_stat (uint32_t, uint32_t, char *,
+                                         job_step_stat_response_msg_t **)
+    cdef extern int slurm_job_step_get_pids (uint32_t, uint32_t, char *,
+                                             job_step_pids_response_msg_t **)
     cdef extern void slurm_job_step_pids_free (job_step_pids_t *)
     cdef extern void slurm_job_step_pids_response_msg_free (void *)
     cdef extern void slurm_job_step_stat_free (job_step_stat_t *)
@@ -1895,7 +1911,9 @@ cdef extern from 'slurm/slurm.h' nogil:
 
     cdef extern int slurm_load_powercap (powercap_info_msg_t **powercap_info_msg_pptr)
     cdef extern void slurm_free_powercap_info_msg (powercap_info_msg_t *msg)
-    cdef extern void slurm_print_powercap_info_msg (FILE * out, powercap_info_msg_t *powercap_info_msg_ptr, int one_liner)
+    cdef extern void slurm_print_powercap_info_msg (FILE * out,
+                                                    powercap_info_msg_t *powercap_info_msg_ptr,
+                                                    int one_liner)
     cdef extern int slurm_update_powercap (update_powercap_msg_t * powercap_msg)
 
     #
@@ -1905,9 +1923,15 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern char *slurm_burst_buffer_state_string (uint16_t state)
     cdef extern int slurm_load_burst_buffer_info (burst_buffer_info_msg_t **burst_buffer_info_msg_pptr)
     cdef extern void slurm_free_burst_buffer_info_msg (burst_buffer_info_msg_t *burst_buffer_info_msg)
-    cdef extern void slurm_print_burst_buffer_info_msg (FILE *out, burst_buffer_info_msg_t *info_ptr, int one_liner, int verbosity)
-    cdef extern void slurm_print_burst_buffer_record (FILE *out, burst_buffer_info_t *burst_buffer_ptr, int one_liner, int verbose)
-    cdef extern int slurm_network_callerid (network_callerid_msg_t req, uint32_t *job_id, char *node_name, int node_name_size)
+    cdef extern void slurm_print_burst_buffer_info_msg (FILE *out,
+                                                        burst_buffer_info_msg_t *info_ptr,
+                                                        int one_liner, int verbosity)
+    cdef extern void slurm_print_burst_buffer_record (FILE *out,
+                                                      burst_buffer_info_t *burst_buffer_ptr,
+                                                      int one_liner, int verbose)
+    cdef extern int slurm_network_callerid (network_callerid_msg_t req,
+                                            uint32_t *job_id,
+                                            char *node_name, int node_name_size)
 
     #
     # Blue Gene
@@ -1916,7 +1940,9 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern void slurm_print_block_info_msg (FILE *out, block_info_msg_t *info_ptr, int)
     cdef extern void slurm_print_block_info (FILE *out, block_info_t *bg_info_ptr, int)
     cdef extern char *slurm_sprint_block_info (block_info_t * bg_info_ptr, int)
-    cdef extern int slurm_load_block_info (time_t update_time, block_info_msg_t **block_info_msg_pptr, uint16_t)
+    cdef extern int slurm_load_block_info (time_t update_time,
+                                           block_info_msg_t **block_info_msg_pptr,
+                                           uint16_t)
     cdef extern void slurm_free_block_info_msg (block_info_msg_t *block_info_msg)
     cdef extern int slurm_update_block (update_block_msg_t *block_msg)
     cdef extern void slurm_init_update_block_msg (update_block_msg_t *update_block_msg)
@@ -1927,9 +1953,14 @@ cdef extern from 'slurm/slurm.h' nogil:
 
     cdef extern int slurm_load_front_end (time_t update_time, front_end_info_msg_t **resp)
     cdef extern void slurm_free_front_end_info_msg (front_end_info_msg_t * front_end_buffer_ptr)
-    cdef extern void slurm_print_front_end_info_msg (FILE * out, front_end_info_msg_t * front_end_info_msg_ptr, int one_liner)
-    cdef extern void slurm_print_front_end_table (FILE * out, front_end_info_t * front_end_ptr, int one_liner)
-    cdef extern char *slurm_sprint_front_end_table (front_end_info_t * front_end_ptr, int one_liner)
+    cdef extern void slurm_print_front_end_info_msg (FILE * out,
+                                                     front_end_info_msg_t * front_end_info_msg_ptr,
+                                                     int one_liner)
+    cdef extern void slurm_print_front_end_table (FILE * out,
+                                                  front_end_info_t * front_end_ptr,
+                                                  int one_liner)
+    cdef extern char *slurm_sprint_front_end_table (front_end_info_t * front_end_ptr,
+                                                    int one_liner)
     cdef void slurm_init_update_front_end_msg (update_front_end_msg_t * update_front_end_msg)
     cdef extern int slurm_update_front_end (update_front_end_msg_t * front_end_msg)
 
@@ -2019,7 +2050,9 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     cdef extern int slurmdb_qos_add(void *db_conn, uint32_t uid, List qos_list)
     cdef extern List slurmdb_qos_get(void *db_conn, slurmdb_qos_cond_t *qos_cond)
-    cdef extern List slurmdb_qos_modify(void *db_conn, slurmdb_qos_cond_t *qos_cond, slurmdb_qos_rec_t *qos)
+    cdef extern List slurmdb_qos_modify(void *db_conn,
+                                        slurmdb_qos_cond_t *qos_cond,
+                                        slurmdb_qos_rec_t *qos)
     cdef extern List slurmdb_qos_remove(void *db_conn, slurmdb_qos_cond_t *qos_cond)
 
 
@@ -2033,21 +2066,22 @@ cdef inline void* xmalloc(__sz):
 cdef inline xfree(void *__p):
     slurm_xfree(&__p, __FILE__, __LINE__, __FUNCTION__)
 
-cdef extern void slurm_accounting_enforce_string(uint16_t enforce, char *, int)
-cdef extern void slurm_api_clear_config()
-cdef extern void slurm_api_set_conf_file(char *)
-cdef extern char *slurm_bg_block_state_string(uint16_t)
-cdef extern char *slurm_conn_type_string(enum)
-cdef extern uint16_t slurm_get_preempt_mode()
-cdef extern char *slurm_job_reason_string(int inx)
-cdef extern int   slurm_job_state_num(char *state_name)
-cdef extern char *slurm_job_state_string(uint16_t inx)
-cdef extern char *slurm_node_state_string(uint32_t inx)
-cdef extern char *slurm_node_state_string_compact(uint32_t inx)
-cdef extern char *slurm_node_use_string(int)
-cdef extern uint16_t slurm_preempt_mode_num(char *preempt_mode)
-cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
-cdef extern char *slurm_reservation_flags_string(uint32_t flags)
-cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
-cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
+cdef extern void slurm_accounting_enforce_string (uint16_t enforce,
+                                                  char *, int)
+cdef extern void slurm_api_clear_config ()
+cdef extern void slurm_api_set_conf_file (char *)
+cdef extern char *slurm_bg_block_state_string (uint16_t)
+cdef extern char *slurm_conn_type_string (enum)
+cdef extern uint16_t slurm_get_preempt_mode ()
+cdef extern char *slurm_job_reason_string (int inx)
+cdef extern int   slurm_job_state_num (char *state_name)
+cdef extern char *slurm_job_state_string (uint16_t inx)
+cdef extern char *slurm_node_state_string (uint32_t inx)
+cdef extern char *slurm_node_state_string_compact (uint32_t inx)
+cdef extern char *slurm_node_use_string (int)
+cdef extern uint16_t slurm_preempt_mode_num (char *preempt_mode)
+cdef extern char *slurm_preempt_mode_string (uint16_t preempt_mode)
+cdef extern char *slurm_reservation_flags_string (uint32_t flags)
+cdef extern void slurm_xfree (void **, const_char_ptr, int, const_char_ptr)
+cdef extern void *slurm_xmalloc (size_t, const_char_ptr, int, const_char_ptr)
 cdef extern void slurm_free_stats_response_msg (stats_info_response_msg_t *msg)
