@@ -2422,13 +2422,13 @@ cdef class node:
             raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
     cpdef find_id(self, char *nodeID):
-        u"""Retrieve node ID data.
+        u"""Get node information for a given node.
 
         :param str nodeID: Node key string to search
         :returns: Dictionary of values for given node
         :rtype: `dict`
         """
-        return self.get_node(nodeID)
+        return self.get_node(nodeID).values()[0]
 
     cpdef get(self):
         u"""Get all slurm node information.
