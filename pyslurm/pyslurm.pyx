@@ -2082,6 +2082,7 @@ cdef class job:
                     run_time = <time_t>difftime(end_time, self._record.start_time)
 
             Job_dict[u'run_time'] = run_time
+            Job_dict[u'run_time_str'] = secs2time_str(run_time)
 
             if self._record.shared == 0:
                 Job_dict[u'shared'] = u"0"
@@ -2120,7 +2121,15 @@ cdef class job:
 
             Job_dict[u'submit_time'] = self._record.submit_time
             Job_dict[u'suspend_time'] = self._record.suspend_time
-            Job_dict[u'time_limit'] = self._record.time_limit
+
+            if self._record.time_limit == slurm.NO_VAL:
+                Job_dict[u'time_limit'] = u"Partition_Limit"
+                Job_dict[u'time_limit_str'] = u"Partition_Limit"
+            else:
+                Job_dict[u'time_limit'] = self._record.time_limit
+                Job_dict[u'time_limit_str'] = mins2time_str(
+                    self._record.time_limit)
+
             Job_dict[u'time_min'] = self._record.time_min
             Job_dict[u'threads_per_core'] = self._record.threads_per_core
             Job_dict[u'tres_req_str'] = slurm.stringOrNone(self._record.tres_req_str, '')
@@ -2286,7 +2295,6 @@ def slurm_pid2jobid(uint32_t JobPID=0):
     u"""Get the slurm job id from a process id.
 
     :param int JobPID: Job process id
-
     :returns: 0 for success or a slurm error code
     :rtype: `integer`
     :returns: Job Identifier
@@ -2302,6 +2310,68 @@ def slurm_pid2jobid(uint32_t JobPID=0):
         raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
     return errCode, JobID
+
+
+cdef secs2time_str(uint32_t time):
+    u"""Convert seconds to Slurm string format.
+
+    This method converts time in seconds (86400) to Slurm's string format
+    (1-00:00:00).
+
+    :param int time: time in seconds
+    :returns: time string
+    :rtype: `str`
+    """
+    cdef:
+        char *time_str
+        long days, hours, minutes, seconds
+
+    if time == slurm.INFINITE:
+        time_str = "UNLIMITED"
+    else:
+        seconds = time % 60
+        minutes = (time / 60) % 60
+        hours = (time / 3600) % 24
+        days = time / 86400
+
+        if days < 0 or  hours < 0 or minutes < 0 or seconds < 0:
+            time_str = "INVALID"
+        elif days:
+            return u"%ld-%2.2ld:%2.2ld:%2.2ld" % (days, hours,
+                                                  minutes, seconds)
+        else:
+            return u"2.2ld:%2.2ld:%2.2ld" % (hours, minutes, seconds)
+
+
+cdef mins2time_str(uint32_t time):
+    u"""Convert minutes to Slurm string format.
+
+    This method converts time in minutes (14400) to Slurm's string format
+    (10-00:00:00).
+
+    :param int time: time in minutes
+    :returns: time string
+    :rtype: `str`
+    """
+    cdef:
+        char *time_str
+        long days, hours, minutes, seconds
+
+    if time == slurm.INFINITE:
+        time_str = "UNLIMITED"
+    else:
+        seconds = 0
+        minutes = time % 60
+        hours = (time / 60) % 24
+        days = time / 1440
+
+        if days < 0 or  hours < 0 or minutes < 0 or seconds < 0:
+            time_str = "INVALID"
+        elif days:
+            return u"%ld-%2.2ld:%2.2ld:%2.2ld" % (days, hours,
+                                                  minutes, seconds)
+        else:
+            return u"2.2ld:%2.2ld:%2.2ld" % (hours, minutes, seconds)
 
 
 #
