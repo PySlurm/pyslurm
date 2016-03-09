@@ -1868,7 +1868,7 @@ cdef class job:
                                   SHOW_DETAIL | SHOW_DETAIL2)
 
         if rc == slurm.SLURM_SUCCESS:
-            return self.get_job_ptr()
+            return self.get_job_ptr().values()[0]
         else:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.slurm_strerror(apiError), apiError)
