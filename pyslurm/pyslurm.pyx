@@ -2340,7 +2340,7 @@ cdef secs2time_str(uint32_t time):
             return u"%ld-%2.2ld:%2.2ld:%2.2ld" % (days, hours,
                                                   minutes, seconds)
         else:
-            return u"2.2ld:%2.2ld:%2.2ld" % (hours, minutes, seconds)
+            return u"%2.2ld:%2.2ld:%2.2ld" % (hours, minutes, seconds)
 
 
 cdef mins2time_str(uint32_t time):
@@ -2371,7 +2371,7 @@ cdef mins2time_str(uint32_t time):
             return u"%ld-%2.2ld:%2.2ld:%2.2ld" % (days, hours,
                                                   minutes, seconds)
         else:
-            return u"2.2ld:%2.2ld:%2.2ld" % (hours, minutes, seconds)
+            return u"%2.2ld:%2.2ld:%2.2ld" % (hours, minutes, seconds)
 
 
 #
