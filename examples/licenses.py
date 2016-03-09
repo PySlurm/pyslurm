@@ -6,7 +6,7 @@ def display(lic_dict):
 
     if lic_dict:
 
-        print("State last updated : {0}".format(pyslurm.epoch2date(licenses.lastUpdate())))
+        print("State last updated : {0}".format(slurm.epoch2date(licenses.lastUpdate())))
         print('{0:*^80}'.format(''))
 
         for key, value in lic_dict.iteritems():

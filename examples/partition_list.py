@@ -23,7 +23,7 @@ def display(part_dict):
 
                 elif part_key in [ 'max_nodes', 'max_time', 'max_cpus_per_node']:
 
-                    if value[part_key] == pyslurm.INFINITE:
+                    if value[part_key] == "UNLIMITED":
                         valStr = "Unlimited"
 
                 print("\t{0:<20} : {1}".format(part_key, valStr))

@@ -392,7 +392,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         NODE_STATE_FUTURE
         NODE_STATE_END
 
-    int SHOW_ALL
+    uint16_t SHOW_ALL
 
     ctypedef enum acct_energy_type:
         ENERGY_DATA_JOULES_TASK

@@ -5223,49 +5223,12 @@ cdef class licenses:
 
     def __cinit__(self):
         self._msg = NULL
-        self._lastUpdate = 0
-        self._ShowFlags = 0
-        self._licDict = {}
+        self._ShowFlags = slurm.SHOW_ALL
+        self._lastUpdate = <time_t> NULL
 
     def __dealloc__(self):
-        self.__destroy()
-
-    cpdef __destroy(self):
         u"""Free the memory allocated by load licenses method."""
-        if self._msg is not NULL:
-            slurm.slurm_free_license_info_msg(self._msg)
-
-    def load(self):
-        u"""Load slurm controller licenses information."""
-        self.__load()
-
-    cpdef int __load(self) except? -1:
-        u"""Load slurm controller licenses information."""
-        cdef:
-            slurm.license_info_msg_t *_new_msg = NULL
-            time_t last_time = <time_t>NULL
-            int apiError = 0
-            int errCode = 0
-
-        if self._msg is not NULL:
-            errCode = slurm.slurm_load_licenses(self._lastUpdate, &_new_msg, self._ShowFlags)
-            if errCode == 0:
-                slurm.slurm_free_license_info_msg(self._msg)
-            elif slurm.slurm_get_errno() == 1900:
-                errCode = 0
-                _new_msg = self._msg
-        else:
-            last_time = <time_t>NULL
-            _new_msg = NULL
-            errCode = slurm.slurm_load_licenses(last_time, &_new_msg, self._ShowFlags)
-
-        if errCode == 0:
-            if _new_msg.last_update > self._lastUpdate:
-                self._msg = _new_msg
-                self._lastUpdate = self._msg.last_update
-        else:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.slurm_strerror(apiError), apiError)
+        pass
 
     def lastUpdate(self):
         u"""Return last time (epoch seconds) license data was updated.
@@ -5278,39 +5241,68 @@ cdef class licenses:
     def ids(self):
         u"""Return the current license names from retrieved license data.
 
+        This method calls slurm_load_licenses to retrieve license information
+        from the controller.  slurm_free_license_info_msg is used to free the
+        license message buffer.
+
         :returns: Dictionary of licenses
         :rtype: `dict`
         """
-        return self._licDict.keys()
+        cdef:
+            int rc
+            int apiError
+            uint32_t i
+            list all_licenses
 
-    def get(self):
-        u"""Get slurm controller licenses information.
+        rc = slurm.slurm_load_licenses(<time_t> NULL, &self._msg,
+                                       self._ShowFlags)
+
+        if rc == slurm.SLURM_SUCCESS:
+            all_licenses = []
+            self._lastUpdate = self._msg.last_update
+
+            for i in range(self._msg.num_lic):
+                all_licenses.append(self._msg.lic_array[i].name)
+            slurm.slurm_free_license_info_msg(self._msg)
+            self._msg = NULL
+            return all_licenses
+        else:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.slurm_strerror(apiError), apiError)
+
+    cpdef get(self):
+        u"""Get full license information from the slurm controller.
+
+        This method calls slurm_load_licenses to retrieve license information
+        from the controller.  slurm_free_license_info_msg is used to free the
+        license message buffer.
 
         :returns: Dictionary whose key is the license name
         :rtype: `dict`
         """
-        self.__load()
-        self.__get()
-
-        return self._licDict
-
-    cpdef __get(self):
         cdef:
-            int i
-            dict licenses = {}
-            dict lic
+            int rc
+            int apiError
+            uint32_t i
+            dict License_dict
 
-        if self._msg is not NULL:
-            if self._msg.num_lic:
-                for i in range(self._msg.num_lic):
-                    lic = {}
+        rc = slurm.slurm_load_licenses(<time_t> NULL, &self._msg,
+                                       self._ShowFlags)
 
-                    name = u"%s" % self._msg.lic_array[i].name
-                    lic[u'available'] = self._msg.lic_array[i].available
-                    lic[u'in_use'] = self._msg.lic_array[i].in_use
-                    lic[u'remote'] = self._msg.lic_array[i].remote
-                    lic[u'total'] = self._msg.lic_array[i].total
+        if rc == slurm.SLURM_SUCCESS:
+            self._licDict = {}
+            self._lastUpdate = self._msg.last_update
 
-                    licenses[name] = lic
-
-        self._licDict = licenses
+            for i in range(self._msg.num_lic):
+                License_dict = {}
+                License_dict["total"] = self._msg.lic_array[i].total
+                License_dict["in_use"] = self._msg.lic_array[i].in_use
+                License_dict["available"] = self._msg.lic_array[i].available
+                License_dict["remote"] = self._msg.lic_array[i].remote
+                self._licDict[u"%s" % self._msg.lic_array[i].name] = License_dict
+            slurm.slurm_free_license_info_msg(self._msg)
+            self._msg = NULL
+            return self._licDict
+        else:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.slurm_strerror(apiError), apiError)
