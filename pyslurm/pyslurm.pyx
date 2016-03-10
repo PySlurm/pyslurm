@@ -699,54 +699,65 @@ cdef class config:
 
 
 cdef class partition:
-    u"""Class to access/modify Slurm Partition Information.
-    """
+    u"""Class to access/modify Slurm Partition Information."""
 
     cdef:
         slurm.partition_info_msg_t *_Partition_ptr
-        slurm.partition_info_t _record
         slurm.time_t _lastUpdate
         uint16_t _ShowFlags
         dict _PartDict
 
     def __cinit__(self):
         self._Partition_ptr = NULL
-        self._lastUpdate = 0
-        self._ShowFlags = 0
-        self._PartDict = {}
+        self._ShowFlags = slurm.SHOW_ALL
+        self._lastUpdate = <time_t> NULL
 
     def __dealloc__(self):
-        self.__destroy()
-
-    cpdef __destroy(self):
-        u"""Free the slurm partition memory allocated by load partition method."""
-        if self._Partition_ptr is not NULL:
-            slurm.slurm_free_partition_info_msg(self._Partition_ptr)
+        pass
 
     def lastUpdate(self):
-        u"""Get the time (epoch seconds) the retrieved data was updated.
+        u"""Return time (epoch seconds) the partition data was updated.
 
         :returns: epoch seconds
         :rtype: `integer`
         """
         return self._lastUpdate
 
-    def ids(self):
+    cpdef list ids(self):
         u"""Return the partition IDs from retrieved data.
 
         :returns: Dictionary of partition IDs
         :rtype: `dict`
         """
-        return self._PartDict.keys()
+        cdef:
+            int rc
+            int apiError
+            uint32_t i
+            list all_partitions
 
-    def find_id(self, char *partID=''):
-        u"""Retrieve partition ID data.
+        rc = slurm.slurm_load_partitions(<time_t> NULL, &self._Partition_ptr,
+                                         slurm.SHOW_ALL)
 
-        :param str partID: Partition key to search
-        :returns: Dictionary of values for given partition key
+        if rc == slurm.SLURM_SUCCESS:
+            self._lastUpdate = self._Partition_ptr.last_update
+            all_partitions = []
+            for i in range(self._Partition_ptr.record_count):
+                all_partitions.append(self._Partition_ptr.partition_array[i].name)
+            slurm.slurm_free_partition_info_msg(self._Partition_ptr)
+            self._Partition_ptr = NULL
+            return all_partitions
+        else:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.slurm_strerror(apiError), apiError)
+
+    cpdef dict find_id(self, char *partID):
+        u"""Get partition information for a given partition.
+
+        :param str partID: Partition key string to search
+        :returns: Dictionary of values for given partition
         :rtype: `dict`
         """
-        return self._PartDict.get(partID, {})
+        return self.get().get(partID)
 
     def find(self, name='', val=''):
         u"""Search for a property and associated value in the retrieved partition data.
@@ -756,62 +767,40 @@ cdef class partition:
         :returns: List of IDs that match
         :rtype: `list`
         """
-        cdef list retList = []
+        cdef:
+            list retList = []
+            dict _partition_dict = {}
+
+        _partition_dict = self.get()
 
         if val != '':
-            for key, value in self._blockID.items():
-                if self._blockID[key][name] == val:
+            for key, value in self._partition_dict.items():
+                if _partition_dict[key][name] == val:
                     retList.append(key)
         return retList
-
-    def load(self):
-        u"""Load slurm partition information."""
-        self.__load()
-
-    cpdef int __load(self) except? -1:
-        u"""Load slurm partition information.
-
-        :returns: slurm error Code
-        :rtype: `integer`
-        """
-        cdef:
-            slurm.partition_info_msg_t *new_Partition_ptr = NULL
-            slurm.time_t last_time = <slurm.time_t>NULL
-            int apiError = 0, errCode = 0
-
-        if self._Partition_ptr is not NULL:
-
-            errCode = slurm.slurm_load_partitions(
-                self._Partition_ptr.last_update,
-                &new_Partition_ptr, self._ShowFlags)
-            if errCode == 0:  # SLURM_SUCCESS
-                slurm.slurm_free_partition_info_msg(self._Partition_ptr)
-            elif slurm.slurm_get_errno() == 1900:  # SLURM_NO_CHANGE_IN_DATA
-                errCode = 0
-                new_Partition_ptr = self._Partition_ptr
-        else:
-            errCode = slurm.slurm_load_partitions(last_time,
-                                                  &new_Partition_ptr,
-                                                  self._ShowFlags)
-
-        if errCode == 0:
-            self._Partition_ptr = new_Partition_ptr
-            self._lastUpdate = self._Partition_ptr.last_update
-        else:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.slurm_strerror(apiError), apiError)
-
-        return errCode
 
     cpdef print_info_msg(self, int oneLiner=False):
         u"""Display the partition information from previous load partition method.
 
         :param int oneLiner: Display on one line (default=0)
         """
-        if self._Partition_ptr is not NULL:
+        cdef:
+            int rc
+            int apiError
+
+        rc = slurm.slurm_load_partitions(<time_t> NULL, &self._Partition_ptr,
+                                         slurm.SHOW_ALL)
+
+        if rc == slurm.SLURM_SUCCESS:
             slurm.slurm_print_partition_info_msg(slurm.stdout,
                                                  self._Partition_ptr,
                                                  oneLiner)
+            self._lastUpdate = self._Partition_ptr.last_update
+            slurm.slurm_free_partition_info_msg(self._Partition_ptr)
+            self._Partition_ptr = NULL
+        else:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
     cpdef int delete(self, char *PartID='') except? -1:
         u"""Delete a give slurm partition.
@@ -834,130 +823,135 @@ cdef class partition:
 
         return errCode
 
-    cpdef get(self):
-        u"""Get the slurm partition data from a previous load partition method.
+    cpdef dict get(self):
+        u"""Get all slurm partition information
 
-        :returns: Partition data, key is the partition ID
+        :returns: Dictionary of dictionaries whose key is the partition name.
         :rtype: `dict`
         """
-        self.__load()
-        self.__get()
-
-        return self._PartDict
-
-    cpdef dict __get(self):
-        u"""Get the slurm partition data from a previous load partition method."""
         cdef:
-            uint32_t i
+            int rc
+            int apiError
             uint16_t preempt_mode
-            dict Partition = {}
+            uint32_t i
+            slurm.partition_info_t *record
             dict Part_dict = {}
 
-        if self._Partition_ptr is not NULL:
+        rc = slurm.slurm_load_partitions(<time_t> NULL, &self._Partition_ptr,
+                                         slurm.SHOW_ALL)
+
+        if rc == slurm.SLURM_SUCCESS:
+            self._PartDict = {}
             self._lastUpdate = self._Partition_ptr.last_update
+
             for i in range(self._Partition_ptr.record_count):
                 Part_dict = {}
-                self._record = self._Partition_ptr.partition_array[i]
-                name = self._record.name
+                record = &self._Partition_ptr.partition_array[i]
+                name = record.name
 
-                if self._record.allow_accounts or not self._record.deny_accounts:
-                    if self._record.allow_accounts == NULL or \
-                       self._record.allow_accounts[0] == "\0":
+                if record.allow_accounts or not record.deny_accounts:
+                    if record.allow_accounts == NULL or \
+                       record.allow_accounts[0] == "\0":
                         Part_dict[u'allow_accounts'] = u"ALL"
                     else:
                         Part_dict[u'allow_accounts'] = slurm.listOrNone(
-                            self._record.allow_accounts, ',')
+                            record.allow_accounts, ',')
 
                     Part_dict[u'deny_accounts'] = None
                 else:
                     Part_dict[u'allow_accounts'] = None
                     Part_dict[u'deny_accounts'] = slurm.listOrNone(
-                        self._record.deny_accounts, ',')
+                        record.deny_accounts, ',')
 
-                if self._record.allow_alloc_nodes == NULL:
+                if record.allow_alloc_nodes == NULL:
                     Part_dict[u'allow_alloc_nodes'] = u"ALL"
                 else:
                     Part_dict[u'allow_alloc_nodes'] = slurm.listOrNone(
-                        self._record.allow_alloc_nodes, ',')
+                        record.allow_alloc_nodes, ',')
 
-                if self._record.allow_groups == NULL or \
-                   self._record.allow_groups[0] == "\0":
+                if record.allow_groups == NULL or \
+                   record.allow_groups[0] == "\0":
                     Part_dict[u'allow_groups'] = u"ALL"
                 else:
                     Part_dict[u'allow_groups'] = slurm.listOrNone(
-                        self._record.allow_groups, ',')
+                        record.allow_groups, ',')
 
-                if self._record.allow_qos or not self._record.deny_qos:
-                    if self._record.allow_qos == NULL or \
-                       self._record.allow_qos[0] == "\0":
+                if record.allow_qos or not record.deny_qos:
+                    if record.allow_qos == NULL or \
+                       record.allow_qos[0] == "\0":
                         Part_dict[u'allow_qos'] = u"ALL"
                     else:
                         Part_dict[u'allow_qos'] = slurm.listOrNone(
-                            self._record.allow_qos, ',')
+                            record.allow_qos, ',')
                     Part_dict[u'deny_qos'] = None
                 else:
                     Part_dict[u'allow_qos'] = None
-                    Part_dict[u'deny_qos'] = slurm.listOrNone(self._record.allow_qos, ',')
+                    Part_dict[u'deny_qos'] = slurm.listOrNone(record.allow_qos, ',')
 
-                if self._record.alternate != NULL:
-                    Part_dict[u'alternate'] = slurm.stringOrNone(self._record.alternate, '')
+                if record.alternate != NULL:
+                    Part_dict[u'alternate'] = slurm.stringOrNone(record.alternate, '')
                 else:
                     Part_dict[u'alternate'] = None
 
                 Part_dict[u'billing_weights_str'] = slurm.stringOrNone(
-                    self._record.billing_weights_str, '')
-                Part_dict[u'cr_type'] = self._record.cr_type
-                Part_dict[u'def_mem_per_cpu'] = self._record.def_mem_per_cpu
+                    record.billing_weights_str, '')
+                Part_dict[u'cr_type'] = record.cr_type
+                Part_dict[u'def_mem_per_cpu'] = record.def_mem_per_cpu
 
-                if self._record.default_time == slurm.INFINITE:
+                if record.default_time == slurm.INFINITE:
                     Part_dict[u'default_time'] = u"UNLIMITED"
-                elif self._record.default_time == slurm.NO_VAL:
+                elif record.default_time == slurm.NO_VAL:
                     Part_dict[u'default_time'] = u"NONE"
                 else:
-                    Part_dict[u'default_time'] = self._record.default_time * 60
+                    Part_dict[u'default_time'] = record.default_time * 60
 
-                Part_dict[u'flags'] = get_partition_mode(self._record.flags,
-                                                         self._record.max_share)
-                Part_dict[u'grace_time'] = self._record.grace_time
+                Part_dict[u'flags'] = get_partition_mode(record.flags,
+                                                         record.max_share)
+                Part_dict[u'grace_time'] = record.grace_time
 
-                if self._record.max_cpus_per_node == slurm.INFINITE:
+                if record.max_cpus_per_node == slurm.INFINITE:
                     Part_dict[u'max_cpus_per_node'] = u"UNLIMITED"
                 else:
-                    Part_dict[u'max_cpus_per_node'] = self._record.max_cpus_per_node
+                    Part_dict[u'max_cpus_per_node'] = record.max_cpus_per_node
 
-                Part_dict[u'max_mem_per_cpu'] = self._record.max_mem_per_cpu
+                Part_dict[u'max_mem_per_cpu'] = record.max_mem_per_cpu
 
-                if self._record.max_nodes == slurm.INFINITE:
+                if record.max_nodes == slurm.INFINITE:
                     Part_dict[u'max_nodes'] = u"UNLIMITED"
                 else:
-                    Part_dict[u'max_nodes'] = self._record.max_nodes
+                    Part_dict[u'max_nodes'] = record.max_nodes
 
-                Part_dict[u'max_share'] = self._record.max_share
+                Part_dict[u'max_share'] = record.max_share
 
-                if self._record.max_time == slurm.INFINITE:
+                if record.max_time == slurm.INFINITE:
                     Part_dict[u'max_time'] = u"UNLIMITED"
                 else:
-                    Part_dict[u'max_time'] = self._record.max_time * 60
+                    Part_dict[u'max_time'] = record.max_time * 60
 
-                Part_dict[u'min_nodes'] = self._record.min_nodes
-                Part_dict[u'name'] = slurm.stringOrNone(self._record.name, '')
-                Part_dict[u'nodes'] = slurm.listOrNone(self._record.nodes, ',')
+                Part_dict[u'min_nodes'] = record.min_nodes
+                Part_dict[u'name'] = slurm.stringOrNone(record.name, '')
+                Part_dict[u'nodes'] = slurm.listOrNone(record.nodes, ',')
 
-                preempt_mode = self._record.preempt_mode
+                preempt_mode = record.preempt_mode
                 if preempt_mode == <uint16_t> slurm.NO_VAL:
                     preempt_mode = slurm.slurm_get_preempt_mode()
                 Part_dict[u'preempt_mode'] = slurm.slurm_preempt_mode_string(preempt_mode)
 
-                Part_dict[u'priority'] = self._record.priority
-                Part_dict[u'qos_char'] = slurm.stringOrNone(self._record.qos_char, '')
-                Part_dict[u'state'] = get_partition_state(self._record.state_up)
-                Part_dict[u'total_cpus'] = self._record.total_cpus
-                Part_dict[u'total_nodes'] = self._record.total_nodes
-                Part_dict[u'tres_fmt_str'] = slurm.stringOrNone(self._record.tres_fmt_str, '')
+                Part_dict[u'priority'] = record.priority
+                Part_dict[u'qos_char'] = slurm.stringOrNone(record.qos_char, '')
+                Part_dict[u'state'] = get_partition_state(record.state_up)
+                Part_dict[u'total_cpus'] = record.total_cpus
+                Part_dict[u'total_nodes'] = record.total_nodes
+                Part_dict[u'tres_fmt_str'] = slurm.stringOrNone(record.tres_fmt_str, '')
 
-                Partition[u"%s" % name] = Part_dict
+                self._PartDict[u"%s" % name] = Part_dict
+            slurm.slurm_free_partition_info_msg(self._Partition_ptr)
+            self._Partition_ptr = NULL
+            return self._PartDict
+        else:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
-        self._PartDict = Partition
 
     cpdef int update(self, dict Partition_dict):
         u"""Update a slurm partition.
