@@ -2038,6 +2038,19 @@ cdef class job:
             Job_dict[u'num_cpus'] = self._record.num_cpus
             Job_dict[u'num_nodes'] = self._record.num_nodes
             Job_dict[u'partition'] = self._record.partition
+
+            if self._record.pn_min_memory & MEM_PER_CPU:
+                self._record.pn_min_memory &= (~MEM_PER_CPU)
+                Job_dict[u'mem_per_cpu'] = True
+                Job_dict[u'min_memory_cpu'] = self._record.pn_min_memory
+                Job_dict[u'mem_per_node'] = False
+                Job_dict[u'min_memory_node'] = None
+            else:
+                Job_dict[u'mem_per_cpu'] = False
+                Job_dict[u'min_memory_cpu'] = None
+                Job_dict[u'mem_per_node'] = True
+                Job_dict[u'min_memory_node'] = self._record.pn_min_memory
+
             Job_dict[u'pn_min_memory'] = self._record.pn_min_memory
             Job_dict[u'pn_min_cpus'] = self._record.pn_min_cpus
             Job_dict[u'pn_min_tmp_disk'] = self._record.pn_min_tmp_disk
