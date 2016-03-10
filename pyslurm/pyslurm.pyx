@@ -2132,6 +2132,9 @@ cdef class job:
             if self._record.time_limit == slurm.NO_VAL:
                 Job_dict[u'time_limit'] = u"Partition_Limit"
                 Job_dict[u'time_limit_str'] = u"Partition_Limit"
+            elif self._record.time_limit == slurm.INFINITE:
+                Job_dict[u'time_limit'] = u"UNLIMITED"
+                Job_dict[u'time_limit_str'] = u"UNLIMITED"
             else:
                 Job_dict[u'time_limit'] = self._record.time_limit
                 Job_dict[u'time_limit_str'] = mins2time_str(
@@ -2361,11 +2364,10 @@ cdef mins2time_str(uint32_t time):
     :rtype: `str`
     """
     cdef:
-        char *time_str
         long days, hours, minutes, seconds
 
     if time == slurm.INFINITE:
-        time_str = "UNLIMITED"
+        return u"UNLIMITED"
     else:
         seconds = 0
         minutes = time % 60
