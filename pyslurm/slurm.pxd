@@ -393,6 +393,9 @@ cdef extern from 'slurm/slurm.h' nogil:
         NODE_STATE_END
 
     uint16_t SHOW_ALL
+    uint16_t SHOW_DETAIL
+    uint16_t SHOW_DETAIL2
+    uint16_t SHOW_MIXED
 
     ctypedef enum acct_energy_type:
         ENERGY_DATA_JOULES_TASK
@@ -1720,7 +1723,6 @@ cdef extern from 'slurm/slurm.h' nogil:
     #
     # Job/Node Info Selection
     #
-
     cdef extern int slurm_get_select_jobinfo (dynamic_plugin_data_t *, int, void *)
     cdef extern int slurm_get_select_nodeinfo (dynamic_plugin_data_t *,
                                                uint32_t, uint32_t, void *)

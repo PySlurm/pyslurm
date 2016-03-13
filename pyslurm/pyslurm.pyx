@@ -1783,7 +1783,7 @@ cdef class job:
         # SHOW_DETAIL flag notably make slurm allocate and fill
         # (job_resources_t *)job_resrcs structure member of
         # slurm_job_info_t, with all resources details of the job.
-        self._ShowFlags = SHOW_DETAIL
+        self._ShowFlags = slurm.SHOW_DETAIL
 
     def __dealloc__(self):
         pass
@@ -1859,7 +1859,7 @@ cdef class job:
             int rc
 
         rc = slurm.slurm_load_job(&self._job_ptr, jobid,
-                                  SHOW_DETAIL | SHOW_DETAIL2)
+                                  slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2)
 
         if rc == slurm.SLURM_SUCCESS:
             return self.get_job_ptr().values()[0]
@@ -1884,7 +1884,7 @@ cdef class job:
 
         uid = getpwnam(user)[2]
         rc = slurm.slurm_load_job_user(&self._job_ptr, uid,
-                                       SHOW_DETAIL | SHOW_DETAIL2)
+                                       slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2)
 
         if rc == slurm.SLURM_SUCCESS:
             return self.get_job_ptr()
@@ -1906,7 +1906,7 @@ cdef class job:
             int rc
 
         rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr,
-                                   SHOW_DETAIL | SHOW_DETAIL2)
+                                   slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2)
 
         if rc == slurm.SLURM_SUCCESS:
             return self.get_job_ptr()
@@ -2290,10 +2290,12 @@ cdef class job:
             int rc
             int apiError
 
-        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, SHOW_ALL)
+        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr,
+                                   slurm.SHOW_ALL)
 
         if rc == slurm.SLURM_SUCCESS:
-            slurm.slurm_print_job_info_msg(slurm.stdout, self._job_ptr, oneLiner)
+            slurm.slurm_print_job_info_msg(slurm.stdout, self._job_ptr,
+                                           oneLiner)
             slurm.slurm_free_job_info_msg(self._job_ptr)
             self._job_ptr = NULL
         else:
@@ -2541,7 +2543,8 @@ cdef class node:
             dict Host_dict
 
         if nodeID == NULL:
-            rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr, SHOW_ALL)
+            rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr,
+                                       slurm.SHOW_ALL)
         else:
             rc = slurm.slurm_load_node_single(&self._Node_ptr, nodeID, self._ShowFlags)
 
@@ -2713,7 +2716,8 @@ cdef class node:
             int rc
             int apiError
 
-        rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr, SHOW_ALL)
+        rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr,
+                                   slurm.SHOW_ALL)
 
         if rc == slurm.SLURM_SUCCESS:
             slurm.slurm_print_node_info_msg(slurm.stdout, self._Node_ptr, oneLiner)
@@ -2877,7 +2881,7 @@ cdef class jobstep:
             slurm.time_t last_time = 0
             dict Steps = {}
             dict StepDict = {}
-            uint16_t ShowFlags = self._ShowFlags ^ SHOW_ALL
+            uint16_t ShowFlags = self._ShowFlags ^ slurm.SHOW_ALL
             int i = 0
             int errCode = slurm.slurm_get_job_steps(last_time, self.JobID,
                                                     self.StepID, &job_step_info_ptr,
