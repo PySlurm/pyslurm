@@ -1882,7 +1882,11 @@ cdef class job:
             int rc
             uint32_t uid
 
-        uid = getpwnam(user)[2]
+        try:
+            uid = getpwnam(user)[2]
+        except KeyError:
+            raise KeyError("user " + user + " not found")
+
         rc = slurm.slurm_load_job_user(&self._job_ptr, uid,
                                        slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2)
 
@@ -4168,7 +4172,10 @@ cdef class statistics:
             rpc_user_stats = {}
 
             for i in range(self._buf.rpc_user_size):
-                rpc_user = getpwuid(self._buf.rpc_user_id[i])[0]
+                try:
+                    rpc_user = getpwuid(self._buf.rpc_user_id[i])[0]
+                except KeyError:
+                    rpc_user = str(self._buf.rpc_user_id[i])
                 rpc_user_stats[rpc_user] = {}
                 rpc_user_stats[rpc_user][u"id"] = self._buf.rpc_user_id[i]
                 rpc_user_stats[rpc_user][u"count"] = self._buf.rpc_user_cnt[i]
