@@ -896,14 +896,31 @@ cdef class partition:
                 Part_dict[u'billing_weights_str'] = slurm.stringOrNone(
                     record.billing_weights_str, '')
                 Part_dict[u'cr_type'] = record.cr_type
-                Part_dict[u'def_mem_per_cpu'] = record.def_mem_per_cpu
+
+                if record.def_mem_per_cpu & slurm.MEM_PER_CPU:
+                    if record.def_mem_per_cpu == slurm.MEM_PER_CPU:
+                        Part_dict[u'def_mem_per_cpu'] = u"UNLIMITED"
+                        Part_dict[u'def_mem_per_node'] = None
+                    else:
+                        Part_dict[u'def_mem_per_cpu'] = record.def_mem_per_cpu & (~slurm.MEM_PER_CPU)
+                        Part_dict[u'def_mem_per_node'] = None
+                elif record.def_mem_per_cpu == 0:
+                    Part_dict[u'def_mem_per_cpu'] = None
+                    Part_dict[u'def_mem_per_node'] = u"UNLIMITED"
+                else:
+                    Part_dict[u'def_mem_per_cpu'] = None
+                    Part_dict[u'def_mem_per_node'] = record.def_mem_per_cpu
 
                 if record.default_time == slurm.INFINITE:
                     Part_dict[u'default_time'] = u"UNLIMITED"
+                    Part_dict[u'default_time_str'] = u"UNLIMITED"
                 elif record.default_time == slurm.NO_VAL:
                     Part_dict[u'default_time'] = u"NONE"
+                    Part_dict[u'default_time_str'] = u"NONE"
                 else:
                     Part_dict[u'default_time'] = record.default_time * 60
+                    Part_dict[u'default_time_str'] = secs2time_str(
+                        record.default_time * 60)
 
                 Part_dict[u'flags'] = get_partition_mode(record.flags,
                                                          record.max_share)
@@ -914,7 +931,19 @@ cdef class partition:
                 else:
                     Part_dict[u'max_cpus_per_node'] = record.max_cpus_per_node
 
-                Part_dict[u'max_mem_per_cpu'] = record.max_mem_per_cpu
+                if record.max_mem_per_cpu & slurm.MEM_PER_CPU:
+                    if record.max_mem_per_cpu == slurm.MEM_PER_CPU:
+                        Part_dict[u'max_mem_per_cpu'] = u"UNLIMITED"
+                        Part_dict[u'max_mem_per_node'] = None
+                    else:
+                        Part_dict[u'max_mem_per_cpu'] = record.max_mem_per_cpu & (~slurm.MEM_PER_CPU)
+                        Part_dict[u'max_mem_per_node'] = None
+                elif record.max_mem_per_cpu == 0:
+                    Part_dict[u'max_mem_per_cpu'] = None
+                    Part_dict[u'max_mem_per_node'] = u"UNLIMITED"
+                else:
+                    Part_dict[u'max_mem_per_cpu'] = None
+                    Part_dict[u'max_mem_per_node'] = record.max_mem_per_cpu
 
                 if record.max_nodes == slurm.INFINITE:
                     Part_dict[u'max_nodes'] = u"UNLIMITED"
@@ -925,8 +954,10 @@ cdef class partition:
 
                 if record.max_time == slurm.INFINITE:
                     Part_dict[u'max_time'] = u"UNLIMITED"
+                    Part_dict[u'max_time_str'] = u"UNLIMITED"
                 else:
                     Part_dict[u'max_time'] = record.max_time * 60
+                    Part_dict[u'max_time_str'] = secs2time_str(record.max_time * 60)
 
                 Part_dict[u'min_nodes'] = record.min_nodes
                 Part_dict[u'name'] = slurm.stringOrNone(record.name, '')
@@ -2043,8 +2074,8 @@ cdef class job:
             Job_dict[u'num_nodes'] = self._record.num_nodes
             Job_dict[u'partition'] = self._record.partition
 
-            if self._record.pn_min_memory & MEM_PER_CPU:
-                self._record.pn_min_memory &= (~MEM_PER_CPU)
+            if self._record.pn_min_memory & slurm.MEM_PER_CPU:
+                self._record.pn_min_memory &= (~slurm.MEM_PER_CPU)
                 Job_dict[u'mem_per_cpu'] = True
                 Job_dict[u'min_memory_cpu'] = self._record.pn_min_memory
                 Job_dict[u'mem_per_node'] = False

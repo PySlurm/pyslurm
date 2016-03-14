@@ -397,6 +397,8 @@ cdef extern from 'slurm/slurm.h' nogil:
     uint16_t SHOW_DETAIL2
     uint16_t SHOW_MIXED
 
+    uint32_t MEM_PER_CPU
+
     ctypedef enum acct_energy_type:
         ENERGY_DATA_JOULES_TASK
         ENERGY_DATA_STRUCT
