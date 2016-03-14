@@ -961,7 +961,7 @@ cdef class partition:
 
                 Part_dict[u'min_nodes'] = record.min_nodes
                 Part_dict[u'name'] = slurm.stringOrNone(record.name, '')
-                Part_dict[u'nodes'] = slurm.listOrNone(record.nodes, ',')
+                Part_dict[u'nodes'] = slurm.stringOrNone(record.nodes, ',')
 
                 preempt_mode = record.preempt_mode
                 if preempt_mode == <uint16_t> slurm.NO_VAL:
