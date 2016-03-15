@@ -15,7 +15,7 @@ def display(steps):
         for step, step_dict in job_step.iteritems():
 
             print("\tStep: {0}".format(step))
-                    for task, value in sorted(step_dict.iteritems()):
+            for task, value in sorted(step_dict.iteritems()):
 
                 if task in date_fields:
 
