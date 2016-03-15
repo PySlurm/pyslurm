@@ -2935,16 +2935,29 @@ cdef class jobstep:
 
                 Steps[job_id] = {}
                 Step_dict = {}
-                Step_dict[u'array_job_id'] = job_step_info_ptr.job_steps[i].array_job_id
-                Step_dict[u'array_task_id'] = job_step_info_ptr.job_steps[i].array_task_id
+
+                if job_step_info_ptr.job_steps[i].array_job_id:
+                    Step_dict[u'array_job_id'] = job_step_info_ptr.job_steps[i].array_job_id
+                    Step_dict[u'array_task_id'] = job_step_info_ptr.job_steps[i].array_task_id
+                else:
+                    Step_dict[u'array_job_id'] = None
+                    Step_dict[u'array_task_id'] = None
+
                 Step_dict[u'ckpt_dir'] = job_step_info_ptr.job_steps[i].ckpt_dir
                 Step_dict[u'ckpt_interval'] = job_step_info_ptr.job_steps[i].ckpt_interval
+
+                Step_dict[u'dist'] = slurm.stringOrNone(
+                    slurm.slurm_step_layout_type_name(<slurm.task_dist_states_t>job_step_info_ptr.job_steps[i].task_dist), ''
+                )
+
                 Step_dict[u'gres'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].gres, '')
                 Step_dict[u'name'] = job_step_info_ptr.job_steps[i].name
                 Step_dict[u'network'] = slurm.stringOrNone(
                     job_step_info_ptr.job_steps[i].network, '')
 
-                Step_dict[u'nodes'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].nodes, '')
+                Step_dict[u'nodes'] = slurm.stringOrNone(
+                    job_step_info_ptr.job_steps[i].nodes, '')
+
                 Step_dict[u'num_cpus'] = job_step_info_ptr.job_steps[i].num_cpus
                 Step_dict[u'num_tasks'] = job_step_info_ptr.job_steps[i].num_tasks
                 Step_dict[u'partition'] = job_step_info_ptr.job_steps[i].partition
@@ -2956,7 +2969,15 @@ cdef class jobstep:
                 Step_dict[u'state'] = slurm.slurm_job_state_string(
                     job_step_info_ptr.job_steps[i].state)
 
-                Step_dict[u'time_limit'] = job_step_info_ptr.job_steps[i].time_limit
+                if job_step_info_ptr.job_steps[i].time_limit == slurm.INFINITE:
+                    Step_dict[u'time_limit'] = u"UNLIMITED"
+                    Step_dict[u'time_limit_str'] = u"UNLIMITED"
+                else:
+                    Step_dict[u'time_limit'] = job_step_info_ptr.job_steps[i].time_limit
+                    Step_dict[u'time_limit_str'] = secs2time_str(
+                        job_step_info_ptr.job_steps[i].time_limit)
+
+                Step_dict[u'tres_alloc_str'] = job_step_info_ptr.job_steps[i].tres_alloc_str
                 Step_dict[u'user_id'] = job_step_info_ptr.job_steps[i].user_id
 
                 Steps[job_id][step_id] = Step_dict
@@ -2973,12 +2994,10 @@ cdef class jobstep:
         :returns: List of job step layout.
         :rtype: `list`
         """
-        return self.__layout(JobID, StepID)
-
-    cpdef __layout(self, uint32_t JobID, uint32_t StepID):
         cdef:
             slurm.slurm_step_layout_t *old_job_step_ptr
             int i = 0, j = 0, Node_cnt = 0
+            char *node
 
             dict Layout = {}
             list Nodes = [], Node_list = [], Tids_list = []
@@ -2995,16 +3014,20 @@ cdef class jobstep:
             Layout[u'plane_size'] = old_job_step_ptr.plane_size
             Layout[u'task_cnt'] = old_job_step_ptr.task_cnt
             Layout[u'task_dist'] = old_job_step_ptr.task_dist
+            Layout[u'task_dist'] = slurm.stringOrNone(
+                    slurm.slurm_step_layout_type_name(<slurm.task_dist_states_t>old_job_step_ptr.task_dist), ''
+            )
 
-            Nodes = Layout[u'node_list'].split(',')
-            for i in range(Node_cnt):
+            hl = hostlist()
+            hl.create(old_job_step_ptr.node_list)
+            Nodes = hl.get_list()
+            hl.destroy()
 
+            for i, node in enumerate(Nodes):
                 Tids_list = []
                 for j in range(old_job_step_ptr.tasks[i]):
-
                     Tids_list.append(old_job_step_ptr.tids[i][j])
-
-                Node_list.append([Nodes[i], Tids_list])
+                Node_list.append([node, Tids_list])
 
             Layout[u'tasks'] = Node_list
 
