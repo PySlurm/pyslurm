@@ -20,15 +20,15 @@ from __future__ import print_function
 import pyslurm
 
 Node_dict = {
-		'node_names': 'bps000',
-		'node_state': pyslurm.NODE_STATE_DRAIN, 
-		'reason': 'API test'
-	}
+    'node_names': 'bps000',
+    'node_state': pyslurm.NODE_STATE_DRAIN, 
+    'reason': 'API test'
+    }
 
 try:
-	a = pyslurm.node()
-	rc = a.update(Node_dict)
+    a = pyslurm.node()
+    rc = a.update(Node_dict)
 except ValueError as e:
-	print("Node Update error - {0}".format(e.args[0]))
+    print("Node Update error - {0}".format(e.args[0]))
 else:
-	print("Node {0} successfully updated".format(Node_dict["node_names"]))
+    print("Node {0} successfully updated".format(Node_dict["node_names"]))

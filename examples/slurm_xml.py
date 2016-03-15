@@ -16,7 +16,7 @@ hosts = socket.gethostbyaddr(socket.gethostname())[1]
 my_host = hosts[0]
 
 if "makalu" not in my_host:
-	sys.exit()
+    sys.exit()
 
 now = int(time.time())
 #lock_file = "/var/tmp/slurm_xml.lck"
@@ -47,25 +47,25 @@ jobs = a.get()
 xml_file.write("\t<jobs>\n")
 for key, value in jobs.iteritems():
 
-	xml_file.write('\t\t<job>\n')
-	xml_file.write("\t\t\t<id>{0}</id>\n".format(key))
-	for job_key in sorted(value.iterkeys()):
-		xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(job_key, value[job_key], job_key))
+    xml_file.write('\t\t<job>\n')
+    xml_file.write("\t\t\t<id>{0}</id>\n".format(key))
+    for job_key in sorted(value.iterkeys()):
+        xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(job_key, value[job_key], job_key))
 
-	b = pyslurm.jobstep(key, 0, 0)
-	steps = b.get()
-	for job, job_step in sorted(steps.iteritems()):
-		xml_file.write('\t\t\t<jobstep>\n')
+    b = pyslurm.jobstep(key, 0, 0)
+    steps = b.get()
+    for job, job_step in sorted(steps.iteritems()):
+        xml_file.write('\t\t\t<jobstep>\n')
 
-		for step in sorted(job_step.iterkeys()): 
-			xml_file.write("\t\t\t\t<id>{0}</id>\n".format(step))
-			step_info = pyslurm.slurm_job_step_layout_get(int(job), int(step))
-			for task in sorted(step_info.iterkeys()):
-				xml_file.write('\t\t\t\t<{0}>{1}</{2}>\n'.format(task, step_info[task], task))
+        for step in sorted(job_step.iterkeys()): 
+            xml_file.write("\t\t\t\t<id>{0}</id>\n".format(step))
+            step_info = pyslurm.slurm_job_step_layout_get(int(job), int(step))
+            for task in sorted(step_info.iterkeys()):
+                xml_file.write('\t\t\t\t<{0}>{1}</{2}>\n'.format(task, step_info[task], task))
 
-		xml_file.write('\t\t\t</jobstep>\n')
-		
-	xml_file.write('\t\t</job>\n')
+        xml_file.write('\t\t\t</jobstep>\n')
+        
+    xml_file.write('\t\t</job>\n')
 
 xml_file.write("\t</jobs>\n")
 
@@ -79,19 +79,19 @@ node_dict = a.get()
 xml_file.write( "\t<nodes>\n")
 for key, value in node_dict.iteritems():
 
-	xml_file.write('\t\t<node>\n')
-	xml_file.write("\t\t\t<id>{0}</id>\n".format(key))
-	for part_key in sorted(value.iterkeys()):
-		xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(part_key, value[part_key], part_key))
+    xml_file.write('\t\t<node>\n')
+    xml_file.write("\t\t\t<id>{0}</id>\n".format(key))
+    for part_key in sorted(value.iterkeys()):
+        xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(part_key, value[part_key], part_key))
 
-	if primary and key in primary:
-		xml_file.write("\t\t\t<controller>Primary</controller>\n")
-	elif backup and key in backup: 
-		xml_file.write("\t\t\t<controller>backup</controller>\n")
-	else:
-		xml_file.write("\t\t\t<controller></controller>\n")
+    if primary and key in primary:
+        xml_file.write("\t\t\t<controller>Primary</controller>\n")
+    elif backup and key in backup: 
+        xml_file.write("\t\t\t<controller>backup</controller>\n")
+    else:
+        xml_file.write("\t\t\t<controller></controller>\n")
 
-	xml_file.write('\t\t</node>\n')
+    xml_file.write('\t\t</node>\n')
 xml_file.write( "\t</nodes>\n")
 
 #
@@ -104,11 +104,11 @@ part_dict = a.get()
 xml_file.write("\t<partitions>\n")
 for key, value in part_dict.iteritems():
 
-	xml_file.write('\t\t<partition>\n')
-	for part_key, part_value in value.iteritems():
-		xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(part_key, part_value, part_key))
+    xml_file.write('\t\t<partition>\n')
+    for part_key, part_value in value.iteritems():
+        xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(part_key, part_value, part_key))
 
-	xml_file.write('\t\t</partition>\n')
+    xml_file.write('\t\t</partition>\n')
 
 xml_file.write("\t</partitions>\n")
 

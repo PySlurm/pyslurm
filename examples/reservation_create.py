@@ -21,38 +21,38 @@ res_dict["duration"] = 600
 res_dict["name"] = "res_test"
 
 try:
-	resid = a.create(res_dict)
+    resid = a.create(res_dict)
 except ValueError as e:
-        print("Reservation creation failed - {0}".format(e.args[0]))
+    print("Reservation creation failed - {0}".format(e.args[0]))
 else:
-	print("Success - Created reservation {0}\n".format(resid))
+    print("Success - Created reservation {0}\n".format(resid))
 
-	res_dict = a.get()
-	if res_dict.has_key(resid):
+    res_dict = a.get()
+    if res_dict.has_key(resid):
 
-		date_fields = [ 'end_time', 'start_time' ]
+        date_fields = [ 'end_time', 'start_time' ]
 
-		value = res_dict[resid]
-		print("Res ID : {0}".format(resid))
-		for res_key in sorted(value.iterkeys()):
+        value = res_dict[resid]
+        print("Res ID : {0}".format(resid))
+        for res_key in sorted(value.iterkeys()):
 
-			if res_key in date_fields:
+            if res_key in date_fields:
 
-				if value[res_key] == 0:
-					print("\t{0:<20} : N/A".format(res_key))
-				else:
-					ddate = pyslurm.epoch2date(value[res_key])
-					print("\t{0:<20} : {1}".format(res_key, ddate))
-			else:
-					print("\t{0:<20} : {1}".format(res_key, value[res_key]))
+                if value[res_key] == 0:
+                    print("\t{0:<20} : N/A".format(res_key))
+                else:
+                    ddate = pyslurm.epoch2date(value[res_key])
+                    print("\t{0:<20} : {1}".format(res_key, ddate))
+            else:
+                    print("\t{0:<20} : {1}".format(res_key, value[res_key]))
 
- 		print('{0:-^80}'.format(''))
+        print('{0:-^80}'.format(''))
 
-	else:
-		print("No reservation {0} found !".format(resid))
-		sys.exit(-1)
+    else:
+        print("No reservation {0} found !".format(resid))
+        sys.exit(-1)
 
-	print()
- 	print('{0:-^80}'.format(' All Reservations '))
-	a.print_reservation_info_msg()
- 	print('{0:-^80}'.format(''))
+    print()
+    print('{0:-^80}'.format(' All Reservations '))
+    a.print_reservation_info_msg()
+    print('{0:-^80}'.format(''))

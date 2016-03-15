@@ -6,12 +6,12 @@ import pyslurm
 from time import gmtime, strftime
 
 try:
-	a = pyslurm.topology()
-	b = a.get()
+    a = pyslurm.topology()
+    b = a.get()
 except ValueError as e:
-	print("Topology error - {0}".format(e.args[0]))
+    print("Topology error - {0}".format(e.args[0]))
 else:
-	if not b:
-		print("No toplogy found")
-	else:
-		print(b)
+    if not b:
+        print("No toplogy found")
+    else:
+        print(b)

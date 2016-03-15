@@ -1,13 +1,10 @@
 # Ignore Build Directory #
-
 build/
 
 # Ignore Docs Directory #
-
 #doc/
 
-# Igmore Temporary Build Files #
-
+# Ignore Temporary Build Files #
 pyslurm/pyslurm.c
 pyslurm/bluegene.pxi
 pyslurm/slurm_version.pxi
@@ -16,3 +13,7 @@ pyslurm/*.pyc
 pyslurm/*.pyx~
 pyslurm/*.pxi~
 pyslurm/*.pxd~
+pyslurm/*.so
+
+# Ignore vim swap files
+*.swp
