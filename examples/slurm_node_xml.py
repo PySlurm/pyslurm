@@ -112,7 +112,7 @@ if __name__ == '__main__':
     if not options.output:
         stdout_orig = sys.stdout
         sys.stdout = open(node_file, 'w')
-        
+
     now = int(time.time())
     sys.stdout.write('<?xml version="1.0" encoding="iso-8859-1" ?>\n')
     sys.stdout.write("<node>\n")
@@ -135,9 +135,9 @@ if __name__ == '__main__':
     if a:
         for host, data in a.iteritems():
             sys.stdout.write("\t<slurmd>\n")
-                    for key, value in data.iteritems():
+            for key, value in data.iteritems():
                 sys.stdout.write("\t\t<{0}>{1}</{0}>\n".format(key,value,key))
-            sys.stdout.write("\t</slurmd>\n")
+                sys.stdout.write("\t</slurmd>\n")
 
     a = pyslurm.job()
     jobs = a.get()

@@ -8,7 +8,7 @@ from pwd import getpwnam, getpwuid
 from time import gmtime, strftime, sleep
 
 def list_users(job_dict):
- 
+
     users = []
     if job_dict:
 
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         pyslurmjob = pyslurm.job()
         jobs = pyslurmjob.get()
     except ValueError as e:
-            print("Job query failed - {0}".format(e.args[0]))
+        print("Job query failed - {0}".format(e.args[0]))
         sys.exit(1)
 
     users = list_users(jobs)

@@ -20,6 +20,6 @@ if old_dlopen_flags:
     if hasattr(sys, "setdlopenflags"):
         sys.setdlopenflags(old_dlopen_flags)
 
-__version__ = "15.08.2"
+__version__ = "15.08.8"
 def version():
     return __version__

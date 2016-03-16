@@ -2997,7 +2997,6 @@ cdef class jobstep:
         cdef:
             slurm.slurm_step_layout_t *old_job_step_ptr
             int i = 0, j = 0, Node_cnt = 0
-            char *node
 
             dict Layout = {}
             list Nodes = [], Node_list = [], Tids_list = []
