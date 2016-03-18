@@ -2943,24 +2943,28 @@ cdef class jobstep:
                     Step_dict[u'array_job_id'] = None
                     Step_dict[u'array_task_id'] = None
 
-                Step_dict[u'ckpt_dir'] = job_step_info_ptr.job_steps[i].ckpt_dir
+                Step_dict[u'ckpt_dir'] = slurm.stringOrNone(
+                    job_step_info_ptr.job_steps[i].ckpt_dir, '')
                 Step_dict[u'ckpt_interval'] = job_step_info_ptr.job_steps[i].ckpt_interval
 
                 Step_dict[u'dist'] = slurm.stringOrNone(
                     slurm.slurm_step_layout_type_name(<slurm.task_dist_states_t>job_step_info_ptr.job_steps[i].task_dist), ''
                 )
 
-                Step_dict[u'gres'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].gres, '')
-                Step_dict[u'name'] = job_step_info_ptr.job_steps[i].name
+                Step_dict[u'gres'] = slurm.stringOrNone(
+                    job_step_info_ptr.job_steps[i].gres, '')
+                Step_dict[u'name'] = slurm.stringOrNone(
+                    job_step_info_ptr.job_steps[i].name, '')
                 Step_dict[u'network'] = slurm.stringOrNone(
                     job_step_info_ptr.job_steps[i].network, '')
-
                 Step_dict[u'nodes'] = slurm.stringOrNone(
                     job_step_info_ptr.job_steps[i].nodes, '')
 
                 Step_dict[u'num_cpus'] = job_step_info_ptr.job_steps[i].num_cpus
                 Step_dict[u'num_tasks'] = job_step_info_ptr.job_steps[i].num_tasks
-                Step_dict[u'partition'] = job_step_info_ptr.job_steps[i].partition
+
+                Step_dict[u'partition'] = slurm.stringOrNone(
+                    job_step_info_ptr.job_steps[i].partition, '')
                 Step_dict[u'resv_ports'] = slurm.stringOrNone(
                     job_step_info_ptr.job_steps[i].resv_ports, '')
 
@@ -2977,7 +2981,9 @@ cdef class jobstep:
                     Step_dict[u'time_limit_str'] = secs2time_str(
                         job_step_info_ptr.job_steps[i].time_limit)
 
-                Step_dict[u'tres_alloc_str'] = job_step_info_ptr.job_steps[i].tres_alloc_str
+                Step_dict[u'tres_alloc_str'] = slurm.stringOrNone(
+                    job_step_info_ptr.job_steps[i].tres_alloc_str, '')
+
                 Step_dict[u'user_id'] = job_step_info_ptr.job_steps[i].user_id
 
                 Steps[job_id][step_id] = Step_dict
