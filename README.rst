@@ -21,9 +21,9 @@ Pre-requistes
 This release has been tested with :
 
     * Slurm 15.08.8 Cython 0.15.1 and Python 2.7.5
-    * Slurm 15.08.8 Cython 0.23.4 and Python 2.7.5
+    * Slurm 15.08.8 Cython 0.23.5 and Python 2.7.5
     * Slurm 15.08.9 Cython 0.15.1 and Python 2.7.5
-    * Slurm 15.08.9 Cython 0.23.4 and Python 2.7.5
+    * Slurm 15.08.9 Cython 0.23.5 and Python 2.7.5
 
 Installation
 ************
