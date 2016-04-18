@@ -2005,8 +2005,8 @@ cdef class job:
             Job_dict[u'assoc_id'] = self._record.assoc_id
             Job_dict[u'batch_flag'] = self._record.batch_flag
             Job_dict[u'batch_host'] = slurm.stringOrNone(self._record.batch_host, '')
-#            Job_dict[u'batch_script'] = slurm.stringOrNone(
-#                self._record.batch_script, '')
+            Job_dict[u'batch_script'] = slurm.stringOrNone(
+                self._record.batch_script, '')
 
             Job_dict[u'billable_tres'] = self._record.billable_tres
             Job_dict[u'bitflags'] = self._record.bitflags
