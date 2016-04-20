@@ -3332,7 +3332,11 @@ cdef class node:
 			alloc_cpus = err_cpus = total_used = 0
 			cpus_per_node = 1
 
-			name = self._record.name
+			name = slurm.stringOrNone(self._record.name, '')
+			if name is None:
+				name = slurm.stringOrNone(self._record.node_hostname, '')
+			if name is None:
+				name = slurm.stringOrNone(self._record.node_addr, 'node-noname')
 			node_state = self._record.node_state
 			
 			Host_dict['arch'] = slurm.stringOrNone(self._record.arch, '')
