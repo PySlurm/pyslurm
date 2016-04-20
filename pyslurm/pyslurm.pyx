@@ -2358,7 +2358,9 @@ cdef class node:
 
 			# Enhanced node state - src/api/node_info.c
 
-			comp_str = comp_str = drain_str = power_str = ''
+			comp_str = ''
+			drain_str = ''
+			power_str = ''
 
 			node_state = self._Node_ptr.node_array[i].node_state
 			my_state = node_state
