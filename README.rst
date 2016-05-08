@@ -9,7 +9,7 @@ Overview
 
 Currently `PySlurm` is under development to move from it's thin layer on top of the Slurm C API to an object orientated interface.
 
-This release is based on the Slurm 15.08.8, 15.08.9 and 15.08.10 API.
+This release is based on the Slurm API versions 15.08.8 thru 15.08.11.
 
 Pre-requistes
 *************
@@ -18,12 +18,11 @@ Pre-requistes
 * [Python] http://www.python.org
 * [Cython] http://www.cython.org
 
-This release has been tested with :
+PySlurm has been tested with:
 
-    * Slurm 15.08.8 Cython 0.15.1 and Python 2.7.5
-    * Slurm 15.08.8 Cython 0.24 and Python 2.7.5
-    * Slurm 15.08.9 Cython 0.15.1 and Python 2.7.5
-    * Slurm 15.08.9 Cython 0.24 and Python 2.7.5
+    * Cython 0.15.1, 0.19.2, and 0.24
+    * Python 2.6 and 2.7
+    * Slurm 15.08.8 thru 15.08.11
 
 Installation
 ************
