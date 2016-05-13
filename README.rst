@@ -1,5 +1,5 @@
 ***********************************
-PySlurm: Slurm interface for Python
+PySlurm: Slurm Interface for Python
 ***********************************
 
 :Authors: Mark Roberts <mark@gingergeeks.co.uk> and Giovanni Torres <giovanni.torres@gmail.com>
@@ -67,7 +67,7 @@ and can be regenerated at any time :
     * make clean
     * make html
 
-Download
-********
+Help
+****
 
-The source code is available on `GitHub <http://github.com/gingergeeks/pyslurm>`_.
+Ask questions on the `pyslurm group <https://groups.google.com/forum/#!forum/pyslurm>`_.
