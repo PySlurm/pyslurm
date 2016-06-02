@@ -2502,7 +2502,7 @@ cdef class node:
 
     def __cinit__(self):
         self._Node_ptr = NULL
-        self._ShowFlags = 0
+        self._ShowFlags = slurm.SHOW_DETAIL
         self._lastUpdate = 0
 
     def __dealloc__(self):
@@ -2584,9 +2584,10 @@ cdef class node:
 
         if nodeID == NULL:
             rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr,
-                                       slurm.SHOW_ALL)
+                                       self._ShowFlags)
         else:
-            rc = slurm.slurm_load_node_single(&self._Node_ptr, nodeID, self._ShowFlags)
+            rc = slurm.slurm_load_node_single(&self._Node_ptr, nodeID,
+                                              self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             self._NodeDict = {}
@@ -2622,9 +2623,9 @@ cdef class node:
                 Host_dict[u'cpu_spec_list'] = slurm.listOrNone(record.cpu_spec_list, '')
                 Host_dict[u'features'] = slurm.listOrNone(record.features, '')
                 Host_dict[u'free_mem'] = record.free_mem
-                Host_dict[u'gres'] = slurm.listOrNone(record.gres, '')
+                Host_dict[u'gres'] = slurm.listOrNone(record.gres, ',')
                 Host_dict[u'gres_drain'] = slurm.listOrNone(record.gres_drain, '')
-                Host_dict[u'gres_used'] = slurm.listOrNone(record.gres_used, '')
+                Host_dict[u'gres_used'] = slurm.listOrNone(record.gres_used, ',')
                 Host_dict[u'mem_spec_limit'] = record.mem_spec_limit
                 Host_dict[u'name'] = slurm.stringOrNone(record.name, '')
                 Host_dict[u'node_addr'] = slurm.stringOrNone(record.node_addr, '')
