@@ -968,7 +968,8 @@ cdef class partition:
                     preempt_mode = slurm.slurm_get_preempt_mode()
                 Part_dict[u'preempt_mode'] = slurm.slurm_preempt_mode_string(preempt_mode)
 
-                Part_dict[u'priority'] = record.priority
+                Part_dict[u'priority_job_factor'] = record.priority_job_factor
+                Part_dict[u'priority_tier'] = record.priority_tier
                 Part_dict[u'qos_char'] = slurm.stringOrNone(record.qos_char, '')
                 Part_dict[u'state'] = get_partition_state(record.state_up)
                 Part_dict[u'total_cpus'] = record.total_cpus
@@ -2141,7 +2142,6 @@ cdef class job:
                 Job_dict[u'shared'] = u"OK"
 
             Job_dict[u'show_flags'] = self._record.show_flags
-            Job_dict[u'sicp_mode'] = self._record.sicp_mode
             Job_dict[u'sockets_per_board'] = self._record.sockets_per_board
             Job_dict[u'sockets_per_node'] = self._record.sockets_per_node
             Job_dict[u'start_time'] = self._record.start_time
@@ -2622,10 +2622,17 @@ cdef class node:
                 Host_dict[u'cpu_load'] = record.cpu_load
                 Host_dict[u'cpu_spec_list'] = slurm.listOrNone(record.cpu_spec_list, '')
                 Host_dict[u'features'] = slurm.listOrNone(record.features, '')
+                Host_dict[u'features_active'] = slurm.listOrNone(record.features_act, '')
                 Host_dict[u'free_mem'] = record.free_mem
                 Host_dict[u'gres'] = slurm.listOrNone(record.gres, ',')
                 Host_dict[u'gres_drain'] = slurm.listOrNone(record.gres_drain, '')
                 Host_dict[u'gres_used'] = slurm.listOrNone(record.gres_used, ',')
+
+                if record.mcs_label == NULL:
+                    Host_dict[u'mcs_label'] = None
+                else:
+                    Host_dict[u'mcs_label'] = record.mcs_label
+                    
                 Host_dict[u'mem_spec_limit'] = record.mem_spec_limit
                 Host_dict[u'name'] = slurm.stringOrNone(record.name, '')
                 Host_dict[u'node_addr'] = slurm.stringOrNone(record.node_addr, '')
