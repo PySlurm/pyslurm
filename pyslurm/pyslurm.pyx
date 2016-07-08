@@ -2529,7 +2529,7 @@ cdef class node:
             list all_nodes
 
         rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr,
-                                   slurm.SHOW_ALL)
+                                   self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             all_nodes = []
@@ -2758,7 +2758,7 @@ cdef class node:
             int apiError
 
         rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr,
-                                   slurm.SHOW_ALL)
+                                   self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             slurm.slurm_print_node_info_msg(slurm.stdout, self._Node_ptr, oneLiner)
