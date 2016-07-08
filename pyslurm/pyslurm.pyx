@@ -2502,7 +2502,7 @@ cdef class node:
 
     def __cinit__(self):
         self._Node_ptr = NULL
-        self._ShowFlags = slurm.SHOW_DETAIL
+        self._ShowFlags = slurm.SHOW_ALL | slurm.SHOW_DETAIL
         self._lastUpdate = 0
 
     def __dealloc__(self):
@@ -2607,7 +2607,7 @@ cdef class node:
                 cpus_per_node = 1
 
                 if record.name is NULL:
-                    break
+                    continue
 
                 total_used = record.cpus
                 if (node_scaling):
