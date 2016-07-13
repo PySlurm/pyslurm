@@ -17,3 +17,6 @@ pyslurm/*.so
 
 # Ignore vim swap files
 *.swp
+
+# Ignore test pyc files
+tests/*.pyc
