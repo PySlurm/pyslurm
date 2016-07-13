@@ -54,7 +54,7 @@ cdef inline stringOrNone(char* value, value2):
         if value2 is '':
             return None
         return u"%s" % value2
-    return u"%s" % value.decode('utf-8')
+    return u"%s" % value.decode('utf-8', 'replace')
 
 cdef inline boolToString(int value):
     if value == 0:
