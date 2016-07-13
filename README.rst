@@ -18,11 +18,11 @@ Pre-requistes
 * [Python] http://www.python.org
 * [Cython] http://www.cython.org
 
-PySlurm has been tested with:
+This PySlurm branch has been tested with:
 
     * Cython 0.15.1, 0.19.2, and 0.24
     * Python 2.6 and 2.7
-    * Slurm 16.05.0
+    * Slurm 16.05.0 thru 16.05.1
 
 Installation
 ************
