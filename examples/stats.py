@@ -5,7 +5,6 @@ from __future__ import print_function
 def display(stats_dict):
 
     if stats_dict:
-
         print('{0:*^80}'.format(' Slurm Controller Statistics '))
         for key, value in stats_dict.iteritems():
             if key in ['bf_when_last_cycle', 'req_time', 'req_time_start']:
@@ -29,7 +28,6 @@ def display(stats_dict):
 
         print('{0:*^80}'.format(''))
     else:
-        
         print("No Stats found !")
 
 

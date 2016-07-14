@@ -33,5 +33,4 @@ if __name__ == "__main__":
     steps = a.get()
 
     if len(steps) > 0:
-
         display(steps)

@@ -23,7 +23,7 @@ def display(node_dict):
                         print("\t{0:<17} : {1}".format(part_key, ddate))
                 elif ('reason_uid' in part_key and value['reason'] is None):
                     print("\t{0:<17} : ".format(part_key))
-                else: 
+                else:
                     print("\t{0:<17} : {1}".format(part_key, value[part_key]))
 
             print('{0:*^80}'.format(''))
@@ -33,7 +33,6 @@ if __name__ == "__main__":
     import pyslurm
 
     try:
-
         Nodes = pyslurm.node()
         node_dict = Nodes.get()
 
@@ -45,7 +44,6 @@ if __name__ == "__main__":
             print("Node IDs - {0}".format(Nodes.ids()))
 
         else:
-    
             print("No Nodes found !")
 
     except ValueError as e:
