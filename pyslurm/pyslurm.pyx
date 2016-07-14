@@ -1811,10 +1811,7 @@ cdef class job:
     def __cinit__(self):
         self._job_ptr = NULL
         self._lastUpdate = 0
-        # SHOW_DETAIL flag notably make slurm allocate and fill
-        # (job_resources_t *)job_resrcs structure member of
-        # slurm_job_info_t, with all resources details of the job.
-        self._ShowFlags = slurm.SHOW_DETAIL
+        self._ShowFlags = slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2
 
     def __dealloc__(self):
         pass
@@ -1825,7 +1822,6 @@ cdef class job:
         :returns: epoch seconds
         :rtype: `integer`
         """
-
         return self._lastUpdate
 
     cpdef ids(self):
@@ -1841,7 +1837,7 @@ cdef class job:
             uint32_t i
             list all_jobs
 
-        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, slurm.SHOW_ALL)
+        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             all_jobs = []
@@ -1889,8 +1885,7 @@ cdef class job:
             int apiError
             int rc
 
-        rc = slurm.slurm_load_job(&self._job_ptr, jobid,
-                                  slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2)
+        rc = slurm.slurm_load_job(&self._job_ptr, jobid, self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             return self.get_job_ptr().values()[0]
@@ -1923,8 +1918,7 @@ cdef class job:
         else:
             uid = user
 
-        rc = slurm.slurm_load_job_user(&self._job_ptr, uid,
-                                       slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2)
+        rc = slurm.slurm_load_job_user(&self._job_ptr, uid, self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             return self.get_job_ptr()
@@ -1945,8 +1939,7 @@ cdef class job:
             int apiError
             int rc
 
-        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr,
-                                   slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2)
+        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             return self.get_job_ptr()
@@ -2330,8 +2323,7 @@ cdef class job:
             int rc
             int apiError
 
-        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr,
-                                   slurm.SHOW_ALL)
+        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             slurm.slurm_print_job_info_msg(slurm.stdout, self._job_ptr,
