@@ -1876,25 +1876,28 @@ cdef class job:
 
         return retList
 
-    cpdef find_id(self, uint32_t jobid):
-        u"""Retrieve single job ID data.
+    cpdef find_id(self, char *jobid_str):
+        u"""Retrieve job ID data.
 
-        This method calls slurm_load_job to get all job_table records
-        associated with a specific job.
+        This method calls slurm_xlate_job_id() to convert a jobid string to a
+        jobid int.  For example, a subjob of 123_4 would translate to 124.
+        Then, slurm_load_job() gets all job_table records associated with that
+        specific job. This works for single jobs and job arrays.
 
-        :param int jobID: Job id key string to search
-        :returns: Dictionary of values for given job id
-        :rtype: `dict`
+        :param str jobID: Job id key string to search
+        :returns: List of dictionary of values for given job id
+        :rtype: `list`
         """
         cdef:
             int apiError
             int rc
+            uint32_t jobid
 
-        rc = slurm.slurm_load_job(&self._job_ptr, jobid,
-                                  slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2)
+        jobid = slurm.slurm_xlate_job_id(jobid_str)
+        rc = slurm.slurm_load_job(&self._job_ptr, jobid, self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
-            return self.get_job_ptr().values()[0]
+            return self.get_job_ptr().values()
         else:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.slurm_strerror(apiError), apiError)
