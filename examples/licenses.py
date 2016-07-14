@@ -5,7 +5,6 @@ from __future__ import print_function
 def display(lic_dict):
 
     if lic_dict:
-
         print("State last updated : {0}".format(slurm.epoch2date(licenses.lastUpdate())))
         print('{0:*^80}'.format(''))
 
@@ -18,7 +17,6 @@ def display(lic_dict):
 
             print('{0:*^80}'.format(''))
     else:
-        
         print("No Licenses found !")
 
 if __name__ == "__main__":
@@ -28,7 +26,6 @@ if __name__ == "__main__":
     import time
 
     try:
-
         licenses = slurm.licenses()
         lic = licenses.get()
         old = licenses.lastUpdate()

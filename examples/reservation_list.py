@@ -28,13 +28,13 @@ def display(res_dict):
                         print("\t{0:<20} : {1}".format(res_key, value[res_key]))
 
         print('{0:*^80}'.format(''))
-        
+
         now = int(time.time())
         resvState = "INACTIVE"
 
         if value['start_time'] <= now and value['end_time'] >= now:
             resvState = "ACTIVE"
-        
+
         print("\t%-20s : %s\n" % ("state", resvState))
 
 if __name__ == "__main__":

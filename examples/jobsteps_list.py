@@ -8,6 +8,7 @@ from time import gmtime, strftime
 
 steps = pyslurm.jobstep()
 a = steps.get()
+
 if a:
     for job, job_step in sorted(a.iteritems()):
 
@@ -32,4 +33,3 @@ if a:
     print('{0:*^80}'.format(''))
 else:
     print("No jobsteps found !")
-
