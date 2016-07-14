@@ -37,7 +37,7 @@ def display(job_dict):
                         print("\t{0:<20} : {1}".format(part_key, ddate))
                 else:
                     print("\t{0:<20} : {1}".format(part_key, value[part_key]))
-                
+
             print("-" * 80)
 
 if __name__ == "__main__":
@@ -61,13 +61,12 @@ if __name__ == "__main__":
             print("Number of pending jobs - {0}".format(len(pending)))
             print("Number of running jobs - {0}".format(len(running)))
             print()
-        
+
             print("JobIDs in Running state - {0}".format(running))
             print("JobIDs in Pending state - {0}".format(pending))
             print()
         else:
-    
+
             print("No jobs found !")
     except ValueError as e:
         print("Job query failed - {0}".format(e.args[0]))
-

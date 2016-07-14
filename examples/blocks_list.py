@@ -9,11 +9,10 @@ def display(block_dict):
 
     if block_dict:
 
-     
         date_fields = [ ]
-      
+
         print('{0:*^80}'.format(''))
-      
+
         for key, value in block_dict.iteritems():
 
             print("{0} :".format(key))
@@ -32,7 +31,7 @@ def display(block_dict):
                     print("\t{0:<17} : {1}".format(part_key, pyslurm.get_connection_type(value[part_key])))
                 elif part_key == 'state':
                     print("\t{0:<17} : {1}".format(part_key, value[part_key]))
-                else: 
+                else:
                     print("\t{0:<17} : {1}".format(part_key, value[part_key]))
 
             print('{0:*^80}'.format(''))

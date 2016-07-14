@@ -23,9 +23,9 @@ class DictDiffer(object):
         self.set_current, self.set_past = set(current_dict.keys()), set(past_dict.keys())
         self.intersect = self.set_current.intersection(self.set_past)
     def added(self):
-        return self.set_current - self.intersect 
+        return self.set_current - self.intersect
     def removed(self):
-        return self.set_past - self.intersect 
+        return self.set_past - self.intersect
     def changed(self):
         return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
     def unchanged(self):
@@ -74,4 +74,3 @@ if __name__ == "__main__":
         sleep(interval)
 
     sys.exit()
-

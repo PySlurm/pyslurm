@@ -21,7 +21,7 @@ import pyslurm
 
 Node_dict = {
     'node_names': 'bps000',
-    'node_state': pyslurm.NODE_STATE_DRAIN, 
+    'node_state': pyslurm.NODE_STATE_DRAIN,
     'reason': 'API test'
     }
 

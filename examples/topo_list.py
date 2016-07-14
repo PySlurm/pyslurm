@@ -12,6 +12,6 @@ except ValueError as e:
     print("Topology error - {0}".format(e.args[0]))
 else:
     if not b:
-        print("No toplogy found")
+        print("No topology found")
     else:
         print(b)

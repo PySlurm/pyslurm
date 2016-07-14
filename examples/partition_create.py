@@ -16,5 +16,5 @@ else:
     print("Partition {0} successfully created".format(partition_dict['Name']))
 
     a.get()
-    print() 
+    print()
     print("Partition IDs - {0}".format(a.ids()))

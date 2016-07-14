@@ -57,14 +57,14 @@ for key, value in jobs.iteritems():
     for job, job_step in sorted(steps.iteritems()):
         xml_file.write('\t\t\t<jobstep>\n')
 
-        for step in sorted(job_step.iterkeys()): 
+        for step in sorted(job_step.iterkeys()):
             xml_file.write("\t\t\t\t<id>{0}</id>\n".format(step))
             step_info = pyslurm.slurm_job_step_layout_get(int(job), int(step))
             for task in sorted(step_info.iterkeys()):
                 xml_file.write('\t\t\t\t<{0}>{1}</{2}>\n'.format(task, step_info[task], task))
 
         xml_file.write('\t\t\t</jobstep>\n')
-        
+
     xml_file.write('\t\t</job>\n')
 
 xml_file.write("\t</jobs>\n")
@@ -86,7 +86,7 @@ for key, value in node_dict.iteritems():
 
     if primary and key in primary:
         xml_file.write("\t\t\t<controller>Primary</controller>\n")
-    elif backup and key in backup: 
+    elif backup and key in backup:
         xml_file.write("\t\t\t<controller>backup</controller>\n")
     else:
         xml_file.write("\t\t\t<controller></controller>\n")

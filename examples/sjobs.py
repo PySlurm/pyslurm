@@ -67,12 +67,12 @@ if __name__ == "__main__":
 
             if jobs[jobid]["job_state"] == "PENDING":
                 pending = pending + 1
-                procs_request = procs_request + jobs[jobid]["num_cpus"] 
+                procs_request = procs_request + jobs[jobid]["num_cpus"]
                 nodes_request = nodes_request + jobs[jobid]["num_nodes"]
 
             if jobs[jobid]["job_state"] == "RUNNING":
                 running = running + 1
-                procs_used = procs_used + jobs[jobid]["num_cpus"] 
+                procs_used = procs_used + jobs[jobid]["num_cpus"]
                 nodes_used = nodes_used + jobs[jobid]["num_nodes"]
 
         total_procs_request = total_procs_request + procs_request
@@ -87,4 +87,3 @@ if __name__ == "__main__":
     print(delim)
     print("|                   TOTAL                   | {0:>9d} | {1:>10d} | {2:>13d} | {3:>15d} | {4:>12d} | {5:>12d} |".format(total_procs_used, total_nodes_used, total_procs_request, total_nodes_request, total_job_running, total_job_pending))
     print(delim)
-
