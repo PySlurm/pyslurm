@@ -1,73 +1,29 @@
-***********************************
-PySlurm: Slurm Interface for Python
-***********************************
+PySlurm: Python Bindings for Slurm
+==================================
 
-:Authors: Mark Roberts <mark@gingergeeks.co.uk> and Giovanni Torres <giovanni.torres@gmail.com>
+WARNING: This is for development only.  Do not use this in production.
 
-Overview
+Examples
 ========
 
-Currently `PySlurm` is under development to move from it's thin layer on top of the Slurm C API to an object orientated interface.
+.. highlight:: python
 
-This release is based on the Slurm API versions 15.08.8 thru 15.08.12.
+    >>> from pyslurm import node
+    >>> a = node.get_node("c1")
+    >>> a
+    >>> [<pyslurm.node.Node object at 0x27bf950>]
+    >>> dir(a[0])
+    >>> ['__class__', '__delattr__', '__doc__', '__format__',
+    '__getattribute__', '__hash__', '__init__', '__new__', '__reduce__',
+    '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
+    '__subclasshook__', 'alloc_mem', 'arch', 'available_features', 'boards',
+    'boot_time', 'boot_time_str', 'core_spec_cnt', 'cores_per_socket',
+    'cpu_alloc', 'cpu_err', 'cpu_load', 'cpu_spec_list', 'cpu_tot', 'free_mem',
+    'gres', 'gres_drain', 'gres_used', 'mem_spec_limit', 'name', 'node_addr',
+    'node_hostname', 'os', 'owner', 'real_memory', 'slurmd_start_time',
+    'slurmd_start_time_str', 'sockets', 'state', 'threads_per_core',
+    'tmp_disk', 'version', 'weight']
+    >>> a[0].state
+    u'MIXED'
+    >>>
 
-Pre-requistes
-*************
-
-* [Slurm] http://www.schedmd.com
-* [Python] http://www.python.org
-* [Cython] http://www.cython.org
-
-PySlurm has been tested with:
-
-    * Cython 0.15.1, 0.19.2, and 0.24
-    * Python 2.6 and 2.7
-    * Slurm 15.08.8 thru 15.08.12
-
-Installation
-************
-
-You will need to instruct the setup.py script where either the Slurm install root 
-directory or where the Slurm libraries and Slurm include files are :
-
-#. Slurm default directory (/usr):
-
-    * python setup.py build
-
-    * python setup.py install
-
-#. Indicate Blue Gene type (L/P/Q) on build line:
-
-    * --bgl or --bgp or --bgq
-
-#. Slurm root directory (Alternate installation directory):
-
-    * python setup.py build --slurm=PATH_TO_SLURM_DIR
-
-    * python setup.py install
-
-#. Separate Slurm library and include directory paths:
-
-    * python setup.py build --slurm-lib=PATH_TO_SLURM_LIB --slurm-inc=PATH_TO_SLURM_INC
-
-    * python setup.py install
-
-#. The build will automatically call a cleanup procedure to remove temporary build files but this can be called directly if needed as well with :
-
-    * python setup.py clean
-
-Documentation
-*************
-
-`Sphinx <http://www.sphinx-doc.org>`_ (needs to be installed) is currently used to generate the 
-documentation from the reStructuredText based doc strings from the module once it is built 
-and can be regenerated at any time :
-
-    * cd doc
-    * make clean
-    * make html
-
-Help
-****
-
-Ask questions on the `pyslurm group <https://groups.google.com/forum/#!forum/pyslurm>`_.

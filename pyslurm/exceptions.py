@@ -1,0 +1,2 @@
+class PySlurmError(Exception):
+    pass
