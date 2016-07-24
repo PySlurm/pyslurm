@@ -117,4 +117,5 @@ cdef extern from "slurm/slurm.h" nogil:
     int slurm_load_job_user(job_info_msg_t **job_info_msg_pptr,
                             uint32_t user_id, uint16_t show_flags)
 
+    int slurm_pid2jobid(pid_t job_pid, uint32_t *job_id_ptr)
     void slurm_free_job_info_msg(job_info_msg_t *job_buffer_ptr)

@@ -8,7 +8,7 @@ cdef inline strOrNone(char *value):
     if value is NULL:
         return None
     else:
-        return u"%s" % value.decode("utf-8", "replace")
+        return value.decode("utf-8", "replace")
 
 
 cdef inline list listOrNone(char *value):

@@ -1,5 +1,10 @@
+# common.pxd
+#
+# Slurm declarations common to all other extension files.
+#
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int32_t
+from posix.types cimport pid_t
 
 cdef extern from "time.h" nogil:
     ctypedef long time_t
@@ -40,6 +45,8 @@ cdef extern from "slurm/slurm_errno.h" nogil:
 
     char *slurm_strerror(int errnum)
     int slurm_get_errno()
+    int slurm_seterrno(int errnum)
+    int slurm_perror(char *msg)
 
 
 #
@@ -47,3 +54,4 @@ cdef extern from "slurm/slurm_errno.h" nogil:
 #
 
 cdef extern void slurm_make_time_str(time_t *time, char *string, int size)
+

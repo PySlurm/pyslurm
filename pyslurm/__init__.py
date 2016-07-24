@@ -10,3 +10,4 @@ from .node import *
 from .job import *
 from .statistics import *
 from .misc import *
+from .config import *

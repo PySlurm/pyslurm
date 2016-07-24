@@ -1,10 +1,11 @@
-from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
-from libc.stdint cimport int32_t
-
+from common cimport *
 
 cdef extern from "slurm/slurm.h" nogil:
-    long SLURM_VERSION_NUMBER
-    long SLURM_VERSION_MAJOR(long a)
-    long SLURM_VERSION_MINOR(long a)
-    long SLURM_VERSION_MICRO(long a)
-
+    int slurm_ping(int primary)
+    int slurm_reconfigure()
+    int slurm_shutdown(uint16_t options)
+    int slurm_takeover()
+    int slurm_set_debugflags(uint64_t debug_flags_plus,
+                             uint64_t debug_flags_minus)
+    int slurm_set_debug_level(uint32_t debug_level)
+    int slurm_set_schedlog_level(uint32_t schedlog_level)

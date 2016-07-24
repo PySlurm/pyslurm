@@ -1,3 +1,4 @@
+# cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: cdivision=True
 
@@ -31,7 +32,6 @@ cpdef list get_jobs_ids():
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         uint32_t i
         int rc
-        int errnum
         list all_jobs = []
 
     rc = slurm_load_jobs(<time_t>NULL, &job_info_msg_ptr, show_flags)
@@ -44,8 +44,7 @@ cpdef list get_jobs_ids():
         job_info_msg_ptr = NULL
         return all_jobs
     else:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
 
 
 cpdef list get_user_jobs(user):
@@ -66,7 +65,6 @@ cpdef list get_user_jobs(user):
         job_info_msg_t *job_info_msg_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int rc
-        int errnum
         uint32_t user_id
         char *username
 
@@ -84,5 +82,25 @@ cpdef list get_user_jobs(user):
     if rc == SLURM_SUCCESS:
         pass
     else:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
+
+
+cpdef int pid2jobid(pid_t job_pid):
+    """
+    Return a Slurm job id corresponding to the given local process id.
+
+    Args:
+        job_pid (int): job pid
+    Returns:
+        Job id.
+    """
+    cdef:
+        uint32_t job_id
+        int rc
+
+    rc = slurm_pid2jobid(job_pid, &job_id)
+
+    if rc == SLURM_SUCCESS:
+        return job_id
+    else:
+        raise PySlurmError(slurm_strerror(rc), rc)

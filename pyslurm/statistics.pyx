@@ -1,13 +1,22 @@
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: cdivision=True
+from __future__ import division, unicode_literals
 
-from __future__ import print_function, division, unicode_literals
+from pwd import getpwuid
 
 from common cimport *
 from utils cimport *
 from exceptions import PySlurmError
 
 cdef class Stats:
+    """
+    An object to store Slurm statistics.
+
+    Attributes:
+        The Stats class contains attributes from the stats_info_response_msg
+        struct found in slurm.h.
+    """
+
     cdef:
         uint32_t parts_packed
         time_t req_time
@@ -47,6 +56,8 @@ cdef class Stats:
         uint32_t *rpc_user_id
         uint32_t *rpc_user_cnt
         uint64_t *rpc_user_time
+        dict rpc_type_stats
+        dict rpc_user_stats
 
     property parts_packed:
         def __get__(self):
@@ -168,13 +179,31 @@ cdef class Stats:
         def __get__(self):
             return self.bf_active
 
+    property rpc_type_stats:
+        def __get__(self):
+            return self.rpc_type_stats
+
+    property rpc_user_stats:
+        def __get__(self):
+            return self.rpc_user_stats
+
 
 cpdef get_statistics():
+    """
+    Return scheduling statistics.
+
+    This output returns metrics for the main scheduler algorithm, backfill
+    scheduler and slurmctld execution, similar to the output of sdiag.
+
+    Args:
+        None
+    Returns:
+        Statistics object with all scheduler statistics.
+    """
     cdef:
         stats_info_request_msg_t req
         stats_info_response_msg_t *buf = NULL
         int rc
-        int errnum
         uint32_t i
         dict rpc_type_stats
         dict rpc_user_stats
@@ -221,43 +250,42 @@ cpdef get_statistics():
 
         rpc_type_stats = {}
 
-#        for i in range(buf.rpc_type_size):
-#            rpc_type = self.__rpc_num2string(buf.rpc_type_id[i])
-#            rpc_type_stats[rpc_type] = {}
-#            rpc_type_stats[rpc_type][u'id = buf.rpc_type_id[i]
-#            rpc_type_stats[rpc_type][u'count = buf.rpc_type_cnt[i]
-#            if buf.rpc_type_cnt[i] == 0:
-#                rpc_type_stats[rpc_type][u'ave_time = 0
-#            else:
-#                rpc_type_stats[rpc_type][u'ave_time = int(buf.rpc_type_time[i] /
-#                                                            buf.rpc_type_cnt[i])
-#            rpc_type_stats[rpc_type][u'total_time = int(buf.rpc_type_time[i])
-#        stats.rpc_type_stats = rpc_type_stats
-#
-#        rpc_user_stats = {}
-#
-#        for i in range(buf.rpc_user_size):
-#            try:
-#                rpc_user = getpwuid(buf.rpc_user_id[i])[0]
-#            except KeyError:
-#                rpc_user = str(buf.rpc_user_id[i])
-#            rpc_user_stats[rpc_user] = {}
-#            rpc_user_stats[rpc_user][u"id"] = buf.rpc_user_id[i]
-#            rpc_user_stats[rpc_user][u"count"] = buf.rpc_user_cnt[i]
-#            if buf.rpc_user_cnt[i] == 0:
-#                rpc_user_stats[rpc_user][u"ave_time"] = 0
-#            else:
-#                rpc_user_stats[rpc_user][u"ave_time"] = int(buf.rpc_user_time[i] /
-#                                                            buf.rpc_user_cnt[i])
-#            rpc_user_stats[rpc_user][u"total_time"] = int(buf.rpc_user_time[i])
-#        stats.rpc_user_stats = rpc_user_stats
-#
+        for i in range(buf.rpc_type_size):
+            rpc_type = rpc_num2string(buf.rpc_type_id[i])
+            rpc_type_stats[rpc_type] = {}
+            rpc_type_stats[rpc_type]['id'] = buf.rpc_type_id[i]
+            rpc_type_stats[rpc_type]['count'] = buf.rpc_type_cnt[i]
+            if buf.rpc_type_cnt[i] == 0:
+                rpc_type_stats[rpc_type]['ave_time'] = 0
+            else:
+                rpc_type_stats[rpc_type]['ave_time'] = int(buf.rpc_type_time[i] /
+                                                           buf.rpc_type_cnt[i])
+            rpc_type_stats[rpc_type]['total_time'] = int(buf.rpc_type_time[i])
+        stats.rpc_type_stats = rpc_type_stats
+
+        rpc_user_stats = {}
+
+        for i in range(buf.rpc_user_size):
+            try:
+                rpc_user = getpwuid(buf.rpc_user_id[i])[0]
+            except KeyError:
+                rpc_user = buf.rpc_user_id[i]
+            rpc_user_stats[rpc_user] = {}
+            rpc_user_stats[rpc_user]["id"] = buf.rpc_user_id[i]
+            rpc_user_stats[rpc_user]["count"] = buf.rpc_user_cnt[i]
+            if buf.rpc_user_cnt[i] == 0:
+                rpc_user_stats[rpc_user]["ave_time"] = 0
+            else:
+                rpc_user_stats[rpc_user]["ave_time"] = int(buf.rpc_user_time[i] /
+                                                           buf.rpc_user_cnt[i])
+            rpc_user_stats[rpc_user]["total_time"] = int(buf.rpc_user_time[i])
+        stats.rpc_user_stats = rpc_user_stats
+
         slurm_free_stats_response_msg(buf)
         buf = NULL
         return stats
     else:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
 
 
 cpdef int reset_statistics(self):
@@ -265,10 +293,14 @@ cpdef int reset_statistics(self):
     Reset scheduling statistics
 
     This method required root privileges.
+
+    Args:
+        None
+    Returns:
+        Integer return code.
     """
     cdef:
         stats_info_request_msg_t req
-        int errnum
         int rc
 
     req.command_id = STAT_COMMAND_RESET
@@ -277,12 +309,20 @@ cpdef int reset_statistics(self):
     if rc == SLURM_SUCCESS:
         return rc
     else:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
 
 
 cdef rpc_num2string(uint16_t opcode):
     """
+    Return string mapping of opcode.
+
+    Given a protocol opcode, this function returns its string description
+    mapping of the slurm_msg_type_t to its name.
+
+    Args:
+        opcode (int): protocol opcode
+    Returns:
+        String description of opcode
     """
     cdef dict num2string
 

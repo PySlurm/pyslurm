@@ -1,3 +1,4 @@
+# cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: cdivision=True
 
@@ -132,6 +133,8 @@ cdef class Node:
 
     property name:
         def __get__(self):
+#            cdef bytes py_string = self.name
+#            return py_string
             return strOrNone(self.name)
 
     property node_addr:
@@ -212,7 +215,6 @@ cpdef list get_nodes_ids():
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         uint32_t i
         int rc
-        int errnum
         list all_nodes = []
 
     rc = slurm_load_node(<time_t>NULL, &node_info_msg_ptr, show_flags)
@@ -225,8 +227,7 @@ cpdef list get_nodes_ids():
         node_info_msg_ptr = NULL
         return all_nodes
     else:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
 
 
 cpdef list get_nodes():
@@ -245,7 +246,7 @@ cpdef list get_nodes():
     return get_node(NULL)
 
 
-cpdef list get_node(char *nodeID):
+cpdef get_node(char *nodeID):
     """Return a list of one or all Node objects.
 
     This function calls either slurm_load_node or slurm_load_node_single to
@@ -253,22 +254,22 @@ cpdef list get_node(char *nodeID):
     object, whereas slurm_load_node will return all Node objects, one for each
     node configured in the cluster.
 
-    If nodeID is NULL, then call slurm_load_node to get all nodes.  If nodeID
-    is not NULL, then call slurm_load_node_single to get specific node.
+    If nodeID is NULL, then call slurm_load_node to get all nodes.
+    If nodeID is not NULL, then call slurm_load_node_single to get specific
+    node.
 
     Args:
         nodeID (str): node id to query
     Returns:
-        A list of one or more Node object(s)
+        A single node object or a list of all Node objects
     Raises:
-        PySlurmError: if slurm_load_node or slurm_load_node_sinble is
+        PySlurmError: if slurm_load_node or slurm_load_node_single is
         unsuccessful.
     """
     cdef:
         node_info_msg_t *node_info_msg_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int cpus_per_node = 1
-        int errnum
         int idle_cpus
         int inx
         int rc
@@ -433,18 +434,12 @@ cpdef list get_node(char *nodeID):
                 slurm_make_time_str(<time_t *>&record.boot_time,
                                     time_str, sizeof(time_str))
                 this_node.boot_time_str = time_str
-            else:
-                this_node.boot_time_str = None
-                this_node.boot_time = None
 
             if record.slurmd_start_time:
                 slurm_make_time_str(<time_t *>&record.slurmd_start_time,
                                     time_str, sizeof(time_str))
                 this_node.slurmd_start_time_str = time_str
                 this_node.slurmd_start_time = record.slurmd_start_time
-            else:
-                this_node.slurmd_start_time_str = None
-                this_node.slurmd_start_time = None
 
 #            # Power Management
 #            if (not record.power or (record.power.cap_watts == NO_VAL)):
@@ -511,10 +506,13 @@ cpdef list get_node(char *nodeID):
 
         slurm_free_node_info_msg(node_info_msg_ptr)
         node_info_msg_ptr = NULL
-        return node_list
+
+        if nodeID == NULL:
+            return node_list
+        else:
+            return this_node
     else:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
 
 
 cpdef print_node_info_msg(int one_liner=False):
@@ -536,7 +534,6 @@ cpdef print_node_info_msg(int one_liner=False):
         node_info_msg_t *node_info_msg_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int rc
-        int errnum
 
     rc = slurm_load_node(<time_t>NULL, &node_info_msg_ptr, show_flags)
 
@@ -545,8 +542,7 @@ cpdef print_node_info_msg(int one_liner=False):
         slurm_free_node_info_msg(node_info_msg_ptr)
         node_info_msg_ptr = NULL
     else:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
 
 
 cpdef print_node_info_table(char *nodeID, int one_liner=False):
@@ -577,7 +573,6 @@ cpdef print_node_info_table(char *nodeID, int one_liner=False):
         node_info_msg_t *node_info_msg_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int rc
-        int errnum
 
     rc = slurm_load_node_single(&node_info_msg_ptr, nodeID, show_flags)
 
@@ -587,8 +582,7 @@ cpdef print_node_info_table(char *nodeID, int one_liner=False):
         slurm_free_node_info_msg(node_info_msg_ptr)
         node_info_msg_ptr = NULL
     else:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
 
 
 cpdef int update_node(dict node_dict):
@@ -599,7 +593,6 @@ cpdef int update_node(dict node_dict):
     cdef:
         update_node_msg_t update_node_msg
         int rc
-        int errnum
 
     if not node_dict:
         raise PySlurmError("You must provide a valid node update dictionary.")
@@ -636,7 +629,6 @@ cpdef int update_node(dict node_dict):
     rc = slurm_update_node(&update_node_msg)
 
     if rc != SLURM_SUCCESS:
-        errnum = slurm_get_errno()
-        raise PySlurmError(slurm_strerror(errnum))
+        raise PySlurmError(slurm_strerror(rc), rc)
 
     return rc

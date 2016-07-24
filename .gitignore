@@ -1,19 +1,13 @@
-# Ignore Build Directory #
-build/
+# Compiled python modules
+*.pyc
 
-# Ignore Docs Directory #
-#doc/
+# Distutils build folder
+/build/
 
-# Ignore Temporary Build Files #
-pyslurm/pyslurm.c
-pyslurm/bluegene.pxi
-pyslurm/slurm_version.pxi
-pyslurm/*.py~
-pyslurm/*.pyc
-pyslurm/*.pyx~
-pyslurm/*.pxi~
-pyslurm/*.pxd~
-pyslurm/*.so
+# Python egg metadata
+/*.egg-info
 
-# Ignore vim swap files
-*.swp
+# Cython object and library files
+*.o
+*.c
+*.so
