@@ -127,6 +127,12 @@ def setup_package():
         ext_modules = cythonize(extensions),
     #    cmdclass = {"build_ext": build_ext },
     )
+#    Entry-points:
+#    [console_scripts]
+#    nosetests = nose:run_exit
+#    [distutils.commands]
+#    nosetests = nose.commands:nosetests
+
 
 if __name__ == "__main__":
     setup_package()

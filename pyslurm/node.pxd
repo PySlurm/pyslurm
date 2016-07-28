@@ -156,8 +156,8 @@ cdef extern char *slurm_node_state_string(uint32_t inx)
 # Defined node states
 #
 
-cdef inline IS_NODE_ALLOCATED(node_info_t _X):
+cdef inline IS_NODE_ALLOCATED(node_info_t* _X):
     return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ALLOCATED
 
-cdef inline IS_NODE_COMPLETING(node_info_t _X):
+cdef inline IS_NODE_COMPLETING(node_info_t* _X):
     return (_X.node_state & NODE_STATE_COMPLETING)

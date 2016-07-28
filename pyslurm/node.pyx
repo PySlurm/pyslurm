@@ -1,56 +1,63 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: cdivision=True
-
 from __future__ import print_function, division, unicode_literals
 
 import os as _os
-
-from common cimport *
+from pwd import getpwuid
 from utils cimport *
+from common cimport *
 from exceptions import PySlurmError
 
 include "node.pxi"
+include "utils.pxi"
 
 cdef class Node:
     cdef:
         uint32_t alloc_mem
-        char *arch
-        char *available_features
+        unicode arch
         uint16_t boards
         time_t boot_time
-        char boot_time_str[32]
+        unicode boot_time_str
+        uint32_t cap_watts
+        uint64_t consumed_joules
         uint16_t cores_per_socket
         uint16_t core_spec_cnt
         uint32_t cpu_load
         uint16_t cpu_alloc
         uint16_t cpu_err
         uint16_t cpu_tot
-        char *cpu_spec_list
+        unicode cpu_spec_list
+        uint32_t current_watts
+        uint64_t ext_sensors_joules
+        uint64_t ext_sensors_temp
+        uint64_t ext_sensors_watts
+        unicode features
         uint32_t free_mem
-        #char *active_features
-        char *gres
-        char *gres_drain
-        char *gres_used
-        #char *mcs_label
+        unicode gres
+        unicode gres_drain
+        unicode gres_used
+        uint32_t lowest_joules
         uint32_t mem_spec_limit
-        char *name
-        char *node_addr
-        char *node_hostname
-        char *state
-        char *os
+        unicode node_name
+        unicode node_addr
+        unicode node_host_name
+        unicode state
+        unicode os
         uint32_t owner
         uint32_t real_memory
-        char *reason_str
+        unicode rack_midplane
+        unicode reason
+        unicode reason_str
         time_t reason_time
-        char *reason_time_str
+        unicode reason_time_str
         uint32_t reason_uid
+        unicode reason_user
         time_t slurmd_start_time
-        char slurmd_start_time_str[32]
+        unicode slurmd_start_time_str
         uint16_t sockets
         uint16_t threads_per_core
         uint32_t tmp_disk
-        char *version
+        unicode version
         uint32_t weight
 
     property alloc_mem:
@@ -59,7 +66,7 @@ cdef class Node:
 
     property arch:
         def __get__(self):
-            return strOrNone(self.arch)
+            return self.arch
 
     property boards:
         def __get__(self):
@@ -72,6 +79,20 @@ cdef class Node:
     property boot_time_str:
         def __get__(self):
             return self.boot_time_str
+
+    property cap_watts:
+        def __get__(self):
+            if self.cap_watts == NO_VAL:
+                return "n/a"
+            else:
+                return self.cap_watts
+
+    property consumed_joules:
+        def __get__(self):
+            if self.consumed_joules == NO_VAL:
+                return "n/s"
+            else:
+                return int(self.consumed_joules)
 
     property cores_per_socket:
         def __get__(self):
@@ -102,11 +123,41 @@ cdef class Node:
 
     property cpu_spec_list:
         def __get__(self):
-            return listOrNone(self.cpu_spec_list)
+            if self.cpu_spec_list is not None:
+                return self.cpu_spec_list.split(",")
 
-    property available_features:
+    property current_watts:
         def __get__(self):
-            return listOrNone(self.available_features)
+            if self.current_watts == NO_VAL:
+                return "n/s"
+            else:
+                return self.current_watts
+
+    property ext_sensors_joules:
+        def __get__(self):
+            if self.ext_sensors_joules == NO_VAL:
+                return "n/s"
+            else:
+                return int(self.ext_sensors_joules)
+
+    property ext_sensors_temp:
+        def __get__(self):
+            if self.ext_sensors_temp == NO_VAL:
+                return "n/s"
+            else:
+                return int(self.ext_sensors_temp)
+
+    property ext_sensors_watts:
+        def __get__(self):
+            if self.ext_sensors_watts == NO_VAL:
+                return "n/s"
+            else:
+                return int(self.ext_sensors_watts)
+
+    property features:
+        def __get__(self):
+            if self.features is not None:
+                return self.features.split(",")
 
     property free_mem:
         def __get__(self):
@@ -117,42 +168,50 @@ cdef class Node:
 
     property gres:
         def __get__(self):
-            return listOrNone(self.gres)
+            if self.gres is not None:
+                return self.gres.split(",")
 
     property gres_drain:
         def __get__(self):
-            return listOrNone(self.gres_drain)
+            if self.gres_drain is not None:
+                return self.gres_drain.split(",")
 
     property gres_used:
         def __get__(self):
-            return listOrNone(self.gres_used)
+            if self.gres_used is not None:
+                return self.gres_used.split(",")
+
+    property lowest_joules:
+        def __get__(self):
+            if self.lowest_joules == NO_VAL:
+                return "n/s"
+            else:
+                return int(self.lowest_joules)
 
     property mem_spec_limit:
         def __get__(self):
             return self.mem_spec_limit
 
-    property name:
+    property node_name:
         def __get__(self):
-#            cdef bytes py_string = self.name
-#            return py_string
-            return strOrNone(self.name)
+            return self.node_name
 
     property node_addr:
         def __get__(self):
-            return strOrNone(self.node_addr)
+            return self.node_addr
 
-    property node_hostname:
+    property node_host_name:
         def __get__(self):
-            return strOrNone(self.node_hostname)
+            return self.node_host_name
 
     property state:
         def __get__(self):
-            return strOrNone(self.state)
+            return self.state
 
     property os:
         def __get__(self):
             if self.os:
-                return strOrNone(self.os)
+                return self.os
             else:
                 return None
 
@@ -163,9 +222,37 @@ cdef class Node:
             else:
                 return self.owner
 
+    property rack_midplane:
+        def __get__(self):
+            return self.rack_midplane
+
     property real_memory:
         def __get__(self):
             return self.real_memory
+
+    property reason:
+        def __get__(self):
+            return self.reason
+
+    property reason_str:
+        def __get__(self):
+            return self.reason_str
+
+    property reason_time:
+        def __get__(self):
+            return self.reason_time
+
+    property reason_time_str:
+        def __get__(self):
+            return self.reason_time_str
+
+    property reason_uid:
+        def __get__(self):
+            return self.reason_uid
+
+    property reason_user:
+        def __get__(self):
+            return self.reason_user
 
     property slurmd_start_time:
         def __get__(self):
@@ -189,7 +276,7 @@ cdef class Node:
 
     property version:
         def __get__(self):
-            return strOrNone(self.version)
+            return self.version
 
     property weight:
         def __get__(self):
@@ -221,7 +308,7 @@ cpdef list get_nodes_ids():
 
     if rc == SLURM_SUCCESS:
         for i in range(node_info_msg_ptr.record_count):
-            all_nodes.append(node_info_msg_ptr.node_array[i].name)
+            all_nodes.append(tounicode(node_info_msg_ptr.node_array[i].name))
 
         slurm_free_node_info_msg(node_info_msg_ptr)
         node_info_msg_ptr = NULL
@@ -230,7 +317,7 @@ cpdef list get_nodes_ids():
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef list get_nodes():
+cpdef get_nodes():
     """
     Return a list of all Node objects.
 
@@ -243,10 +330,10 @@ cpdef list get_nodes():
     Raises:
         PySlurmError: if slurm_load_node is unsuccessful.
     """
-    return get_node(NULL)
+    return get_node(None)
 
 
-cpdef get_node(char *nodeID):
+cpdef get_node(node):
     """Return a list of one or all Node objects.
 
     This function calls either slurm_load_node or slurm_load_node_single to
@@ -274,28 +361,31 @@ cpdef get_node(char *nodeID):
         int inx
         int rc
         int total_used
-        char *cloud_str = ""
-        char *comp_str = ""
-        char *drain_str = ""
-        char *power_str = ""
-        char *reason_str = NULL
-        char *select_reason_str = NULL
+        char* cloud_str = ""
+        char* comp_str = ""
+        char* drain_str = ""
+        char* power_str = ""
+        char* reason_str = NULL
+        char* select_reason_str = NULL
         char time_str[32]
-        char *save_ptr = NULL
-        char *tok
-        char *user_name
+        char* save_ptr = NULL
+        char* tok
+        char* user_name
         uint16_t err_cpus = 0
         uint16_t alloc_cpus = 0
         uint32_t i
         uint32_t alloc_memory
         uint32_t my_state
-        #uint32_t cluster_flags = slurmdb_setup_cluster_flags()
+        uint32_t cluster_flags = slurmdb_setup_cluster_flags()
         list node_list = []
+        char* nodeID = NULL
 
-    if nodeID == NULL:
+    if node is None:
         rc = slurm_load_node(<time_t>NULL, &node_info_msg_ptr, show_flags)
     else:
-        rc = slurm_load_node_single(&node_info_msg_ptr, nodeID, show_flags)
+        b_node = node.encode("UTF-8")
+        #nodeID = _node
+        rc = slurm_load_node_single(&node_info_msg_ptr, b_node, show_flags)
 
     if rc == SLURM_SUCCESS:
         for i in range(node_info_msg_ptr.record_count):
@@ -303,8 +393,8 @@ cpdef get_node(char *nodeID):
 
             my_state = record.node_state
 
-#            if node_scaling:
-#                cpus_per_node = record.cpus / node_scaling
+            if node_info_msg_ptr.node_scaling:
+                cpus_per_node = record.cpus / node_info_msg_ptr.node_scaling
 
             if (my_state & NODE_STATE_CLOUD):
                 my_state &= (~NODE_STATE_CLOUD)
@@ -331,13 +421,13 @@ cpdef get_node(char *nodeID):
                                       NODE_STATE_ALLOCATED,
                                       &alloc_cpus)
 
-#            if (cluster_flags & CLUSTER_FLAG_BG):
-#                if (not alloc_cpus and
-#                    (IS_NODE_ALLOCATED(record) or
-#                     IS_NODE_COMPLETING(record))):
-#                    alloc_cpus = record.cpus
-#                else:
-#                    alloc_cpus *= cpus_per_node
+            if (cluster_flags & CLUSTER_FLAG_BG):
+                if (not alloc_cpus and
+                    (IS_NODE_ALLOCATED(record) or
+                     IS_NODE_COMPLETING(record))):
+                    alloc_cpus = record.cpus
+                else:
+                    alloc_cpus *= cpus_per_node
 
             idle_cpus = record.cpus - alloc_cpus
 
@@ -346,8 +436,8 @@ cpdef get_node(char *nodeID):
                                       NODE_STATE_ERROR,
                                       &err_cpus)
 
-#            if (cluster_flags & CLUSTER_FLAG_BG):
-#                err_cpus *= cpus_per_node
+            if (cluster_flags & CLUSTER_FLAG_BG):
+                err_cpus *= cpus_per_node
 
             idle_cpus -= err_cpus
 
@@ -359,40 +449,39 @@ cpdef get_node(char *nodeID):
             # Instantiate empty Node class instance for storing attributes
             this_node = Node()
 
-            this_node.name = record.name
+            this_node.node_name = tounicode(record.name)
 
-#            if (cluster_flags & CLUSTER_FLAG_BG):
-#                slurm_get_select_nodeinfo(record.select_nodeinfo,
-#                                          SELECT_NODEDATA_RACK_MP,
-#                                          0, &select_reason_str)
-#                if select_reason_str:
-#                    this_node.rack_midplane = select_reason_str
+            if (cluster_flags & CLUSTER_FLAG_BG):
+                slurm_get_select_nodeinfo(record.select_nodeinfo,
+                                          SELECT_NODEDATA_RACK_MP,
+                                          <node_states>0, &select_reason_str)
+                if select_reason_str:
+                    this_node.rack_midplane = tounicode(select_reason_str)
 
             if record.arch:
-                this_node.arch = record.arch
+                this_node.arch = tounicode(record.arch)
 
             this_node.cores_per_socket = record.cores
             this_node.cpu_alloc = alloc_cpus
             this_node.cpu_err = err_cpus
             this_node.cpu_tot = record.cpus
             this_node.cpu_load = record.cpu_load
-            this_node.available_features = record.features
-            #this_node.active_features = record.features_act
-            this_node.gres = record.gres
+            this_node.features = tounicode(record.features)
+            this_node.gres = tounicode(record.gres)
 
             if record.gres_drain:
-                this_node.gres_drain = record.gres_drain
+                this_node.gres_drain = tounicode(record.gres_drain)
 
             if record.gres_used:
-                this_node.gres_used = record.gres_used
+                this_node.gres_used = tounicode(record.gres_used)
 
             if record.node_hostname or record.node_addr:
-                this_node.node_addr = record.node_addr
-                this_node.node_hostname = record.node_hostname
-                this_node.version = record.version
+                this_node.node_addr = tounicode(record.node_addr)
+                this_node.node_host_name = tounicode(record.node_hostname)
+                this_node.version = tounicode(record.version)
 
             if record.os:
-                this_node.os = record.os
+                this_node.os = tounicode(record.os)
 
             slurm_get_select_nodeinfo(record.select_nodeinfo,
                                       SELECT_NODEDATA_MEM_ALLOC,
@@ -411,103 +500,114 @@ cpdef get_node(char *nodeID):
                 if record.core_spec_cnt:
                     this_node.core_spec_count = record.core_spec_cnt
                 if record.cpu_spec_list:
-                    this_node.cpu_spec_list = record.cpu_spec_list
+                    this_node.cpu_spec_list = tounicode(record.cpu_spec_list)
                 if record.mem_spec_limit:
                     this_node.mem_spec_limit = record.mem_spec_limit
 
-#            this_node.state = (slurm_node_state_string(my_state) + cloud_str +
-#                               comp_str + drain_str + power_str)
-            this_node.state = slurm_node_state_string(my_state)
+            this_node.state = (tounicode(slurm_node_state_string(my_state)) +
+                               tounicode(cloud_str) +
+                               tounicode(comp_str) +
+                               tounicode(drain_str) +
+                               tounicode(power_str))
 
             this_node.threads_per_core = record.threads
             this_node.tmp_disk = record.tmp_disk
             this_node.weight = record.weight
             this_node.owner = record.owner
 
-#            if record.mcs_label == NULL:
-#                this_node.mcs_label = "N/A"
-#            else:
-#                this_node.mcs_label = record.mcs_label
-
             if record.boot_time:
                 this_node.boot_time = record.boot_time
                 slurm_make_time_str(<time_t *>&record.boot_time,
                                     time_str, sizeof(time_str))
-                this_node.boot_time_str = time_str
+                b_time_str = time_str
+                this_node.boot_time_str = tounicode(b_time_str)
 
             if record.slurmd_start_time:
+                this_node.slurmd_start_time = record.slurmd_start_time
                 slurm_make_time_str(<time_t *>&record.slurmd_start_time,
                                     time_str, sizeof(time_str))
-                this_node.slurmd_start_time_str = time_str
-                this_node.slurmd_start_time = record.slurmd_start_time
+                b_time_str = time_str
+                this_node.slurmd_start_time_str = tounicode(b_time_str)
 
-#            # Power Management
-#            if (not record.power or (record.power.cap_watts == NO_VAL)):
-#                this_node.cap_watts = "n/a"
-#            else:
-#                this_node.cap_watts = record.power.cap_watts
-#
-#            # Power Consumption
-#            if (not record.energy or (record.energy.current_watts == NO_VAL)):
-#                this_node.current_watts = "n/s"
-#                this_node.lowest_joules = "n/s"
-#                this_node.consumed_joules = "n/s"
-#            else:
-#                this_node.current_watts = record.energy.current_watts
-#                this_node.lowest_joules = int(record.energy.base_consumed_energy)
-#                this_node.consumed_joules = int(record.energy.consumed_energy)
-#
-#            # External Sensors
-#            if (not record.ext_sensors or (record.ext_sensors.consumed_energy == NO_VAL)):
-#                this_node.ext_sensors_joules = "n/s"
-#            else:
-#                this_node.ext_sensors_joules = int(record.ext_sensors.consumed_energy)
-#
-#            if (not record.ext_sensors or (record.ext_sensors.current_watts == NO_VAL)):
-#                this_node.ext_sensors_watts = "n/s"
-#            else:
-#                this_node.ext_sensors_watts = record.ext_sensors.current_watts
-#
-#            if (not record.ext_sensors or (record.ext_sensors.temperature == NO_VAL)):
-#                this_node.ext_sensors_temp = "n/s"
-#            else:
-#                this_node.ext_sensors_temp = record.ext_sensors.temperature
+            # Power Management
+            if (not record.power or (record.power.cap_watts == NO_VAL)):
+                this_node.cap_watts = NO_VAL
+            else:
+                this_node.cap_watts = record.power.cap_watts
 
-#            if record.reason and record.reason[0]:
-#                reason_str = record.reason
-#
-#            slurm_get_select_nodeinfo(record.select_nodeinfo,
-#                                      SELECT_NODEDATA_EXTRA_INFO,
-#                                      0, &select_reason_str)
-#
-#            if select_reason_str and select_reason_str[0]:
-#                reason_str += select_reason_str
-#
-#            #xfree(select_reason_str)
-#
-#            if reason_str:
-#                inx = 1
-#                tok = strtok_r(reason_str, "\n", &save_ptr)
-#
-#                while tok:
-#                    this_node.reason_str += tok
-#                    inx += 1
-#                    if (inx == 1) and (record.reason_time):
-#                        slurm_make_time_str(<time_t *>&record.reason_time,
-#                                            time_str, sizeof(time_str))
-#                        this_node.reason_str += record.reason_uid + "@" + time_str
-#                    tok = strtok_r(NULL, "\n", &save_ptr)
-#                this_node.reason_uid = record.reason_uid
-#                this_node.reason_time = record.reason_time
-#                this_node.reason_time_str = time_str
-#                #xfree(reason_str)
+            # Power Consumption
+            if (not record.energy or (record.energy.current_watts == NO_VAL)):
+                this_node.current_watts = NO_VAL
+                this_node.lowest_joules = NO_VAL
+                this_node.consumed_joules = NO_VAL
+            else:
+                this_node.current_watts = record.energy.current_watts
+                this_node.lowest_joules = record.energy.base_consumed_energy
+                this_node.consumed_joules = record.energy.consumed_energy
+
+            # External Sensors
+            if (not record.ext_sensors or (
+                    record.ext_sensors.consumed_energy == NO_VAL)):
+                this_node.ext_sensors_joules = NO_VAL
+            else:
+                this_node.ext_sensors_joules = record.ext_sensors.consumed_energy
+
+            if (not record.ext_sensors or (
+                    record.ext_sensors.current_watts == NO_VAL)):
+                this_node.ext_sensors_watts = NO_VAL
+            else:
+                this_node.ext_sensors_watts = record.ext_sensors.current_watts
+
+            if (not record.ext_sensors or (
+                    record.ext_sensors.temperature == NO_VAL)):
+                this_node.ext_sensors_temp = NO_VAL
+            else:
+                this_node.ext_sensors_temp = record.ext_sensors.temperature
+
+            if record.reason and record.reason[0]:
+                this_node.reason = tounicode(record.reason)
+                reason_str = record.reason
+                u_reason_str = tounicode(reason_str)
+
+            slurm_get_select_nodeinfo(record.select_nodeinfo,
+                                      SELECT_NODEDATA_EXTRA_INFO,
+                                      <node_states>0, &select_reason_str)
+
+            if select_reason_str and select_reason_str[0]:
+                u_select_reason_str = tounicode(select_reason_str)
+                if u_reason_str:
+                    u_reason_str += "\n"
+                u_reason_str += u_select_reason_str
+
+            if reason_str and record.reason_time:
+                slurm_make_time_str(<time_t *>&record.reason_time,
+                                    time_str, sizeof(time_str))
+
+                try:
+                    # getpwuid returns str, not bytes; we want unicode
+                    u_reason_user = unicode(getpwuid(record.reason_uid)[0])
+                except KeyError:
+                    b_reason_user = <bytes>record.reason_uid
+                    u_reason_user = tounicode(b_reason_user)
+
+                this_node.reason_user = u_reason_user
+
+                b_time_str = time_str
+                this_node.reason_time_str = tounicode(b_time_str)
+
+                u_reason_str += (" [" + u_reason_user +
+                                 "@" + tounicode(b_time_str) + "]")
+
+                this_node.reason_str = u_reason_str
+                this_node.reason_uid = record.reason_uid
+                this_node.reason_time = record.reason_time
 
             node_list.append(this_node)
 
         slurm_free_node_info_msg(node_info_msg_ptr)
         node_info_msg_ptr = NULL
 
-        if nodeID == NULL:
+        if node is None:
             return node_list
         else:
             return this_node
@@ -531,7 +631,7 @@ cpdef print_node_info_msg(int one_liner=False):
         PySlurmError: if slurm_load_node is not successful.
     """
     cdef:
-        node_info_msg_t *node_info_msg_ptr = NULL
+        node_info_msg_t* node_info_msg_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int rc
 
@@ -545,7 +645,7 @@ cpdef print_node_info_msg(int one_liner=False):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef print_node_info_table(char *nodeID, int one_liner=False):
+cpdef print_node_info_table(char* nodeID, int one_liner=False):
     """
     Print information about a specific node to stdout.
 

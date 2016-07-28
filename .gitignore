@@ -11,3 +11,6 @@
 *.o
 *.c
 *.so
+
+# Vim swap files
+*.swp

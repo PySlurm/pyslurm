@@ -54,4 +54,11 @@ cdef extern from "slurm/slurm_errno.h" nogil:
 #
 
 cdef extern void slurm_make_time_str(time_t *time, char *string, int size)
+cdef mins2time_str(uint32_t time)
+cdef secs2time_str(uint32_t time)
 
+#
+# Declarations outside of slurmdb.h
+#
+
+cdef extern uint32_t slurmdb_setup_cluster_flags()
