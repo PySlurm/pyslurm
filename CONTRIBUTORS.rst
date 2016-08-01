@@ -6,7 +6,7 @@ Contributors
 * Ramon Bastiaans
 * Mike Dacre
 * Mehdi Dogguy
-* Stephan Gorget (past author)
+* Stephan Gorget
 * Rémi Palancher
 * Mark Roberts
 * Giovanni Torres

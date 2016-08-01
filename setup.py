@@ -107,7 +107,7 @@ def setup_package():
             "Environment :: Console",
             "Intended Audience :: Developers",
             "Intended Audience :: System Administrators",
-            "License :: OSI Approved :: GNU General Public License (GPL)",
+            "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
             "Natural Language :: English",
             "Operating System :: POSIX :: Linux",
             "Programming Language :: Cython",

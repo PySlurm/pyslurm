@@ -14,3 +14,6 @@
 
 # Vim swap files
 *.swp
+
+# Doc build
+/doc/build/

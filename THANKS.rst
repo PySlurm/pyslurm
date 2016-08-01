@@ -1,4 +1,4 @@
-Many Thanks to the following :
+Many Thanks to the following:
 
 * Mary Cushion
 * Paul Selby

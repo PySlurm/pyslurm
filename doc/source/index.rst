@@ -1,100 +1,42 @@
-.. PySlurm documentation master file, created by
-   sphinx-quickstart on Thu Sep  8 18:50:27 2011.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+PySlurm
+=======
 
-PySlurm: Slurm Interface to python
-===================================
-
-:Authors: Mark Roberts, Stephan Gorget
-:Date: |today|
 :Version: |version|
+:Date: |today|
 
-This module provides a low-level Python wrapper around the Slurm C-API using Cython.
+PySlurm is a set of Python/Cython extension modules that wrap the `Slurm
+<http://slurm.schedmd.com>`_ C API.  Slurm is typically used on HPC clusters of
+varying sizes, from clusters with a few nodes to clusters such as those listed
+on the `TOP500 <https://www.top500.org>`_.
 
-Contents
-========
+Examples
+--------
+
+Examples on how to use the PySlurm submodules.
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
 
-Block Class
-***********
+   examples/index
 
-.. autoclass:: pyslurm.block
-   :members:
+Developer's Guide
+-----------------
 
-Config Class
-************
+How to contribute to PySlurm, and some explanation of API design choices.
 
-.. autoclass:: pyslurm.config
-   :members:
+.. toctree::
+   :maxdepth: 1
 
-FrontEnd Class
-**************
+   dev/index
 
-.. autoclass:: pyslurm.front_end
-   :members:
+API Reference
+-------------
 
-HostList Class
-**************
+A description of all functions and classes, which are also the docstrings found
+in the source.  This includes the arguments and return types for each function.
 
-.. autoclass:: pyslurm.hostlist
-   :members:
+.. toctree::
+   :maxdepth: 1
+   :glob:
 
-Job Class
-*********
-
-.. autoclass:: pyslurm.job
-   :members:
-
-JobStep Class
-*************
-
-.. autoclass:: pyslurm.jobstep
-   :members:
-
-Node Class
-**********
-
-.. autoclass:: pyslurm.node
-   :members:
-
-Partition Class
-***************
-
-.. autoclass:: pyslurm.partition
-   :members:
-
-Reservation Class
-*****************
-
-.. autoclass:: pyslurm.reservation
-   :members:
-
-Statistics Class
-****************
-
-.. autoclass:: pyslurm.statistics
-   :members:
-
-Topology Class
-**************
-
-.. autoclass:: pyslurm.topology
-   :members:
-
-Trigger Class
-*************
-
-.. autoclass:: pyslurm.trigger
-   :members:
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   api/*

@@ -1,5 +1,33 @@
-# -*- coding: utf-8 -*-
+"""
+PySlurm: Python bindings for the Slurm C API
+============================================
+
+PySlurm is a Cython wrapper around Slurm C API functions.
+
+More information about Slurm can be found at http://slurm.schedmd.com.
+
+Extensions
+----------
+
+::
+
+    node            --- Get Node Information
+    job             --- Get Job Information
+    statistics      --- Get Slurmctld and Scheduler stats
+
+Utility tools
+-------------
+
+::
+
+    version         --- PySlurm version string
+    api_version     --- Slurm version string
+
+
+"""
 from __future__ import absolute_import, division, print_function
+
+__all__ = ["node"]
 
 import sys
 import ctypes

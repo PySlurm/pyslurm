@@ -1,5 +1,36 @@
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: embedsignature=True
 # cython: cdivision=True
+"""
+=================
+:mod:`statistics`
+=================
+
+The statistics extension module retrieves information related to slurmctld
+execution, including:
+
+    - threads
+    - agents
+    - jobs
+    - scheduling algorithms
+
+Slurm API Functions
+-------------------
+
+This module declares and wraps the following Slurm API functions:
+
+    - slurm_get_statistics
+    - slurm_free_stats_response_msg
+    - slurm_reset_statistics
+
+
+Stats Objects
+-------------
+
+Functions in this module wrap the ``stats_info_response_msg_t`` struct found in
+`slurm.h`. This struct is converted to a :class:`Stats` object, which implement
+Python properties to retrieve the value of each element.
+
+"""
 from __future__ import division, unicode_literals
 
 from pwd import getpwuid
@@ -10,13 +41,8 @@ from exceptions import PySlurmError
 
 cdef class Stats:
     """
-    An object to store Slurm statistics.
-
-    Attributes:
-        The Stats class contains attributes from the stats_info_response_msg
-        struct found in slurm.h.
+    An object to wrap ``stats_info_response_msg_t`` structs.
     """
-
     cdef:
         uint32_t parts_packed
         time_t req_time
@@ -64,126 +90,216 @@ cdef class Stats:
             return self.parts_packed
 
     property req_time:
+        """Request time of statistics"""
         def __get__(self):
             return self.req_time
 
     property req_time_start:
+        """Time since data was last reset"""
         def __get__(self):
             return self.req_time_start
 
     property server_thread_count:
+        """Number of current active slurmctld threads"""
         def __get__(self):
             return self.server_thread_count
 
     property agent_queue_size:
+        """
+        Size of the agent queue used to control communication between slurm
+        daemons and the controller.
+        """
         def __get__(self):
             return self.agent_queue_size
 
     property schedule_cycle_max:
+        """
+        Time in microseconds for the maximum scheduling cycle since last
+        reset.
+        """
         def __get__(self):
             return self.schedule_cycle_max
 
     property schedule_cycle_last:
+        """Time in microseconds for last scheduling cycle"""
         def __get__(self):
             return self.schedule_cycle_last
 
     property schedule_cycle_sum:
+        """
+        Divide by `schedule_cycle_counter` to get the Mean Cycle (mean of
+        scheduling cycles since last reset.
+        """
         def __get__(self):
             return self.schedule_cycle_sum
 
     property schedule_cycle_counter:
+        """Number of scheduling cycles since last reset"""
         def __get__(self):
             return self.schedule_cycle_counter
 
     property schedule_cycle_depth:
+        """
+         Divide by `schedule_cycle_counter` to get the Mean Depth Cycle.  Depth
+         means number of jobs processed in a scheduling cycle.
+        """
         def __get__(self):
             return self.schedule_cycle_depth
 
     property schedule_queue_len:
+        """Length of jobs pending queue"""
         def __get__(self):
             return self.schedule_queue_len
 
     property jobs_submitted:
+        """Number of jobs submitted since last reset"""
         def __get__(self):
             return self.jobs_submitted
 
     property jobs_started:
+        """
+        Number of jobs started since last reset. This includes backfilled
+        jobs.
+        """
         def __get__(self):
             return self.jobs_started
 
     property jobs_completed:
+        """Number of jobs completed since last reset"""
         def __get__(self):
             return self.jobs_completed
 
     property jobs_canceled:
+        """Number of jobs canceled since last reset"""
         def __get__(self):
             return self.jobs_canceled
 
     property jobs_failed:
+        """Number of jobs failed since last reset"""
         def __get__(self):
             return self.jobs_failed
 
     property bf_backfilled_jobs:
+        """
+        Number of jobs started thanks to backfilling since last slurm
+        start.
+        """
         def __get__(self):
             return self.bf_backfilled_jobs
 
     property bf_last_backfilled_jobs:
+        """
+        Number of jobs started thanks to backfilling since last time  stats
+        where reset. By default these values are reset at midnight UTC
+        time.
+        """
         def __get__(self):
             return self.bf_last_backfilled_jobs
 
     property bf_cycle_counter:
+        """Number of scheduling cycles since last reset"""
         def __get__(self):
             return self.bf_cycle_counter
 
     property bf_cycle_sum:
+        """
+        Divide by `bf_cycle_counter` to get Mean Cycle, mean scheduling
+        cycles since last reset.
+        """
         def __get__(self):
             return self.bf_cycle_sum
 
     property bf_cycle_last:
+        """Time  in  microseconds  of  last backfilling cycle"""
         def __get__(self):
             return self.bf_cycle_last
 
     property bf_cycle_max:
+        """
+        Time in microseconds of maximum backfilling cycle execution since last
+        reset.
+        """
         def __get__(self):
             return self.bf_cycle_max
 
     property bf_last_depth:
+        """
+        Number of processed jobs during last backfilling scheduling cycle. It
+        counts every process even if it has no option to execute due to
+        dependencies or limits.
+        """
         def __get__(self):
             return self.bf_last_depth
 
     property bf_last_depth_try:
+        """
+        Number of processed jobs during last backfilling scheduling cycle.  It
+        counts only processes with a chance to run waiting for available
+        resources.  These jobs make the backfilling algorithm heavier.
+        """
         def __get__(self):
             return self.bf_last_depth_try
 
     property bf_depth_sum:
+        """
+        Divide by `bf_cycle_counter` to get Depth Mean, mean of processed jobs
+        during backfilling scheduling  cycles  since last reset.
+        """
         def __get__(self):
             return self.bf_depth_sum
 
     property bf_depth_try_sum:
+        """
+        Divide by `bf_cycle_counter` to get Depth Mean (try depth), mean of
+        processed jobs during backfilling scheduling cycles since last reset.
+        It counts only processes with a chance to run waiting for available
+        resources.  These jobs are which makes the backfilling algorithm
+        heavier.
+        """
         def __get__(self):
             return self.bf_depth_try_sum
 
     property bf_queue_len:
+        """
+        Number of jobs pending to be processed by backfilling algorithm.  A job
+        appears as much times as partitions it requested.
+        """
         def __get__(self):
             return self.bf_queue_len
 
     property bf_queue_len_sum:
+        """
+        Divide by `bf_cycle_counter` to get Queue Length Mean, mean of jobs
+        pending to be processed by backfilling algorithm.
+        """
         def __get__(self):
             return self.bf_queue_len_sum
 
     property bf_when_last_cycle:
+        """Time when last execution cycle happened."""
         def __get__(self):
             return self.bf_when_last_cycle
 
     property bf_active:
+        """Data obtained in the middle of backfilling execution."""
         def __get__(self):
             return self.bf_active
 
     property rpc_type_stats:
+        """
+        Remote Procedure Call statistics by message type.
+
+        :rtype: dict
+        """
         def __get__(self):
             return self.rpc_type_stats
 
     property rpc_user_stats:
+        """
+        Remote Procedure Call statistics by user.
+
+        :rtype: dict
+        """
         def __get__(self):
             return self.rpc_user_stats
 
@@ -192,13 +308,12 @@ cpdef get_statistics():
     """
     Return scheduling statistics.
 
-    This output returns metrics for the main scheduler algorithm, backfill
-    scheduler and slurmctld execution, similar to the output of sdiag.
+    This function wraps the `slurm_get_statistics` function and returns metrics
+    for the main scheduler algorithm, backfill scheduler and slurmctld
+    execution, similar to the output of `sdiag`.
 
-    Args:
-        None
     Returns:
-        Statistics object with all scheduler statistics.
+        Stats: Statistics object with all scheduler statistics.
     """
     cdef:
         stats_info_request_msg_t req
@@ -292,12 +407,13 @@ cpdef int reset_statistics(self):
     """
     Reset scheduling statistics
 
-    This method required root privileges.
-
-    Args:
-        None
     Returns:
-        Integer return code.
+        int: Return code.
+
+    Notes:
+        #. This method requires **root** privileges.
+        #. Use :func:`get_errno` to translate return code if not 0.
+
     """
     cdef:
         stats_info_request_msg_t req
@@ -317,12 +433,12 @@ cdef rpc_num2string(uint16_t opcode):
     Return string mapping of opcode.
 
     Given a protocol opcode, this function returns its string description
-    mapping of the slurm_msg_type_t to its name.
+    mapping of the ``slurm_msg_type_t`` to its name.
 
     Args:
-        opcode (int): protocol opcode
+        opcode (int): Protocol opcode
     Returns:
-        String description of opcode
+        str: Description of opcode
     """
     cdef dict num2string
 

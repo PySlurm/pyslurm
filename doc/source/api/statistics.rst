@@ -1,0 +1,3 @@
+.. automodule:: pyslurm.statistics
+   :members:
+
