@@ -34,7 +34,7 @@ def test_job_scontrol():
     test_job = all_job_ids[0]
     #assert type(test_job) is IntType
 
-    test_job_info = pyslurm.job().find_id(test_job)
+    test_job_info = pyslurm.job().find_id(str(test_job))[0]
     assert test_job == test_job_info["job_id"]
 
     scontrol = subprocess.Popen(["scontrol", "-d", "show", "job",

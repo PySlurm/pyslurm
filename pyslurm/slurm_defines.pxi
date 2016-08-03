@@ -264,6 +264,7 @@ SELECT_NAV_MODE = slurm.SELECT_NAV_MODE
 #NO_VAL = 0xfffffffe
 #NO_VAL64 = 0xfffffffffffffffe
 
+SLURM_PENDING_STEP = 0xfffffffd
 SLURM_BATCH_SCRIPT = 0xfffffffe
 SLURM_EXTERN_CONT = 0xffffffff
 
