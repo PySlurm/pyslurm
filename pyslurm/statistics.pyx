@@ -33,275 +33,268 @@ Python properties to retrieve the value of each element.
 """
 from __future__ import division, unicode_literals
 
-from pwd import getpwuid
-
-from common cimport *
-from utils cimport *
+from c_statistics cimport *
+from slurm_common cimport *
 from exceptions import PySlurmError
+from pwd import getpwuid
 
 cdef class Stats:
     """
     An object to wrap ``stats_info_response_msg_t`` structs.
     """
     cdef:
-        uint32_t parts_packed
-        time_t req_time
-        time_t req_time_start
-        uint32_t server_thread_count
-        uint32_t agent_queue_size
-        uint32_t schedule_cycle_max
-        uint32_t schedule_cycle_last
-        uint32_t schedule_cycle_sum
-        uint32_t schedule_cycle_counter
-        uint32_t schedule_cycle_depth
-        uint32_t schedule_queue_len
-        uint32_t jobs_submitted
-        uint32_t jobs_started
-        uint32_t jobs_completed
-        uint32_t jobs_canceled
-        uint32_t jobs_failed
-        uint32_t bf_backfilled_jobs
-        uint32_t bf_last_backfilled_jobs
-        uint32_t bf_cycle_counter
-        uint64_t bf_cycle_sum
-        uint32_t bf_cycle_last
-        uint32_t bf_cycle_max
-        uint32_t bf_last_depth
-        uint32_t bf_last_depth_try
-        uint32_t bf_depth_sum
-        uint32_t bf_depth_try_sum
-        uint32_t bf_queue_len
-        uint32_t bf_queue_len_sum
-        time_t bf_when_last_cycle
-        uint32_t bf_active
-        uint32_t rpc_type_size
-        uint16_t *rpc_type_id
-        uint32_t *rpc_type_cnt
-        uint64_t *rpc_type_time
-        uint32_t rpc_user_size
-        uint32_t *rpc_user_id
-        uint32_t *rpc_user_cnt
-        uint64_t *rpc_user_time
-        dict rpc_type_stats
-        dict rpc_user_stats
+        readonly uint32_t parts_packed
+        readonly time_t req_time
+        readonly time_t req_time_start
+        readonly uint32_t server_thread_count
+        readonly uint32_t agent_queue_size
+        readonly uint32_t schedule_cycle_max
+        readonly uint32_t schedule_cycle_last
+        readonly uint32_t schedule_cycle_sum
+        readonly uint32_t schedule_cycle_counter
+        readonly uint32_t schedule_cycle_depth
+        readonly uint32_t schedule_queue_len
+        readonly uint32_t jobs_submitted
+        readonly uint32_t jobs_started
+        readonly uint32_t jobs_completed
+        readonly uint32_t jobs_canceled
+        readonly uint32_t jobs_failed
+        readonly uint32_t bf_backfilled_jobs
+        readonly uint32_t bf_last_backfilled_jobs
+        readonly uint32_t bf_cycle_counter
+        readonly uint64_t bf_cycle_sum
+        readonly uint32_t bf_cycle_last
+        readonly uint32_t bf_cycle_max
+        readonly uint32_t bf_last_depth
+        readonly uint32_t bf_last_depth_try
+        readonly uint32_t bf_depth_sum
+        readonly uint32_t bf_depth_try_sum
+        readonly uint32_t bf_queue_len
+        readonly uint32_t bf_queue_len_sum
+        readonly time_t bf_when_last_cycle
+        readonly uint32_t bf_active
+        readonly uint32_t rpc_type_size
+        readonly uint32_t rpc_user_size
+        readonly dict rpc_type_stats
+        readonly dict rpc_user_stats
 
-    property parts_packed:
-        def __get__(self):
-            return self.parts_packed
+#    property parts_packed:
+#        def __get__(self):
+#            return self.parts_packed
 
-    property req_time:
-        """Request time of statistics"""
-        def __get__(self):
-            return self.req_time
+#    property req_time:
+#        """Request time of statistics"""
+#        def __get__(self):
+#            return self.req_time
 
-    property req_time_start:
-        """Time since data was last reset"""
-        def __get__(self):
-            return self.req_time_start
+#    property req_time_start:
+#        """Time since data was last reset"""
+#        def __get__(self):
+#            return self.req_time_start
 
-    property server_thread_count:
-        """Number of current active slurmctld threads"""
-        def __get__(self):
-            return self.server_thread_count
+#    property server_thread_count:
+#        """Number of current active slurmctld threads"""
+#        def __get__(self):
+#            return self.server_thread_count
 
-    property agent_queue_size:
-        """
-        Size of the agent queue used to control communication between slurm
-        daemons and the controller.
-        """
-        def __get__(self):
-            return self.agent_queue_size
+#    property agent_queue_size:
+#        """
+#        Size of the agent queue used to control communication between slurm
+#        daemons and the controller.
+#        """
+#        def __get__(self):
+#            return self.agent_queue_size
 
-    property schedule_cycle_max:
-        """
-        Time in microseconds for the maximum scheduling cycle since last
-        reset.
-        """
-        def __get__(self):
-            return self.schedule_cycle_max
+#    property schedule_cycle_max:
+#        """
+#        Time in microseconds for the maximum scheduling cycle since last
+#        reset.
+#        """
+#        def __get__(self):
+#            return self.schedule_cycle_max
+#
+#    property schedule_cycle_last:
+#        """Time in microseconds for last scheduling cycle"""
+#        def __get__(self):
+#            return self.schedule_cycle_last
+#
+#    property schedule_cycle_sum:
+#        """
+#        Divide by `schedule_cycle_counter` to get the Mean Cycle (mean of
+#        scheduling cycles since last reset.
+#        """
+#        def __get__(self):
+#            return self.schedule_cycle_sum
+#
+#    property schedule_cycle_counter:
+#        """Number of scheduling cycles since last reset"""
+#        def __get__(self):
+#            return self.schedule_cycle_counter
+#
+#    property schedule_cycle_depth:
+#        """
+#         Divide by `schedule_cycle_counter` to get the Mean Depth Cycle.  Depth
+#         means number of jobs processed in a scheduling cycle.
+#        """
+#        def __get__(self):
+#            return self.schedule_cycle_depth
+#
+#    property schedule_queue_len:
+#        """Length of jobs pending queue"""
+#        def __get__(self):
+#            return self.schedule_queue_len
+#
+#    property jobs_submitted:
+#        """Number of jobs submitted since last reset"""
+#        def __get__(self):
+#            return self.jobs_submitted
+#
+#    property jobs_started:
+#        """
+#        Number of jobs started since last reset. This includes backfilled
+#        jobs.
+#        """
+#        def __get__(self):
+#            return self.jobs_started
+#
+#    property jobs_completed:
+#        """Number of jobs completed since last reset"""
+#        def __get__(self):
+#            return self.jobs_completed
+#
+#    property jobs_canceled:
+#        """Number of jobs canceled since last reset"""
+#        def __get__(self):
+#            return self.jobs_canceled
+#
+#    property jobs_failed:
+#        """Number of jobs failed since last reset"""
+#        def __get__(self):
+#            return self.jobs_failed
+#
+#    property bf_backfilled_jobs:
+#        """
+#        Number of jobs started thanks to backfilling since last slurm
+#        start.
+#        """
+#        def __get__(self):
+#            return self.bf_backfilled_jobs
+#
+#    property bf_last_backfilled_jobs:
+#        """
+#        Number of jobs started thanks to backfilling since last time  stats
+#        where reset. By default these values are reset at midnight UTC
+#        time.
+#        """
+#        def __get__(self):
+#            return self.bf_last_backfilled_jobs
+#
+#    property bf_cycle_counter:
+#        """Number of scheduling cycles since last reset"""
+#        def __get__(self):
+#            return self.bf_cycle_counter
 
-    property schedule_cycle_last:
-        """Time in microseconds for last scheduling cycle"""
-        def __get__(self):
-            return self.schedule_cycle_last
-
-    property schedule_cycle_sum:
-        """
-        Divide by `schedule_cycle_counter` to get the Mean Cycle (mean of
-        scheduling cycles since last reset.
-        """
-        def __get__(self):
-            return self.schedule_cycle_sum
-
-    property schedule_cycle_counter:
-        """Number of scheduling cycles since last reset"""
-        def __get__(self):
-            return self.schedule_cycle_counter
-
-    property schedule_cycle_depth:
-        """
-         Divide by `schedule_cycle_counter` to get the Mean Depth Cycle.  Depth
-         means number of jobs processed in a scheduling cycle.
-        """
-        def __get__(self):
-            return self.schedule_cycle_depth
-
-    property schedule_queue_len:
-        """Length of jobs pending queue"""
-        def __get__(self):
-            return self.schedule_queue_len
-
-    property jobs_submitted:
-        """Number of jobs submitted since last reset"""
-        def __get__(self):
-            return self.jobs_submitted
-
-    property jobs_started:
-        """
-        Number of jobs started since last reset. This includes backfilled
-        jobs.
-        """
-        def __get__(self):
-            return self.jobs_started
-
-    property jobs_completed:
-        """Number of jobs completed since last reset"""
-        def __get__(self):
-            return self.jobs_completed
-
-    property jobs_canceled:
-        """Number of jobs canceled since last reset"""
-        def __get__(self):
-            return self.jobs_canceled
-
-    property jobs_failed:
-        """Number of jobs failed since last reset"""
-        def __get__(self):
-            return self.jobs_failed
-
-    property bf_backfilled_jobs:
-        """
-        Number of jobs started thanks to backfilling since last slurm
-        start.
-        """
-        def __get__(self):
-            return self.bf_backfilled_jobs
-
-    property bf_last_backfilled_jobs:
-        """
-        Number of jobs started thanks to backfilling since last time  stats
-        where reset. By default these values are reset at midnight UTC
-        time.
-        """
-        def __get__(self):
-            return self.bf_last_backfilled_jobs
-
-    property bf_cycle_counter:
-        """Number of scheduling cycles since last reset"""
-        def __get__(self):
-            return self.bf_cycle_counter
-
-    property bf_cycle_sum:
-        """
-        Divide by `bf_cycle_counter` to get Mean Cycle, mean scheduling
-        cycles since last reset.
-        """
-        def __get__(self):
-            return self.bf_cycle_sum
-
-    property bf_cycle_last:
-        """Time  in  microseconds  of  last backfilling cycle"""
-        def __get__(self):
-            return self.bf_cycle_last
-
-    property bf_cycle_max:
-        """
-        Time in microseconds of maximum backfilling cycle execution since last
-        reset.
-        """
-        def __get__(self):
-            return self.bf_cycle_max
-
-    property bf_last_depth:
-        """
-        Number of processed jobs during last backfilling scheduling cycle. It
-        counts every process even if it has no option to execute due to
-        dependencies or limits.
-        """
-        def __get__(self):
-            return self.bf_last_depth
-
-    property bf_last_depth_try:
-        """
-        Number of processed jobs during last backfilling scheduling cycle.  It
-        counts only processes with a chance to run waiting for available
-        resources.  These jobs make the backfilling algorithm heavier.
-        """
-        def __get__(self):
-            return self.bf_last_depth_try
-
-    property bf_depth_sum:
-        """
-        Divide by `bf_cycle_counter` to get Depth Mean, mean of processed jobs
-        during backfilling scheduling  cycles  since last reset.
-        """
-        def __get__(self):
-            return self.bf_depth_sum
-
-    property bf_depth_try_sum:
-        """
-        Divide by `bf_cycle_counter` to get Depth Mean (try depth), mean of
-        processed jobs during backfilling scheduling cycles since last reset.
-        It counts only processes with a chance to run waiting for available
-        resources.  These jobs are which makes the backfilling algorithm
-        heavier.
-        """
-        def __get__(self):
-            return self.bf_depth_try_sum
-
-    property bf_queue_len:
-        """
-        Number of jobs pending to be processed by backfilling algorithm.  A job
-        appears as much times as partitions it requested.
-        """
-        def __get__(self):
-            return self.bf_queue_len
-
-    property bf_queue_len_sum:
-        """
-        Divide by `bf_cycle_counter` to get Queue Length Mean, mean of jobs
-        pending to be processed by backfilling algorithm.
-        """
-        def __get__(self):
-            return self.bf_queue_len_sum
-
-    property bf_when_last_cycle:
-        """Time when last execution cycle happened."""
-        def __get__(self):
-            return self.bf_when_last_cycle
-
-    property bf_active:
-        """Data obtained in the middle of backfilling execution."""
-        def __get__(self):
-            return self.bf_active
-
-    property rpc_type_stats:
-        """
-        Remote Procedure Call statistics by message type.
-
-        :rtype: dict
-        """
-        def __get__(self):
-            return self.rpc_type_stats
-
-    property rpc_user_stats:
-        """
-        Remote Procedure Call statistics by user.
-
-        :rtype: dict
-        """
-        def __get__(self):
-            return self.rpc_user_stats
+#    property bf_cycle_sum:
+#        """
+#        Divide by `bf_cycle_counter` to get Mean Cycle, mean scheduling
+#        cycles since last reset.
+#        """
+#        def __get__(self):
+#            return self.bf_cycle_sum
+#
+#    property bf_cycle_last:
+#        """Time  in  microseconds  of  last backfilling cycle"""
+#        def __get__(self):
+#            return self.bf_cycle_last
+#
+#    property bf_cycle_max:
+#        """
+#        Time in microseconds of maximum backfilling cycle execution since last
+#        reset.
+#        """
+#        def __get__(self):
+#            return self.bf_cycle_max
+#
+#    property bf_last_depth:
+#        """
+#        Number of processed jobs during last backfilling scheduling cycle. It
+#        counts every process even if it has no option to execute due to
+#        dependencies or limits.
+#        """
+#        def __get__(self):
+#            return self.bf_last_depth
+#
+#    property bf_last_depth_try:
+#        """
+#        Number of processed jobs during last backfilling scheduling cycle.  It
+#        counts only processes with a chance to run waiting for available
+#        resources.  These jobs make the backfilling algorithm heavier.
+#        """
+#        def __get__(self):
+#            return self.bf_last_depth_try
+#
+#    property bf_depth_sum:
+#        """
+#        Divide by `bf_cycle_counter` to get Depth Mean, mean of processed jobs
+#        during backfilling scheduling  cycles  since last reset.
+#        """
+#        def __get__(self):
+#            return self.bf_depth_sum
+#
+#    property bf_depth_try_sum:
+#        """
+#        Divide by `bf_cycle_counter` to get Depth Mean (try depth), mean of
+#        processed jobs during backfilling scheduling cycles since last reset.
+#        It counts only processes with a chance to run waiting for available
+#        resources.  These jobs are which makes the backfilling algorithm
+#        heavier.
+#        """
+#        def __get__(self):
+#            return self.bf_depth_try_sum
+#
+#    property bf_queue_len:
+#        """
+#        Number of jobs pending to be processed by backfilling algorithm.  A job
+#        appears as much times as partitions it requested.
+#        """
+#        def __get__(self):
+#            return self.bf_queue_len
+#
+#    property bf_queue_len_sum:
+#        """
+#        Divide by `bf_cycle_counter` to get Queue Length Mean, mean of jobs
+#        pending to be processed by backfilling algorithm.
+#        """
+#        def __get__(self):
+#            return self.bf_queue_len_sum
+#
+#    property bf_when_last_cycle:
+#        """Time when last execution cycle happened."""
+#        def __get__(self):
+#            return self.bf_when_last_cycle
+#
+#    property bf_active:
+#        """Data obtained in the middle of backfilling execution."""
+#        def __get__(self):
+#            return self.bf_active
+#
+#    property rpc_type_stats:
+#        """
+#        Remote Procedure Call statistics by message type.
+#
+#        :rtype: dict
+#        """
+#        def __get__(self):
+#            return self.rpc_type_stats
+#
+#    property rpc_user_stats:
+#        """
+#        Remote Procedure Call statistics by user.
+#
+#        :rtype: dict
+#        """
+#        def __get__(self):
+#            return self.rpc_user_stats
 
 
 cpdef get_statistics():
@@ -312,6 +305,8 @@ cpdef get_statistics():
     for the main scheduler algorithm, backfill scheduler and slurmctld
     execution, similar to the output of `sdiag`.
 
+    This function wraps the ``_print_stats`` function in `src/sdiag/sdiag.c`.
+
     Returns:
         Stats: Statistics object with all scheduler statistics.
     """
@@ -320,8 +315,6 @@ cpdef get_statistics():
         stats_info_response_msg_t *buf = NULL
         int rc
         uint32_t i
-        dict rpc_type_stats
-        dict rpc_user_stats
 
     req.command_id = STAT_COMMAND_GET
     rc = slurm_get_statistics(&buf, <stats_info_request_msg_t*>&req)

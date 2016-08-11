@@ -1,4 +1,9 @@
-from common cimport *
+# c_job.pxd
+#
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
+from libc.stdint cimport int32_t
+from posix.types cimport pid_t, time_t
+from slurm_common cimport dynamic_plugin_data_t
 
 cdef extern from "slurm/slurm.h" nogil:
     ctypedef struct job_resources_t:

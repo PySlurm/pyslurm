@@ -1,4 +1,4 @@
-from common cimport *
+from libc.stdint cimport uint16_t, uint32_t, uint64_t
 
 cdef extern from "slurm/slurm.h" nogil:
     int slurm_ping(int primary)

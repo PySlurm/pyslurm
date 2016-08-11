@@ -4,10 +4,12 @@
 
 from __future__ import print_function, division, unicode_literals
 
-from common cimport *
-from utils cimport *
+from posix.types cimport pid_t, time_t
+from c_job cimport *
+from slurm_common cimport *
 from exceptions import PySlurmError
 from pwd import getpwnam
+from utils cimport *
 
 cdef class Job:
     pass

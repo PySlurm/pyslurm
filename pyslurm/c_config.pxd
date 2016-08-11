@@ -1,4 +1,8 @@
-from common cimport *
+# c_config.pxd
+#
+from libc.stdint cimport uint16_t, uint32_t, uint64_t
+from libc.stdio cimport FILE
+from posix.types cimport time_t
 
 cdef extern from "slurm/slurm.h" nogil:
     long SLURM_VERSION_NUMBER

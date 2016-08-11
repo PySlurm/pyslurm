@@ -1,4 +1,7 @@
-from common cimport *
+# c_statistics.pxd
+#
+from libc.stdint cimport uint16_t, uint32_t, uint64_t
+from posix.types cimport time_t
 
 cdef extern from "slurm/slurm.h" nogil:
     enum:

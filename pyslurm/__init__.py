@@ -27,7 +27,11 @@ Utility tools
 """
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["node"]
+__all__ = [
+    "node",
+    "statistics",
+    "partition"
+]
 
 import sys
 import ctypes
@@ -39,3 +43,4 @@ from .job import *
 from .statistics import *
 from .misc import *
 from .config import *
+from .partition import *

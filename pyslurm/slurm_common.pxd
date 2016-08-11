@@ -1,25 +1,25 @@
-# common.pxd
+# slurm_common.pxd
 #
 # Slurm declarations common to all other extension files.
 #
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int32_t
-from posix.types cimport pid_t
-
-cdef extern from "time.h" nogil:
-    ctypedef long time_t
-
-
-cdef extern from 'stdio.h' nogil:
-    ctypedef struct FILE
-    cdef FILE *stdout
-
+from posix.types cimport time_t
 
 cdef extern from "slurm/slurm.h" nogil:
+    # NOTE: should this just be enums?
     uint32_t INFINITE
     uint64_t INFINITE64
     uint32_t NO_VAL
     uint64_t NO_VAL64
+
+    enum:
+        CR_CORE
+        CR_SOCKET
+
+    enum:
+        MEM_PER_CPU
+        SHARED_FORCE
 
     enum:
         SHOW_ALL
@@ -54,8 +54,14 @@ cdef extern from "slurm/slurm_errno.h" nogil:
 #
 
 cdef extern void slurm_make_time_str(time_t *time, char *string, int size)
-cdef mins2time_str(uint32_t time)
-cdef secs2time_str(uint32_t time)
+cdef extern void convert_num_unit(double num, char *buf, int buf_size,
+                                  int orig_type, int spec_type, uint32_t flags)
+cdef extern uint16_t slurm_get_preempt_mode()
+cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
+
+cdef enum:
+    CONVERT_NUM_UNIT_EXACT
+    UNIT_NONE
 
 #
 # Declarations outside of slurmdb.h

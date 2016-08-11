@@ -1,4 +1,5 @@
 # cython: embedsignature=True
+# cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: cdivision=True
 """
 ===========
@@ -21,7 +22,6 @@ This module declares and wraps the following Slurm API functions:
 - slurm_node_state_string
 - slurm_print_node_info_msg
 - slurm_print_node_table
-- slurm_strerror
 - slurm_update_node
 
 Node Objects
@@ -29,28 +29,30 @@ Node Objects
 
 Several functions in this module wrap the ``node_info_t`` struct found in
 `slurm.h`. The members of this struct are converted to a :class:`Node` object,
-which implement Python properties to retrieve the value of each attribute.
+which implements Python properties to retrieve the value of each attribute.
 
 Each node record in a ``node_info_msg_t`` struct is converted to a
 :class:`Node` object when calling some of the functions in this module.
 
 """
-from __future__ import print_function, division, unicode_literals
+from __future__ import print_function, division#, unicode_literals
 
 import os as _os
+
+from libc.stdio cimport stdout
+from c_node cimport *
+from slurm_common cimport *
+from exceptions import PySlurmError
 from pwd import getpwuid
 from utils cimport *
-from common cimport *
-from exceptions import PySlurmError
 
 include "node.pxi"
-include "utils.pxi"
 
 cdef class Node:
     """An object to wrap `node_info_t` structs."""
     cdef:
         uint32_t alloc_mem
-        unicode arch
+        readonly object arch
         uint16_t boards
         time_t boot_time
         unicode boot_time_str
@@ -96,15 +98,16 @@ cdef class Node:
         unicode version
         uint32_t weight
 
+    # missing tres_format_str, core_spec_count, cpu_spec_list, mem_spec_limit
     property alloc_mem:
         """Total memory, in MB, currently allocated by jobs on the node"""
         def __get__(self):
             return self.alloc_mem
 
-    property arch:
-        """Computer architecture"""
-        def __get__(self):
-            return self.arch
+#    property arch:
+#        """Computer architecture"""
+#        def __get__(self):
+#            return self.arch
 
     property boards:
         """Total number of boards per node"""
@@ -439,6 +442,9 @@ cdef get_node_info_msg(node, ids=False):
     If node is NULL, then call ``slurm_load_node`` to get all nodes.  If node
     is not NULL, then call ``slurm_load_node_single`` to get specific node.
 
+    This function wraps the ``slurm_sprint_node_table`` function found in
+    `src/api/node_info.c`.
+
     Args:
         node (str): node id to query.  If node is None, then get all nodes.
         ids (Optional[bool]): True returns only the node names (default
@@ -558,7 +564,7 @@ cdef get_node_info_msg(node, ids=False):
                     this_node.rack_midplane = tounicode(select_reason_str)
 
             if record.arch:
-                this_node.arch = tounicode(record.arch)
+                this_node.arch = record.arch if record.arch is not NULL else None
 
             this_node.cores_per_socket = record.cores
             this_node.cpu_alloc = alloc_cpus
@@ -745,11 +751,11 @@ cpdef print_node_info_msg(int one_liner=False):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef print_node_info_table(char* node, int one_liner=False):
+cpdef print_node_info_table(node, int one_liner=False):
     """
     Print information about a specific node to stdout.
 
-    This function outputs information about all Slurm nodes based upon the
+    This function outputs information about a give Slurm node based upon the
     message loaded by ``slurm_load_node_single``. It uses the
     ``slurm_print_node_table`` function to print to stdout.  The output is
     equivalent to *scontrol show node <nodename>*
@@ -766,7 +772,8 @@ cpdef print_node_info_table(char* node, int one_liner=False):
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int rc
 
-    rc = slurm_load_node_single(&node_info_msg_ptr, node, show_flags)
+    b_node = node.encode("UTF-8")
+    rc = slurm_load_node_single(&node_info_msg_ptr, b_node, show_flags)
 
     if rc == SLURM_SUCCESS:
         slurm_print_node_table(stdout, &node_info_msg_ptr.node_array[0],
@@ -886,9 +893,10 @@ cpdef int update_node(dict node_dict):
     cdef:
         update_node_msg_t update_node_msg
         int rc
+        int errno
 
     if not node_dict:
-        raise PySlurmError("You must provide a valid node update dictionary.")
+        raise PySlurmError("You must provide a node update dictionary.")
 
     slurm_init_update_node_msg(&update_node_msg)
 
@@ -922,6 +930,7 @@ cpdef int update_node(dict node_dict):
     rc = slurm_update_node(&update_node_msg)
 
     if rc != SLURM_SUCCESS:
-        raise PySlurmError(slurm_strerror(rc), rc)
-
-    return rc
+        errno = slurm_get_errno()
+        raise PySlurmError(slurm_strerror(errno), errno)
+    else:
+        return rc

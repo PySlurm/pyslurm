@@ -1,18 +1,9 @@
 from libc.stdint cimport uint16_t, uint32_t, uint64_t
-
-from common cimport *
-
-cdef extern from "time.h" nogil:
-    ctypedef long time_t
-
-#cdef extern from "string.h" nogil:
-#    char *strtok_r(char *str, const char *delim, char **saveptr)
+from libc.stdio cimport FILE
+from posix.types cimport time_t
+from slurm_common cimport dynamic_plugin_data_t
 
 include "node.pxi"
-
-#
-# Main Slurm API
-#
 
 cdef extern from "slurm/slurm.h" nogil:
     ctypedef struct acct_gather_energy_t:
@@ -125,10 +116,6 @@ cdef extern from "slurm/slurm.h" nogil:
     int slurm_load_node_single(node_info_msg_t **resp,
                                char *node_name,
                                uint16_t show_flags)
-
-#    int slurm_get_node_energy(char *host, uint16_t delta,
-#                              uint16_t *sensors_cnt,
-#                              acct_gather_energy_t **energy)
 
     int slurm_get_select_nodeinfo(dynamic_plugin_data_t *nodeinfo,
                                   select_nodedata_type data_type,

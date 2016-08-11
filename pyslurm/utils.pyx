@@ -1,11 +1,18 @@
-# cython: embedsignature=True
 # cython: cdivision=True
-#
-# common.pyx
-#
 from __future__ import print_function, division, unicode_literals
 
 from libc.stdint cimport uint32_t
+from slurm_common cimport INFINITE
+
+# 
+# PySlurm Helper Functions
+#
+
+cdef unicode tounicode(char* s):
+    if s == NULL:
+        return None
+    else:
+        return s.decode("UTF-8", "replace")
 
 #
 # Slurm functions not externalized
@@ -31,9 +38,9 @@ cdef secs2time_str(uint32_t time):
         time_str = "UNLIMITED"
     else:
         seconds = time % 60
-        minutes = (time / 60) % 60
-        hours = (time / 3600) % 24
-        days = time / 86400
+        minutes = (time // 60) % 60
+        hours = (time // 3600) % 24
+        days = time // 86400
 
         if days < 0 or  hours < 0 or minutes < 0 or seconds < 0:
             time_str = "INVALID"
@@ -64,8 +71,8 @@ cdef mins2time_str(uint32_t time):
     else:
         seconds = 0
         minutes = time % 60
-        hours = (time / 60) % 24
-        days = time / 1440
+        hours = (time // 60) % 24
+        days = time // 1440
 
         if days < 0 or  hours < 0 or minutes < 0 or seconds < 0:
             time_str = "INVALID"

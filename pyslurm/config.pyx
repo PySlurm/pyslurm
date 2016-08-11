@@ -1,13 +1,11 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
-
 from __future__ import division, unicode_literals
 
-from common cimport *
-from utils cimport *
+from libc.stdio cimport stdout
+from c_config cimport *
+from slurm_common cimport *
 from exceptions import PySlurmError
 
-# Overall Slurm Information
 cpdef api_version():
     """
     Return Slurm API version number.

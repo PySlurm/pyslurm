@@ -1,15 +1,5 @@
-# 
-# PySlurm Helper Functions
-#
-cdef inline strOrNone(char *value):
-    if value is NULL:
-        return None
-    else:
-        return value.decode("utf-8", "replace")
+from libc.stdint cimport uint32_t
 
-
-cdef inline list listOrNone(char *value):
-    if value is NULL:
-        return None
-    else:
-        return value.split(",")
+cdef unicode tounicode(char* s)
+cdef secs2time_str(uint32_t time)
+cdef mins2time_str(uint32_t time)

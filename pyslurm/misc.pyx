@@ -1,11 +1,10 @@
 # cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
-
 from __future__ import print_function, division, unicode_literals
 
-from common cimport *
-from utils cimport *
-from exceptions import PySlurmError
+from libc.stdint cimport uint16_t, uint32_t, uint64_t
+from c_misc cimport *
+from slurm_common cimport *
 
 #
 # Error Handling
