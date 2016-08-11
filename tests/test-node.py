@@ -3,37 +3,46 @@ from __future__ import print_function, division, absolute_import
 import pyslurm
 import re
 import subprocess
-from nose.tools import assert_equals
+from nose.tools import assert_equals, assert_true
+
+def test_get_node():
+    """Node: Test get_node() return type"""
+    all_node_ids = pyslurm.node.get_nodes(ids=True)
+    assert_true(isinstance(all_node_ids, list))
+
+    test_node = all_node_ids[0]
+    test_node_obj = pyslurm.node.get_node(test_node)
+    assert_true(isinstance(test_node_obj, pyslurm.node.Node))
 
 
 def test_get_nodes():
-    """Test get_nodes(), get_nodes_ids(), their count and type."""
+    """Node: Test get_nodes(), their count and type."""
     all_nodes = pyslurm.node.get_nodes()
-    assert isinstance(all_nodes, list)
+    assert_true(isinstance(all_nodes, list))
 
-    all_node_ids = pyslurm.node.get_nodes_ids()
-    assert isinstance(all_node_ids, list)
+    all_node_ids = pyslurm.node.get_nodes(ids=True)
+    assert_true(isinstance(all_node_ids, list))
 
-    assert len(all_nodes) == len(all_node_ids)
+    assert_equals(len(all_nodes), len(all_node_ids))
 
     first_node = all_nodes[0]
-    assert first_node.node_name in all_node_ids
+    assert_true(first_node.node_name in all_node_ids)
 
 
 def test_node_scontrol():
-    """Compare scontrol values to PySlurm values."""
+    """Node: Compare scontrol values to PySlurm values."""
 #    try:
 #        basestring
 #    except NameError:
 #        basestring = str
 
-    all_node_ids = pyslurm.node.get_nodes_ids()
+    all_node_ids = pyslurm.node.get_nodes(ids=True)
     # TODO: 
     # convert to a function and  use a for loop to get a running node and a
     # drained/downed node as well, mixed and allocated
     # and a non-existent node
     test_node = all_node_ids[0]
-#    assert isinstance(test_node, basestring)
+#    assert_equals(isinstance(test_node, basestring)
 
     obj = pyslurm.node.get_node(test_node)
     assert_equals(test_node, obj.node_name)
@@ -57,50 +66,62 @@ def test_node_scontrol():
 
     assert_equals(obj.alloc_mem, sctl["AllocMem"])
 
-    if sctl.get("Arch"):
-        assert obj.arch == sctl["Arch"]
-
-    assert obj.boards == sctl["Boards"]
-    assert obj.boot_time_str == sctl["BootTime"]
-    assert obj.cap_watts == sctl["CapWatts"]
-    assert obj.cores_per_socket == sctl["CoresPerSocket"]
-    assert obj.cpu_alloc == sctl["CPUAlloc"]
-    assert obj.cpu_err == sctl["CPUErr"]
+    assert_equals(obj.arch, sctl.get("Arch"))
+    assert_equals(obj.boards, sctl["Boards"])
+    assert_equals(obj.boot_time_str, sctl["BootTime"])
+    assert_equals(obj.cap_watts, sctl["CapWatts"])
+    assert_equals(obj.cores_per_socket, sctl["CoresPerSocket"])
+    assert_equals(obj.cpu_alloc, sctl["CPUAlloc"])
+    assert_equals(obj.cpu_err, sctl["CPUErr"])
 
     try:
-        assert obj.cpu_load == sctl["CPULoad"]
+        assert_equals(obj.cpu_load, sctl["CPULoad"])
     except AssertionError:
-        assert obj.cpu_load == float(sctl["CPULoad"])
+        assert_equals(obj.cpu_load, float(sctl["CPULoad"]))
 
-    assert obj.cpu_tot == sctl["CPUTot"]
-    assert obj.consumed_joules == sctl["ConsumedJoules"]
-    assert obj.cores_per_socket == sctl["CoresPerSocket"]
-    assert obj.current_watts == sctl["CurrentWatts"]
-    assert obj.ext_sensors_joules == sctl["ExtSensorsJoules"]
+    assert_equals(obj.consumed_joules, sctl["ConsumedJoules"])
 
-    assert obj.ext_sensors_temp == sctl["ExtSensorsTemp"]
-    assert obj.ext_sensors_watts == sctl["ExtSensorsWatts"]
-    assert obj.features == sctl["Features"].split(",")
-    assert obj.free_mem == sctl["FreeMem"]
-    assert obj.gres == sctl["Gres"].split(",")
+    if sctl.get("CoreSpecCount"):
+        assert_equals(obj.core_spec_count, sctl["CoreSpecCount"])
 
-    assert obj.gres_drain == sctl["GresDrain"].split(",")
-    assert obj.gres_used == sctl["GresUsed"].split(",")
-    assert obj.lowest_joules == sctl["LowestJoules"]
-    assert obj.node_name == sctl["NodeName"]
-    assert obj.node_addr == sctl["NodeAddr"]
-    assert obj.node_host_name == sctl["NodeHostName"]
+    assert_equals(obj.cores_per_socket, sctl["CoresPerSocket"])
 
-    if sctl.get("OS"):
-        assert obj.os == sctl["OS"]
+    if sctl.get("CPUSpecList"):
+        assert_equals(obj.cpu_spec_list, sctl["CPUSpecList"].split(","))
 
-    assert obj.owner == sctl["Owner"]
-    assert obj.real_memory == sctl["RealMemory"]
-    assert obj.slurmd_start_time_str == sctl["SlurmdStartTime"]
-    assert obj.sockets == sctl["Sockets"]
-    assert obj.state == sctl["State"]
+    assert_equals(obj.cpu_tot, sctl["CPUTot"])
+    assert_equals(obj.current_watts, sctl["CurrentWatts"])
+    assert_equals(obj.ext_sensors_joules, sctl["ExtSensorsJoules"])
+    assert_equals(obj.ext_sensors_temp, sctl["ExtSensorsTemp"])
+    assert_equals(obj.ext_sensors_watts, sctl["ExtSensorsWatts"])
+    assert_equals(obj.features, sctl["Features"].split(","))
+    assert_equals(obj.free_mem, sctl["FreeMem"])
 
-    assert obj.threads_per_core == sctl["ThreadsPerCore"]
-    assert obj.tmp_disk == sctl["TmpDisk"]
-    assert obj.version == sctl["Version"]
-    assert obj.weight == sctl["Weight"]
+    if sctl.get("Gres"):
+        assert_equals(obj.gres, sctl["Gres"].split(","))
+
+    if sctl.get("GresDrain"):
+        assert_equals(obj.gres_drain, sctl["GresDrain"].split(","))
+
+    if sctl.get("GresUsed"):
+        assert_equals(obj.gres_used, sctl["GresUsed"].split(","))
+
+    assert_equals(obj.lowest_joules, sctl["LowestJoules"])
+
+    if sctl.get("MemSpecLimit"):
+        assert_equals(obj.mem_spec_limit, sctl.get("MemSpecLimit"))
+
+    assert_equals(obj.node_name, sctl["NodeName"])
+    assert_equals(obj.node_addr, sctl["NodeAddr"])
+    assert_equals(obj.node_host_name, sctl["NodeHostName"])
+    assert_equals(obj.os, sctl.get("OS"))
+    assert_equals(obj.owner, sctl["Owner"])
+    assert_equals(obj.real_memory, sctl["RealMemory"])
+    assert_equals(obj.reason_str, sctl.get("Reason"))
+    assert_equals(obj.slurmd_start_time_str, sctl["SlurmdStartTime"])
+    assert_equals(obj.sockets, sctl["Sockets"])
+    assert_equals(obj.state, sctl["State"])
+    assert_equals(obj.threads_per_core, sctl["ThreadsPerCore"])
+    assert_equals(obj.tmp_disk, sctl["TmpDisk"])
+    assert_equals(obj.version, sctl["Version"])
+    assert_equals(obj.weight, sctl["Weight"])
