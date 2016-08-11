@@ -1,5 +1,8 @@
-# Compiled python modules
+# Python 2 bytecode compiled modules
 *.pyc
+
+# Python 3 bytecode compiled folder
+/pyslurm/__pycache__
 
 # Distutils build folder
 /build/
