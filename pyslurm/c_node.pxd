@@ -1,7 +1,7 @@
 from libc.stdint cimport uint16_t, uint32_t, uint64_t
 from libc.stdio cimport FILE
 from posix.types cimport time_t
-from slurm_common cimport dynamic_plugin_data_t
+from .slurm_common cimport dynamic_plugin_data_t
 
 include "node.pxi"
 
@@ -143,8 +143,8 @@ cdef extern char *slurm_node_state_string(uint32_t inx)
 # Defined node states
 #
 
-cdef inline IS_NODE_ALLOCATED(node_info_t* _X):
+cdef inline IS_NODE_ALLOCATED(node_info_t _X):
     return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ALLOCATED
 
-cdef inline IS_NODE_COMPLETING(node_info_t* _X):
+cdef inline IS_NODE_COMPLETING(node_info_t _X):
     return (_X.node_state & NODE_STATE_COMPLETING)

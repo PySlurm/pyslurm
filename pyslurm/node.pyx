@@ -35,362 +35,159 @@ Each node record in a ``node_info_msg_t`` struct is converted to a
 :class:`Node` object when calling some of the functions in this module.
 
 """
-from __future__ import print_function, division#, unicode_literals
+from __future__ import absolute_import, division#, unicode_literals
 
 import os as _os
+from pwd import getpwuid
 
 from libc.stdio cimport stdout
-from c_node cimport *
-from slurm_common cimport *
-from exceptions import PySlurmError
-from pwd import getpwuid
-from utils cimport *
+from .c_node cimport *
+from .slurm_common cimport *
+from .utils cimport *
+from .exceptions import PySlurmError
 
 include "node.pxi"
 
 cdef class Node:
     """An object to wrap `node_info_t` structs."""
     cdef:
-        uint32_t alloc_mem
+        readonly uint32_t alloc_mem
         readonly object arch
-        uint16_t boards
-        time_t boot_time
-        unicode boot_time_str
+        readonly uint16_t boards
+        readonly time_t boot_time
+        readonly unicode boot_time_str
         uint32_t cap_watts
         uint64_t consumed_joules
-        uint16_t cores_per_socket
-        uint16_t core_spec_cnt
+        readonly uint16_t cores_per_socket
+        readonly uint16_t core_spec_cnt
         uint32_t cpu_load
-        uint16_t cpu_alloc
-        uint16_t cpu_err
-        uint16_t cpu_tot
-        unicode cpu_spec_list
+        readonly uint16_t cpu_alloc
+        readonly uint16_t cpu_err
+        readonly uint16_t cpu_tot
+        readonly unicode cpu_spec_list
         uint32_t current_watts
         uint64_t ext_sensors_joules
         uint64_t ext_sensors_temp
         uint64_t ext_sensors_watts
-        unicode features
+        readonly list features
         uint32_t free_mem
-        unicode gres
-        unicode gres_drain
-        unicode gres_used
+        readonly list gres
+        readonly list gres_drain
+        readonly list gres_used
         uint32_t lowest_joules
-        uint32_t mem_spec_limit
-        unicode node_name
-        unicode node_addr
-        unicode node_host_name
-        unicode state
-        unicode os
+        readonly uint32_t mem_spec_limit
+        readonly unicode node_name
+        readonly unicode node_addr
+        readonly unicode node_host_name
+        readonly unicode os
         uint32_t owner
-        uint32_t real_memory
-        unicode rack_midplane
-        unicode reason
-        unicode reason_str
-        time_t reason_time
-        unicode reason_time_str
-        uint32_t reason_uid
-        unicode reason_user
-        time_t slurmd_start_time
-        unicode slurmd_start_time_str
-        uint16_t sockets
-        uint16_t threads_per_core
-        uint32_t tmp_disk
-        unicode version
-        uint32_t weight
+        readonly uint32_t real_memory
+        readonly unicode rack_midplane
+        readonly unicode reason
+        readonly unicode reason_str
+        readonly time_t reason_time
+        readonly unicode reason_time_str
+        readonly uint32_t reason_uid
+        readonly unicode reason_user
+        readonly time_t slurmd_start_time
+        readonly unicode slurmd_start_time_str
+        readonly uint16_t sockets
+        readonly unicode state
+        readonly uint16_t threads_per_core
+        readonly uint32_t tmp_disk
+        readonly unicode version
+        readonly uint32_t weight
 
-    # missing tres_format_str, core_spec_count, cpu_spec_list, mem_spec_limit
-    property alloc_mem:
-        """Total memory, in MB, currently allocated by jobs on the node"""
-        def __get__(self):
-            return self.alloc_mem
-
-#    property arch:
-#        """Computer architecture"""
-#        def __get__(self):
-#            return self.arch
-
-    property boards:
-        """Total number of boards per node"""
-        def __get__(self):
-            return self.boards
-
-    property boot_time:
-        """Time of node boot (epoch)"""
-        def __get__(self):
-            return self.boot_time
-
-    property boot_time_str:
-        """Time of node boot (formatted)"""
-        def __get__(self):
-            return self.boot_time_str
-
-    property cap_watts:
+    @property
+    def cap_watts(self):
         """Power consumption limit of node (watts)"""
-        def __get__(self):
-            if self.cap_watts == NO_VAL:
-                return "n/a"
-            else:
-                return self.cap_watts
+        if self.cap_watts == NO_VAL:
+            return "n/a"
+        else:
+            return self.cap_watts
 
-    property consumed_joules:
+    @property
+    def consumed_joules(self):
         """
         Energy consumed by node between the time registered by slurmd (joules,
         n/s if not supported)
         """
-        def __get__(self):
-            if self.consumed_joules == NO_VAL:
-                return "n/s"
-            else:
-                return int(self.consumed_joules)
+        if self.consumed_joules == NO_VAL:
+            return "n/s"
+        else:
+            return int(self.consumed_joules)
 
-    property cores_per_socket:
-        """Number of cores per socket"""
-        def __get__(self):
-            return self.cores_per_socket
-
-    property core_spec_cnt:
-        """Number of specialized cores on node"""
-        def __get__(self):
-            return self.core_spec_cnt
-
-    property cpu_alloc:
-        """CPUs allocated on node"""
-        def __get__(self):
-            return self.cpu_alloc
-
-    property cpu_err:
-        """CPUs in an ERROR state"""
-        def __get__(self):
-            return self.cpu_err
-
-    property cpu_load:
+    @property
+    def cpu_load(self):
         """CPU load"""
-        def __get__(self):
-            if self.cpu_load == NO_VAL:
-                return "N/A"
-            else:
-                return "%.2f" % (self.cpu_load / 100.0)
+        if self.cpu_load == NO_VAL:
+            return "N/A"
+        else:
+            return "%.2f" % (self.cpu_load / 100.0)
 
-    property cpu_tot:
-        """Configured count of CPUs running on node"""
-        def __get__(self):
-            return self.cpu_tot
-
-    property cpu_spec_list:
-        """Node's specialized CPUs"""
-        def __get__(self):
-            if self.cpu_spec_list is not None:
-                return self.cpu_spec_list.split(",")
-
-    property current_watts:
+    @property
+    def current_watts(self):
         """Instantaneous power consumption of node (watts)"""
-        def __get__(self):
-            if self.current_watts == NO_VAL:
-                return "n/s"
-            else:
-                return self.current_watts
+        if self.current_watts == NO_VAL:
+            return "n/s"
+        else:
+            return self.current_watts
 
-    property ext_sensors_joules:
+    @property
+    def ext_sensors_joules(self):
         """
         Energy consumed by node since time powered on (joules, n/s if not
         supported)
         """
-        def __get__(self):
-            if self.ext_sensors_joules == NO_VAL:
-                return "n/s"
-            else:
-                return int(self.ext_sensors_joules)
+        if self.ext_sensors_joules == NO_VAL:
+            return "n/s"
+        else:
+            return int(self.ext_sensors_joules)
 
-    property ext_sensors_temp:
+    @property
+    def ext_sensors_temp(self):
         """Temperature of node (joules, n/s if not supported)"""
-        def __get__(self):
-            if self.ext_sensors_temp == NO_VAL:
-                return "n/s"
-            else:
-                return int(self.ext_sensors_temp)
+        if self.ext_sensors_temp == NO_VAL:
+            return "n/s"
+        else:
+            return int(self.ext_sensors_temp)
 
-    property ext_sensors_watts:
+    @property
+    def ext_sensors_watts(self):
         """
         Instantaneous power consumption of node (joules, n/s if not supported)
         """
-        def __get__(self):
-            if self.ext_sensors_watts == NO_VAL:
-                return "n/s"
-            else:
-                return int(self.ext_sensors_watts)
+        if self.ext_sensors_watts == NO_VAL:
+            return "n/s"
+        else:
+            return int(self.ext_sensors_watts)
 
-    property features:
-        """List of a node's features"""
-        def __get__(self):
-            if self.features is not None:
-                return self.features.split(",")
-
-    property free_mem:
+    @property
+    def free_mem(self):
         """Free memory in MiB"""
-        def __get__(self):
-            if self.free_mem == NO_VAL:
-                return "N/A"
-            else:
-                return self.free_mem
+        if self.free_mem == NO_VAL:
+            return "N/A"
+        else:
+            return self.free_mem
 
-    property gres:
-        """List of a node's generic resources"""
-        def __get__(self):
-            if self.gres is not None:
-                return self.gres.split(",")
-
-    property gres_drain:
-        """List of drained GRES"""
-        def __get__(self):
-            if self.gres_drain is not None:
-                return self.gres_drain.split(",")
-
-    property gres_used:
-        """List of GRES in current use"""
-        def __get__(self):
-            if self.gres_used is not None:
-                return self.gres_used.split(",")
-
-    property lowest_joules:
+    @property
+    def lowest_joules(self):
         """
         Energy consumed by node between time powered on and time registered
         with slurmd (joules, n/s if not supported)
         """
-        def __get__(self):
-            if self.lowest_joules == NO_VAL:
-                return "n/s"
-            else:
-                return int(self.lowest_joules)
+        if self.lowest_joules == NO_VAL:
+            return "n/s"
+        else:
+            return int(self.lowest_joules)
 
-    property mem_spec_limit:
-        """MB memory limit for specialization"""
-        def __get__(self):
-            return self.mem_spec_limit
-
-    property node_name:
-        """Node name to Slurm"""
-        def __get__(self):
-            return self.node_name
-
-    property node_addr:
-        """Communication name (optional)"""
-        def __get__(self):
-            return self.node_addr
-
-    property node_host_name:
-        """Node's hostname (optional)"""
-        def __get__(self):
-            return self.node_host_name
-
-    property state:
-        """Node state (see `enum node_states`)"""
-        def __get__(self):
-            return self.state
-
-    property os:
-        """Operating system currently running on node"""
-        def __get__(self):
-            if self.os:
-                return self.os
-            else:
-                return None
-
-    property owner:
+    @property
+    def owner(self):
         """User allowed to use this node or NO_VAL"""
-        def __get__(self):
-            if self.owner == NO_VAL:
-                return "N/A"
-            else:
-                return self.owner
-
-    property rack_midplane:
-        """Bluegene rack midplane node data"""
-        def __get__(self):
-            return self.rack_midplane
-
-    property real_memory:
-        """Configured MB of real memory on node"""
-        def __get__(self):
-            return self.real_memory
-
-    property reason:
-        """Reason for node being DOWN or DRAINING"""
-        def __get__(self):
-            return self.reason
-
-    property reason_str:
-        """
-        Reason for node being DOWN or DRAINING (including reason_user and
-        reason_time)
-        """
-        def __get__(self):
-            return self.reason_str
-
-    property reason_time:
-        """
-        Time stamp when reason was set, ignore if no reason is set (epoch)
-        """
-        def __get__(self):
-            return self.reason_time
-
-    property reason_time_str:
-        """
-        Time stamp when reason was set, ignore if no reason is set
-        (formatted)
-        """
-        def __get__(self):
-            return self.reason_time_str
-
-    property reason_uid:
-        """
-        User that set the reason, ignore if no reason is set (uid)
-        """
-        def __get__(self):
-            return self.reason_uid
-
-    property reason_user:
-        """
-        User that set the reason, ignore if no reason is set (username)
-        """
-        def __get__(self):
-            return self.reason_user
-
-    property slurmd_start_time:
-        """Time of slurmd startup (epoch)"""
-        def __get__(self):
-            return self.slurmd_start_time
-
-    property slurmd_start_time_str:
-        """Time of slurmd startup (formatted)"""
-        def __get__(self):
-            return self.slurmd_start_time_str
-
-    property sockets:
-        """Total number of sockets per node"""
-        def __get__(self):
-            return self.sockets
-
-    property threads_per_core:
-        """Number of threads per core"""
-        def __get__(self):
-            return self.threads_per_core
-
-    property tmp_disk:
-        """Configured MB of total disk in TMP_FS"""
-        def __get__(self):
-            return self.tmp_disk
-
-    # TODO: tres_fmt_str
-
-    property version:
-        """Slurm version number"""
-        def __get__(self):
-            return self.version
-
-    property weight:
-        """Arbitrary priority of node for scheduling"""
-        def __get__(self):
-            return self.weight
+        if self.owner == NO_VAL:
+            return "N/A"
+        else:
+            return self.owner
 
 
 def get_nodes(ids=False):
@@ -489,8 +286,7 @@ cdef get_node_info_msg(node, ids=False):
         rc = slurm_load_node_single(&node_info_msg_ptr, b_node, show_flags)
 
     if rc == SLURM_SUCCESS:
-        for i in range(node_info_msg_ptr.record_count):
-            record = &node_info_msg_ptr.node_array[i]
+        for record in node_info_msg_ptr.node_array[:node_info_msg_ptr.record_count]:
 
             if ids and node is None:
                 node_list.append(tounicode(record.name))
@@ -571,14 +367,14 @@ cdef get_node_info_msg(node, ids=False):
             this_node.cpu_err = err_cpus
             this_node.cpu_tot = record.cpus
             this_node.cpu_load = record.cpu_load
-            this_node.features = tounicode(record.features)
-            this_node.gres = tounicode(record.gres)
+            this_node.features = tounicode(record.features).split(",")
+            this_node.gres = tounicode(record.gres).split(",")
 
             if record.gres_drain:
-                this_node.gres_drain = tounicode(record.gres_drain)
+                this_node.gres_drain = tounicode(record.gres_drain).split(",")
 
             if record.gres_used:
-                this_node.gres_used = tounicode(record.gres_used)
+                this_node.gres_used = tounicode(record.gres_used).split(",")
 
             if record.node_hostname or record.node_addr:
                 this_node.node_addr = tounicode(record.node_addr)
@@ -605,7 +401,9 @@ cdef get_node_info_msg(node, ids=False):
                 if record.core_spec_cnt:
                     this_node.core_spec_count = record.core_spec_cnt
                 if record.cpu_spec_list:
-                    this_node.cpu_spec_list = tounicode(record.cpu_spec_list)
+                    this_node.cpu_spec_list = tounicode(
+                        record.cpu_spec_list
+                    ).split(",")
                 if record.mem_spec_limit:
                     this_node.mem_spec_limit = record.mem_spec_limit
 

@@ -1,8 +1,8 @@
 # cython: cdivision=True
-from __future__ import print_function, division, unicode_literals
+from __future__ import absolute_import, division, unicode_literals
 
 from libc.stdint cimport uint32_t
-from slurm_common cimport INFINITE
+from .slurm_common cimport INFINITE
 
 # 
 # PySlurm Helper Functions
