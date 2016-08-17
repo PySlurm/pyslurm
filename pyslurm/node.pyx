@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: cdivision=True
 """
 ===========
@@ -35,7 +34,7 @@ Each node record in a ``node_info_msg_t`` struct is converted to a
 :class:`Node` object when calling some of the functions in this module.
 
 """
-from __future__ import absolute_import, division#, unicode_literals
+from __future__ import absolute_import, division, unicode_literals
 
 import os as _os
 from pwd import getpwuid
@@ -277,7 +276,6 @@ cdef get_node_info_msg(node, ids=False):
         uint32_t alloc_memory
         uint32_t my_state
         uint32_t cluster_flags = slurmdb_setup_cluster_flags()
-        list node_list = []
 
     if node is None:
         rc = slurm_load_node(<time_t>NULL, &node_info_msg_ptr, show_flags)
@@ -285,6 +283,7 @@ cdef get_node_info_msg(node, ids=False):
         b_node = node.encode("UTF-8")
         rc = slurm_load_node_single(&node_info_msg_ptr, b_node, show_flags)
 
+    node_list = []
     if rc == SLURM_SUCCESS:
         for record in node_info_msg_ptr.node_array[:node_info_msg_ptr.record_count]:
 
@@ -360,7 +359,7 @@ cdef get_node_info_msg(node, ids=False):
                     this_node.rack_midplane = tounicode(select_reason_str)
 
             if record.arch:
-                this_node.arch = record.arch if record.arch is not NULL else None
+                this_node.arch = tounicode(record.arch)
 
             this_node.cores_per_socket = record.cores
             this_node.cpu_alloc = alloc_cpus
