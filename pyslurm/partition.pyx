@@ -32,13 +32,13 @@ Each partition in a ``partition_info_msg_t`` struct is converted to a
 :class:`Partition` object when calling some of the functions in this module.
 
 """
-from __future__ import print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 from libc.stdio cimport stdout
-from c_partition cimport *
-from slurm_common cimport *
-from utils cimport *
-from exceptions import PySlurmError
+from .c_partition cimport *
+from .slurm_common cimport *
+from .utils cimport *
+from .exceptions import PySlurmError
 
 include "partition.pxi"
 
@@ -99,12 +99,6 @@ cdef class Partition:
         else:
             return self.allow_accounts.split(",")
 
-#    @property
-#    def alloc_nodes(self):
-#        """List of allowed allocating nodes"""
-#        def __get__(self):
-#            return self.alloc_nodes
-
     @property
     def allow_groups(self):
         """Comma delimited list of groups"""
@@ -120,16 +114,6 @@ cdef class Partition:
             return "ALL"
         else:
             return self.allow_qos.split(",")
-
-#    property alternate:
-#        """Name of alternate partition"""
-#        def __get__(self):
-#            return self.alternate
-
-#    property cr_type:
-#        """see CR_* values in slurm.h"""
-#        def __get__(self):
-#            return self.cr_type
 
     @property
     def default(self):
@@ -178,49 +162,6 @@ cdef class Partition:
             # def_mem_per_node == def_mem_per_cpu
             return self.def_mem_per_cpu
 
-#    # FIXME
-#    @property
-#    def deny_accounts(self):
-#        """Comma delimited list of denied accounts"""
-#        if self.deny_accounts:
-#            return self.deny_accounts.split(",")
-
-#    @property
-#    def deny_qos(self):
-#        """Comma delimited list of denied qos"""
-#        if self.deny_qos:
-#            return self.deny_qos.split(",")
-
-#    property disable_root_jobs:
-#        """Whether root jobs are disabled"""
-#        def __get__(self):
-#            return self.disable_root_jobs
-
-#    property exclusive_user:
-#        """allocated exclusively by user"""
-#        def __get__(self):
-#            return self.exclusive_user
-
-#    property flags:
-#        """Flags set by slurm no the partition"""
-#        def __get__(self):
-#            return self.flags
-
-#    property grace_time:
-#        """Preemption grace time in seconds"""
-#        def __get__(self):
-#            return self.grace_time
-
-#    property hidden:
-#        """Partition is hidden"""
-#        def __get__(self):
-#            return self.hidden
-
-#    property lln:
-#        """LLN"""
-#        def __get__(self):
-#            return self.lln
-
     @property
     def max_cpus_per_node(self):
         """Maximum allocated CPUs per node"""
@@ -254,22 +195,21 @@ cdef class Partition:
     @property
     def max_nodes(self):
         """per job or INFINITE"""
+        cdef:
+            char tmp[16]
+            uint32_t cluster_flags = slurmdb_setup_cluster_flags()
+
         if self.max_nodes == INFINITE:
             return "UNLIMITED"
         else:
-#                if cluster_flags & CLUSTER_FLAG_BG:
-#                    convert_num_unit(<float>record.max_nodes, tmp,
-#                                     sizeof(tmp), UNIT_NONE, NO_VAL,
-#                                     CONVERT_NUM_UNIT_EXACT)
-#                    this_part.max_nodes = tounicode(tmp)
-#                else:
-#                    this_part.max_nodes = record.max_nodes
-            return self.max_nodes
-
-#    property max_share:
-#        """Number of jobs to gang schedule"""
-#        def __get__(self):
-#            return self.max_share
+            if (cluster_flags & CLUSTER_FLAG_BG):
+#                convert_num_unit(<float>self.max_nodes, tmp,
+#                                 sizeof(tmp), UNIT_NONE, NO_VAL,
+#                                 CONVERT_NUM_UNIT_EXACT)
+#                return tmp
+                pass
+            else:
+                return self.max_nodes
 
     @property
     def max_time(self):
@@ -286,61 +226,6 @@ cdef class Partition:
             return "UNLIMITED"
         else:
             return secs2time_str(self.max_time * 60)
-
-#    property midplanes:
-#        """For Bluegene partitions only"""
-#        def __get__(self):
-#            return self.midplanes
-
-#    property min_nodes:
-#        """Minimum nodes per job"""
-#        def __get__(self):
-#            return self.min_nodes
-
-#    property nodes:
-#        """list of nodes in the partition"""
-#        def __get__(self):
-#            return self.nodes
-
-#    property partition_name:
-#        """Name of the partition"""
-#        def __get__(self):
-#            return self.partition_name
-
-#    property preempt_mode:
-#        """See PREEMPT_MODE_* in slurm/slurm.h"""
-#        def __get__(self):
-#            return self.preempt_mode
-
-#    property preempt_mode_str:
-#        """See PREEMPT_MODE_* in slurm/slurm.h"""
-#        def __get__(self):
-#            return self.preempt_mode_str
-
-#    property priority:
-#        """Scheduling priority for jobs"""
-#        def __get__(self):
-#            return self.priority
-
-#    property qos:
-#        """The partition QOS name"""
-#        def __get__(self):
-#            return self.qos
-
-#    property req_resv:
-#        """req resv"""
-#        def __get__(self):
-#            return self.req_resv
-
-#    property root_only:
-#        """Only root can submit jobs"""
-#        def __get__(self):
-#            return self.root_only
-
-#    property select_type_parameters:
-#        """select type parameters"""
-#        def __get__(self):
-#            return self.select_type_parameters
 
     @property
     def shared(self):
@@ -359,36 +244,6 @@ cdef class Partition:
             return "NO"
         else:
             return "YES:%s" % val
-
-#    property state:
-#        """state of the partition"""
-#        def __get__(self):
-#            return self.state
-
-#    property state_up:
-#        """state of the partition"""
-#        def __get__(self):
-#            return self.state_up
-
-#    property total_cpus:
-#        """Total number of CPUs in the partition"""
-#        def __get__(self):
-#            return self.total_cpus
-
-#    property total_nodes:
-#        """Total number of nodes in the partition"""
-#        def __get__(self):
-#            return self.total_nodes
-
-#    property tres_billing_weights:
-#        """Per TRES billing weights"""
-#        def __get__(self):
-#            return self.tres_billing_weights
-
-#    property tres_fmt_str:
-#        """Configured TRES in partition"""
-#        def __get__(self):
-#            return self.tres_fmt_str
 
 
 def get_partitions(ids=False):
@@ -702,12 +557,9 @@ def find_partitions(partattr, pattern, ids=False):
     pass
 
 
-cdef update_part_msg(part_dict):
-    pass
-
-cpdef int create_partition(part_dict):
+cdef update_part_msg(action, part_dict):
     """
-    Request creation of a new partition.
+    Request update or creation of a new partition.
 
     Notes:
         #. This method requires **root** privileges.
@@ -743,7 +595,31 @@ cpdef int create_partition(part_dict):
     if "AllowQoS" in part_dict:
         update_part_msg.allow_qos = part_dict["AllowQos"]
 
-    rc = slurm_create_partition(&update_part_msg)
+    if "Name" in part_dict:
+        update_part_msg.name = part_dict["Name"]
+
+    if "State" in part_dict:
+        update_part_msg.state_up = part_dict["State"]
+
+    if action == "create":
+        rc = slurm_create_partition(&update_part_msg)
+        return rc
+    elif action == "update":
+        rc = slurm_update_partition(&update_part_msg)
+        return rc
+
+
+cpdef int create_partition(part_dict):
+    """
+    Request creation of a new partition.
+
+    Notes:
+        #. This method requires **root** privileges.
+        #. Use :func:`get_errno` to translate return code if not 0.
+        #. Partition name must be set for the call to succeed.
+
+    """
+    update_part_msg("create", part_dict)
 
 
 cpdef int update_partition(part_dict):
@@ -757,23 +633,7 @@ cpdef int update_partition(part_dict):
         function.
 
     """
-    cdef:
-        update_part_msg_t update_part_msg
-        int rc
-
-    if not part_dict:
-        raise PySlurmError("You must provide a partition update dictionary")
-
-    slurm_init_part_desc_msg(&update_part_msg)
-
-    if "Name" in part_dict:
-        update_part_msg.name = part_dict["Name"]
-
-    if "State" in part_dict:
-        update_part_msg.state_up = part_dict["State"]
-
-    rc = slurm_update_partition(&update_part_msg)
-    return rc
+    update_part_msg("update", part_dict)
 
 
 cpdef int delete_partition(partition):
