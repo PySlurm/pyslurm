@@ -275,8 +275,8 @@ cdef get_partition_info_msg(partition, ids=False):
 #        uint32_t i
         int rc
 
-    if partition:
-        b_partition = partition.encode("UTF-8")
+#    if partition:
+#        b_partition = partition.encode("UTF-8")
 
     rc = slurm_load_partitions(<time_t> NULL, &part_info_msg_ptr,
                                show_flags)
