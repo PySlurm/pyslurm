@@ -15,7 +15,6 @@ This module declares and wraps the following Slurm API functions:
 - slurm_load_powercap
 - slurm_free_powercap_info_msg
 - slurm_print_powercap_info_msg
-- slurm_update_powercap
 
 Powercap Object
 ---------------
@@ -25,7 +24,9 @@ Functions in this module wrap the ``powercap_info_msg_t`` struct found in
 which implements Python properties to retrieve the value of each attribute.
 
 """
-from __future__ import absolute_import, division, unicode_literals
+from __future__ import absolute_import, unicode_literals
+
+from libc.stdio cimport stdout
 
 from .c_powercap cimport *
 from .slurm_common cimport *
@@ -76,5 +77,34 @@ def get_powercap():
         powercap_info_msg_ptr = NULL
 
         return powercap
+    else:
+        raise PySlurmError(slurm_strerror(rc), rc)
+
+
+def print_powercap_info_msg(int one_liner=False):
+    """
+    Print information about powercapping to stdout.
+
+    This function outputs information about all Slurm partitions based upon
+    the message loaded by ``slurm_load_powercap``. It uses the
+    ``slurm_print_powercap_info_msg`` function to print to stdout.  The
+    output is equivalent to *scontrol show powercap*.
+
+    Args:
+        one_liner (Optional[bool]): print powercap info on one line if True
+            (default False)
+    Raises:
+        PySlurmError: If ``slurm_load_powercap`` is not successful.
+    """
+    cdef:
+        powercap_info_msg_t *powercap_info_msg_ptr = NULL
+        int rc
+
+    rc = slurm_load_powercap(&powercap_info_msg_ptr)
+
+    if rc == SLURM_SUCCESS:
+        slurm_print_powercap_info_msg(stdout, powercap_info_msg_ptr, one_liner)
+        slurm_free_powercap_info_msg(powercap_info_msg_ptr)
+        powercap_info_msg_ptr = NULL
     else:
         raise PySlurmError(slurm_strerror(rc), rc)
