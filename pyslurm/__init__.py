@@ -45,3 +45,4 @@ from .misc import *
 from .config import *
 from .partition import *
 from .license import *
+from .powercap import *
