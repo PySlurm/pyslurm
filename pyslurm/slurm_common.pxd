@@ -42,6 +42,7 @@ cdef extern from "slurm/slurm_errno.h" nogil:
         SLURM_SUCCESS
         SLURM_ERROR
         SLURM_FAILURE
+        SLURM_PROTOCOL_SUCCESS
 
     char *slurm_strerror(int errnum)
     int slurm_get_errno()
