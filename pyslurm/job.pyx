@@ -320,7 +320,7 @@ def get_jobs(ids=False):
 
 def get_job(jobid):
     """
-    Return a single :class:`Job` objects for the given jobid.
+    Return a single :class:`Job` object for the given jobid.
 
     This function calls ``slurm_load_job`` to retrieve information for the
     given jobid.
