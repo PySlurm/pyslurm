@@ -1,7 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
 import pyslurm
-import re
 import subprocess
 from nose.tools import assert_equals, assert_true
 
@@ -56,8 +55,6 @@ def test_job_scontrol():
     scontrol_stdout = scontrol[0].strip().decode("UTF-8", "replace").split()
 
     # Convert scontrol show job <job> into a dictionary of key value pairs.
-    # The regex is to search for values that have a space, typically this would
-    # be the Reason parameter if a job has been drained
     sctl = {}
     for item in scontrol_stdout:
         kv = item.split("=", 1)
