@@ -47,3 +47,4 @@ from .partition import *
 from .license import *
 from .powercap import *
 from .topology import *
+from .jobstep import *

@@ -35,6 +35,7 @@ cdef extern from "slurm/slurm.h" nogil:
 cdef extern from "slurm/slurmdb.h" nogil:
     enum:
         CLUSTER_FLAG_BG
+        CLUSTER_FLAG_BGQ
 
 
 cdef extern from "slurm/slurm_errno.h" nogil:
