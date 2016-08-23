@@ -7,11 +7,11 @@ from libc.stdint cimport int32_t
 from posix.types cimport time_t
 
 cdef extern from "slurm/slurm.h" nogil:
-    # NOTE: should this just be enums?
-    uint32_t INFINITE
-    uint64_t INFINITE64
-    uint32_t NO_VAL
-    uint64_t NO_VAL64
+    enum:
+        INFINITE
+        INFINITE64
+        NO_VAL
+        NO_VAL64
 
     enum:
         CR_CORE
@@ -31,11 +31,32 @@ cdef extern from "slurm/slurm.h" nogil:
         void *data
         uint32_t plugin_id
 
+    ctypedef enum cpu_bind_type_t:
+        CPU_BIND_VERBOSE
+        CPU_BIND_TO_THREADS
+        CPU_BIND_TO_CORES
+        CPU_BIND_TO_SOCKETS
+        CPU_BIND_TO_LDOMS
+        CPU_BIND_TO_BOARDS
+        CPU_BIND_NONE
+        CPU_BIND_RANK
+        CPU_BIND_MAP
+        CPU_BIND_MASK
+        CPU_BIND_LDRANK
+        CPU_BIND_LDMAP
+        CPU_BIND_LDMASK
+        CPU_BIND_ONE_THREAD_PER_CORE
+        CPU_BIND_CPUSETS
+        CPU_AUTO_BIND_TO_THREADS
+        CPU_AUTO_BIND_TO_CORES
+        CPU_AUTO_BIND_TO_SOCKETS
+
 
 cdef extern from "slurm/slurmdb.h" nogil:
     enum:
         CLUSTER_FLAG_BG
         CLUSTER_FLAG_BGQ
+        CLUSTER_FLAG_MULTSD
 
 
 cdef extern from "slurm/slurm_errno.h" nogil:

@@ -361,6 +361,7 @@ cdef extern from "slurm/slurm.h" nogil:
 # Job declarations outside of slurm.h
 #
 
+# src/common/slurm_protocol_api.h
 cdef extern uint16_t slurm_get_track_wckey()
 cdef extern char *slurm_job_reason_string(job_state_reason inx)
 cdef extern char *slurm_job_state_string(uint32_t inx)
