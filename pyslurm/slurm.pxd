@@ -6,7 +6,7 @@ from libc.stdint cimport int64_t, int32_t
 from libc.string cimport strlen, memset, memcpy
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
-from posix.types cimport uid_t
+from posix.unistd cimport uid_t
 
 from cpython.version cimport PY_MAJOR_VERSION
 
@@ -1649,7 +1649,7 @@ cdef extern from 'slurm/slurm.h' nogil:
     ctypedef top_job_msg top_job_msg_t
 
     ctypedef struct slurm_step_ctx_params_t:
-        uint16_t ckpt_interval;
+        uint16_t ckpt_interval
         uint32_t cpu_count
         uint32_t cpu_freq_min
         uint32_t cpu_freq_max
@@ -1695,7 +1695,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         char *remote_output_filename
         char *remote_error_filename
         char *remote_input_filename
-        uint32_t gid;
+        uint32_t gid
         bool multi_prog
         uint32_t slurmd_debug
         bool parallel_debug
