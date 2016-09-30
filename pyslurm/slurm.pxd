@@ -291,7 +291,8 @@ cdef extern from 'slurm/slurm.h' nogil:
         WAIT_QOS_MAX_UNK_PER_ACCT
         WAIT_QOS_MAX_JOB_PER_ACCT
         WAIT_QOS_MAX_SUB_JOB_PER_ACCT
-
+        WAIT_PART_CONFIG
+        WAIT_ACCOUNT_POLICY
 
     cdef enum select_jobdata_type:
         SELECT_JOBDATA_GEOMETRY
