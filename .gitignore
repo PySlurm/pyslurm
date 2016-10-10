@@ -20,3 +20,6 @@ pyslurm/*.so
 
 # Ignore test pyc files
 tests/*.pyc
+
+# Ignore pycache (Python 3)
+*/__pycache__
