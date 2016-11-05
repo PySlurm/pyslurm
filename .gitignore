@@ -1,14 +1,17 @@
 # Python 2 bytecode compiled modules
 *.pyc
 
+# Ignore temporary build files
+pyslurm/*.pxi
+
 # Python 3 bytecode compiled folder
-/pyslurm/__pycache__
+pyslurm/__pycache__
 
 # Distutils build folder
-/build/
+build/
 
 # Python egg metadata
-/*.egg-info
+*.egg-info
 
 # Cython object and library files
 *.o
@@ -19,4 +22,4 @@
 *.swp
 
 # Doc build
-/doc/build/
+doc/build/
