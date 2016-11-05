@@ -24,7 +24,7 @@ logging.basicConfig(level=20)
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
 __version__ = "16.05.5"
 __min_slurm_hex_version__ = "0x100505"
-__max_slurm_hex_version__ = "0x100505"
+__max_slurm_hex_version__ = "0x100506"
 
 def fatal(logstring, code=1):
     logger.error("Fatal: " + logstring)
