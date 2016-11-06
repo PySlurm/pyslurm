@@ -28,6 +28,7 @@ cdef extern from "slurm/slurm.h" nogil:
         time_t run_time
         dynamic_plugin_data_t *select_jobinfo
         time_t start_time
+        uint16_t start_protocol_ver
         uint32_t state
         uint32_t step_id
         uint32_t task_dist
@@ -45,6 +46,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t node_cnt
         char *node_list
         uint16_t plane_size
+        uint16_t start_protocol_ver
         uint16_t *tasks
         uint32_t task_cnt
         uint32_t task_dist

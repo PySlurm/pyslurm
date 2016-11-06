@@ -127,8 +127,7 @@ def test_job_scontrol():
     # quickly
 #    assert_equals(obj.run_time_str, sctl.get("RunTime"))
     assert_equals(obj.secs_pre_suspend, sctl.get("SecsPreSuspend"))
-    assert_equals(obj.shared, sctl.get("Shared"))
-    assert_equals(obj.sicp, sctl.get("SICP"))
+    assert_equals(obj.over_subscribe, sctl.get("OverSubscribe"))
     assert_equals(obj.socks_per_node, sctl.get("Socks/Node"))
     assert_equals(obj.start_time_str, sctl.get("StartTime"))
     assert_equals(obj.std_err, sctl.get("StdErr"))

@@ -104,15 +104,17 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t max_mem_per_cpu
         uint32_t max_step_cnt
         uint16_t max_tasks_per_node
+        char *mcs_plugin
+        char *mcs_plugin_params
         uint16_t mem_limit_enforce
         uint32_t min_job_age
         char *mpi_default
         char *mpi_params
         char *msg_aggr_params
         uint16_t msg_timeout
-        #uint16_t tcp_timeout
+        uint16_t tcp_timeout
         uint32_t next_job_id
-        #char *node_features_plugins
+        char *node_features_plugins
         char *node_prefix
         uint16_t over_time_limit
         char *plugindir
@@ -274,10 +276,11 @@ cdef extern from "slurm/slurm.h" nogil:
         DEBUG_FLAG_BURST_BUF
         DEBUG_FLAG_CPU_FREQ
         DEBUG_FLAG_POWER
-        DEBUG_FLAG_SICP
+        DEBUG_FLAG_TIME_CRAY
         DEBUG_FLAG_DB_ARCHIVE
         DEBUG_FLAG_DB_TRES
         DEBUG_FLAG_ESEARCH
+        DEBUG_FLAG_NODE_FEATURES
 
     enum:
         HEALTH_CHECK_NODE_IDLE
@@ -323,6 +326,7 @@ cdef extern from "slurm/slurm.h" nogil:
         CR_NHC_NO
         CR_ONE_TASK_PER_CORE
         CR_PACK_NODES
+        CR_NHC_ABSOLUTELY_NO
         CR_CORE_DEFAULT_DIST_BLOCK
         CR_LLN
 

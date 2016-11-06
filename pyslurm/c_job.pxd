@@ -90,7 +90,6 @@ cdef extern from "slurm/slurm.h" nogil:
         dynamic_plugin_data_t *select_jobinfo
         uint16_t shared
         uint16_t show_flags
-        uint8_t sicp_mode
         uint16_t sockets_per_board
         uint16_t sockets_per_node
         time_t start_time
@@ -288,6 +287,19 @@ cdef extern from "slurm/slurm.h" nogil:
         WAIT_QOS_MAX_BB_PER_USER
         WAIT_QOS_MAX_BB_MINS_PER_JOB
         WAIT_QOS_MIN_BB
+        FAIL_DEADLINE
+        WAIT_QOS_MAX_BB_PER_ACCT
+        WAIT_QOS_MAX_CPU_PER_ACCT
+        WAIT_QOS_MAX_ENERGY_PER_ACCT
+        WAIT_QOS_MAX_GRES_PER_ACCT
+        WAIT_QOS_MAX_NODE_PER_ACCT
+        WAIT_QOS_MAX_LIC_PER_ACCT
+        WAIT_QOS_MAX_MEM_PER_ACCT
+        WAIT_QOS_MAX_UNK_PER_ACCT
+        WAIT_QOS_MAX_JOB_PER_ACCT
+        WAIT_QOS_MAX_SUB_JOB_PER_ACCT
+        WAIT_PART_CONFIG
+        WAIT_ACCOUNT_POLICY
 
     enum select_jobdata_type:
         SELECT_JOBDATA_GEOMETRY
@@ -332,6 +344,7 @@ cdef extern from "slurm/slurm.h" nogil:
         JOB_NODE_FAIL
         JOB_PREEMPTED
         JOB_BOOT_FAIL
+        JOB_DEADLINE
         JOB_END
 
     enum: JOB_STATE_BASE
@@ -365,6 +378,9 @@ cdef extern from "slurm/slurm.h" nogil:
 cdef extern uint16_t slurm_get_track_wckey()
 cdef extern char *slurm_job_reason_string(job_state_reason inx)
 cdef extern char *slurm_job_state_string(uint32_t inx)
+
+# src/common/slurm_protocol_defs.c
+cdef extern char *slurm_job_share_string(uint16_t shared)
 
 #cdef extern int select_g_select_jobinfo_get(dynamic_plugin_data_t *jobinfo,
 #                                            select_jobdata_type data_type,

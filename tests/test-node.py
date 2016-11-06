@@ -94,7 +94,8 @@ def test_node_scontrol():
     assert_equals(obj.ext_sensors_joules, sctl["ExtSensorsJoules"])
     assert_equals(obj.ext_sensors_temp, sctl["ExtSensorsTemp"])
     assert_equals(obj.ext_sensors_watts, sctl["ExtSensorsWatts"])
-    assert_equals(obj.features, sctl["Features"].split(","))
+    assert_equals(obj.available_features, sctl["AvailableFeatures"].split(","))
+    assert_equals(obj.active_features, sctl["ActiveFeatures"].split(","))
     assert_equals(obj.free_mem, sctl["FreeMem"])
 
     if sctl.get("Gres"):

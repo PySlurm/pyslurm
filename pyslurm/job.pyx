@@ -41,8 +41,8 @@ from posix.wait cimport WIFSIGNALED, WTERMSIG, WEXITSTATUS
 
 from .c_job cimport *
 from .slurm_common cimport *
+from .utils cimport *
 from .exceptions import PySlurmError
-from .utils cimport secs2time_str, mins2time_str
 
 cdef class Job:
     """An object to wrap `job_info_t` structs."""
@@ -83,6 +83,7 @@ cdef class Job:
         readonly unicode kill_o_in_invalid_dependent
         readonly unicode licenses
         readonly unicode midplane_list
+        unicode mcs_label
         readonly uint32_t min_cpus_node
         readonly unicode network
         readonly uint16_t nice
@@ -114,8 +115,7 @@ cdef class Job:
         readonly unicode sched_midplane_list
         readonly unicode sched_node_list
         readonly int secs_pre_suspend
-        uint16_t shared
-        readonly uint8_t sicp
+        uint16_t over_subscribe
         readonly time_t start_time
         readonly unicode start_time_str
         readonly unicode std_err
@@ -193,6 +193,14 @@ cdef class Job:
         return "%s:%s" % exit_status, term_sig
 
     @property
+    def mcs_label(self):
+        """mcs_label if mcs plugin in use."""
+        if self.mcs_label:
+            return self.mcs_label
+        else:
+            return "N/A"
+
+    @property
     def ntasks_per_board(self):
         """Number of tasks to invoke on each board"""
         if self.ntasks_per_board == <uint16_t>NO_VAL:
@@ -237,16 +245,9 @@ cdef class Job:
         pass
 
     @property
-    def shared(self):
+    def over_subscribe(self):
         """1 if job can share nodes with other jobs"""
-        if self.shared == 0:
-            return 0
-        elif self.shared == 1:
-            return 1
-        elif self.shared == 2:
-            return "USER"
-        else:
-            return "OK"
+        return slurm_job_share_string(self.over_subscribe)
 
     @property
     def sockets_per_board(self):
@@ -347,7 +348,7 @@ cdef get_job_info_msg(jobid, ids=False):
         time_t end_time
         time_t run_time
         int rc
-        uint16_t nice
+        uint64_t nice
         uint32_t cluster_flags = slurmdb_setup_cluster_flags()
         uint32_t max_nodes = 0
         uint32_t min_nodes = 0
@@ -395,6 +396,8 @@ cdef get_job_info_msg(jobid, ids=False):
                 )
             else:
                 pass
+
+            this_job.mcs_label = tounicode(record.mcs_label)
 
             nice = record.nice
             nice -= NICE_OFFSET
@@ -609,7 +612,7 @@ cdef get_job_info_msg(jobid, ids=False):
             if record.resv_name:
                 this_job.reservation = record.resv_name
 
-            this_job.shared = record.shared
+            this_job.over_subscribe = record.shared
             this_job.contiguous = record.contiguous
 
             if record.licenses:
@@ -656,8 +659,6 @@ cdef get_job_info_msg(jobid, ids=False):
                 this_job.power = "LEVEL"
             else:
                 this_job.power = ""
-
-            this_job.sicp = record.sicp_mode
 
             if record.bitflags:
                 if (record.bitflags & KILL_INV_DEP):

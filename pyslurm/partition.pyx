@@ -78,12 +78,13 @@ cdef class Partition:
         readonly unicode partition_name
         readonly uint16_t preempt_mode
         readonly unicode preempt_mode_str
-        readonly uint16_t priority
+        readonly uint16_t priority_job_factor
+        readonly uint16_t priority_tier
         readonly unicode qos
         readonly unicode req_resv
         readonly unicode root_only
-        readonly unicode select_type_parameters
-        unicode shared
+        unicode select_type_parameters
+        unicode over_subscribe
         readonly unicode state
         readonly uint16_t state_up
         readonly uint32_t total_cpus
@@ -228,7 +229,15 @@ cdef class Partition:
             return secs2time_str(self.max_time * 60)
 
     @property
-    def shared(self):
+    def select_type_parameters(self):
+        """Select Type Parameters."""
+        if select_type_param_string(self.cr_type) is not None:
+            return select_type_param_string(self.cr_type)
+        else:
+            return "NONE"
+
+    @property
+    def over_subscribe(self):
         """is the partition shared"""
         cdef:
             uint16_t force
@@ -387,7 +396,8 @@ cdef get_partition_info_msg(partition, ids=False):
                 this_part.lln = "NO"
 
             this_part.max_cpus_per_node = record.max_cpus_per_node
-            this_part.priority = record.priority
+            this_part.priority_job_factor = record.priority_job_factor
+            this_part.priority_tier = record.priority_tier
 
             if record.flags & PART_FLAG_ROOT_ONLY:
                 this_part.root_only = "YES"
@@ -441,14 +451,6 @@ cdef get_partition_info_msg(partition, ids=False):
 #                this_part.total_nodes = record.total_nodes
             this_part.total_nodes = record.total_nodes
             this_part.cr_type = record.cr_type
-
-            if record.cr_type & CR_CORE:
-                this_part.select_type_parameters = "CR_CORE"
-            elif record.cr_type & CR_SOCKET:
-                this_part.select_type_parameters = "CR_SOCKET"
-            else:
-                this_part.select_type_parameters = "N/A"
-
             this_part.def_mem_per_cpu = record.def_mem_per_cpu
             this_part.max_mem_per_cpu = record.max_mem_per_cpu
 

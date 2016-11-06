@@ -45,11 +45,11 @@ cdef extern from "slurm/slurm.h" nogil:
         ext_sensors_data_t *ext_sensors
         power_mgmt_data_t *power
         char *features
-        #char *features_act
+        char *features_act
         char *gres
         char *gres_drain
         char *gres_used
-        #char *mcs_label
+        char *mcs_label
         uint32_t mem_spec_limit
         char *name
         char *node_addr
@@ -99,6 +99,7 @@ cdef extern from "slurm/slurm.h" nogil:
 
     ctypedef struct update_node_msg_t:
         char *features
+        char *features_act
         char *gres
         char *node_addr
         char *node_hostname

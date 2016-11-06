@@ -27,7 +27,8 @@ cdef extern from "slurm/slurm.h" nogil:
         int32_t *node_inx
         char *nodes
         uint16_t preempt_mode
-        uint16_t priority
+        uint16_t priority_job_factor
+        uint16_t priority_tier
         char *qos_char
         uint16_t state_up
         uint32_t total_cpus
@@ -44,11 +45,11 @@ cdef extern from "slurm/slurm.h" nogil:
 
     ctypedef partition_info_t update_part_msg_t
 
-    int slurm_create_partition(update_part_msg_t * part_msg)
-    int slurm_update_partition(update_part_msg_t * part_msg)
-    int slurm_delete_partition(delete_part_msg_t * part_msg)
-    void slurm_init_part_desc_msg(update_part_msg_t * update_part_msg)
-    void slurm_free_partition_info_msg(partition_info_msg_t * part_info_ptr)
+    int slurm_create_partition(update_part_msg_t *part_msg)
+    int slurm_update_partition(update_part_msg_t *part_msg)
+    int slurm_delete_partition(delete_part_msg_t *part_msg)
+    void slurm_init_part_desc_msg(update_part_msg_t *update_part_msg)
+    void slurm_free_partition_info_msg(partition_info_msg_t *part_info_ptr)
 
     int slurm_load_partitions(time_t update_time,
                               partition_info_msg_t **part_buffer_ptr,
@@ -61,3 +62,10 @@ cdef extern from "slurm/slurm.h" nogil:
     void slurm_print_partition_info(FILE *out,
                                     partition_info_t *part_ptr,
                                     int one_liner)
+
+#
+# Job declarations outside of slurm.h
+#
+
+# src/common/slurm_selecttype_info.h
+cdef extern char *select_type_param_string(uint16_t select_type_param)
