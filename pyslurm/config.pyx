@@ -795,14 +795,16 @@ def get_config():
             config.priority_type = conf_info_msg_ptr.priority_type
         else:
             config.priority_decay_half_life = conf_info_msg_ptr.priority_decay_hl
-            config.priority_decay_half_life_str = secs2time_str(
-                conf_info_msg_ptr.priority_decay_hl
+            slurm_secs2time_str(<time_t>conf_info_msg_ptr.priority_decay_hl,
+                tmp_str, sizeof(tmp_str)
             )
+            config.priority_decay_half_life_str = tmp_str
 
             config.priority_calc_period = conf_info_msg_ptr.priority_calc_period
-            config.priority_calc_period_str = secs2time_str(
-                conf_info_msg_ptr.priority_calc_period
+            slurm_secs2time_str(<time_t>conf_info_msg_ptr.priority_calc_period,
+                tmp_str, sizeof(tmp_str)
             )
+            config.priority_calc_period_str = tmp_str
 
             if conf_info_msg_ptr.priority_favor_small:
                 config.priority_favor_small = "Yes"
@@ -814,9 +816,10 @@ def get_config():
             )
 
             config.priority_max_age = conf_info_msg_ptr.priority_max_age
-            config.priority_max_age_str = secs2time_str(
-                conf_info_msg_ptr.priority_max_age
+            slurm_secs2time_str(<time_t>conf_info_msg_ptr.priority_max_age,
+                tmp_str, sizeof(tmp_str)
             )
+            config.priority_max_age_str = tmp_str
 
             config.priority_usage_reset_period = conf_info_msg_ptr.priority_reset_period
             config.priority_usage_reset_period_str = (

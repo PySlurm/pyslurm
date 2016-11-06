@@ -62,10 +62,3 @@ cdef extern from "slurm/slurm.h" nogil:
     void slurm_print_partition_info(FILE *out,
                                     partition_info_t *part_ptr,
                                     int one_liner)
-
-#
-# Job declarations outside of slurm.h
-#
-
-# src/common/slurm_selecttype_info.h
-cdef extern char *select_type_param_string(uint16_t select_type_param)

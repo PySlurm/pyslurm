@@ -81,6 +81,8 @@ cdef extern void convert_num_unit(double num, char *buf, int buf_size,
                                   int orig_type, int spec_type, uint32_t flags)
 cdef extern uint16_t slurm_get_preempt_mode()
 cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
+cdef extern void slurm_secs2time_str(time_t time, char *string, int size)
+cdef extern void slurm_mins2time_str(uint32_t time, char *string, int size)
 
 cdef enum:
     CONVERT_NUM_UNIT_EXACT

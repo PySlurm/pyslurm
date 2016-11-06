@@ -134,12 +134,14 @@ cdef class Partition:
     @property
     def default_time_str(self):
         """minutes, NO_VAL or INFINITE"""
+        cdef char time_limit[32]
         if self.default_time == INFINITE:
             return "UNLIMITED"
         elif self.default_time == NO_VAL:
             return "NONE"
         else:
-            return secs2time_str(self.default_time * 60)
+            slurm_secs2time_str(self.default_time * 60, time_limit, sizeof(time_limit))
+            return time_limit
 
     @property
     def def_mem_per_cpu(self):
@@ -223,10 +225,12 @@ cdef class Partition:
     @property
     def max_time_str(self):
         """minutes or INFINITE"""
+        cdef char time_line[32]
         if self.max_time == INFINITE:
             return "UNLIMITED"
         else:
-            return secs2time_str(self.max_time * 60)
+            slurm_secs2time_str(self.max_time * 60, time_line, sizeof(time_line))
+            return time_line
 
     @property
     def select_type_parameters(self):

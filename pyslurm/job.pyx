@@ -267,7 +267,9 @@ cdef class Job:
 
     @property
     def switches(self):
-        return self.req_switch + "@" + secs2time_str(self.wait4switch)
+        cdef char time_buf[32]
+        slurm_secs2time_str(<time_t>self.wait4switch, time_buf, sizeof(time_buf))
+        return self.req_switch + "@" + time_buf
 
     @property
     def thread_spec(self):
@@ -286,18 +288,22 @@ cdef class Job:
     @property
     def time_limit_str(self):
         """Maximum run time in minutes or INFINITE."""
+        cdef char time_str[32]
         if self.time_limit == NO_VAL:
             return "Partition_Limit"
         else:
-            return mins2time_str(self.time_limit)
+            slurm_mins2time_str(<time_t>self.time_limit, time_str, sizeof(time_str))
+            return time_str
 
     @property
     def time_min_str(self):
         """Minimum run time in minutes or INFINITE."""
+        cdef char time_str[32]
         if self.time_min == 0:
             return "N/A"
         else:
-            return mins2time_str(self.time_min)
+            slurm_mins2time_str(<time_t>self.time_min, time_str, sizeof(time_str))
+            return time_str
 
 
 def get_jobs(ids=False):
@@ -344,6 +350,7 @@ cdef get_job_info_msg(jobid, ids=False):
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         char time_str[32]
         char tmp_line[1024 * 128]
+        char tmp1[128]
         char *ionodes = NULL
         time_t end_time
         time_t run_time
@@ -451,7 +458,9 @@ cdef get_job_info_msg(jobid, ids=False):
                     run_time = <time_t>(difftime(end_time, record.start_time))
 
             this_job.run_time = run_time
-            this_job.run_time_str = secs2time_str(run_time)
+            slurm_secs2time_str(run_time, time_str, sizeof(time_str))
+            this_job.run_time_str = time_str
+
             this_job.time_limit = record.time_limit
             this_job.time_min = record.time_min
 
@@ -649,6 +658,8 @@ cdef get_job_info_msg(jobid, ids=False):
             if record.req_switch:
                 this_job.req_switch = record.req_switch
                 this_job.wait4switch = record.wait4switch
+
+            # TODO: Line 34 (wait4switch slurm_secs2time_str)
 
             if record.burst_buffer:
                 this_job.burst_buffer = record.burst_buffer

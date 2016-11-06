@@ -36,7 +36,6 @@ from .c_job cimport slurm_get_select_jobinfo, slurm_job_state_string
 from .c_job cimport SELECT_JOBDATA_IONODES
 from .slurm_common cimport *
 from .exceptions import PySlurmError
-from .utils cimport secs2time_str
 
 cdef class Jobstep:
     """An object to wrap `jobstep_info_t` structs."""
@@ -134,6 +133,7 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
         job_step_info_response_msg_t *job_step_info_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         char time_str[32]
+        char limit_str[32]
         char *io_nodes = NULL
         uint32_t cluster_flags = slurmdb_setup_cluster_flags()
         int rc
@@ -158,7 +158,8 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
             if record.time_limit == INFINITE:
                 this_jobstep.time_limit_str = "UNLIMITED"
             else:
-                this_jobstep.time_limit_str = secs2time_str(record.time_limit)
+                slurm_secs2time_str(<time_t>record.time_limit * 60, limit_str, sizeof(limit_str))
+                this_jobstep.time_limit_str = limit_str
 
             this_jobstep.array_job_id = record.array_job_id
             this_jobstep.array_task_id = record.array_task_id
