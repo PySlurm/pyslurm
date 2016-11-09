@@ -1,4 +1,4 @@
-# c_topology.pxd
+# c_reservation.pxd
 #
 from libc.stdint cimport uint32_t
 from libc.stdint cimport int32_t
@@ -39,3 +39,10 @@ cdef extern from "slurm/slurm.h" nogil:
     void slurm_print_reservation_info(FILE *out,
                                       reserve_info_t *resv_ptr,
                                       int one_liner)
+
+#
+# Job declarations outside of slurm.h
+#
+
+# src/common/slurm_protocol_defs.h
+cdef extern char *slurm_reservation_flags_string(uint32_t flags)
