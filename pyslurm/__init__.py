@@ -38,13 +38,14 @@ import ctypes
 
 sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
-from .node import *
-from .job import *
-from .statistics import *
-from .misc import *
 from .config import *
-from .partition import *
-from .license import *
-from .powercap import *
-from .topology import *
+from .job import *
 from .jobstep import *
+from .license import *
+from .misc import *
+from .node import *
+from .partition import *
+from .powercap import *
+from .reservation import *
+from .statistics import *
+from .topology import *
