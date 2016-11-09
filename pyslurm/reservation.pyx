@@ -115,7 +115,7 @@ def get_reservation(reservation):
 
 cdef get_reservation_info_msg(reservation, ids=False):
     cdef:
-        reserve_info_msg_t *res_info_ptr = NULL
+        reserve_info_msg_t *resv_info_msg_ptr = NULL
         char tmp1[32]
         char tmp2[32]
         char tmp3[32]
@@ -127,11 +127,11 @@ cdef get_reservation_info_msg(reservation, ids=False):
         time_t now = time(NULL)
 
 
-    rc = slurm_load_reservations(<time_t>NULL, &res_info_ptr)
+    rc = slurm_load_reservations(<time_t>NULL, &resv_info_msg_ptr)
 
     resv_list = []
     if rc == SLURM_SUCCESS:
-        for record in res_info_ptr.reservation_array[:res_info_ptr.record_count]:
+        for record in resv_info_msg_ptr.reservation_array[:resv_info_msg_ptr.record_count]:
             if reservation:
                 b_reservation = reservation.encode("UTF-8")
                 if b_reservation and (b_reservation != record.name):
@@ -213,8 +213,8 @@ cdef get_reservation_info_msg(reservation, ids=False):
 
             resv_list.append(this_resv)
 
-        slurm_free_reservation_info_msg(res_info_ptr)
-        res_info_ptr = NULL
+        slurm_free_reservation_info_msg(resv_info_msg_ptr)
+        resv_info_msg_ptr = NULL
 
         if reservation and resv_list:
             return resv_list[0]
@@ -224,30 +224,30 @@ cdef get_reservation_info_msg(reservation, ids=False):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-#def print_topology_info_msg(int one_liner=False):
-#    """
-#    Print information about powercapping to stdout.
-#
-#    This function outputs information about all Slurm partitions based upon
-#    the message loaded by ``slurm_load_powercap``. It uses the
-#    ``slurm_print_powercap_info_msg`` function to print to stdout.  The
-#    output is equivalent to *scontrol show powercap*.
-#
-#    Args:
-#        one_liner (Optional[bool]): print powercap info on one line if True
-#            (default False)
-#    Raises:
-#        PySlurmError: If ``slurm_load_powercap`` is not successful.
-#    """
-#    cdef:
-#        powercap_info_msg_t *powercap_info_msg_ptr = NULL
-#        int rc
-#
-#    rc = slurm_load_powercap(&powercap_info_msg_ptr)
-#
-#    if rc == SLURM_SUCCESS:
-#        slurm_print_powercap_info_msg(stdout, powercap_info_msg_ptr, one_liner)
-#        slurm_free_powercap_info_msg(powercap_info_msg_ptr)
-#        powercap_info_msg_ptr = NULL
-#    else:
-#        raise PySlurmError(slurm_strerror(rc), rc)
+def print_reservation_info_msg(int one_liner=False):
+    """
+    Print information about all reservation records.
+
+    This function outputs information about all Slurm reservations based upon
+    the data structure loaded by ``slurm_load_reservations``. It uses the
+    ``slurm_print_reservation_info_msg`` function to print to stdout.  The
+    output is equivalent to *scontrol show reservations*.
+
+    Args:
+        one_liner (Optional[bool]): print reservations on one line if True
+            (default False)
+    Raises:
+        PySlurmError: If ``slurm_load_reservations`` is not successful.
+    """
+    cdef:
+        reserve_info_msg_t *resv_info_msg_ptr = NULL
+        int rc
+
+    rc = slurm_load_reservations(<time_t>NULL, &resv_info_msg_ptr)
+
+    if rc == SLURM_SUCCESS:
+        slurm_print_reservation_info_msg(stdout, resv_info_msg_ptr, one_liner)
+        slurm_free_reservation_info_msg(resv_info_msg_ptr)
+        resv_info_msg_ptr = NULL
+    else:
+        raise PySlurmError(slurm_strerror(rc), rc)
