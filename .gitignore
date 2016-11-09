@@ -15,6 +15,7 @@ build/
 
 # Cython object and library files
 *.o
+*.c
 *.so
 
 # Vim swap files
