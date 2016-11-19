@@ -28,7 +28,7 @@ Each reservation record in a ``reserve_info_msg_t`` struct is converted to a
 :class:`Reservation` object when calling some of the functions in this module.
 
 """
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
 
 from libc.stdio cimport stdout
 from libc.time cimport time, difftime
@@ -247,6 +247,51 @@ def print_reservation_info_msg(int one_liner=False):
 
     if rc == SLURM_SUCCESS:
         slurm_print_reservation_info_msg(stdout, resv_info_msg_ptr, one_liner)
+        slurm_free_reservation_info_msg(resv_info_msg_ptr)
+        resv_info_msg_ptr = NULL
+    else:
+        raise PySlurmError(slurm_strerror(rc), rc)
+
+
+def print_reservation_info(reservation, int one_liner=False):
+    """
+    Print information about a specific reservation to stdout.  This function
+    outputs information about a given Slurm reservation based upon the message
+    loaded by ``slurm_load_reservation``. It uses the ``slurm_print_reservation_info``
+    function to print to stdout.  The output is equivalent to *scontrol show
+    reservation <reservation name>*
+
+    Args:
+        reservation (str): print single reservation
+        one_liner (Optional[bool]): print single reservation on one line if True
+            (default False)
+    Raises:
+        PySlurmError: If ``slurm_load_reservations`` is not successful.
+    """
+    cdef:
+        reserve_info_msg_t *resv_info_msg_ptr = NULL
+        int rc
+        int print_cnt = 0
+
+    rc = slurm_load_reservations(<time_t>NULL, &resv_info_msg_ptr)
+
+    b_reservation = reservation.encode("UTF-8")
+    if rc == SLURM_SUCCESS:
+        for record in resv_info_msg_ptr.reservation_array[:resv_info_msg_ptr.record_count]:
+            if b_reservation != record.name:
+                continue
+
+            print_cnt += 1
+            slurm_print_reservation_info(stdout, &record, one_liner)
+            break
+
+        if print_cnt == 0:
+            if reservation:
+                print("Reservation %s not found" % b_reservation)
+                return 1
+            else:
+                print("No reservations in the system")
+
         slurm_free_reservation_info_msg(resv_info_msg_ptr)
         resv_info_msg_ptr = NULL
     else:
