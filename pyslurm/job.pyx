@@ -802,3 +802,28 @@ def kill_job(uint32_t jobid, uint16_t signal=SIGKILL, uint16_t flags=0):
     else:
         errno = slurm_get_errno()
         raise PySlurmError(slurm_strerror(errno), errno)
+
+
+def notify_job(uint32_t jobid, message):
+    """
+    Send message to the job's stdout.
+
+    This function may only be successfully executed by the user root.
+
+    Args:
+        jobid (int): slurm job_id or 0 for all jobs
+        message (str): arbitrary message
+    Returns:
+        0 on success, otherwise return -1
+
+    """
+    cdef:
+        int rc
+
+    b_message = message.encode("UTF-8")
+    rc = slurm_notify_job(jobid, b_message)
+
+    if rc == SLURM_SUCCESS:
+        return rc
+    else:
+        raise PySlurmError(slurm_strerror(rc), rc)
