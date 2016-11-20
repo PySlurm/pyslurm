@@ -13,7 +13,9 @@ Slurm API Functions
 
 This module declares and wraps the following Slurm API functions:
 
-- slurm_get_job
+- slurm_get_job_steps
+- slurm_free_job_step_info_response_msg
+- slurm_kill_job_step
 
 Jobstep Objects
 ---------------
@@ -94,18 +96,18 @@ cdef class Jobstep:
 
 def get_jobsteps(ids=False):
     """
-    Return a list of all jobs as :class:`Job` objects.
+    Return a list of all jobs as :class:`Jobstep` objects.
 
-    This function calls ``slurm_load_jobs`` to retrieve information for all
+    This function calls ``slurm_get_job_steps`` to retrieve information for all
     jobs.
 
     Args:
         ids (Optional[bool]): Return list of only job ids if True (default
             False).
     Returns:
-        list: A list of :class:`Job` objects, one for each job.
+        list: A list of :class:`Jobstep` objects, one for each job.
     Raises:
-        PySlurmError: if ``slurm_load_jobs`` is unsuccessful.
+        PySlurmError: if ``slurm_get_job_steps`` is unsuccessful.
 
     """
     return get_jobstep_info_msg(None, None, ids)
@@ -113,17 +115,17 @@ def get_jobsteps(ids=False):
 
 def get_jobstep(jobid, stepid):
     """
-    Return a single :class:`Job` object for the given jobid.
+    Return a single :class:`Jobstep` object for the given jobid.
 
-    This function calls ``slurm_load_job`` to retrieve information for the
+    This function calls ``slurm_get_job_steps`` to retrieve information for the
     given jobid.
 
     Args:
         jobid (str): jobid to query
     Returns:
-        Job: A single :class:`Job` object
+        Job: A single :class:`Jobstep` object
     Raises:
-        PySlurmError: if ``slurm_load_job`` is unsuccessful.
+        PySlurmError: if ``slurm_get_job_steps`` is unsuccessful.
 
     """
     return get_jobstep_info_msg(jobid, stepid)
