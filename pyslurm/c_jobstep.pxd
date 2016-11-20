@@ -166,6 +166,7 @@ cdef extern from "slurm/slurm.h" nogil:
     void slurm_job_step_stat_free(job_step_stat_t *object)
     void slurm_job_step_stat_response_msg_free(void *object)
     int slurm_update_step(step_update_request_msg_t *step_msg)
+    int slurm_kill_job_step(uint32_t job_id, uint32_t job_step_id, uint16_t signal)
 
 #
 # Job declarations outside of slurm.h

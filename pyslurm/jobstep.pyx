@@ -29,6 +29,7 @@ Each job record in a ``job_step_`` struct is converted to a
 """
 from __future__ import absolute_import, division, unicode_literals
 
+from libc.signal cimport SIGKILL
 from posix.types cimport time_t
 
 from .c_jobstep cimport *
@@ -231,3 +232,30 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
         return jobstep_list
     else:
         raise PySlurmError(slurm_strerror(rc), rc)
+
+
+def kill_job_step(uint32_t jobid, uint32_t job_step_id, uint16_t signal=SIGKILL):
+    """
+    Send the specified signal to a job step.
+
+    This function may only be successfully executed by the job's owner or user
+    root.  For a list of signal numbers, see `man 7 signal` or run `kill -l`.
+
+    Args:
+        jobid (int): job id
+        job_step_id (int): job step's id
+        signal (int): signal number (Default: SIGKILL(15))
+    Returns:
+        0 on success, otherwise return -1 and set errno to indicate error
+    """
+    cdef:
+        int rc
+        int errno
+
+    rc = slurm_kill_job_step(jobid, job_step_id, signal)
+
+    if rc == SLURM_SUCCESS:
+        return rc
+    else:
+        errno = slurm_get_errno()
+        raise PySlurmError(slurm_strerror(errno), errno)
