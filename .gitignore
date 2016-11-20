@@ -1,9 +1,6 @@
 # Python 2 bytecode compiled modules
 *.pyc
 
-# Ignore temporary build files
-pyslurm/*.pxi
-
 # Python 3 bytecode compiled folder
 pyslurm/__pycache__
 
