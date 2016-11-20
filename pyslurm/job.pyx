@@ -36,6 +36,7 @@ from pwd import getpwnam, getpwuid
 
 from libc.time cimport difftime
 from libc.time cimport time as c_time
+from libc.signal cimport SIGKILL
 from posix.types cimport pid_t, time_t
 from posix.wait cimport WIFSIGNALED, WTERMSIG, WEXITSTATUS
 
@@ -43,6 +44,8 @@ from .c_job cimport *
 from .slurm_common cimport *
 from .utils cimport *
 from .exceptions import PySlurmError
+
+include "job.pxi"
 
 cdef class Job:
     """An object to wrap `job_info_t` structs."""
@@ -363,7 +366,8 @@ cdef get_job_info_msg(jobid, ids=False):
     if jobid is None:
         rc = slurm_load_jobs(<time_t>NULL, &job_info_msg_ptr, show_flags)
     else:
-        rc = slurm_load_job(&job_info_msg_ptr, jobid, show_flags)
+        jobid_xlate = slurm_xlate_job_id(jobid)
+        rc = slurm_load_job(&job_info_msg_ptr, jobid_xlate, show_flags)
 
     job_list = []
     if rc == SLURM_SUCCESS:
@@ -747,3 +751,54 @@ cpdef int pid2jobid(pid_t job_pid):
         return job_id
     else:
         raise PySlurmError(slurm_strerror(rc), rc)
+
+
+def get_rem_time(uint32_t jobid, slurm_format=False):
+    """
+    Return remaining time for a given job in seconds.
+
+    Args:
+        jobid (int): slurm job id
+    Returns:
+        remaining time in seconds or -1 for error
+    """
+    cdef:
+        int rem_time
+
+    # TODO: add secs2time_str() if slurm_format=True
+    rem_time = slurm_get_rem_time(jobid)
+    return rem_time
+
+
+def kill_job(uint32_t jobid, uint16_t signal=SIGKILL, uint16_t flags=0):
+    """
+    Send the specified signal to all steps of an existing job.
+
+    This function may only be successfully executed by the job's owner or user
+    root. The following flags are available (see slurm.h for more info):
+
+        KILL_JOB_BATCH
+        KILL_JOB_ARRAY
+        KILL_STEPS_ONLY
+        KILL_FULL_JOB
+
+    For a list of signal numbers, see `man 7 signal` or run `kill -l`.
+
+    Args:
+        jobid (int): slurm job id
+        signal (int): signal number (Default: SIGKILL(15))
+        flags (str): KILL_JOB_* flags (Default: 0)
+    Returns:
+        0 on success, otherwise return -1 and set errno to indicate error
+    """
+    cdef:
+        int rc
+        int errno
+
+    rc = slurm_kill_job(jobid, signal, flags)
+
+    if rc == SLURM_SUCCESS:
+        return rc
+    else:
+        errno = slurm_get_errno()
+        raise PySlurmError(slurm_strerror(errno), errno)

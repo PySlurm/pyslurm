@@ -369,6 +369,9 @@ cdef extern from "slurm/slurm.h" nogil:
     void slurm_get_job_stderr(char *buf, int buf_size, job_info_t *job_ptr)
     void slurm_get_job_stdin(char *buf, int buf_size, job_info_t *job_ptr)
     void slurm_get_job_stdout(char *buf, int buf_size, job_info_t *job_ptr)
+    uint32_t slurm_xlate_job_id(char *job_id_str)
+    long slurm_get_rem_time(uint32_t jobid)
+    int slurm_kill_job(uint32_t job_id, uint16_t signal, uint16_t flags)
 
 #
 # Job declarations outside of slurm.h
