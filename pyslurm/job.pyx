@@ -343,7 +343,11 @@ def get_job(jobid):
         PySlurmError: if ``slurm_load_job`` is unsuccessful.
 
     """
-    return get_job_info_msg(jobid)
+    if isinstance(jobid, int):
+        jobid = str(jobid).encode("UTF-8")
+
+    jobid_xlate = slurm_xlate_job_id(jobid)
+    return get_job_info_msg(jobid_xlate)
 
 
 cdef get_job_info_msg(jobid, ids=False):
@@ -366,8 +370,7 @@ cdef get_job_info_msg(jobid, ids=False):
     if jobid is None:
         rc = slurm_load_jobs(<time_t>NULL, &job_info_msg_ptr, show_flags)
     else:
-        jobid_xlate = slurm_xlate_job_id(jobid)
-        rc = slurm_load_job(&job_info_msg_ptr, jobid_xlate, show_flags)
+        rc = slurm_load_job(&job_info_msg_ptr, jobid, show_flags)
 
     job_list = []
     if rc == SLURM_SUCCESS:
@@ -686,7 +689,7 @@ cdef get_job_info_msg(jobid, ids=False):
         slurm_free_job_info_msg(job_info_msg_ptr)
         job_info_msg_ptr = NULL
 
-        if jobid is None:
+        if jobid is None or len(job_list) > 1:
             return job_list
         else:
             return this_job
