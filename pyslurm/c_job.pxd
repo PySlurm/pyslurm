@@ -373,6 +373,7 @@ cdef extern from "slurm/slurm.h" nogil:
     long slurm_get_rem_time(uint32_t jobid)
     int slurm_kill_job(uint32_t job_id, uint16_t signal, uint16_t flags)
     int slurm_notify_job(uint32_t job_id, char *message)
+    int slurm_get_end_time(uint32_t jobid, time_t *end_time_ptr)
 
 #
 # Job declarations outside of slurm.h

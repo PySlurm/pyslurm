@@ -753,23 +753,6 @@ cpdef int pid2jobid(pid_t job_pid):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-def get_rem_time(uint32_t jobid, slurm_format=False):
-    """
-    Return remaining time for a given job in seconds.
-
-    Args:
-        jobid (int): slurm job id
-    Returns:
-        remaining time in seconds or -1 for error
-    """
-    cdef:
-        int rem_time
-
-    # TODO: add secs2time_str() if slurm_format=True
-    rem_time = slurm_get_rem_time(jobid)
-    return rem_time
-
-
 def kill_job(uint32_t jobid, uint16_t signal=SIGKILL, uint16_t flags=0):
     """
     Send the specified signal to all steps of an existing job.
@@ -815,7 +798,6 @@ def notify_job(uint32_t jobid, message):
         message (str): arbitrary message
     Returns:
         0 on success, otherwise return -1
-
     """
     cdef:
         int rc
@@ -825,5 +807,57 @@ def notify_job(uint32_t jobid, message):
 
     if rc == SLURM_SUCCESS:
         return rc
+    else:
+        raise PySlurmError(slurm_strerror(rc), rc)
+
+
+def get_rem_time(uint32_t jobid, slurm_format=False):
+    """
+    Return remaining time for a given job in seconds.
+
+    Args:
+        jobid (int): slurm job id
+    Returns:
+        remaining time in seconds or -1 for error
+    """
+    cdef:
+        int rem_time
+        char time_buf[32]
+
+    rem_time = slurm_get_rem_time(jobid)
+    if rem_time != -1:
+        if slurm_format:
+            slurm_secs2time_str(<time_t>rem_time, time_buf, sizeof(time_buf))
+            return time_buf
+        else:
+            return rem_time
+    return rem_time
+
+
+def get_end_time(uint32_t jobid, slurm_format=False):
+    """
+    Get the expected end time for a given slurm job
+
+    Args:
+        jobid (int): slurm job_id
+        slurm_format (bool): time since epoch if False, slurm time formatted if
+            True (Default: False)
+    Returns:
+        end time
+    """
+    cdef:
+        int rc
+        char time_str[32]
+        time_t end_time
+
+    rc = slurm_get_end_time(jobid, &end_time)
+
+    if rc == SLURM_SUCCESS:
+        if not slurm_format:
+            return end_time
+        else:
+            slurm_make_time_str(<time_t *>&end_time,
+                                time_str, sizeof(time_str))
+            return time_str
     else:
         raise PySlurmError(slurm_strerror(rc), rc)
