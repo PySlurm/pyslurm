@@ -41,6 +41,7 @@ sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 from .config import *
 from .job import *
 from .jobstep import *
+from .hostlist import *
 from .license import *
 from .misc import *
 from .node import *
