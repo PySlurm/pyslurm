@@ -6,7 +6,6 @@ cdef extern from "slurm/slurm.h" nogil:
 
     ctypedef hostlist *hostlist_t
 
-
     hostlist_t slurm_hostlist_create(const char *hostlist)
     int slurm_hostlist_count(hostlist_t hl)
     void slurm_hostlist_destroy(hostlist_t hl)
