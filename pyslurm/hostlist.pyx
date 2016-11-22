@@ -37,7 +37,7 @@ from .slurm_common cimport *
 from .exceptions import PySlurmError
 
 cdef class Hostlist:
-    """An object to wrap `hostlist_t` structs."""
+    """An object to store hostlists."""
 
     cdef hostlist_t hl
 
@@ -47,10 +47,19 @@ cdef class Hostlist:
     def __dealloc__(self):
         self.destroy()
 
-    def create(self, hostnames):
+    def create(self, hostnames=None):
         """
+        Create a new hostlist from a string representation.
+
+        Args:
+            hostnames (str):
+        Returns:
+            True if successful.
         """
-        self.hl = slurm_hostlist_create(hostnames)
+        if not hostnames:
+            self.hl = slurm_hostlist_create(NULL)
+        else:
+            self.hl = slurm_hostlist_create(hostnames)
 
         if not self.hl:
             raise PySlurmError("No memory")
@@ -59,6 +68,12 @@ cdef class Hostlist:
 
     def destroy(self):
         """
+        Destroy a hostlist object. Frees all memory allocated to the hostlist.
+
+        Args:
+            None
+        Returns:
+            None
         """
         if self.hl is not NULL:
             slurm_hostlist_destroy(self.hl)
@@ -66,11 +81,23 @@ cdef class Hostlist:
 
     def count(self):
         """
+        Return the number of hosts in the hostlist.
+
+        Args:
+            None
+        Returns:
+            Number of hosts in the hostlist
         """
         return slurm_hostlist_count(self.hl)
 
     def ranged_string(self):
         """
+        Return the string representation of the hostlist.
+
+        Args:
+            None
+        Returns:
+            String representation of the hostlist
         """
         if self.hl is not NULL:
             return slurm_hostlist_ranged_string_malloc(self.hl)
@@ -83,6 +110,11 @@ cdef class Hostlist:
 
         The hosts argument may take the same form as in
         slurm_hostlist_create().
+
+        Args:
+            hosts (str): string representation of one or more hosts
+        Returns:
+            Number of hostnames inserted into the hostlist or 0 on failure
         """
         if self.hl is not NULL:
             return slurm_hostlist_push(self.hl, hosts)
@@ -90,6 +122,14 @@ cdef class Hostlist:
     def push_host(self, host):
         """
         Push a single host onto the hostlist.
+
+        This function is more efficient than self.push() for a single
+        hostname, since the argument does not need to be checked for ranges.
+
+        Args:
+            host (str): string representation of a single host.
+        Returns:
+            1 for success, 0 for failure
         """
         if self.hl is not NULL:
             return slurm_hostlist_push_host(self.hl, host)
@@ -98,6 +138,11 @@ cdef class Hostlist:
         """
         Return position in hostlist after searching for the first host matching
         hostname.
+
+        Args:
+            hostname (str): string representation of a single host
+        Returns:
+            Position in the list if found or -1 if host not found
         """
         if self.hl is not NULL:
             return slurm_hostlist_find(self.hl, hostname)
@@ -106,6 +151,14 @@ cdef class Hostlist:
         """
         Returns the string representation of the first host in the hostlist or
         NULL if the hostlist is empty.
+
+        The host is removed frmo the hostlist.
+
+        Args:
+            None
+        Returns:
+            String representatio of the first host in the hostlist or NULL if
+            the hostlist is empty.
         """
         if self.hl is not NULL:
             return slurm_hostlist_shift(self.hl)
@@ -113,6 +166,11 @@ cdef class Hostlist:
     def uniq(self):
         """
         Sort the hostlist and remove duplicate entries.
+
+        Args:
+            None
+        Returns:
+            None
         """
         if self.hl is not NULL:
             return slurm_hostlist_uniq(self.hl)
