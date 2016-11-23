@@ -17,6 +17,10 @@ This module declares and wraps the following Slurm API functions:
 - slurm_load_job
 - slurm_load_jobs
 - slurm_pid2jobid
+- slurm_get_rem_time
+- slurm_get_end_time
+- slurm_kill_job
+- slurm_notify_job
 
 Job Objects
 ------------
@@ -600,6 +604,7 @@ cdef get_job_info_msg(jobid, ids=False):
             # TODO
             job_resrcs = record.job_resrcs
 
+            # TODO
             if job_resrcs:
                 if (cluster_flags & CLUSTER_FLAG_BG):
                     pass
@@ -820,6 +825,8 @@ def get_rem_time(uint32_t jobid, slurm_format=False):
 
     Args:
         jobid (int): slurm job id
+        slurm_format (bool): time in seconds if False, slurm time formatted if
+            True (Default: False)
     Returns:
         remaining time in seconds or -1 for error
     """
@@ -864,3 +871,10 @@ def get_end_time(uint32_t jobid, slurm_format=False):
             return time_str
     else:
         raise PySlurmError(slurm_strerror(rc), rc)
+
+
+cdef int __job_cpus_allocated_on_node(job_resources_t *job_resrcs_ptr, node):
+    """
+    """
+    #return slurm_job_cpus_allocated_on_node(&job_resrcs_ptr, node)
+    pass
