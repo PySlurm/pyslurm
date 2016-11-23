@@ -4745,7 +4745,176 @@ cdef class qos:
 
         self._QOSDict = Q_dict
 
+#
+# sludbd jobs Class
+#
+cdef class slurmdb_jobs:
+    u"""Class to access/update slurmdbd Jobs information."""
 
+    cdef:
+        void *dbconn
+        dict _JOBSDict
+        slurm.List _JOBSList
+
+    def __cinit__(self):
+        self.dbconn = <void *>NULL
+        self._JOBSDict = {}
+
+    def __dealloc__(self):
+        self.__destroy()
+
+    cpdef __destroy(self):
+        u"""jobs Destructor method."""
+        self._JOBSDict = {}
+
+    def load(self):
+        u"""Load slurm jobs information."""
+        self.__load()
+
+    cpdef int __load(self) except? -1:
+        u"""Load slurmdbd jobs list. start and end is linux time stamp values"""
+        cdef:
+            int apiError = 0
+            void* dbconn = slurm.slurmdb_connection_get()
+            slurm.List JOBSList = slurm.slurmdb_jobs_get(dbconn, NULL)
+
+        if JOBSList is NULL:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.slurm_strerror(apiError), apiError)
+        else:
+            self._JOBSList = JOBSList
+
+        slurm.slurmdb_connection_close(&dbconn)
+        return 0
+
+    def lastUpdate(self):
+        u"""Return last time (sepoch seconds) the JOBS data was updated.
+
+        :returns: epoch seconds
+        :rtype: `integer`
+        """
+        return self._lastUpdate
+
+    def ids(self):
+        u"""Return the JOBS IDs from retrieved data.
+
+        :returns: Dictionary of JOBS IDs
+        :rtype: `dict`
+        """
+        return self._JOBSDict.keys()
+
+    def get(self):
+        u"""Get slurm JOBS information.
+
+        :returns: Dictionary whose key is the JOBS ID
+        :rtype: `dict`
+        """
+        self.__load()
+        self.__get()
+        return self._JOBSDict
+
+    cpdef __get(self):
+        cdef:
+            slurm.List jobs_list = NULL
+            slurm.ListIterator iters = NULL
+            int i = 0
+            int listNum = 0
+            dict J_dict = {}
+
+        if self._JOBSList is not NULL:
+            listNum = slurm.slurm_list_count(self._JOBSList)
+            iters = slurm.slurm_list_iterator_create(self._JOBSList)
+
+            for i in range(listNum):
+                job = <slurm.slurmdb_job_rec_t *>slurm.slurm_list_next(iters)
+
+                # JOBS infos
+                JOBS_info = {}
+                if job is not NULL:
+                    jobid = job.jobid
+                    JOBS_info[u'account'] = slurm.stringOrNone(job.account, '')
+                    JOBS_info[u'allocated_gres'] = slurm.stringOrNone(job.alloc_gres, '')
+                    JOBS_info[u'allocated_nodes'] = job.alloc_nodes
+                    JOBS_info[u'array_job_id'] = job.array_job_id
+                    JOBS_info[u'array_max_tasks'] = job.array_max_tasks
+                    JOBS_info[u'array_task_id'] = job.array_task_id
+                    JOBS_info[u'array_task_str'] = slurm.stringOrNone(job.array_task_str, '')
+                    JOBS_info[u'associd'] = job.associd
+                    JOBS_info[u'blockid'] = slurm.stringOrNone(job.blockid, '')
+                    JOBS_info[u'cluster'] = slurm.stringOrNone(job.cluster, '')
+                    JOBS_info[u'derived_ec'] = job.derived_ec
+                    JOBS_info[u'derived_es'] = slurm.stringOrNone(job.derived_es, '')
+                    JOBS_info[u'elapsed'] = job.elapsed
+                    JOBS_info[u'eligible'] = job.eligible
+                    JOBS_info[u'end'] = job.end
+                    JOBS_info[u'exit_code'] = job.exitcode
+                    JOBS_info[u'gid'] = job.gid
+                    JOBS_info[u'jobid'] = job.jobid
+                    JOBS_info[u'jobname'] = slurm.stringOrNone(job.jobname, '')
+                    JOBS_info[u'lft'] = job.lft
+                    JOBS_info[u'partition'] = slurm.stringOrNone(job.partition, '')
+                    JOBS_info[u'nodes'] = slurm.stringOrNone(job.nodes, '')
+                    JOBS_info[u'priority'] = job.priority
+                    JOBS_info[u'qosid'] = job.qosid
+                    JOBS_info[u'req_cpus'] = job.req_cpus
+                    JOBS_info[u'req_gres'] = slurm.stringOrNone(job.req_gres, '')
+                    JOBS_info[u'req_mem'] = job.req_mem
+                    JOBS_info[u'requid'] = job.requid
+                    JOBS_info[u'resvid'] = job.resvid
+                    JOBS_info[u'resv_name'] = slurm.stringOrNone(job.resv_name,'')
+                    JOBS_info[u'show_full'] = job.show_full
+                    JOBS_info[u'start'] = job.start
+                    JOBS_info[u'state'] = job.state
+                    job_statistics = <slurm.slurmdb_stats_t> job.stats
+                    JOBS_info[u'stat_actual_cpufreq'] = job_statistics.act_cpufreq
+                    JOBS_info[u'stat_cpu_ave'] = job_statistics.cpu_ave
+                    JOBS_info[u'stat_consumed_energy'] = job_statistics.consumed_energy
+                    JOBS_info[u'stat_cpu_min'] = job_statistics.cpu_min
+                    JOBS_info[u'stat_cpu_min_nodeid'] = job_statistics.cpu_min_nodeid
+                    JOBS_info[u'stat_cpu_min_taskid'] = job_statistics.cpu_min_taskid
+                    JOBS_info[u'stat_disk_read_ave'] = job_statistics.disk_read_ave
+                    JOBS_info[u'stat_disk_read_max'] = job_statistics.disk_read_max
+                    JOBS_info[u'stat_disk_read_max_nodeid'] = job_statistics.disk_read_max_nodeid
+                    JOBS_info[u'stat_disk_read_max_taskid'] = job_statistics.disk_read_max_taskid
+                    JOBS_info[u'stat_disk_write_ave'] = job_statistics.disk_write_ave
+                    JOBS_info[u'stat_disk_write_max'] = job_statistics.disk_write_max
+                    JOBS_info[u'stat_disk_write_max_nodeid'] = job_statistics.disk_write_max_nodeid
+                    JOBS_info[u'stat_disk_write_max_taskid'] = job_statistics.disk_write_max_taskid
+                    JOBS_info[u'stat_pages_ave'] = job_statistics.pages_ave
+                    JOBS_info[u'stat_pages_max'] = job_statistics.pages_max
+                    JOBS_info[u'stat_pages_max_nodeid'] = job_statistics.pages_max_nodeid
+                    JOBS_info[u'stat_pages_max_taskid'] = job_statistics.pages_max_taskid
+                    JOBS_info[u'stat_rss_ave'] = job_statistics.rss_ave
+                    JOBS_info[u'stat_rss_max'] = job_statistics.rss_max
+                    JOBS_info[u'stat_rss_max_nodeid'] = job_statistics.rss_max_nodeid
+                    JOBS_info[u'stat_rss_max_taskid'] = job_statistics.rss_max_taskid
+                    JOBS_info[u'stat_vsize_ave'] = job_statistics.vsize_ave
+                    JOBS_info[u'stat_vsize_max'] = job_statistics.vsize_max
+                    JOBS_info[u'stat_vize_max_nodeid'] = job_statistics.vsize_max_nodeid
+                    JOBS_info[u'stat_vsize_max_taskid'] = job_statistics.vsize_max_taskid
+                    JOBS_info[u'steps'] = "Not filled, string should be handled"
+                    JOBS_info[u'submit'] = job.submit
+                    JOBS_info[u'suspended'] = job.suspended
+                    JOBS_info[u'sys_cpu_sec'] = job.sys_cpu_sec
+                    JOBS_info[u'sys_cpu_usec'] = job.sys_cpu_usec
+                    JOBS_info[u'timelimit'] = job.timelimit
+                    JOBS_info[u'tot_cpu_sec'] = job.tot_cpu_sec
+                    JOBS_info[u'tot_cpu_usec'] = job.tot_cpu_usec
+                    JOBS_info[u'track_steps'] = job.track_steps
+                    JOBS_info[u'tres_alloc_str'] = slurm.stringOrNone(job.tres_alloc_str,'')
+                    JOBS_info[u'tres_req_str'] = slurm.stringOrNone(job.tres_req_str,'')
+                    JOBS_info[u'uid'] = job.uid
+                    JOBS_info[u'used_gres'] = slurm.stringOrNone(job.used_gres, '')
+                    JOBS_info[u'user'] = slurm.stringOrNone(job.user,'')
+                    JOBS_info[u'user_cpu_sec'] = job.user_cpu_sec
+                    JOBS_info[u'user_cpu_sec'] = job.user_cpu_usec
+                    JOBS_info[u'wckey'] = slurm.stringOrNone(job.wckey, '')
+                    JOBS_info[u'wckeyid'] = job.wckeyid
+                    J_dict[jobid] = JOBS_info
+
+            slurm.slurm_list_iterator_destroy(iters)
+            slurm.slurm_list_destroy(self._JOBSList)
+        self._JOBSDict = J_dict
 #
 # Helper functions to convert numerical States
 #
@@ -5154,7 +5323,7 @@ def get_partition_state(uint16_t inx):
         elif inx == PARTITION_DOWN:
             state = "DOWN"
         elif inx == PARTITION_INACTIVE:
-            stats = "INACTIVE"
+            state = "INACTIVE"
         elif inx == PARTITION_DRAIN:
             state = "DRAIN"
         else:

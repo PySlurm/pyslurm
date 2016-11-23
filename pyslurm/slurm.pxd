@@ -2106,6 +2106,123 @@ cdef extern from 'slurm/slurm.h' nogil:
 
 cdef extern from 'slurm/slurmdb.h' nogil:
 
+    ctypedef struct slurmdb_job_cond:
+        List acct_list
+        List associd_list
+        List cluster_list
+        uint32_t cpus_max
+        uint32_t cpus_min
+        uint16_t duplicates
+        int32_t exitcode
+        List groupid_list
+        List jobname_list
+        uint32_t nodes_max
+        uint32_t nodes_min
+        List partition_list
+        List qos_list
+        List resv_list
+        List resvid_list
+        List state_list
+        List step_list
+        uint32_t timelimit_max
+        uint32_t timelimit_min
+        time_t usage_end
+        time_t usage_start
+        char *used_nodes
+        List userid_list
+        List wckey_list
+        uint16_t without_steps
+        uint16_t without_usage_truncation
+
+    ctypedef slurmdb_job_cond slurmdb_job_cond_t
+
+    ctypedef struct slurmdb_stats:
+        double act_cpufreq
+        double cpu_ave
+        double consumed_energy
+        uint32_t cpu_min
+        uint32_t cpu_min_nodeid
+        uint32_t cpu_min_taskid
+        double disk_read_ave
+        double disk_read_max
+        uint32_t disk_read_max_nodeid 
+        uint32_t disk_read_max_taskid
+        double disk_write_ave
+        double disk_write_max
+        uint32_t disk_write_max_nodeid
+        uint32_t disk_write_max_taskid
+        double pages_ave
+        uint64_t pages_max
+        uint32_t pages_max_nodeid
+        uint32_t pages_max_taskid
+        double rss_ave
+        uint64_t rss_max
+        uint32_t rss_max_nodeid
+        uint32_t rss_max_taskid
+        double vsize_ave
+        uint64_t vsize_max
+        uint32_t vsize_max_nodeid
+        uint32_t vsize_max_taskid
+
+    ctypedef slurmdb_stats slurmdb_stats_t
+
+    ctypedef struct slurmdb_job_rec:
+        char *account
+        char *alloc_gres
+        uint32_t alloc_nodes
+        uint32_t array_job_id
+        uint32_t array_max_tasks
+        uint32_t array_task_id
+        char *array_task_str
+        uint32_t associd
+        char *blockid
+        char *cluster
+        uint32_t derived_ec
+        char *derived_es
+        uint32_t elapsed
+        time_t eligible
+        time_t end
+        uint32_t exitcode
+        void *first_step_ptr
+        uint32_t gid
+        uint32_t jobid
+        char *jobname
+        uint32_t lft
+        char *partition
+        char *nodes
+        uint32_t priority
+        uint32_t qosid
+        uint32_t req_cpus
+        char *req_gres
+        uint32_t req_mem
+        uint32_t requid
+        uint32_t resvid
+        char *resv_name
+        uint32_t show_full
+        time_t start
+        uint32_t state
+        slurmdb_stats_t stats
+        List steps 
+        time_t submit
+        uint32_t suspended
+        uint32_t sys_cpu_sec
+        uint32_t sys_cpu_usec
+        uint32_t timelimit
+        uint32_t tot_cpu_sec
+        uint32_t tot_cpu_usec
+        uint16_t track_steps
+        char *tres_alloc_str
+        char *tres_req_str
+        uint32_t uid
+        char *used_gres
+        char *user
+        uint32_t user_cpu_sec
+        uint32_t user_cpu_usec
+        char *wckey
+        uint32_t wckeyid
+
+    ctypedef slurmdb_job_rec slurmdb_job_rec_t
+
     ctypedef struct slurmdb_qos_usage_t:
         List job_list
         uint32_t grp_used_jobs
@@ -2187,7 +2304,9 @@ cdef extern from 'slurm/slurmdb.h' nogil:
                                          slurmdb_qos_rec_t *qos)
     cdef extern List slurmdb_qos_remove (void *db_conn, slurmdb_qos_cond_t *qos_cond)
 
-
+    # jobs accounting C APIs
+    cdef extern List slurmdb_jobs_get(void *db_conn, slurmdb_job_cond_t *job_cond)
+    cdef extern void slurmdb_destroy_job_rec(void *object)
 #
 # Slurm declarations not in slurm.h
 #
