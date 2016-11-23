@@ -611,3 +611,25 @@ BLOCK_READY = 3
 BLOCK_RESUME = 4
 BLOCK_ERROR = 5
 BLOCK_REMOVE = 6
+
+#
+# for slurmdbd, define from slurmdbd.h
+#
+
+CLUSTER_FLAG_BG     = 0x00000001   # This is a bluegene cluster 
+CLUSTER_FLAG_BGL    = 0x00000002   # This is a bluegene/l cluster 
+CLUSTER_FLAG_BGP    = 0x00000004   # This is a bluegene/p cluster 
+CLUSTER_FLAG_BGQ    = 0x00000008   # This is a bluegene/q cluster 
+CLUSTER_FLAG_SC     = 0x00000010   # This is a sun constellation cluster 
+CLUSTER_FLAG_XCPU   = 0x00000020   # This has xcpu, removed v15.08 
+CLUSTER_FLAG_AIX    = 0x00000040   # This is an aix cluster 
+CLUSTER_FLAG_MULTSD = 0x00000080   # This cluster is multiple slurmd 
+CLUSTER_FLAG_CRAYXT = 0x00000100   # This cluster is a ALPS cray
+CLUSTER_FLAG_CRAY_A = 0x00000100   # This cluster is a ALPS cray 
+CLUSTER_FLAG_FE     = 0x00000200   # This cluster is a front end system 
+CLUSTER_FLAG_CRAY_N = 0x00000400   # This cluster is a Native cray 
+CLUSTER_FLAG_CRAY   = 0x00000500   # This cluster is a cray.
+
+SLURMDB_EVENT_ALL = 0x0000
+SLURMDB_EVENT_CLUSTER = 0x0001
+SLURMDB_EVENT_NODE = 0x0002
