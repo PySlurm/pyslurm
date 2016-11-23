@@ -8,6 +8,7 @@ from .slurm_common cimport dynamic_plugin_data_t
 cdef extern from "slurm/slurm.h" nogil:
     enum:
         NICE_OFFSET
+        HIGHEST_DIMENSIONS
 
     ctypedef struct job_resources_t:
         pass
@@ -350,6 +351,141 @@ cdef extern from "slurm/slurm.h" nogil:
     enum: JOB_STATE_BASE
     enum: SLURM_POWER_FLAGS_LEVEL
 
+    ctypedef struct job_desc_msg_t:
+        char *account
+        char *acctg_freq
+        char *alloc_node
+        uint16_t alloc_resp_port
+        uint32_t alloc_sid
+        uint32_t argc
+        char **argv
+        char *array_inx
+        void *array_bitmap
+        time_t begin_time
+        uint32_t bitflags
+        char *burst_buffer
+        uint16_t ckpt_interval
+        char *ckpt_dir
+        char *clusters
+        char *comment
+        uint16_t contiguous
+        uint16_t core_spec
+        char *cpu_bind
+        uint16_t cpu_bind_type
+        uint32_t cpu_freq_min
+        uint32_t cpu_freq_max
+        uint32_t cpu_freq_gov
+        time_t deadline
+        char *dependency
+        time_t end_time
+        char **environment
+        uint32_t env_size
+        char *exc_nodes
+        char *features
+        char *gres
+        uint32_t group_id
+        uint32_t job_id
+        char * job_id_str
+        uint16_t kill_on_node_fail
+        char *licenses
+        uint16_t mail_type
+        char *mail_user
+        char *mcs_label
+        char *mem_bind
+        uint16_t mem_bind_type
+        char *name
+        char *network
+        uint32_t nice
+        uint32_t num_tasks
+        uint8_t open_mode
+        uint16_t other_port
+        uint8_t overcommit
+        char *partition
+        uint16_t plane_size
+        uint8_t power_flags
+        uint32_t priority
+        uint32_t profile
+        char *qos
+        uint16_t reboot
+        char *resp_host
+        char *req_nodes
+        uint16_t requeue
+        char *reservation
+        char *script
+        uint16_t shared
+        char **spank_job_env
+        uint32_t spank_job_env_size
+        uint32_t task_dist
+        uint32_t time_limit
+        uint32_t time_min
+        uint32_t user_id
+        uint16_t wait_all_nodes
+        uint16_t warn_flags
+        uint16_t warn_signal
+        uint16_t warn_time
+        char *work_dir
+        uint16_t cpus_per_task
+        uint32_t min_cpus
+        uint32_t max_cpus
+        uint32_t min_nodes
+        uint32_t max_nodes
+        uint16_t boards_per_node
+        uint16_t sockets_per_board
+        uint16_t sockets_per_node
+        uint16_t cores_per_socket
+        uint16_t threads_per_core
+        uint16_t ntasks_per_node
+        uint16_t ntasks_per_socket
+        uint16_t ntasks_per_core
+        uint16_t ntasks_per_board
+        uint16_t pn_min_cpus
+        uint32_t pn_min_memory
+        uint32_t pn_min_tmp_disk
+        # The following parameters are only meaningful on a Blue Gene
+        # system at present. Some will be of value on other system. Don't remove these
+        # they are needed for LCRM and others that can't talk to the opaque data type
+        # select_jobinfo.
+        uint16_t geometry[HIGHEST_DIMENSIONS]
+        uint16_t conn_type[HIGHEST_DIMENSIONS]
+        uint16_t rotate
+        char *blrtsimage
+        char *linuximage
+        char *mloaderimage
+        char *ramdiskimage
+        # End of Blue Gene specific values
+        uint32_t req_switch
+        dynamic_plugin_data_t *select_jobinfo
+        char *std_err
+        char *std_in
+        char *std_out
+        uint64_t *tres_req_cnt
+        uint32_t wait4switch
+        char *wckey
+
+    ctypedef struct resource_allocation_response_msg_t:
+        char *account
+        uint32_t job_id
+        char *alias_list
+        uint32_t cpu_freq_min
+        uint32_t cpu_freq_max
+        uint32_t cpu_freq_gov
+        uint16_t *cpus_per_node
+        uint32_t *cpu_count_reps
+        uint32_t env_size
+        char **environment
+        uint32_t error_code
+        uint32_t node_cnt
+        char *node_list
+        uint16_t ntasks_per_board
+        uint16_t ntasks_per_core
+        uint16_t ntasks_per_socket
+        uint32_t num_cpu_groups
+        char *partition
+        uint32_t pn_min_memory
+        char *qos
+        char *resv_name
+        dynamic_plugin_data_t *select_jobinfo
+
     int slurm_load_job(job_info_msg_t **resp, uint32_t job_id,
                        uint16_t show_flags)
 
@@ -374,8 +510,24 @@ cdef extern from "slurm/slurm.h" nogil:
     int slurm_kill_job(uint32_t job_id, uint16_t signal, uint16_t flags)
     int slurm_notify_job(uint32_t job_id, char *message)
     int slurm_get_end_time(uint32_t jobid, time_t *end_time_ptr)
+
     int slurm_job_cpus_allocated_on_node(job_resources_t *job_resrcs_ptr,
                                          const char *node_name)
+
+    void slurm_init_job_desc_msg(job_desc_msg_t *job_desc_msg)
+
+    int slurm_allocate_resources(job_desc_msg_t *job_desc_msg,
+                                 resource_allocation_response_msg_t **job_alloc_resp_msg)
+
+#    resource_allocation_response_msg_t *slurm_allocate_resources_blocking(
+#        const job_desc_msg_t *user_req,
+#        time_t timeout,
+#        <*pending_callback>(uint32_t job_id)
+#    )
+
+    void slurm_free_resource_allocation_response_msg(
+        resource_allocation_response_msg_t *msg
+    )
 
 #
 # Job declarations outside of slurm.h
