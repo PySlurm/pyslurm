@@ -424,6 +424,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint16_t warn_signal
         uint16_t warn_time
         char *work_dir
+        # job constraints
         uint16_t cpus_per_task
         uint32_t min_cpus
         uint32_t max_cpus
@@ -486,6 +487,11 @@ cdef extern from "slurm/slurm.h" nogil:
         char *resv_name
         dynamic_plugin_data_t *select_jobinfo
 
+    ctypedef struct submit_response_msg_t:
+        uint32_t job_id
+        uint32_t step_id
+        uint32_t error_code
+
     int slurm_load_job(job_info_msg_t **resp, uint32_t job_id,
                        uint16_t show_flags)
 
@@ -519,15 +525,22 @@ cdef extern from "slurm/slurm.h" nogil:
     int slurm_allocate_resources(job_desc_msg_t *job_desc_msg,
                                  resource_allocation_response_msg_t **job_alloc_resp_msg)
 
-#    resource_allocation_response_msg_t *slurm_allocate_resources_blocking(
-#        const job_desc_msg_t *user_req,
-#        time_t timeout,
-#        <*pending_callback>(uint32_t job_id)
-#    )
+    resource_allocation_response_msg_t *slurm_allocate_resources_blocking(
+        const job_desc_msg_t *user_req,
+        time_t timeout,
+        void (*pending_callback)(uint32_t job_id)
+    )
 
     void slurm_free_resource_allocation_response_msg(
         resource_allocation_response_msg_t *msg
     )
+
+    int slurm_submit_batch_job(job_desc_msg_t *job_desc_msg,
+        submit_response_msg_t **slurm_alloc_msg
+    )
+
+    void slurm_free_submit_response_response_msg(submit_response_msg_t *msg)
+    int slurm_update_job(job_desc_msg_t *job_msg)
 
 #
 # Job declarations outside of slurm.h
