@@ -349,7 +349,6 @@ cdef extern from "slurm/slurm.h" nogil:
         JOB_END
 
     enum: JOB_STATE_BASE
-    enum: SLURM_POWER_FLAGS_LEVEL
 
     ctypedef struct job_desc_msg_t:
         char *account
@@ -384,6 +383,7 @@ cdef extern from "slurm/slurm.h" nogil:
         char *features
         char *gres
         uint32_t group_id
+        uint16_t immediate
         uint32_t job_id
         char * job_id_str
         uint16_t kill_on_node_fail

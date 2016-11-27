@@ -35,15 +35,22 @@ Each job record in a ``job_info_msg_t`` struct is converted to a
 """
 from __future__ import absolute_import, division, unicode_literals
 
+# Python Imports
 from grp import getgrgid
+from os import getuid, getgid
 from pwd import getpwnam, getpwuid
 
+# Cython Includes
+from cpython.string cimport PyString_AsString
+from libc.errno cimport errno
+from libc.signal cimport SIGKILL
+from libc.stdlib cimport malloc, free
 from libc.time cimport difftime
 from libc.time cimport time as c_time
-from libc.signal cimport SIGKILL
 from posix.types cimport pid_t, time_t
 from posix.wait cimport WIFSIGNALED, WTERMSIG, WEXITSTATUS
 
+# PySlurm imports
 from .c_job cimport *
 from .slurm_common cimport *
 from .utils cimport *
@@ -784,7 +791,6 @@ def kill_job(uint32_t jobid, uint16_t signal=SIGKILL, uint16_t flags=0):
     """
     cdef:
         int rc
-        int errno
 
     rc = slurm_kill_job(jobid, signal, flags)
 
@@ -878,3 +884,328 @@ cdef int __job_cpus_allocated_on_node(job_resources_t *job_resrcs_ptr, node):
     """
     #return slurm_job_cpus_allocated_on_node(&job_resrcs_ptr, node)
     pass
+
+
+cpdef int allocate_resources(dict job_descriptor) except -1:
+    """
+    Example:
+    >>> a = {
+    ...     "name": "job01",
+    ...     "time_limit": 300,
+    ...     "pn_min_memory": 100,
+    ...     "num_tasks": 2,
+    ...     "user_id": os.getuid(),
+    ...     "group_id": os.getgid()
+    ... }
+    >>> pyslurm.job.allocate_resources(job_descriptor)
+    1234567
+    """
+    cdef:
+        job_desc_msg_t job_desc_msg
+        resource_allocation_response_msg_t *slurm_alloc_msg_ptr
+        int rc
+
+    slurm_init_job_desc_msg(&job_desc_msg)
+    try:
+        job_desc_msg.name = job_descriptor["name"]
+    except KeyError:
+        job_desc_msg.name = NULL
+
+    job_desc_msg.time_limit = job_descriptor["time_limit"]
+    job_desc_msg.pn_min_memory = job_descriptor["pn_min_memory"]
+    job_desc_msg.num_tasks = job_descriptor["num_tasks"]
+    job_desc_msg.user_id = job_descriptor["user_id"]
+    job_desc_msg.group_id = job_descriptor["group_id"]
+
+    rc = slurm_allocate_resources(&job_desc_msg, &slurm_alloc_msg_ptr)
+
+    if rc == SLURM_SUCCESS:
+        this_jobid = slurm_alloc_msg_ptr.job_id
+        slurm_free_resource_allocation_response_msg(slurm_alloc_msg_ptr)
+        slurm_alloc_msg_ptr = NULL
+        return this_jobid
+    else:
+        errno = slurm_get_errno()
+        raise PySlurmError(slurm_strerror(errno), errno)
+
+
+cpdef allocate_resources_blocking(dict job_descriptor):
+    """
+    """
+    cdef:
+        job_desc_msg_t job_desc_msg
+        resource_allocation_response_msg_t *slurm_alloc_msg_ptr
+
+    slurm_init_job_desc_msg(&job_desc_msg)
+    job_desc_msg.name = job_descriptor["name"]
+    job_desc_msg.time_limit = job_descriptor["time_limit"]
+    job_desc_msg.pn_min_memory = job_descriptor["pn_min_memory"]
+    job_desc_msg.num_tasks = job_descriptor["num_tasks"]
+    job_desc_msg.user_id = job_descriptor["user_id"]
+    job_desc_msg.group_id = job_descriptor["group_id"]
+
+    slurm_alloc_msg_ptr = slurm_allocate_resources_blocking(
+        &job_desc_msg, 0, NULL)
+
+    if slurm_alloc_msg_ptr:
+        slurm_free_resource_allocation_response_msg(slurm_alloc_msg_ptr)
+        slurm_alloc_msg_ptr = NULL
+    else:
+        raise PySlurmError("slurm_allocate_resources_blocking error")
+
+
+cpdef int submit_batch_job(dict jobdict) except -1:
+    """
+    """
+    cdef:
+        job_desc_msg_t job_desc_msg
+        submit_response_msg_t *slurm_alloc_msg_ptr
+        int rc
+        char **env
+
+    slurm_init_job_desc_msg(&job_desc_msg)
+
+    if "account" in jobdict:
+        job_desc_msg.account = jobdict["account"]
+
+    if "acctg_freq" in jobdict:
+        job_desc_msg.acctg_freq = jobdict["acctg_freq"]
+
+    if "alloc_node" in jobdict:
+        job_desc_msg.alloc_node = jobdict["alloc_node"]
+
+    if "alloc_sid" in jobdict:
+        job_desc_msg.alloc_sid = jobdict["alloc_sid"]
+
+    if "begin_time" in jobdict:
+        job_desc_msg.begin_time = jobdict["begin_time"]
+
+    if "clusters" in jobdict:
+        job_desc_msg.clusters = jobdict["clusters"]
+
+    if "comment" in jobdict:
+        job_desc_msg.comment = jobdict["comment"]
+
+    if "contiguous" in jobdict:
+        job_desc_msg.contiguous = jobdict["contiguous"]
+
+    if "cpu_freq_min" in jobdict:
+        job_desc_msg.cpu_freq_min = jobdict["cpu_freq_min"]
+
+    if "cpu_freq_max" in jobdict:
+        job_desc_msg.cpu_freq_max = jobdict["cpu_freq_max"]
+
+    if "cpu_freq_gov" in jobdict:
+        job_desc_msg.cpu_freq_gov = jobdict["cpu_freq_gov"]
+
+    if "deadline" in jobdict:
+        job_desc_msg.deadline = jobdict["deadline"]
+
+    if "dependency" in jobdict:
+        job_desc_msg.dependency = jobdict["dependency"]
+
+    if "environment" in jobdict:
+        # "environment" must be of type list.
+        # "env_size" is the size of the list.
+        # "env" is a C string array.  The following converts "environment" to a
+        # cstring array, for example:
+        #    char *env[2]
+        #    job_desc_msg.env_size = 2 
+        #    env[0] = "SLURM_ENV_0=looking_good" 
+        #    env[1] = "SLURM_ENV_1=still_good" 
+        #    job_desc_msg.environment = env
+        job_desc_msg.env_size = len(jobdict["environment"])
+        env = <char **>malloc(len(jobdict["environment"]) * sizeof(char *))
+        for index, item in jobdict["environment"]:
+            env[index] = PyString_AsString(item)
+        job_desc_msg.environment = env
+        free(env)
+
+    if "features" in jobdict:
+        job_desc_msg.features = jobdict["features"]
+
+    if "gres" in jobdict:
+        job_desc_msg.gres = jobdict["gres"]
+
+    if "group_id" in jobdict:
+        job_desc_msg.group_id = jobdict["group_id"]
+
+    if "immediate" in jobdict:
+        job_desc_msg.immediate = jobdict["immediate"]
+
+    if "kill_on_node_fail" in jobdict:
+        job_desc_msg.kill_on_node_fail = jobdict["kill_on_node_fail"]
+
+    if "licenses" in jobdict:
+        job_desc_msg.licenses = jobdict["licenses"]
+
+    if "mail_type" in jobdict:
+        job_desc_msg.mail_type = jobdict["mail_type"]
+
+    if "mail_user" in jobdict:
+        job_desc_msg.mail_user = jobdict["mail_user"]
+
+    if "name" in jobdict:
+        job_desc_msg.name = jobdict["name"]
+
+    if "num_tasks" in jobdict:
+        job_desc_msg.num_tasks = jobdict["num_tasks"]
+
+    if "open_mode" in jobdict:
+        job_desc_msg.open_mode = jobdict["open_mode"]
+
+    if "overcommit" in jobdict:
+        job_desc_msg.overcommit = jobdict["overcommit"]
+
+    if "partition" in jobdict:
+        job_desc_msg.partition = jobdict["partition"]
+
+    if "plane_size" in jobdict:
+        job_desc_msg.plane_size = jobdict["plane_size"]
+
+    if "power_flags" in jobdict:
+        job_desc_msg.power_flags = jobdict["power_flags"]
+
+    if "priority" in jobdict:
+        job_desc_msg.priority = jobdict["priority"]
+
+    if "qos" in jobdict:
+        job_desc_msg.qos = jobdict["qos"]
+
+    if "reboot" in jobdict:
+        job_desc_msg.reboot = jobdict["reboot"]
+
+    if "req_nodes" in jobdict:
+        job_desc_msg.req_nodes = jobdict["req_nodes"]
+
+    if "requeue" in jobdict:
+        job_desc_msg.requeue = jobdict["requeue"]
+
+    if "reservation" in jobdict:
+        job_desc_msg.reservation = jobdict["reservation"]
+
+    if "script" in jobdict:
+        job_desc_msg.script = jobdict["script"]
+
+    if "shared" in jobdict:
+        job_desc_msg.shared = jobdict["shared"]
+
+    if "time_limit" in jobdict:
+        job_desc_msg.time_limit = jobdict["time_limit"]
+
+    if "time_min" in jobdict:
+        job_desc_msg.time_min = jobdict["time_min"]
+
+    if "user_id" in jobdict:
+        job_desc_msg.user_id = jobdict["user_id"]
+
+    if "wait_all_nodes" in jobdict:
+        job_desc_msg.wait_all_nodes = jobdict["wait_all_nodes"]
+
+    if "work_dir" in jobdict:
+        job_desc_msg.work_dir = jobdict["work_dir"]
+
+    # job constraints
+    if "cpus_per_task" in jobdict:
+        job_desc_msg.cpus_per_task = jobdict["cpus_per_task"]
+
+    if "min_cpus" in jobdict:
+        job_desc_msg.min_cpus = jobdict["min_cpus"]
+
+    if "max_cpus" in jobdict:
+        job_desc_msg.max_cpus = jobdict["max_cpus"]
+
+    if "min_nodes" in jobdict:
+        job_desc_msg.min_nodes = jobdict["min_nodes"]
+
+    if "max_nodes" in jobdict:
+        job_desc_msg.max_nodes = jobdict["max_nodes"]
+
+    if "boards_per_node" in jobdict:
+        job_desc_msg.boards_per_node = jobdict["boards_per_node"]
+
+    if "sockets_per_board" in jobdict:
+        job_desc_msg.sockets_per_board = jobdict["sockets_per_board"]
+
+    if "sockets_per_node" in jobdict:
+        job_desc_msg.sockets_per_node = jobdict["sockets_per_node"]
+
+    if "cores_per_socket" in jobdict:
+        job_desc_msg.cores_per_socket = jobdict["cores_per_socket"]
+
+    if "threads_per_core" in jobdict:
+        job_desc_msg.threads_per_core = jobdict["threads_per_core"]
+
+    if "ntasks_per_node" in jobdict:
+        job_desc_msg.ntasks_per_node = jobdict["ntasks_per_node"]
+
+    if "ntasks_per_socket" in jobdict:
+        job_desc_msg.ntasks_per_socket = jobdict["ntasks_per_socket"]
+
+    if "ntasks_per_core" in jobdict:
+        job_desc_msg.ntasks_per_core = jobdict["ntasks_per_core"]
+
+    if "ntasks_per_board" in jobdict:
+        job_desc_msg.ntasks_per_board = jobdict["ntasks_per_board"]
+
+    if "pn_min_cpus" in jobdict:
+        job_desc_msg.pn_min_cpus = jobdict["pn_min_cpus"]
+
+    if "pn_min_memory" in jobdict:
+        job_desc_msg.pn_min_memory = jobdict["pn_min_memory"]
+
+    if "pn_min_tmp_disk" in jobdict:
+        job_desc_msg.pn_min_tmp_disk = jobdict["pn_min_tmp_disk"]
+
+    if "req_switch" in jobdict:
+        job_desc_msg.req_switch = jobdict["req_switch"]
+
+    if "std_err" in jobdict:
+        job_desc_msg.std_err = jobdict["std_err"]
+
+    if "std_in" in jobdict:
+        job_desc_msg.std_in = jobdict["std_in"]
+
+    if "std_out" in jobdict:
+        job_desc_msg.std_out = jobdict["std_out"]
+
+    if "wait4switch" in jobdict:
+        job_desc_msg.wait4switch = jobdict["wait4switch"]
+
+    if "wckey" in jobdict:
+        job_desc_msg.wckey = jobdict["wckey"]
+
+    rc = slurm_submit_batch_job(&job_desc_msg, &slurm_alloc_msg_ptr)
+
+    if rc == SLURM_SUCCESS:
+        this_jobid = slurm_alloc_msg_ptr.job_id
+        slurm_free_submit_response_response_msg(slurm_alloc_msg_ptr)
+        slurm_alloc_msg_ptr = NULL
+        return this_jobid
+    else:
+        errno = slurm_get_errno()
+        raise PySlurmError(slurm_strerror(errno), errno)
+
+
+cpdef int update_job(dict update) except -1:
+    """
+    Issue RPC to update a job's configuration.
+
+    Only usable by user root or (for some parameters) the job's owner.
+    """
+    cdef:
+        job_desc_msg_t update_job_msg
+        int rc
+
+    slurm_init_job_desc_msg(&update_job_msg)
+    update_job_msg.job_id = update["job_id"] if "job_id" in update else None
+    update_job_msg.time_limit = update["time_limit"]
+    update_job_msg.partition = update["partition"]
+
+    rc = slurm_update_job(&update_job_msg)
+
+    if rc == SLURM_SUCCESS:
+        return rc
+    else:
+        errno = slurm_get_errno()
+        raise PySlurmError(slurm_strerror(errno), errno)
