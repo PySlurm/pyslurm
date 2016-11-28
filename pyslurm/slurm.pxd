@@ -2491,6 +2491,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     # jobs accounting C APIs
     cdef extern List slurmdb_jobs_get(void *db_conn, slurmdb_job_cond_t *job_cond)
+    cdef extern void slurmdb_destroy_job_cond(void *object);
     cdef extern void slurmdb_destroy_job_rec(void *object)
 #
 # Slurm declarations not in slurm.h
