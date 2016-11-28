@@ -4752,6 +4752,7 @@ cdef class slurmdb_jobs:
     u"""Class to access/update slurmdbd Jobs information."""
 
     cdef:
+        slurm.slurmdb_job_cond_t *job_cond
         void *dbconn
         dict _JOBSDict
         slurm.List _JOBSList
@@ -4759,6 +4760,7 @@ cdef class slurmdb_jobs:
     def __cinit__(self):
         self.dbconn = <void *>NULL
         self._JOBSDict = {}
+        self.job_cond = <slurm.slurmdb_job_cond_t *>NULL
 
     def __dealloc__(self):
         self.__destroy()
@@ -4766,6 +4768,21 @@ cdef class slurmdb_jobs:
     cpdef __destroy(self):
         u"""jobs Destructor method."""
         self._JOBSDict = {}
+        if self.job_cond != NULL:
+            slurm.slurmdb_destroy_job_cond(self.job_cond)
+
+    def set_job_condition(self, start_time, end_time):
+        u""" set slurmdb_job_cond_t values start and end time in linux time stamp format"""
+        self.__set_job_condition(start_time, end_time)
+
+    cpdef __set_job_condition(self, slurm.time_t start_time, slurm.time_t end_time):
+        self.job_cond = <slurm.slurmdb_job_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_job_cond_t))
+        if self.job_cond != NULL:
+            self.job_cond.usage_start = <slurm.time_t>start_time
+            self.job_cond.usage_end = <slurm.time_t>end_time
+            return "Time range was set correctly"
+        else:
+            return "Memory Allocation Failure!"
 
     def load(self):
         u"""Load slurm jobs information."""
@@ -4776,7 +4793,7 @@ cdef class slurmdb_jobs:
         cdef:
             int apiError = 0
             void* dbconn = slurm.slurmdb_connection_get()
-            slurm.List JOBSList = slurm.slurmdb_jobs_get(dbconn, NULL)
+            slurm.List JOBSList = slurm.slurmdb_jobs_get(dbconn, self.job_cond)
 
         if JOBSList is NULL:
             apiError = slurm.slurm_get_errno()
