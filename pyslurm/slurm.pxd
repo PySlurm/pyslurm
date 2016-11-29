@@ -2105,6 +2105,121 @@ cdef extern from 'slurm/slurm.h' nogil:
 #
 
 cdef extern from 'slurm/slurmdb.h' nogil:
+    ctypedef struct slurmdb_cluster_cond:
+        uint16_t classification
+        List cluster_list
+        uint32_t flags
+        List plugin_id_select_list
+        List rpc_version_list
+        time_t usage_end
+        time_t usage_start
+        uint16_t with_deleted
+        uint16_t with_usage
+
+    ctypedef slurmdb_cluster_cond slurmdb_cluster_cond_t
+
+    ctypedef struct slurmdb_tres_rec:
+        uint64_t alloc_secs
+        uint32_t rec_count
+        uint64_t count
+        uint32_t id
+        char *name
+        char *type
+
+    ctypedef slurmdb_tres_rec slurmdb_tres_rec_t
+
+    ctypedef struct slurmdb_cluster_accounting_rec:
+        uint64_t alloc_secs
+        uint64_t down_secs
+        uint64_t idle_secs
+        uint64_t over_secs
+        uint64_t pdown_secs
+        time_t period_start
+        uint64_t resv_secs
+        slurmdb_tres_rec_t tres_rec
+
+    ctypedef slurmdb_cluster_accounting_rec slurmdb_cluster_accounting_rec_t
+
+    ctypedef struct slurmdb_assoc_usage:
+        List children_list
+        uint64_t *grp_used_tres
+        uint64_t *grp_used_tres_run_secs
+        double grp_used_wall
+        double fs_factor
+        uint32_t level_shares
+#        slurmdb_assoc_rec_t *parent_assoc_ptr
+#        slurmdb_assoc_rec_t *fs_assoc_ptr # need some definition
+        double shares_norm
+        uint32_t tres_cnt
+        long double usage_efctv
+        long double usage_norm
+        long double usage_raw
+        long double *usage_tres_raw
+        uint32_t used_jobs
+        uint32_t used_submit_jobs
+        long double level_fs
+        bitstr_t *valid_qos
+
+    ctypedef slurmdb_assoc_usage slurmdb_assoc_usage_t
+
+    ctypedef struct slurmdb_assoc_rec:
+        List accounting_list
+        char *acct
+        slurmdb_assoc_rec *assoc_next
+        slurmdb_assoc_rec *assoc_next_id
+        char *cluster
+        uint32_t def_qos_id
+        uint32_t grp_jobs
+        uint32_t grp_submit_jobs
+        char *grp_tres
+        uint64_t *grp_tres_ctld
+        char *grp_tres_min
+        uint64_t *grp_tres_mins_ctld
+        char *grp_tres_run_mins
+        uint64_t *grp_tres_run_mins_ctld
+        uint32_t grp_wall
+        uint32_t id
+        uint16_t is_def
+        uint32_t lft
+        uint32_t max_jobs
+        uint32_t max_submit_jobs
+        char *max_tres_mins_pj
+        uint64_t *max_tres_mins_ctldi
+        char *max_tres_run_mins
+        uint64_t *max_tres_run_mins_ctld
+        char *max_tres_pj
+        uint64_t *max_tres_ctld
+        char *max_tres_pn
+        uint64_t *max_tres_pn_ctld
+        uint32_t max_wall_pj
+        char *parent_acct
+        uint32_t parent_id
+        char *partition
+        List qos_list
+        uint32_t rgt
+        uint32_t shares_raw
+        uint32_t uid
+        slurmdb_assoc_usage_t *usage
+        char *user
+
+    ctypedef slurmdb_assoc_rec slurmdb_assoc_rec_t
+
+    ctypedef struct slurmdb_cluster_rec:
+        List accounting_list
+        uint16_t classification
+        char *control_host
+        uint32_t control_port
+        uint16_t dimensions
+        int *dim_size
+        uint32_t flags
+        char *name
+        char *nodes
+        uint32_t plugin_id_select
+        slurmdb_assoc_rec_t *root_assoc #It is not required to support now
+        uint16_t rpc_version
+        char *tres_str
+
+    ctypedef slurmdb_cluster_rec slurmdb_cluster_rec_t
 
     ctypedef struct slurmdb_job_cond:
         List acct_list
@@ -2145,7 +2260,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         uint32_t cpu_min_taskid
         double disk_read_ave
         double disk_read_max
-        uint32_t disk_read_max_nodeid 
+        uint32_t disk_read_max_nodeid
         uint32_t disk_read_max_taskid
         double disk_write_ave
         double disk_write_max
@@ -2202,7 +2317,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         time_t start
         uint32_t state
         slurmdb_stats_t stats
-        List steps 
+        List steps
         time_t submit
         uint32_t suspended
         uint32_t sys_cpu_sec
@@ -2306,8 +2421,17 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     # jobs accounting C APIs
     cdef extern List slurmdb_jobs_get(void *db_conn, slurmdb_job_cond_t *job_cond)
-    cdef extern void slurmdb_destroy_job_cond(void *object);
+    cdef extern void slurmdb_destroy_job_cond(void *object)
     cdef extern void slurmdb_destroy_job_rec(void *object)
+
+    # clusters accounting and report APIs
+    cdef extern List slurmdb_clusters_get(void *db_conn, slurmdb_cluster_cond_t *cluster_cond)
+    cdef extern void slurmdb_init_cluster_cond(slurmdb_cluster_cond_t *cluster, bool free_it)
+    cdef extern void slurmdb_destroy_cluster_cond(void *object)
+    #cdef extern void slurmdb_init_cluster_rec(slurmdb_cluster_rec_t *cluster, bool free_it)
+    cdef extern void slurmdb_destroy_cluster_rec(void *object)
+    #cdef extern void slurmdb_destroy_report_cluster_rec(void *object)
+
 #
 # Slurm declarations not in slurm.h
 #
