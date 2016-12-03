@@ -11,17 +11,17 @@ Extensions
 
 ::
 
-    config          --- Slurm Control Configuration Read/Print/Update Functions
-    hostlist        --- Slurm Hostlist Functions
-    job             --- Slurm Job Control Configuration Read/Print/Update Functions
-    jobstep         --- Slurm Job Step Configuration Read/Print/Update Functions
-    license         --- Slurm License Read Functions
-    node            --- Slurm Node Configuration Read/Print Functions
-    partition       --- Slurm Partition Configuration Read/Print/Update Functions
-    powercap        --- Slurm Powercapping Read/Print/Update Functions
-    reservation     --- Slurm Reservation Configuration Read/Print/Update Functions
-    statistics      --- Slurm Scheduler Diagnostic Functions
-    topology        --- Slurm Switch Topology Configuration Read/Print Functions
+    config       ---  Slurm Control Configuration Read/Print/Update Functions
+    hostlist     ---  Slurm Hostlist Functions
+    job          ---  Slurm Job Control Configuration Read/Print/Update Functions
+    jobstep      ---  Slurm Job Step Configuration Read/Print/Update Functions
+    license      ---  Slurm License Read Functions
+    node         ---  Slurm Node Configuration Read/Print Functions
+    partition    ---  Slurm Partition Configuration Read/Print/Update Functions
+    powercap     ---  Slurm Powercapping Read/Print/Update Functions
+    reservation  ---  Slurm Reservation Configuration Read/Print/Update Functions
+    statistics   ---  Slurm Scheduler Diagnostic Functions
+    topology     ---  Slurm Switch Topology Configuration Read/Print Functions
 
 """
 import sys
