@@ -1,4 +1,4 @@
-.. automodule:: pyslurm.node
+.. automodule:: pyslurm.powercap
    :members:
    :undoc-members:
 

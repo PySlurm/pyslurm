@@ -1,9 +1,9 @@
 # cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
 """
-===========
+===============
 :mod:`powercap`
-===========
+===============
 
 The powercap extension module is used to get Slurm powercapping information.
 

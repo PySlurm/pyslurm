@@ -635,8 +635,7 @@ cpdef int update_partition(part_dict):
     Notes:
         #. This method requires **root** privileges.
         #. Use :func:`get_errno` to translate return code if not 0.
-        #. Most, but not all, parameters of a partition may be changed by this
-        function.
+        #. Most, but not all, parameters of a partition may be changed by this function.
 
     """
     update_part_msg("update", part_dict)

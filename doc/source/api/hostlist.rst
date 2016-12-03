@@ -1,4 +1,4 @@
-.. automodule:: pyslurm.node
+.. automodule:: pyslurm.hostlist
    :members:
    :undoc-members:
 

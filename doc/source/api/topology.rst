@@ -1,4 +1,4 @@
-.. automodule:: pyslurm.node
+.. automodule:: pyslurm.topology
    :members:
    :undoc-members:
 

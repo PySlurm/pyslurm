@@ -1,5 +1,13 @@
 # cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
+"""
+===========
+:mod:`misc`
+===========
+
+The misc extension module is used to wrap uncategorized slurm functions.
+
+"""
 from __future__ import print_function, division, unicode_literals
 
 from libc.stdint cimport uint16_t, uint32_t, uint64_t

@@ -1,4 +1,13 @@
 # cython: cdivision=True
+"""
+============
+:mod:`utils`
+============
+
+The utils extension module replicates slurm functions that are not exported via
+libslurm.
+
+"""
 from __future__ import absolute_import, division, unicode_literals
 
 from libc.stdint cimport uint32_t, uint64_t
