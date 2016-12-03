@@ -20,7 +20,11 @@
 import sys
 # sys.path.insert(0, os.path.abspath('.'))
 from datetime import datetime
-from unittest.mock import MagicMock
+
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    from mock import Mock as MagicMock
 
 # -- Mock imports for PySlurm ---------------------------------------------
 class Mock(MagicMock):
