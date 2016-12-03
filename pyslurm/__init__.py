@@ -11,42 +11,35 @@ Extensions
 
 ::
 
-    node            --- Get Node Information
-    job             --- Get Job Information
-    statistics      --- Get Slurmctld and Scheduler stats
-
-Utility tools
--------------
-
-::
-
-    version         --- PySlurm version string
-    api_version     --- Slurm version string
-
+    config          --- Slurm Control Configuration Read/Print/Update Functions
+    hostlist        --- Slurm Hostlist Functions
+    job             --- Slurm Job Control Configuration Read/Print/Update Functions
+    jobstep         --- Slurm Job Step Configuration Read/Print/Update Functions
+    license         --- Slurm License Read Functions
+    node            --- Slurm Node Configuration Read/Print Functions
+    partition       --- Slurm Partition Configuration Read/Print/Update Functions
+    powercap        --- Slurm Powercapping Read/Print/Update Functions
+    reservation     --- Slurm Reservation Configuration Read/Print/Update Functions
+    statistics      --- Slurm Scheduler Diagnostic Functions
+    topology        --- Slurm Switch Topology Configuration Read/Print Functions
 
 """
-from __future__ import absolute_import
-
-__all__ = [
-    "node",
-    "statistics",
-    "partition"
-]
-
 import sys
 import ctypes
 
+__version__ = "dev-16.05-props"
+
 sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
-from .config import *
-from .job import *
-from .jobstep import *
-from .hostlist import *
-from .license import *
-from .misc import *
-from .node import *
-from .partition import *
-from .powercap import *
-from .reservation import *
-from .statistics import *
-from .topology import *
+from . import config
+from . import job
+from . import jobstep
+from . import hostlist
+from . import license
+from . import misc
+from . import node
+from . import partition
+from . import powercap
+from . import reservation
+from . import statistics
+from . import topology
