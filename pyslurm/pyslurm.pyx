@@ -5080,6 +5080,149 @@ cdef class slurmdb_jobs:
         self._JOBSDict = J_dict
 
 #
+# sludbd Reservations Class
+#
+cdef class slurmdb_reservations:
+    u"""Class to access/update slurmdbd reservations information."""
+
+    cdef:
+        slurm.slurmdb_reservation_cond_t *reservation_cond
+        void *dbconn
+        dict _RESERVATIONSDict
+        slurm.List _RESERVATIONSList
+
+    def __cinit__(self):
+        self.dbconn = <void *>NULL
+        self._RESERVATIONSDict = {}
+        self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>NULL
+
+    def __dealloc__(self):
+        self.__destroy()
+
+    cpdef __destroy(self):
+        u"""reservations Destructor method."""
+        self._RESERVATIONSDict = {}
+        if self.reservation_cond != NULL:
+            slurm.slurmdb_destroy_reservation_cond(self.reservation_cond)
+
+    def set_reservation_condition(self, start_time, end_time):
+        u""" set slurmdb_reservation_cond_t values start and end time in linux time stamp format"""
+        return self.__set_reservation_condition(start_time, end_time)
+
+    cpdef __set_reservation_condition(self, slurm.time_t start_time, slurm.time_t end_time):
+        self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_reservation_cond_t))
+        if self.reservation_cond != NULL:
+            self.reservation_cond.with_usage = 1
+            self.reservation_cond.time_start = <slurm.time_t>start_time
+            self.reservation_cond.time_end = <slurm.time_t>end_time
+            return "Time range is set from {} to {}".format( \
+                    self.reservation_cond.time_start, self.reservation_cond.time_end)
+        else:
+            print("Not set")
+            return "Memory Allocation Failure!"
+
+    def load(self):
+        u"""Load slurm reservations information."""
+        self.__load()
+
+    cpdef int __load(self) except? -1:
+        u"""Load slurmdbd reservations list. start and end is linux time stamp values"""
+        cdef:
+            int apiError = 0
+            void* dbconn = slurm.slurmdb_connection_get()
+            slurm.List RESERVATIONSList = slurm.slurmdb_reservations_get(dbconn, self.reservation_cond)
+
+        if RESERVATIONSList is NULL:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.slurm_strerror(apiError), apiError)
+        else:
+            self._RESERVATIONSList = RESERVATIONSList
+
+        slurm.slurmdb_connection_close(&dbconn)
+        return 0
+
+    def lastUpdate(self):
+        u"""Return last time (sepoch seconds) the RESERVATIONS data was updated.
+
+        :returns: epoch seconds
+        :rtype: `integer`
+        """
+        return self._lastUpdate
+
+    def ids(self):
+        u"""Return the RESERVATIONS IDs from retrieved data.
+
+        :returns: Dictionary of RESERVATIONS IDs
+        :rtype: `dict`
+        """
+        return self._RESERVATIONSDict.keys()
+
+    def get(self):
+        u"""Get slurm RESERVATIONS information.
+
+        :returns: Dictionary whose key is the RESERVATIONS ID
+        :rtype: `dict`
+        """
+        self.__load()
+        self.__get()
+        return self._RESERVATIONSDict
+
+    cpdef __get(self):
+        cdef:
+            slurm.List reservations_list = NULL
+            slurm.ListIterator iters = NULL
+            int i = 0
+            int listNum = 0
+            dict R_dict = {}
+
+        if self._RESERVATIONSList is not NULL:
+            listNum = slurm.slurm_list_count(self._RESERVATIONSList)
+            iters = slurm.slurm_list_iterator_create(self._RESERVATIONSList)
+            for i in range(listNum):
+                reservation = <slurm.slurmdb_reservation_rec_t *>slurm.slurm_list_next(iters)
+
+                # RESERVATIONS infos
+                RESERVATIONS_info = {}
+                if reservation is not NULL:
+                    reservation_id = reservation.id
+                    RESERVATIONS_info[u'name'] = slurm.stringOrNone(reservation.name, '')
+                    RESERVATIONS_info[u'nodes'] = slurm.stringOrNone(reservation.nodes, '')
+                    RESERVATIONS_info[u'node_index'] = slurm.stringOrNone(reservation.node_inx, '')
+                    RESERVATIONS_info[u'associations'] = slurm.stringOrNone(reservation.assocs, '')
+                    RESERVATIONS_info[u'cluster'] = slurm.stringOrNone(reservation.cluster, '')
+                    RESERVATIONS_info[u'tres_str'] = slurm.stringOrNone(reservation.tres_str, '')
+                    RESERVATIONS_info[u'reservation_id'] = reservation.id
+                    RESERVATIONS_info[u'time_start'] = reservation.time_start
+                    RESERVATIONS_info[u'time_start_prev'] = reservation.time_start_prev
+                    RESERVATIONS_info[u'time_end'] = reservation.time_end
+                    RESERVATIONS_info[u'flags'] = reservation.flags
+                    if reservation.tres_list != NULL:
+                        num_tres = slurm.slurm_list_count(reservation.tres_list)
+                        tres_iters = slurm.slurm_list_iterator_create(reservation.tres_list)
+                        tres_dict = {}
+                        RESERVATIONS_info[u'num_tres'] = num_tres
+                        for j in range(num_tres):
+                            tres = <slurm.slurmdb_tres_rec_t *>slurm.slurm_list_next(tres_iters)
+                            if tres is not NULL:
+                                tmp_tres_dict = {}
+                                tres_id = tres.id
+                                if (tres.name is not NULL):
+                                    tmp_tres_dict[u'name'] = slurm.stringOrNone(tres.name,'')
+                                if (tres.type is not NULL):
+                                    tmp_tres_dict[u'type'] = slurm.stringOrNone(tres.type,'')
+                                tmp_tres_dict[u'rec_count'] = tres.rec_count
+                                tmp_tres_dict[u'count'] = tres.count
+                                tmp_tres_dict[u'tres_id'] = tres.id
+                                tmp_tres_dict[u'alloc_secs'] = tres.alloc_secs
+                                tres_dict[tres_id] = tmp_tres_dict
+                        RESERVATIONS_info[u'tres_list'] = tres_dict
+                        slurm.slurm_list_iterator_destroy(tres_iters)
+                    R_dict[reservation_id] = RESERVATIONS_info
+            slurm.slurm_list_iterator_destroy(iters)
+            slurm.slurm_list_destroy(self._RESERVATIONSList)
+        self._RESERVATIONSDict = R_dict
+
+#
 # sludbd clusters Class
 #
 cdef class slurmdb_clusters:
@@ -5107,16 +5250,18 @@ cdef class slurmdb_clusters:
 
     def set_cluster_condition(self, start_time, end_time):
         u""" set slurmdb_cluster_cond_t values start and end time in linux time stamp format"""
-        self.__set_cluster_condition(start_time, end_time)
+        return self.__set_cluster_condition(start_time, end_time)
 
     cpdef __set_cluster_condition(self, slurm.time_t start_time, slurm.time_t end_time):
         self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
         if self.cluster_cond != NULL:
-            print("set before")
+            slurm.slurmdb_init_cluster_cond(self.cluster_cond, 0)
+            self.cluster_cond.with_deleted = 1
+            self.cluster_cond.with_usage = 1
             self.cluster_cond.usage_start = <slurm.time_t>start_time
             self.cluster_cond.usage_end = <slurm.time_t>end_time
-            print("set after")
-            return "Time range was set correctly"
+            return "Time range is set start={} end={}".format( \
+                    self.cluster_cond.usage_start, self.cluster_cond.usage_end)
         else:
             print("Not set")
             return "Memory Allocation Failure!"
@@ -5178,7 +5323,6 @@ cdef class slurmdb_clusters:
         if self._CLUSTERSList is not NULL:
             listNum = slurm.slurm_list_count(self._CLUSTERSList)
             iters = slurm.slurm_list_iterator_create(self._CLUSTERSList)
-            print('Clusters:{}'.format(listNum))
             for i in range(listNum):
                 cluster = <slurm.slurmdb_cluster_rec_t *>slurm.slurm_list_next(iters)
 
@@ -5196,22 +5340,21 @@ cdef class slurmdb_clusters:
                     CLUSTERS_info[u'flags'] = cluster.flags
                     CLUSTERS_info[u'dimensions'] = cluster.dimensions
                     CLUSTERS_info[u'classification'] = cluster.classification
-                    num_acct = slurm.slurm_list_count(cluster.accounting_list)
-                    print('num_tres :{}'.format(num_acct))
-                    acct_iters = slurm.slurm_list_iterator_create(cluster.accounting_list)
-                    acct_dict = {}
-                    CLUSTERS_info[u'num_acct'] = num_acct
-                    for j in range(num_acct):
-                        print('Before acct_tres')
-                        acct_tres = <slurm.slurmdb_cluster_accounting_rec_t *>slurm.slurm_list_next(acct_iters)
-                        print('After acct_tres')
-                        if acct_tres is not NULL:
-                            acct_tres_dict = {}
-                            acct_tres_rec = <slurm.slurmdb_tres_rec_t>acct_tres.tres_rec
-                            if (acct_tres_rec.name is not NULL) or (acct_tres_rec.type is not NULL):
+                    if cluster.accounting_list != NULL:
+                        num_acct = slurm.slurm_list_count(cluster.accounting_list)
+                        acct_iters = slurm.slurm_list_iterator_create(cluster.accounting_list)
+                        acct_dict = {}
+                        CLUSTERS_info[u'num_acct'] = num_acct
+                        for j in range(num_acct):
+                            acct_tres = <slurm.slurmdb_cluster_accounting_rec_t *>slurm.slurm_list_next(acct_iters)
+                            if acct_tres is not NULL:
+                                acct_tres_dict = {}
                                 acct_tres_id = acct_tres_rec.id
-                                acct_tres_dict[u'name'] = slurm.stringOrNone(acct_tres_rec.name,'')
-                                acct_tres_dict[u'type'] = slurm.stringOrNone(acct_tres_rec.type,'')
+                                acct_tres_rec = <slurm.slurmdb_tres_rec_t>acct_tres.tres_rec
+                                if (acct_tres_rec.name is not NULL):
+                                    acct_tres_dict[u'name'] = slurm.stringOrNone(acct_tres_rec.name,'')
+                                if (acct_tres_rec.type is not NULL):
+                                    acct_tres_dict[u'type'] = slurm.stringOrNone(acct_tres_rec.type,'')
                                 acct_tres_dict[u'rec_count'] = acct_tres_rec.rec_count
                                 acct_tres_dict[u'count'] = acct_tres_rec.count
                                 acct_tres_dict[u'alloc_secs'] = acct_tres.alloc_secs
@@ -5222,11 +5365,11 @@ cdef class slurmdb_clusters:
                                 acct_tres_dict[u'over_secs'] = acct_tres.over_secs
                                 acct_tres_dict[u'period_start'] = acct_tres.period_start
                                 acct_dict[acct_tres_id] = acct_tres_dict
-                    CLUSTERS_info[u'accounting'] = acct_dict
+                        CLUSTERS_info[u'accounting'] = acct_dict
+                        slurm.slurm_list_iterator_destroy(acct_iters)
                     C_dict[cluster_name] = CLUSTERS_info
 
-            #slurm.slurm_list_iterator_destroy(iters)
-            #slurm.slurm_list_iterator_destroy(acct_iters)
+            slurm.slurm_list_iterator_destroy(iters)
             slurm.slurm_list_destroy(self._CLUSTERSList)
         self._CLUSTERSDict = C_dict
 
