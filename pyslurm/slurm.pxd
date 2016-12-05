@@ -2338,6 +2338,34 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     ctypedef slurmdb_job_rec slurmdb_job_rec_t
 
+    ctypedef struct slurmdb_reservation_cond:
+        List cluster_list
+        uint16_t flags
+        List id_list
+        List name_list
+        char *nodes
+        time_t time_end
+        time_t time_start
+        uint16_t with_usage
+
+    ctypedef slurmdb_reservation_cond slurmdb_reservation_cond_t
+
+    ctypedef struct slurmdb_reservation_rec:
+        char *assocs
+        char *cluster
+        uint32_t flags
+        uint32_t id
+        char *name
+        char *nodes
+        char *node_inx
+        time_t time_end
+        time_t time_start
+        time_t time_start_prev
+        char *tres_str
+        List tres_list
+
+    ctypedef slurmdb_reservation_rec slurmdb_reservation_rec_t
+
     ctypedef struct slurmdb_qos_usage_t:
         List job_list
         uint32_t grp_used_jobs
@@ -2423,6 +2451,12 @@ cdef extern from 'slurm/slurmdb.h' nogil:
     cdef extern List slurmdb_jobs_get(void *db_conn, slurmdb_job_cond_t *job_cond)
     cdef extern void slurmdb_destroy_job_cond(void *object)
     cdef extern void slurmdb_destroy_job_rec(void *object)
+
+    # reservation accounting details
+    cdef extern List slurmdb_reservations_get(void *db_conn,
+                         slurmdb_reservation_cond_t *resv_cond)
+    cdef extern void slurmdb_destroy_reservation_cond(void *object)
+    cdef extern void slurmdb_destroy_reservation_rec(void *object);
 
     # clusters accounting and report APIs
     cdef extern List slurmdb_clusters_get(void *db_conn, slurmdb_cluster_cond_t *cluster_cond)
