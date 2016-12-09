@@ -22,7 +22,7 @@ This PySlurm branch has been tested with:
 
     * Cython 0.15.1, 0.19.2, and 0.24
     * Python 2.6 and 2.7
-    * Slurm 16.05.5 thru 16.05.6
+    * Slurm 16.05.5 thru 16.05.7
 
 *For Slurm 16.05.0 - 16.05.4 support, use the 16.05.0 branch.*
 
