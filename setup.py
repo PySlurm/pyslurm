@@ -30,6 +30,7 @@ except ImportError:
     raise OSError("Cython >= %s is required to build %s." %
                   (CYTHON_VERSION_MIN, VENDOR))
 
+# FIXME: change default paths
 # Default Slurm Paths
 SLURM_INCLUDE_PATH = "/usr/local/slurm/include"
 SLURM_LIBRARY_PATH = "/usr/local/slurm/lib"
@@ -79,7 +80,7 @@ extensions = [
         "pyslurm/*",
         ["pyslurm/*.pyx"],
         include_dirs=[SLURM_INCLUDE_PATH],
-        libraries=["slurm"],
+        libraries=["slurm", "slurmdb"],
         library_dirs=[SLURM_LIBRARY_PATH]
     )
 ]
