@@ -31,6 +31,7 @@ __version__ = "dev-16.05-props"
 
 sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
+from . import account
 from . import config
 from . import job
 from . import jobstep
