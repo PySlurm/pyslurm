@@ -80,14 +80,14 @@ extensions = [
         "pyslurm/*",
         ["pyslurm/*.pyx"],
         include_dirs=[SLURM_INCLUDE_PATH],
-        libraries=["slurm", "slurmdb"],
+        libraries=["slurmdb", "slurm"],
         library_dirs=[SLURM_LIBRARY_PATH]
     )
 ]
 
 here = path.abspath(path.dirname(__file__))
 
-with open(path.join(here, "README.rst")) as f:
+with open(path.join(here, "README.md")) as f:
     long_description = f.read()
 
 def setup_package():
