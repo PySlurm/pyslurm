@@ -17,6 +17,7 @@ To build PySlurm, you need:
 ## Slurm Support
 
 | Slurm Tag | PySlurm Branch |
+| --------- | -------------- |
 | slurm-16-05-6-1 | dev-16.05-props |
 
 
@@ -76,34 +77,34 @@ directory or where the Slurm libraries and Slurm include files are :
 
 1. Slurm default directory (/usr):
 
-```
+```pycon
 python setup.py build
 python setup.py install
 ```
 
 2. Indicate Blue Gene type (L/P/Q) on build line:
 
-```
+```pycon
 --bgl or --bgp or --bgq
 ```
 
 3. Slurm root directory (Alternate installation directory):
 
-```
+```pycon
 python setup.py build --slurm=PATH_TO_SLURM_DIR
 python setup.py install
 ```
 
 4. Separate Slurm library and include directory paths:
 
-```
+```pycon
 python setup.py build --slurm-lib=PATH_TO_SLURM_LIB --slurm-inc=PATH_TO_SLURM_INC
 python setup.py install
 ```
 
 Remove temporary build files by running:
 
-```
+```pycon
 python setup.py clean --all
 ```
 
