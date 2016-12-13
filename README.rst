@@ -169,5 +169,4 @@ Mark Roberts and Giovanni Torres
 Help
 ====
 
-Ask questions on the [PySlurm Google
-group](https://groups.google.com/forum/#!forum/pyslurm).
+Ask questions on the `PySlurm Google group <https://groups.google.com/forum/#!forum/pyslurm>`_.
