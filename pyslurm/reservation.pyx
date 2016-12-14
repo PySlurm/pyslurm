@@ -175,7 +175,7 @@ cdef get_reservation_info_msg(reservation, ids=False):
             else:
                 this_resv.nodes = record.node_list.split(",")
                 if record.node_cnt == NO_VAL:
-                    this_resv.nodes = 0
+                    this_resv.node_cnt = 0
                 else:
                     this_resv.node_cnt = record.node_cnt
                 this_resv.core_cnt = record.core_cnt
