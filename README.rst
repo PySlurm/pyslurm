@@ -10,6 +10,10 @@ PySlurm: Python Bindings for Slurm
    :target: https://github.com/PySlurm/pyslurm
    :alt: License
 
+.. image:: https://img.shields.io/badge/api%20version-v2-blue.svg
+   :target: https://github.com/PySlurm/pyslurm
+   :alt: API Version
+
 PySlurm is a Cython wrapper around functions and data structures exposed in
 `Slurm's C API <https://slurm.schedmd.com/api.html>`_.
 
