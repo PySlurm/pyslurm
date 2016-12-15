@@ -191,7 +191,7 @@ cdef class Job:
             term_sig = WTERMSIG(self.derived_exit_code)
 
         exit_status = WEXITSTATUS(self.derived_exit_code)
-        return "%s:%s" % exit_status, term_sig
+        return "%s:%s" % (exit_status, term_sig)
 
     @property
     def exit_code(self):
@@ -204,7 +204,7 @@ cdef class Job:
             term_sig = WTERMSIG(self.exit_code)
 
         exit_status = WEXITSTATUS(self.exit_code)
-        return "%s:%s" % exit_status, term_sig
+        return "%s:%s" % (exit_status, term_sig)
 
     @property
     def mcs_label(self):
@@ -283,7 +283,7 @@ cdef class Job:
     def switches(self):
         cdef char time_buf[32]
         slurm_secs2time_str(<time_t>self.wait4switch, time_buf, sizeof(time_buf))
-        return self.req_switch + "@" + time_buf
+        return str(self.req_switch) + "@" + time_buf
 
     @property
     def thread_spec(self):
@@ -318,6 +318,57 @@ cdef class Job:
         else:
             slurm_mins2time_str(<time_t>self.time_min, time_str, sizeof(time_str))
             return time_str
+
+
+cdef class Jobmsg:
+    """An object to wrap job_desc_msg_t structs."""
+    cdef:
+        job_desc_msg_t job_mesg
+        submit_response_msg_t *resp_mesg
+        public list environment
+        char *script
+        public uint32_t user_id
+        char *work_dir
+
+    def __cinit__(self, *args, **kwargs):
+        slurm_init_job_desc_msg(&self.job_mesg)
+
+    def __dealloc__(self):
+        if self.resp_mesg != NULL:
+            slurm_free_submit_response_response_msg(self.resp_mesg)
+            self.resp_mesg = NULL
+
+    def submit_batch_job(self):
+        cdef int rc
+
+        rc = slurm_submit_batch_job(&self.job_mesg, &self.resp_mesg)
+
+        if rc == SLURM_SUCCESS:
+            this_jobid = self.resp_mesg.job_id
+            slurm_free_submit_response_response_msg(self.resp_mesg)
+            self.resp_mesg = NULL
+            return this_jobid
+        else:
+            errno = slurm_get_errno()
+            raise PySlurmError(slurm_strerror(errno), errno)
+
+    @property
+    def script(self):
+        if self.script != NULL:
+            return self.script
+
+    @script.setter
+    def script(self, value):
+        self.script = value
+
+    @property
+    def work_dir(self):
+        if self.work_dir != NULL:
+            return self.work_dir
+
+    @work_dir.setter
+    def work_dir(self, value):
+        self.work_dir = value
 
 
 def get_jobs(ids=False):
@@ -775,10 +826,10 @@ def kill_job(uint32_t jobid, uint16_t signal=SIGKILL, uint16_t flags=0):
     This function may only be successfully executed by the job's owner or user
     root. The following flags are available (see slurm.h for more info):
 
-        KILL_JOB_BATCH
-        KILL_JOB_ARRAY
-        KILL_STEPS_ONLY
-        KILL_FULL_JOB
+    * KILL_JOB_BATCH
+    * KILL_JOB_ARRAY
+    * KILL_STEPS_ONLY
+    * KILL_FULL_JOB
 
     For a list of signal numbers, see `man 7 signal` or run `kill -l`.
 
@@ -889,16 +940,18 @@ cdef int __job_cpus_allocated_on_node(job_resources_t *job_resrcs_ptr, node):
 cpdef int allocate_resources(dict job_descriptor) except -1:
     """
     Example:
-    >>> a = {
-    ...     "name": "job01",
-    ...     "time_limit": 300,
-    ...     "pn_min_memory": 100,
-    ...     "num_tasks": 2,
-    ...     "user_id": os.getuid(),
-    ...     "group_id": os.getgid()
-    ... }
-    >>> pyslurm.job.allocate_resources(job_descriptor)
-    1234567
+
+        >>> a = {
+        ...     "name": "job01",
+        ...     "time_limit": 300,
+        ...     "pn_min_memory": 100,
+        ...     "num_tasks": 2,
+        ...     "user_id": os.getuid(),
+        ...     "group_id": os.getgid()
+        ... }
+        >>> pyslurm.job.allocate_resources(job_descriptor)
+        1234567
+
     """
     cdef:
         job_desc_msg_t job_desc_msg
@@ -961,7 +1014,7 @@ cpdef int submit_batch_job(dict jobdict) except -1:
         job_desc_msg_t job_desc_msg
         submit_response_msg_t *slurm_alloc_msg_ptr
         int rc
-        char **env
+        char **env = NULL
 
     slurm_init_job_desc_msg(&job_desc_msg)
 
@@ -1016,10 +1069,9 @@ cpdef int submit_batch_job(dict jobdict) except -1:
         #    job_desc_msg.environment = env
         job_desc_msg.env_size = len(jobdict["environment"])
         env = <char **>malloc(len(jobdict["environment"]) * sizeof(char *))
-        for index, item in jobdict["environment"]:
+        for index, item in enumerate(jobdict["environment"]):
             env[index] = PyString_AsString(item)
         job_desc_msg.environment = env
-        free(env)
 
     if "features" in jobdict:
         job_desc_msg.features = jobdict["features"]
@@ -1176,6 +1228,9 @@ cpdef int submit_batch_job(dict jobdict) except -1:
         job_desc_msg.wckey = jobdict["wckey"]
 
     rc = slurm_submit_batch_job(&job_desc_msg, &slurm_alloc_msg_ptr)
+
+    if env != NULL:
+        free(env)
 
     if rc == SLURM_SUCCESS:
         this_jobid = slurm_alloc_msg_ptr.job_id
