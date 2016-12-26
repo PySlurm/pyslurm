@@ -1,4 +1,3 @@
-# cython: cdivision=True
 """
 ============
 :mod:`utils`
@@ -11,6 +10,7 @@ libslurm.
 from __future__ import absolute_import, division, unicode_literals
 
 from libc.stdint cimport uint32_t, uint64_t
+from cpython.version cimport PY_MAJOR_VERSION
 from .slurm_common cimport INFINITE, NO_VAL
 from .c_config cimport *
 
@@ -23,6 +23,17 @@ cdef unicode tounicode(char* s):
         return None
     else:
         return s.decode("UTF-8", "replace")
+
+# TODO: might be needed for Python3 compat
+#cdef unicode _ustring(s):
+#    if type(s) is unicode:
+#        return <unicode>s
+#    elif PY_MAJOR_VERSION < 3 and isinstance(s, bytes):
+#        return (<bytes>s).decode("UTF-8", "replace")
+#    elif isinstance(s, unicode):
+#        return unicode(s)
+#    else:
+#        return None
 
 #
 # Slurm functions not externalized

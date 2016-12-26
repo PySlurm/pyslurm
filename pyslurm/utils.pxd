@@ -26,6 +26,7 @@ cdef extern from "slurm/slurm.h" nogil:
 
 
 cdef unicode tounicode(char* s)
+#cdef unicode _ustring(s)
 cdef cpu_freq_to_string(uint32_t cpu_freq)
 cdef cpu_freq_govlist_to_string(uint32_t govs)
 cdef debug_flags2str(uint64_t debug_flags)
