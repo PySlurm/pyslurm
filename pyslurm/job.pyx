@@ -1,6 +1,4 @@
-# cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
-# cython: cdivision=True
+# cython: embedsignature=True, boundscheck=False, wraparound=False
 """
 ===========
 :mod:`job`
@@ -36,15 +34,14 @@ Each job record in a ``job_info_msg_t`` struct is converted to a
 from __future__ import absolute_import, division, unicode_literals
 
 # Python Imports
-from grp import getgrgid
 from os import getuid, getgid
-from pwd import getpwnam, getpwuid
+from pwd import getpwnam
 
 # Cython Includes
-from cpython.string cimport PyString_AsString
+#from cpython.string cimport PyString_AsString
 from libc.errno cimport errno
 from libc.signal cimport SIGKILL
-from libc.stdlib cimport malloc, free
+#from libc.stdlib cimport malloc, free
 from libc.time cimport difftime
 from libc.time cimport time as c_time
 from posix.types cimport pid_t, time_t
@@ -90,7 +87,6 @@ cdef class Job:
         readonly list features
         readonly list gres
         readonly uint32_t group_id
-        readonly unicode group_name
         readonly uint32_t job_id
         readonly unicode job_name
         readonly unicode job_state
@@ -108,6 +104,7 @@ cdef class Job:
         uint16_t ntasks_per_socket
         uint32_t num_cpus
         uint32_t num_nodes
+        uint16_t over_subscribe
         readonly unicode partition
         readonly unicode power
         readonly time_t preempt_time
@@ -129,7 +126,6 @@ cdef class Job:
         readonly unicode sched_midplane_list
         readonly unicode sched_node_list
         readonly int secs_pre_suspend
-        uint16_t over_subscribe
         readonly time_t start_time
         readonly unicode start_time_str
         readonly unicode std_err
@@ -149,7 +145,6 @@ cdef class Job:
         unicode time_min_str
         readonly unicode tres
         readonly uint32_t user_id
-        readonly unicode user_name
         readonly uint32_t wait4switch
         readonly unicode work_dir
         readonly unicode wckey
@@ -448,31 +443,16 @@ cdef get_job_info_msg(jobid, ids=False):
                 if record.array_task_str:
                     this_job.array_job_id = record.array_job_id
                     # FIXME
-                    this_job.array_task_str = record.array_task_str
+                    this_job.array_task_str = tounicode(record.array_task_str)
                 else:
                     this_job.array_job_id = record.array_job_id
                     this_job.array_task_id = record.array_task_id
 
             if record.name:
-                this_job.job_name = record.name
+                this_job.job_name = tounicode(record.name)
 
             this_job.user_id = record.user_id
-            try:
-                this_job.user_name = (
-                    getpwuid(record.user_id)[0].decode("UTF-8", "replace")
-                )
-            except:
-                pass
-
             this_job.group_id = record.group_id
-
-            try:
-                this_job.group_name = (
-                    getgrgid(record.group_id)[0].decode("UTF-8", "replace")
-                )
-            else:
-                pass
-
             this_job.mcs_label = tounicode(record.mcs_label)
 
             nice = record.nice
@@ -481,27 +461,27 @@ cdef get_job_info_msg(jobid, ids=False):
 
             this_job.priority = record.priority
             if record.account:
-                this_job.account = record.account
+                this_job.account = tounicode(record.account)
 
             if record.qos:
-                this_job.qos = record.qos
+                this_job.qos = tounicode(record.qos)
 
             if slurm_get_track_wckey():
-                this_job.wckey = record.wckey
+                this_job.wckey = tounicode(record.wckey)
 
             if record.state_desc:
-                this_job.reason = record.state_desc.replace(" ", "_")
+                this_job.reason = tounicode(record.state_desc.replace(" ", "_"))
             else:
                 if record.state_reason:
-                    this_job.reason = (
+                    this_job.reason = tounicode(
                         slurm_job_reason_string(<job_state_reason>record.state_reason)
                     )
 
             if record.job_state:
-                this_job.job_state = slurm_job_state_string(record.job_state)
+                this_job.job_state = tounicode(slurm_job_state_string(record.job_state))
 
             if record.dependency:
-                this_job.dependency = record.dependency
+                this_job.dependency = tounicode(record.dependency)
 
             this_job.requeue = record.requeue
             this_job.restarts = record.restart_cnt
@@ -528,7 +508,7 @@ cdef get_job_info_msg(jobid, ids=False):
 
             this_job.run_time = run_time
             slurm_secs2time_str(run_time, time_str, sizeof(time_str))
-            this_job.run_time_str = time_str
+            this_job.run_time_str = time_str[:32].decode("UTF-8", "replace")
 
             this_job.time_limit = record.time_limit
             this_job.time_min = record.time_min
@@ -536,31 +516,31 @@ cdef get_job_info_msg(jobid, ids=False):
             this_job.submit_time = record.submit_time
             slurm_make_time_str(<time_t *>&record.submit_time, time_str,
                                 sizeof(time_str))
-            this_job.submit_time_str = time_str
+            this_job.submit_time_str = time_str[:32].decode("UTF-8", "replace")
 
             this_job.eligible_time = record.eligible_time
             slurm_make_time_str(<time_t *>&record.eligible_time, time_str,
                                 sizeof(time_str))
-            this_job.eligible_time_str = time_str
+            this_job.eligible_time_str = time_str[:32].decode("UTF-8", "replace")
 
             if record.resize_time:
                 this_job.resize_time = record.resize_time
                 slurm_make_time_str(<time_t *>&record.resize_time, time_str,
                                     sizeof(time_str))
-                this_job.resize_time_str = time_str
+                this_job.resize_time_str = time_str[:32].decode("UTF-8", "replace")
 
             this_job.start_time = record.start_time
             slurm_make_time_str(<time_t *>&record.start_time, time_str,
                                 sizeof(time_str))
-            this_job.start_time_str = time_str
+            this_job.start_time_str = time_str[:32].decode("UTF-8", "replace")
 
             this_job.end_time = record.end_time
             if (record.time_limit == INFINITE) and (record.end_time > c_time(NULL)):
-                this_job.end_time_str = "Unknown"
+                this_job.end_time_str = tounicode("Unknown")
             else:
                 slurm_make_time_str(<time_t *>&record.end_time, time_str,
                                     sizeof(time_str))
-                this_job.end_time_str = time_str
+                this_job.end_time_str = time_str[:32].decode("UTF-8", "replace")
 
             this_job.preempt_time = record.preempt_time
             if record.preempt_time == 0:
@@ -569,55 +549,54 @@ cdef get_job_info_msg(jobid, ids=False):
             else:
                 slurm_make_time_str(<time_t *>&record.preempt_time, time_str,
                                     sizeof(time_str))
-                this_job.preempt_time_str = time_str
+                this_job.preempt_time_str = time_str[:32].decode("UTF-8", "replace")
 
             this_job.suspend_time = record.suspend_time
             if record.suspend_time:
                 slurm_make_time_str(<time_t *>&record.suspend_time, time_str,
                                     sizeof(time_str))
-                this_job.suspend_time_str = time_str
+                this_job.suspend_time_str = time_str[:32].decode("UTF-8", "replace")
 #            else:
 #                this_job.suspend_time_str = None
             this_job.secs_pre_suspend = <int>record.pre_sus_time
 
             if record.partition:
-                this_job.partition = record.partition
+                this_job.partition = tounicode(record.partition)
 
             if record.alloc_node:
-                this_job.alloc_node = record.alloc_node
+                this_job.alloc_node = tounicode(record.alloc_node)
 
             this_job.alloc_sid = record.alloc_sid
 
             if (cluster_flags & CLUSTER_FLAG_BG):
                 if record.req_nodes:
-                    this_job.req_midplane_list = record.req_nodes.split(",")
+                    this_job.req_midplane_list = tounicode(record.req_nodes).split(",")
                 if record.exc_nodes:
-                    this_job.exc_midplane_list = record.exc_nodes.split(",")
+                    this_job.exc_midplane_list = tounicode(record.exc_nodes).split(",")
                 slurm_get_select_jobinfo(record.select_jobinfo,
                                          SELECT_JOBDATA_IONODES,
                                          &ionodes)
             else:
                 if record.req_nodes:
-                    this_job.req_node_list = record.req_nodes.split(",")
+                    this_job.req_node_list = tounicode(record.req_nodes).split(",")
                 if record.exc_nodes:
-                    this_job.exc_node_list = record.exc_nodes.split(",")
+                    this_job.exc_node_list = tounicode(record.exc_nodes).split(",")
 
             if record.nodes:
                 if ionodes:
-                    this_job.midplane_list = (
-                        record.nodes + "[" + ionodes + "]"
-                    )
+#                    this_job.midplane_list = tounicode(record.nodes + "[" + ionodes + "]")
+                    pass
                 else:
-                    this_job.node_list = record.nodes
+                    this_job.node_list = tounicode(record.nodes)
 
             if record.sched_nodes:
                 if ionodes:
-                    this_job.sched_midplane_list = record.sched_nodes
+                    this_job.sched_midplane_list = tounicode(record.sched_nodes)
                 else:
-                    this_job.sched_node_list = record.sched_nodes
+                    this_job.sched_node_list = tounicode(record.sched_nodes)
 
             if record.batch_host:
-                this_job.batch_host = record.batch_host
+                this_job.batch_host = tounicode(record.batch_host)
 
             if (cluster_flags & CLUSTER_FLAG_BG):
                 slurm_get_select_jobinfo(record.select_jobinfo,
@@ -648,9 +627,9 @@ cdef get_job_info_msg(jobid, ids=False):
             this_job.cpus_per_task = record.cpus_per_task
 
             if record.tres_alloc_str:
-                this_job.tres = record.tres_alloc_str
+                this_job.tres = tounicode(record.tres_alloc_str)
             else:
-                this_job.tres = record.tres_req_str
+                this_job.tres = tounicode(record.tres_req_str)
 
             this_job.socks_per_node = record.sockets_per_node
             this_job.ntasks_per_node = record.ntasks_per_node
@@ -683,47 +662,47 @@ cdef get_job_info_msg(jobid, ids=False):
             # Line 18: min_memory / min_tmp_disk_node
 
             if record.features:
-                this_job.features = record.features.split(",")
+                this_job.features = tounicode(record.features).split(",")
 
             if record.gres:
-                this_job.gres = record.gres.split(",")
+                this_job.gres = tounicode(record.gres).split(",")
 
             if record.resv_name:
-                this_job.reservation = record.resv_name
+                this_job.reservation = tounicode(record.resv_name)
 
             this_job.over_subscribe = record.shared
             this_job.contiguous = record.contiguous
 
             if record.licenses:
-                this_job.licenses = record.licenses
+                this_job.licenses = tounicode(record.licenses)
 
             if record.network:
-                this_job.network = record.network
+                this_job.network = tounicode(record.network)
 
             if record.command:
-                this_job.command = record.command
+                this_job.command = tounicode(record.command)
 
             if record.work_dir:
-                this_job.work_dir = record.work_dir
+                this_job.work_dir = tounicode(record.work_dir)
 
             # TODO
             # Lines 23 - 28
 
             if record.comment:
-                this_job.comment = record.comment
+                this_job.comment = tounicode(record.comment)
 
             if record.batch_flag:
                 slurm_get_job_stderr(tmp_line, sizeof(tmp_line), &record)
-                this_job.std_err = tmp_line
+                this_job.std_err = tounicode(tmp_line)
 
                 slurm_get_job_stdin(tmp_line, sizeof(tmp_line), &record)
-                this_job.std_in = tmp_line
+                this_job.std_in = tounicode(tmp_line)
 
                 slurm_get_job_stdout(tmp_line, sizeof(tmp_line), &record)
-                this_job.std_out = tmp_line
+                this_job.std_out = tounicode(tmp_line)
 
                 if record.batch_script:
-                    this_job.batch_script = record.batch_script
+                    this_job.batch_script = tounicode(record.batch_script)
 
             if record.req_switch:
                 this_job.req_switch = record.req_switch
@@ -732,20 +711,20 @@ cdef get_job_info_msg(jobid, ids=False):
             # TODO: Line 34 (wait4switch slurm_secs2time_str)
 
             if record.burst_buffer:
-                this_job.burst_buffer = record.burst_buffer
+                this_job.burst_buffer = tounicode(record.burst_buffer)
 
             # Line 36: cpu_freq_debug
 
             if (record.power_flags & SLURM_POWER_FLAGS_LEVEL):
-                this_job.power = "LEVEL"
+                this_job.power = tounicode("LEVEL")
             else:
-                this_job.power = ""
+                this_job.power = tounicode("")
 
             if record.bitflags:
                 if (record.bitflags & KILL_INV_DEP):
-                    this_job.kill_o_in_invalid_dependent = "Yes"
+                    this_job.kill_o_in_invalid_dependent = tounicode("Yes")
                 if (record.bitflags & NO_KILL_INV_DEP):
-                    this_job.kill_o_in_invalid_dependent = "No"
+                    this_job.kill_o_in_invalid_dependent = tounicode("No")
 
             job_list.append(this_job)
 
@@ -1014,7 +993,7 @@ cpdef int submit_batch_job(dict jobdict) except -1:
         job_desc_msg_t job_desc_msg
         submit_response_msg_t *slurm_alloc_msg_ptr
         int rc
-        char **env = NULL
+#        char **env = NULL
 
     slurm_init_job_desc_msg(&job_desc_msg)
 
@@ -1057,21 +1036,21 @@ cpdef int submit_batch_job(dict jobdict) except -1:
     if "dependency" in jobdict:
         job_desc_msg.dependency = jobdict["dependency"]
 
-    if "environment" in jobdict:
-        # "environment" must be of type list.
-        # "env_size" is the size of the list.
-        # "env" is a C string array.  The following converts "environment" to a
-        # cstring array, for example:
-        #    char *env[2]
-        #    job_desc_msg.env_size = 2 
-        #    env[0] = "SLURM_ENV_0=looking_good" 
-        #    env[1] = "SLURM_ENV_1=still_good" 
-        #    job_desc_msg.environment = env
-        job_desc_msg.env_size = len(jobdict["environment"])
-        env = <char **>malloc(len(jobdict["environment"]) * sizeof(char *))
-        for index, item in enumerate(jobdict["environment"]):
-            env[index] = PyString_AsString(item)
-        job_desc_msg.environment = env
+#    if "environment" in jobdict:
+#        # "environment" must be of type list.
+#        # "env_size" is the size of the list.
+#        # "env" is a C string array.  The following converts "environment" to a
+#        # cstring array, for example:
+#        #    char *env[2]
+#        #    job_desc_msg.env_size = 2 
+#        #    env[0] = "SLURM_ENV_0=looking_good" 
+#        #    env[1] = "SLURM_ENV_1=still_good" 
+#        #    job_desc_msg.environment = env
+#        job_desc_msg.env_size = len(jobdict["environment"])
+#        env = <char **>malloc(len(jobdict["environment"]) * sizeof(char *))
+#        for index, item in enumerate(jobdict["environment"]):
+#            env[index] = PyString_AsString(item)
+#        job_desc_msg.environment = env
 
     if "features" in jobdict:
         job_desc_msg.features = jobdict["features"]
@@ -1229,8 +1208,8 @@ cpdef int submit_batch_job(dict jobdict) except -1:
 
     rc = slurm_submit_batch_job(&job_desc_msg, &slurm_alloc_msg_ptr)
 
-    if env != NULL:
-        free(env)
+#    if env != NULL:
+#        free(env)
 
     if rc == SLURM_SUCCESS:
         this_jobid = slurm_alloc_msg_ptr.job_id
