@@ -152,7 +152,7 @@ cdef class Hostlist:
         Returns the string representation of the first host in the hostlist or
         NULL if the hostlist is empty.
 
-        The host is removed frmo the hostlist.
+        The host is removed from the hostlist.
 
         Args:
             None
