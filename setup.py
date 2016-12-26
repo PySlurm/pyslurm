@@ -3,7 +3,7 @@
 
 more description here.
 """
-from __future__ import division, print_function
+from __future__ import print_function
 
 import sys
 import textwrap
@@ -16,19 +16,22 @@ VENDOR = "PySlurm"
 CYTHON_VERSION_MIN = "0.15"
 
 if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[:2] < (3, 3):
-    raise RuntimeError("Python >= 2.6 or >= 3.3 is required to run %s." %
-                       VENDOR)
+    raise RuntimeError(
+        "Python >= 2.6 or >= 3.3 is required to run %s." % VENDOR
+    )
 
 try:
     from Cython.Build import cythonize
     from Cython.Compiler.Version import version as cython_version
 
     if LooseVersion(cython_version) < LooseVersion(CYTHON_VERSION_MIN):
-        raise Exception("Building %s requires Cython >= %s" % (
-                        VENDOR, CYTHON_VERSION_MIN))
+        raise Exception(
+            "Building %s requires Cython >= %s" % (VENDOR, CYTHON_VERSION_MIN)
+        )
 except ImportError:
-    raise OSError("Cython >= %s is required to build %s." %
-                  (CYTHON_VERSION_MIN, VENDOR))
+    raise OSError(
+        "Cython >= %s is required to build %s." % (CYTHON_VERSION_MIN, VENDOR)
+    )
 
 # FIXME: change default paths
 # Default Slurm Paths
