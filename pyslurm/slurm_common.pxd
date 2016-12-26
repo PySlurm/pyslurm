@@ -6,6 +6,8 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int32_t
 from posix.types cimport time_t
 
+from .slurmdb_common cimport List, ListIterator
+
 cdef extern from "slurm/slurm.h" nogil:
     enum:
         INFINITE
@@ -51,6 +53,10 @@ cdef extern from "slurm/slurm.h" nogil:
         CPU_AUTO_BIND_TO_CORES
         CPU_AUTO_BIND_TO_SOCKETS
 
+    ListIterator slurm_list_iterator_create(List l)
+    void *slurm_list_next(ListIterator i)
+    int slurm_list_count(List l)
+
 
 cdef extern from "slurm/slurmdb.h" nogil:
     enum:
@@ -76,17 +82,25 @@ cdef extern from "slurm/slurm_errno.h" nogil:
 # Declarations outside of slurm.h
 #
 
+cdef enum:
+    CONVERT_NUM_UNIT_EXACT
+    UNIT_NONE
+    UNIT_MEGA
+
 cdef extern void slurm_make_time_str(time_t *time, char *string, int size)
-cdef extern void convert_num_unit(double num, char *buf, int buf_size,
-                                  int orig_type, int spec_type, uint32_t flags)
 cdef extern uint16_t slurm_get_preempt_mode()
 cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
 cdef extern void slurm_secs2time_str(time_t time, char *string, int size)
 cdef extern void slurm_mins2time_str(uint32_t time, char *string, int size)
 
-cdef enum:
-    CONVERT_NUM_UNIT_EXACT
-    UNIT_NONE
+cdef extern void slurm_convert_num_unit(
+    double num,
+    char *buf,
+    int buf_size,
+    int orig_type,
+    int spec_type,
+    uint32_t flags
+)
 
 #
 # Declarations outside of slurmdb.h

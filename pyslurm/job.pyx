@@ -39,6 +39,7 @@ from pwd import getpwnam
 
 # Cython Includes
 #from cpython.string cimport PyString_AsString
+from cpython cimport bool
 from libc.errno cimport errno
 from libc.signal cimport SIGKILL
 #from libc.stdlib cimport malloc, free
@@ -92,9 +93,14 @@ cdef class Job:
         readonly unicode job_state
         readonly unicode kill_o_in_invalid_dependent
         readonly unicode licenses
+        readonly bool mem_per_cpu
+        readonly bool mem_per_node
         readonly unicode midplane_list
         unicode mcs_label
-        readonly uint32_t min_cpus_node
+        readonly unicode min_cpus_node
+        readonly unicode min_memory_cpu
+        readonly unicode min_memory_node
+        readonly unicode min_tmp_disk_node
         readonly unicode network
         readonly uint16_t nice
         readonly unicode node_list
@@ -415,6 +421,7 @@ cdef get_job_info_msg(jobid, ids=False):
         char time_str[32]
         char tmp_line[1024 * 128]
         char tmp1[128]
+        char tmp2[128]
         char *ionodes = NULL
         time_t end_time
         time_t run_time
@@ -646,21 +653,51 @@ cdef get_job_info_msg(jobid, ids=False):
                 if (cluster_flags & CLUSTER_FLAG_BG):
                     pass
 
-            # TODO
+            # Line 18
+            if (cluster_flags & CLUSTER_FLAG_BG):
+                slurm_convert_num_unit(
+                    <float>record.pn_min_cpus,
+                    tmp1,
+                    sizeof(tmp1),
+                    UNIT_NONE,
+                    NO_VAL,
+                    CONVERT_NUM_UNIT_EXACT
+                )
+                this_job.min_cpus_node = tounicode(tmp1)
+            else:
+                this_job.min_cpus_node = tounicode(str(record.pn_min_cpus))
+
+            slurm_convert_num_unit(
+                <float>record.pn_min_memory,
+                tmp1,
+                sizeof(tmp1),
+                UNIT_MEGA,
+                NO_VAL,
+                CONVERT_NUM_UNIT_EXACT
+            )
+
+            slurm_convert_num_unit(
+                <float>record.pn_min_tmp_disk,
+                tmp2,
+                sizeof(tmp2),
+                UNIT_MEGA,
+                NO_VAL,
+                CONVERT_NUM_UNIT_EXACT
+            )
+
             if (record.pn_min_memory & MEM_PER_CPU):
                 record.pn_min_memory &= (~MEM_PER_CPU)
-#                this_job.
-                pass
-
-            if (cluster_flags & CLUSTER_FLAG_BG):
-#                convert_num_unit(<float>record.pn_min_cpus,
-                pass
+                this_job.mem_per_cpu = True
+                this_job.mem_per_node = False
+                this_job.min_memory_cpu = tounicode(tmp1)
             else:
-                this_job.min_cpus_node = record.pn_min_cpus
+                this_job.mem_per_cpu = False
+                this_job.mem_per_node = True
+                this_job.min_memory_node = tounicode(tmp1)
 
-            # TODO
-            # Line 18: min_memory / min_tmp_disk_node
+            this_job.min_tmp_disk_node = tounicode(tmp2)
 
+            # Line 19
             if record.features:
                 this_job.features = tounicode(record.features).split(",")
 
