@@ -146,6 +146,7 @@ cdef class Job:
         readonly unicode suspend_time_str
         unicode switches
         uint16_t threads_per_core
+        double thread_spec
         readonly uint32_t time_limit
         unicode time_limit_str
         readonly uint32_t time_min
@@ -435,6 +436,8 @@ cdef get_job_info_msg(jobid, ids=False):
                 continue
 
             this_job = Job()
+
+            # Line 1
             this_job.job_id = record.job_id
 
             if record.array_job_id:
@@ -449,10 +452,12 @@ cdef get_job_info_msg(jobid, ids=False):
             if record.name:
                 this_job.job_name = tounicode(record.name)
 
+            # Line 2
             this_job.user_id = record.user_id
             this_job.group_id = record.group_id
             this_job.mcs_label = tounicode(record.mcs_label)
 
+            # Line 3
             nice = record.nice
             nice -= NICE_OFFSET
             this_job.nice = nice
@@ -467,6 +472,10 @@ cdef get_job_info_msg(jobid, ids=False):
             if slurm_get_track_wckey():
                 this_job.wckey = tounicode(record.wckey)
 
+            # Line 4
+            if record.job_state:
+                this_job.job_state = tounicode(slurm_job_state_string(record.job_state))
+
             if record.state_desc:
                 this_job.reason = tounicode(record.state_desc.replace(" ", "_"))
             else:
@@ -475,19 +484,20 @@ cdef get_job_info_msg(jobid, ids=False):
                         slurm_job_reason_string(<job_state_reason>record.state_reason)
                     )
 
-            if record.job_state:
-                this_job.job_state = tounicode(slurm_job_state_string(record.job_state))
-
             if record.dependency:
                 this_job.dependency = tounicode(record.dependency)
 
+            # Line 5
             this_job.requeue = record.requeue
             this_job.restarts = record.restart_cnt
             this_job.batch_flag = record.batch_flag
             this_job.reboot = record.reboot
             this_job.exit_code = record.exit_code
+
+            # Line 5a
             this_job.derived_exit_code = record.derived_ec
 
+            # Line 6
             if IS_JOB_PENDING(record):
                 run_time = 0
             elif IS_JOB_SUSPENDED(record):
@@ -511,6 +521,7 @@ cdef get_job_info_msg(jobid, ids=False):
             this_job.time_limit = record.time_limit
             this_job.time_min = record.time_min
 
+            # Line 7
             this_job.submit_time = record.submit_time
             slurm_make_time_str(<time_t *>&record.submit_time, time_str,
                                 sizeof(time_str))
@@ -521,12 +532,14 @@ cdef get_job_info_msg(jobid, ids=False):
                                 sizeof(time_str))
             this_job.eligible_time_str = time_str[:32].decode("UTF-8", "replace")
 
+            # Line 8
             if record.resize_time:
                 this_job.resize_time = record.resize_time
                 slurm_make_time_str(<time_t *>&record.resize_time, time_str,
                                     sizeof(time_str))
                 this_job.resize_time_str = time_str[:32].decode("UTF-8", "replace")
 
+            # Line 9
             this_job.start_time = record.start_time
             slurm_make_time_str(<time_t *>&record.start_time, time_str,
                                 sizeof(time_str))
@@ -540,6 +553,7 @@ cdef get_job_info_msg(jobid, ids=False):
                                     sizeof(time_str))
                 this_job.end_time_str = time_str[:32].decode("UTF-8", "replace")
 
+            # Line 10
             this_job.preempt_time = record.preempt_time
             if record.preempt_time == 0:
                 pass
@@ -558,6 +572,7 @@ cdef get_job_info_msg(jobid, ids=False):
 #                this_job.suspend_time_str = None
             this_job.secs_pre_suspend = <int>record.pre_sus_time
 
+            # Line 11
             if record.partition:
                 this_job.partition = tounicode(record.partition)
 
@@ -566,6 +581,7 @@ cdef get_job_info_msg(jobid, ids=False):
 
             this_job.alloc_sid = record.alloc_sid
 
+            # Line 12
             if (cluster_flags & CLUSTER_FLAG_BG):
                 if record.req_nodes:
                     this_job.req_midplane_list = tounicode(record.req_nodes).split(",")
@@ -633,6 +649,7 @@ cdef get_job_info_msg(jobid, ids=False):
             else:
                 this_job.tres = tounicode(record.tres_req_str)
 
+            # Line 17
             this_job.socks_per_node = record.sockets_per_node
             this_job.ntasks_per_node = record.ntasks_per_node
             this_job.ntasks_per_board = record.ntasks_per_board
@@ -642,11 +659,6 @@ cdef get_job_info_msg(jobid, ids=False):
 
             # TODO
             job_resrcs = record.job_resrcs
-
-            # TODO
-            if job_resrcs:
-                if (cluster_flags & CLUSTER_FLAG_BG):
-                    pass
 
             # Line 18
             if (cluster_flags & CLUSTER_FLAG_BG):
@@ -702,6 +714,7 @@ cdef get_job_info_msg(jobid, ids=False):
             if record.resv_name:
                 this_job.reservation = tounicode(record.resv_name)
 
+            # Line 20
             this_job.over_subscribe = record.shared
             this_job.contiguous = record.contiguous
 
@@ -711,18 +724,22 @@ cdef get_job_info_msg(jobid, ids=False):
             if record.network:
                 this_job.network = tounicode(record.network)
 
+            # Line 21
             if record.command:
                 this_job.command = tounicode(record.command)
 
+            # Line 22
             if record.work_dir:
                 this_job.work_dir = tounicode(record.work_dir)
 
             # TODO
-            # Lines 23 - 28
+            # Lines 23 - 28: need select_g_select_jobinfo_sprint()
 
+            # Line 29
             if record.comment:
                 this_job.comment = tounicode(record.comment)
 
+            # Lines 30-32
             if record.batch_flag:
                 slurm_get_job_stderr(tmp_line, sizeof(tmp_line), &record)
                 this_job.std_err = tounicode(tmp_line)
@@ -733,15 +750,16 @@ cdef get_job_info_msg(jobid, ids=False):
                 slurm_get_job_stdout(tmp_line, sizeof(tmp_line), &record)
                 this_job.std_out = tounicode(tmp_line)
 
-                if record.batch_script:
-                    this_job.batch_script = tounicode(record.batch_script)
+            # Line 33
+            if record.batch_script:
+                this_job.batch_script = tounicode(record.batch_script)
 
+            # Line 34
             if record.req_switch:
                 this_job.req_switch = record.req_switch
                 this_job.wait4switch = record.wait4switch
 
-            # TODO: Line 34 (wait4switch slurm_secs2time_str)
-
+            # Line 35
             if record.burst_buffer:
                 this_job.burst_buffer = tounicode(record.burst_buffer)
 
