@@ -91,10 +91,16 @@ def test_job_scontrol():
     assert_equals(obj.job_state, sctl["JobState"])
     assert_equals(obj.licenses, sctl.get("Licenses"))
     assert_equals(obj.min_cpus_node, sctl.get("MinCPUsNode"))
-    # FIXME
-#    assert_equals(obj.min_memory_cpu, sctl.get("MinMemoryCPU"))
-#    assert_equals(obj.min_memory_node, sctl.get("MinMemoryNode"))
-#    assert_equals(obj.min_tmp_disk_node, sctl.get("MinTmpDiskNode"))
+
+    if obj.mem_per_cpu:
+        assert "MinMemoryCPU" in sctl.keys()
+
+    if obj.mem_per_node:
+        assert "MinMemoryNode" in sctl.keys()
+
+    assert_equals(obj.min_memory_cpu, sctl.get("MinMemoryCPU"))
+    assert_equals(obj.min_memory_node, sctl.get("MinMemoryNode"))
+    assert_equals(obj.min_tmp_disk_node, sctl.get("MinTmpDiskNode"))
     assert_equals(obj.network, sctl.get("Network"))
     assert_equals(obj.nice, sctl.get("Nice"))
     assert_equals(obj.node_list, sctl.get("NodeList"))
@@ -103,9 +109,9 @@ def test_job_scontrol():
         str(obj.ntasks_per_socket) + ":" + str(obj.ntasks_per_core),
         sctl.get("NtasksPerN:B:S:C")
     )
-    # FIXME
-#    assert_equals(obj.num_cpus, sctl.get("NumCPUs"))
-#    assert_equals(obj.num_nodes, sctl.get("NumNodes"))
+    assert_equals(obj.num_cpus, sctl.get("NumCPUs"))
+    assert_equals(obj.num_nodes, sctl.get("NumNodes"))
+    assert_equals(obj.num_tasks, sctl.get("NumTasks"))
     assert_equals(obj.partition, sctl.get("Partition"))
     assert_equals(obj.power, sctl.get("Power"))
     assert_equals(obj.preempt_time_str, sctl.get("PreemptTime", "None"))
