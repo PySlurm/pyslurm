@@ -108,8 +108,9 @@ cdef class Job:
         uint16_t ntasks_per_core
         uint16_t ntasks_per_node
         uint16_t ntasks_per_socket
-        uint32_t num_cpus
-        uint32_t num_nodes
+        readonly unicode num_cpus
+        readonly unicode num_nodes
+        readonly uint32_t num_tasks
         uint16_t over_subscribe
         readonly unicode partition
         readonly unicode power
@@ -248,16 +249,6 @@ cdef class Job:
             return "*"
         else:
             return self.ntasks_per_socket
-
-    @property
-    def num_cpus(self):
-        """Minimum number of CPUs required by job"""
-        pass
-
-    @property
-    def num_nodes(self):
-        """Minimum number of nodes required by job"""
-        pass
 
     @property
     def over_subscribe(self):
@@ -589,6 +580,7 @@ cdef get_job_info_msg(jobid, ids=False):
                 if record.exc_nodes:
                     this_job.exc_node_list = tounicode(record.exc_nodes).split(",")
 
+            # Line 13
             if record.nodes:
                 if ionodes:
 #                    this_job.midplane_list = tounicode(record.nodes + "[" + ionodes + "]")
@@ -602,9 +594,11 @@ cdef get_job_info_msg(jobid, ids=False):
                 else:
                     this_job.sched_node_list = tounicode(record.sched_nodes)
 
+            # Line 14
             if record.batch_host:
                 this_job.batch_host = tounicode(record.batch_host)
 
+            # Line 15
             if (cluster_flags & CLUSTER_FLAG_BG):
                 slurm_get_select_jobinfo(record.select_jobinfo,
                                          SELECT_JOBDATA_NODE_CNT,
@@ -628,11 +622,12 @@ cdef get_job_info_msg(jobid, ids=False):
             this_job.cores_per_socket = record.cores_per_socket
             this_job.threads_per_core = record.threads_per_core
 
-#            this_job.num_nodes = # TODO
-#            this_job.num_cpus = # TODO
-
+            this_job.num_nodes = tounicode(_get_range(min_nodes, max_nodes))
+            this_job.num_cpus = tounicode(_get_range(record.num_cpus, record.max_cpus))
+            this_job.num_tasks = record.num_tasks
             this_job.cpus_per_task = record.cpus_per_task
 
+            # Line 16
             if record.tres_alloc_str:
                 this_job.tres = tounicode(record.tres_alloc_str)
             else:
@@ -951,6 +946,31 @@ cdef int __job_cpus_allocated_on_node(job_resources_t *job_resrcs_ptr, node):
     """
     #return slurm_job_cpus_allocated_on_node(&job_resrcs_ptr, node)
     pass
+
+
+
+cdef _get_range(uint32_t lower, uint32_t upper):
+    """
+    """
+    cdef:
+        char tmp[128]
+        char tmp2[128]
+        uint32_t cluster_flags = slurmdb_setup_cluster_flags()
+
+    if (cluster_flags & CLUSTER_FLAG_BG):
+        slurm_convert_num_unit(<float>lower, tmp, sizeof(tmp), UNIT_NONE,
+                               NO_VAL, CONVERT_NUM_UNIT_EXACT)
+        if upper > 0:
+            slurm_convert_num_unit(<float>upper, tmp2, sizeof(tmp2), UNIT_NONE,
+                                   NO_VAL, CONVERT_NUM_UNIT_EXACT)
+            return "%s-%s" % (tmp, tmp2)
+        else:
+            return "%s" % tmp
+    else:
+        if upper > 0:
+            return "%s-%s" % (lower, upper)
+        else:
+            return "%s" % lower
 
 
 cpdef int allocate_resources(dict job_descriptor) except -1:
