@@ -2128,6 +2128,7 @@ cdef class job:
 
             Job_dict[u'run_time'] = run_time
             Job_dict[u'run_time_str'] = secs2time_str(run_time)
+            Job_dict[u'sched_nodes'] = slurm.stringOrNone(self._record.sched_nodes, '')
 
             if self._record.shared == 0:
                 Job_dict[u'shared'] = u"0"
