@@ -23,3 +23,6 @@ tests/*.pyc
 
 # Ignore pycache (Python 3)
 */__pycache__
+
+# Ignore job output files
+*.out
