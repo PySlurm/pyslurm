@@ -6,8 +6,6 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int32_t
 from posix.types cimport time_t
 
-from .slurmdb_common cimport List, ListIterator
-
 cdef extern from "slurm/slurm.h" nogil:
     enum:
         INFINITE
@@ -52,6 +50,16 @@ cdef extern from "slurm/slurm.h" nogil:
         CPU_AUTO_BIND_TO_THREADS
         CPU_AUTO_BIND_TO_CORES
         CPU_AUTO_BIND_TO_SOCKETS
+
+    ctypedef struct llist:
+        pass
+
+    ctypedef llist *List
+
+    ctypedef struct listIterator:
+        pass
+
+    ctypedef listIterator *ListIterator
 
     ListIterator slurm_list_iterator_create(List l)
     void *slurm_list_next(ListIterator i)

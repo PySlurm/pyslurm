@@ -4,7 +4,7 @@ from libc.stdint cimport uint16_t, uint32_t
 from libc.stdint cimport int32_t
 from posix.types cimport time_t
 from libc.stdio cimport FILE
-from .slurmdb_common cimport List
+from .slurm_common cimport List
 
 cdef extern from "slurm/slurm.h" nogil:
     enum:
