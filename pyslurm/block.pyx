@@ -207,3 +207,33 @@ cdef get_block_info_msg(block, ids=False):
             return block_list
     else:
         raise PySlurmError(slurm_strerror(rc), rc)
+
+
+cpdef print_block_info_msg(int one_liner=False):
+    """
+    Print information about all blocks to stdout.
+
+    This function outputs information about all Slurm blocks based upon the
+    message loaded by ``slurm_load_block_info``. It uses the
+    ``slurm_print_block_info_msg`` function to print to stdout.  The output is
+    equivalent to *scontrol show block*.
+
+    Args:
+        one_liner (Optional[bool]): print partitions on one line if True
+            (default False)
+    Raises:
+        PySlurmError: If ``slurm_load_partitions`` is not successful.
+    """
+    cdef:
+        block_info_msg_t *block_info_msg_ptr = NULL
+        uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
+        int rc
+
+    rc = slurm_load_block_info(<time_t> NULL, &block_info_msg_ptr, show_flags)
+
+    if rc == SLURM_SUCCESS:
+        slurm_print_block_info_msg(stdout, block_info_msg_ptr, one_liner)
+        slurm_free_block_info_msg(block_info_msg_ptr)
+        block_info_msg_ptr = NULL
+    else:
+        raise PySlurmError(slurm_strerror(rc), rc)
