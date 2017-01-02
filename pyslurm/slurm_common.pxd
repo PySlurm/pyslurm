@@ -51,6 +51,11 @@ cdef extern from "slurm/slurm.h" nogil:
         CPU_AUTO_BIND_TO_CORES
         CPU_AUTO_BIND_TO_SOCKETS
 
+    ctypedef enum node_use_type:
+        SELECT_COPROCESSOR_MODE
+        SELECT_VIRTUAL_NODE_MODE
+        SELECT_NAV_MODE
+
     ctypedef struct llist:
         pass
 
@@ -64,11 +69,14 @@ cdef extern from "slurm/slurm.h" nogil:
     ListIterator slurm_list_iterator_create(List l)
     void *slurm_list_next(ListIterator i)
     int slurm_list_count(List l)
+    void *slurm_list_peek(List l)
 
 
 cdef extern from "slurm/slurmdb.h" nogil:
     enum:
         CLUSTER_FLAG_BG
+        CLUSTER_FLAG_BGL
+        CLUSTER_FLAG_BGP
         CLUSTER_FLAG_BGQ
         CLUSTER_FLAG_MULTSD
 
@@ -100,6 +108,12 @@ cdef extern uint16_t slurm_get_preempt_mode()
 cdef extern char *slurm_preempt_mode_string(uint16_t preempt_mode)
 cdef extern void slurm_secs2time_str(time_t time, char *string, int size)
 cdef extern void slurm_mins2time_str(uint32_t time, char *string, int size)
+cdef extern char *slurm_bg_block_state_string(uint16_t state)
+cdef extern char *slurm_conn_type_string_full(uint16_t *conn_type)
+
+# NOTE: node_use_type should be in signature
+#cdef extern char *slurm_node_use_string(node_use_type node_use)
+cdef extern char *slurm_node_use_string(uint16_t node_use)
 
 cdef extern void slurm_convert_num_unit(
     double num,

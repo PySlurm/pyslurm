@@ -7,8 +7,15 @@ from libc.stdio cimport FILE
 from .slurm_common cimport List
 
 cdef extern from "slurm/slurm.h" nogil:
-    enum:
-        HIGHEST_DIMENSIONS
+    enum: HIGHEST_DIMENSIONS
+
+    ctypedef struct block_job_info_t:
+        char *cnodes
+        int32_t *cnode_inx
+        uint32_t job_id
+        void *job_ptr
+        uint32_t user_id
+        char *user_name
 
     ctypedef struct block_info_t:
         char *bg_block_id
@@ -33,6 +40,7 @@ cdef extern from "slurm/slurm.h" nogil:
         time_t last_update
         uint32_t record_count
 
+    ctypedef block_info_t update_block_msg_t
 
     void slurm_free_block_info_msg(block_info_msg_t *block_info_msg)
     int slurm_update_block(update_block_msg_t *block_msg)
