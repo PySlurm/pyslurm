@@ -37,16 +37,20 @@ from libc.stdio cimport stdout
 
 from .c_trigger cimport *
 from .slurm_common cimport *
-from .utils cimport trigger_res_type, trigger_type
+from .utils cimport trigger_res_type, trigger_type, trig_offset, trig_flags
 from .exceptions import PySlurmError
 
 cdef class Trigger:
     """An object to wrap `trigger_info_t` structs."""
     cdef:
+        readonly unicode flags
+        readonly int offset
+        readonly unicode program
         readonly unicode res_id
         readonly unicode res_type
         readonly uint32_t trig_id
         readonly unicode trig_type
+        readonly uint32_t user_id
 
 
 def get_triggers(ids=False):
@@ -106,6 +110,10 @@ cdef get_triggers_msg(trigger, ids=False):
             this_trigger.res_type = trigger_res_type(record.res_type)
             this_trigger.res_id = record.res_id
             this_trigger.trig_type = trigger_type(record.trig_type)
+            this_trigger.offset = trig_offset(record.offset)
+            this_trigger.user_id = record.user_id
+            this_trigger.flags = trig_flags(record.flags)
+            this_trigger.program = record.program
 
             trigger_list.append(this_trigger)
 

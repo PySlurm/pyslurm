@@ -3,6 +3,8 @@
 from libc.stdint cimport uint16_t, uint32_t
 
 cdef extern from "slurm/slurm.h" nogil:
+    enum: TRIGGER_FLAG_PERM
+
     enum:
         TRIGGER_RES_TYPE_JOB
         TRIGGER_RES_TYPE_NODE

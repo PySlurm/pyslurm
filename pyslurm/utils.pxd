@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from libc.stdint cimport uint16_t, uint32_t, uint64_t
+from posix.types cimport uid_t, gid_t
 from .slurm_common cimport cpu_bind_type_t
 
 cdef extern from "slurm/slurm.h" nogil:
@@ -41,3 +42,5 @@ cdef slurm_sprint_cpu_bind_type(cpu_bind_type_t cpu_bind_type)
 # cdef slurm_get_hash_val()
 cdef trigger_res_type(uint16_t res_type)
 cdef trigger_type(uint32_t trig_type)
+cdef trig_offset(uint16_t offset)
+cdef trig_flags(uint16_t flags)

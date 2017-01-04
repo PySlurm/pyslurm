@@ -10,6 +10,7 @@ libslurm.
 from __future__ import absolute_import, division, unicode_literals
 
 from libc.stdint cimport uint32_t, uint64_t
+from posix.types cimport uid_t
 from cpython.version cimport PY_MAJOR_VERSION
 from .slurm_common cimport INFINITE, NO_VAL
 from .c_config cimport *
@@ -467,3 +468,14 @@ cdef trigger_type(uint32_t trig_type):
 #        return "burst_buffer"
     else:
         return "unknown"
+
+cdef trig_offset(uint16_t offset):
+    cdef int rc
+    rc = offset
+    rc -= 0x8000
+    return rc
+
+cdef trig_flags(uint16_t flags):
+    if (flags & TRIGGER_FLAG_PERM):
+        return "PERM"
+    return ""
