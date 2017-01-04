@@ -3,6 +3,35 @@
 from libc.stdint cimport uint16_t, uint32_t
 
 cdef extern from "slurm/slurm.h" nogil:
+    enum:
+        TRIGGER_RES_TYPE_JOB
+        TRIGGER_RES_TYPE_NODE
+        TRIGGER_RES_TYPE_SLURMCTLD
+        TRIGGER_RES_TYPE_SLURMDBD
+        TRIGGER_RES_TYPE_DATABASE
+        TRIGGER_RES_TYPE_FRONT_END
+
+    enum:
+        TRIGGER_TYPE_UP
+        TRIGGER_TYPE_DOWN
+        TRIGGER_TYPE_FAIL
+        TRIGGER_TYPE_TIME
+        TRIGGER_TYPE_FINI
+        TRIGGER_TYPE_RECONFIG
+        TRIGGER_TYPE_BLOCK_ERR
+        TRIGGER_TYPE_IDLE
+        TRIGGER_TYPE_DRAINED
+        TRIGGER_TYPE_PRI_CTLD_FAIL
+        TRIGGER_TYPE_PRI_CTLD_RES_OP
+        TRIGGER_TYPE_PRI_CTLD_RES_CTRL
+        TRIGGER_TYPE_PRI_CTLD_ACCT_FULL
+        TRIGGER_TYPE_BU_CTLD_FAIL
+        TRIGGER_TYPE_BU_CTLD_RES_OP
+        TRIGGER_TYPE_BU_CTLD_AS_CTRL
+        TRIGGER_TYPE_PRI_DBD_FAIL
+        TRIGGER_TYPE_PRI_DBD_RES_OP
+        TRIGGER_TYPE_PRI_DB_FAIL
+        TRIGGER_TYPE_PRI_DB_RES_OP
 
     ctypedef struct trigger_info_t:
         uint16_t flags
