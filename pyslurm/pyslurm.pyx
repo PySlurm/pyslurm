@@ -333,6 +333,21 @@ cpdef dict slurm_load_slurmd_status():
 # Slurm Config Class
 #
 
+def get_private_data_list(data):
+    u"""Return the list of enciphered Private Data configuration.
+    
+    result = []
+    exponent = 7
+    types = ['jobs', 'node', 'partitions', 'usage', 'users', 'accounts', 'reservations', 'cloud_nodes']
+    preview = data
+    rest = data
+    while rest != 0:
+        rest = valueToTest % pow(2, exponent)
+        if rest != preview:
+            result.append(types[exponent])
+        exponent = exponent - 1
+        preview = rest
+    return result
 
 cdef class config:
     u"""Class to access slurm config Information."""
@@ -593,6 +608,7 @@ cdef class config:
             Ctl_dict[u'priority_weight_qos'] = self.__Config_ptr.priority_weight_qos
             Ctl_dict[u'proctrack_type'] = slurm.stringOrNone(self.__Config_ptr.proctrack_type, '')
             Ctl_dict[u'private_data'] = self.__Config_ptr.private_data
+            Ctl_dict[u'private_data_list'] = get_private_data_list(self.__Config_ptr.private_data)
             Ctl_dict[u'priority_weight_tres'] = slurm.stringOrNone(self.__Config_ptr.priority_weight_tres, '')
             Ctl_dict[u'prolog'] = slurm.stringOrNone(self.__Config_ptr.prolog, '')
             Ctl_dict[u'prolog_epilog_timeout'] = self.__Config_ptr.prolog_epilog_timeout
