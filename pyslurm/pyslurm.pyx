@@ -2137,8 +2137,7 @@ cdef class job:
                     end_time = self._record.end_time
 
                 if self._record.suspend_time:
-                    run_time = <time_t>difftime(end_time, (self._record.suspend_time +
-                                                           self._record.pre_sus_time))
+                    run_time = <time_t>difftime(end_time, self._record.suspend_time) + self._record.pre_sus_time
                 else:
                     run_time = <time_t>difftime(end_time, self._record.start_time)
 
