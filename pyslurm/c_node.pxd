@@ -147,5 +147,25 @@ cdef extern char *slurm_node_state_string(uint32_t inx)
 cdef inline IS_NODE_ALLOCATED(node_info_t _X):
     return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ALLOCATED
 
+cdef inline IS_NODE_DOWN(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_DOWN
+
+cdef inline IS_NODE_ERROR(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ERROR
+
+cdef inline IS_NODE_MIXED(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_MIXED
+
+cdef inline IS_NODE_IDLE(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_IDLE
+
 cdef inline IS_NODE_COMPLETING(node_info_t _X):
     return (_X.node_state & NODE_STATE_COMPLETING)
+
+cdef inline IS_NODE_DRAIN(node_info_t _X):
+    return (_X.node_state & NODE_STATE_DRAIN)
+
+cdef inline IS_NODE_DRAINING(node_info_t _X):
+    return (_X.node_state & NODE_STATE_DRAIN) and (IS_NODE_ALLOCATED(_X) or
+                                                   IS_NODE_ERROR(_X) or
+                                                   IS_NODE_MIXED(_X))

@@ -36,11 +36,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from libc.stdio cimport stdout
 from .c_partition cimport *
+from .c_node cimport *
+from .c_hostlist cimport *
 from .slurm_common cimport *
 from .utils cimport *
 from .exceptions import PySlurmError
+from collections import defaultdict
 
 include "partition.pxi"
+include "node.pxi"
 
 cdef class Partition:
     """An object to wrap `partition_info_t` structs."""
@@ -291,8 +295,7 @@ cdef get_partition_info_msg(partition, ids=False):
 #    if partition:
 #        b_partition = partition.encode("UTF-8")
 
-    rc = slurm_load_partitions(<time_t> NULL, &part_info_msg_ptr,
-                               show_flags)
+    rc = slurm_load_partitions(<time_t> NULL, &part_info_msg_ptr, show_flags)
 
     part_list = []
     if rc == SLURM_SUCCESS:
@@ -671,3 +674,115 @@ cpdef int delete_partition(partition):
 # if rc == -1:
 #     errno = slurm_get_errno(rc)
 #     print(slurm_strerror(errno), errno)
+
+
+def get_nodes_cpus_aiot():
+    """
+    """
+    cdef:
+        partition_info_msg_t *part_pptr
+        node_info_msg_t *node_pptr
+        uint16_t show_flags = SHOW_ALL
+        uint16_t alloc_cpus
+        uint16_t err_cpus
+        uint16_t idle_cpus
+        uint32_t cluster_flags = slurmdb_setup_cluster_flags()
+        int i
+        int rc
+        int errno
+        int g_node_scaling = 1
+        int single_node_cpus
+        hostlist_t hl
+
+    rc = slurm_load_node(<time_t> NULL, &node_pptr, show_flags)
+
+    if rc == SLURM_SUCCESS:
+        g_node_scaling = node_pptr.node_scaling
+        node_dict = {}
+
+        for nrecord in node_pptr.node_array[:node_pptr.record_count]:
+            if IS_NODE_ALLOCATED(nrecord):
+                node_dict[tounicode(nrecord.name)] = {
+                    "alloc": nrecord.cpus,
+                    "idle": 0,
+                    "other": 0,
+                    "total": nrecord.cpus
+                }
+            elif IS_NODE_IDLE(nrecord):
+                node_dict[tounicode(nrecord.name)] = {
+                    "alloc": 0,
+                    "idle": nrecord.cpus,
+                    "other": 0,
+                    "total": nrecord.cpus
+                }
+            elif IS_NODE_DRAIN(nrecord) or IS_NODE_DOWN(nrecord):
+                node_dict[tounicode(nrecord.name)] = {
+                    "alloc": 0,
+                    "idle": 0,
+                    "other": nrecord.cpus,
+                    "total": nrecord.cpus
+                }
+            else:
+                single_node_cpus = nrecord.cpus / g_node_scaling
+
+                slurm_get_select_nodeinfo(
+                    nrecord.select_nodeinfo,
+                    SELECT_NODEDATA_SUBCNT,
+                    NODE_STATE_ALLOCATED,
+                    &alloc_cpus
+                )
+
+                if (cluster_flags & CLUSTER_FLAG_BG):
+                    if (not alloc_cpus and
+                        (IS_NODE_ALLOCATED(nrecord) or
+                         IS_NODE_COMPLETING(nrecord))):
+                        alloc_cpus = nrecord.cpus
+                    else:
+                        alloc_cpus *= single_node_cpus
+
+                idle_cpus = nrecord.cpus - alloc_cpus
+
+                slurm_get_select_nodeinfo(
+                    nrecord.select_nodeinfo,
+                    SELECT_NODEDATA_SUBCNT,
+                    NODE_STATE_ERROR,
+                    &err_cpus
+                )
+
+                if (cluster_flags & CLUSTER_FLAG_BG):
+                    err_cpus *= single_node_cpus
+
+                idle_cpus -= err_cpus
+
+                node_dict[tounicode(nrecord.name)] = {
+                    "alloc": alloc_cpus,
+                    "idle": idle_cpus,
+                    "other": nrecord.cpus - alloc_cpus - idle_cpus,
+                    "total": nrecord.cpus
+                }
+
+        slurm_free_node_info_msg(node_pptr)
+        node_pptr = NULL
+        rc = slurm_load_partitions(<time_t> NULL, &part_pptr, show_flags)
+
+        if rc == SLURM_SUCCESS:
+            aiot_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+            for precord in part_pptr.partition_array[:part_pptr.record_count]:
+                hl = slurm_hostlist_create(precord.nodes)
+                partname = precord.name
+                for i in range(slurm_hostlist_count(hl)):
+                    node = slurm_hostlist_shift(hl)
+                    aiot_dict[tounicode(partname)]["cpus"]["alloc"] += node_dict[node]["alloc"]
+                    aiot_dict[tounicode(partname)]["cpus"]["idle"] += node_dict[node]["idle"]
+                    aiot_dict[tounicode(partname)]["cpus"]["other"] += node_dict[node]["other"]
+                    aiot_dict[tounicode(partname)]["cpus"]["total"] += node_dict[node]["total"]
+
+                slurm_hostlist_destroy(hl)
+                hl = NULL
+            slurm_free_partition_info_msg(part_pptr)
+            part_pptr = NULL
+            return node_dict, aiot_dict
+        else:
+            pass #PySlurmError
+    else:
+        pass #PySlurmError
