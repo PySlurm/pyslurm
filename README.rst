@@ -11,8 +11,8 @@ Currently `PySlurm` is under development to move from it's thin layer on top of 
 
 This release is based on Slurm 16.05.
 
-Prerequistes
-************
+Prerequisites
+*************
 
 * [Slurm] http://www.schedmd.com
 * [Python] http://www.python.org
