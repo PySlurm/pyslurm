@@ -334,7 +334,7 @@ cpdef dict slurm_load_slurmd_status():
 #
 
 def get_private_data_list(data):
-    u"""Return the list of enciphered Private Data configuration.
+    u"""Return the list of enciphered Private Data configuration."""
     
     result = []
     exponent = 7
@@ -342,7 +342,7 @@ def get_private_data_list(data):
     preview = data
     rest = data
     while rest != 0:
-        rest = valueToTest % pow(2, exponent)
+        rest = data % pow(2, exponent)
         if rest != preview:
             result.append(types[exponent])
         exponent = exponent - 1
