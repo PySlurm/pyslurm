@@ -3609,6 +3609,10 @@ def slurm_create_reservation(dict reservation_dict={}):
         resv_msg.node_cnt[0] = int_value
         resv_msg.node_cnt[1] = 0
 
+    if reservation_dict[u'node_list'] is not '':
+        name = reservation_dict[u'node_list']
+        resv_msg.node_list = name
+
     if reservation_dict[u'users'] is not '':
         name = reservation_dict[u'users']
         resv_msg.users = strcpy(<char*>slurm.xmalloc(strlen(name)+1), name)
