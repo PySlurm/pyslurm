@@ -2137,8 +2137,7 @@ cdef class job:
                     end_time = self._record.end_time
 
                 if self._record.suspend_time:
-                    run_time = <time_t>difftime(end_time, (self._record.suspend_time +
-                                                           self._record.pre_sus_time))
+                    run_time = <time_t>difftime(end_time, self._record.suspend_time) + self._record.pre_sus_time
                 else:
                     run_time = <time_t>difftime(end_time, self._record.start_time)
 
@@ -3609,6 +3608,10 @@ def slurm_create_reservation(dict reservation_dict={}):
         resv_msg.node_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * 2)
         resv_msg.node_cnt[0] = int_value
         resv_msg.node_cnt[1] = 0
+
+    if reservation_dict[u'node_list'] is not '':
+        name = reservation_dict[u'node_list']
+        resv_msg.node_list = name
 
     if reservation_dict[u'users'] is not '':
         name = reservation_dict[u'users']
