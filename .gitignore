@@ -15,6 +15,10 @@ build/
 *.c
 *.so
 
+# Ignore temporary build files
+pyslurm/bluegene.pxi
+pyslurm/slurm_version.pxi
+
 # Vim swap files
 *.swp
 
