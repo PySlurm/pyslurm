@@ -2160,7 +2160,7 @@ cdef class job:
             Job_dict[u'start_time'] = self._record.start_time
 
             if self._record.state_desc:
-                Job_dict[u'state_reason'] = self._record.state_desc.replace(" ", "_")
+                Job_dict[u'state_reason'] = self._record.state_desc.decode().replace(" ", "_")
             else:
                 Job_dict[u'state_reason'] = slurm.slurm_job_reason_string(
                     <slurm.job_state_reason>self._record.state_reason)
