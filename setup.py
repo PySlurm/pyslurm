@@ -24,7 +24,7 @@ logging.basicConfig(level=20)
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
 __version__ = "16.05.5"
 __min_slurm_hex_version__ = "0x100505"
-__max_slurm_hex_version__ = "0x100509"
+__max_slurm_hex_version__ = "0x10050a"
 
 def fatal(logstring, code=1):
     logger.error("Fatal: " + logstring)
@@ -45,10 +45,9 @@ def usage():
     sys.exit(1)
 
 def scandir(dir, files=[]):
-
     """
     Scan the directory for extension files, converting
-    them to extension names in dotted notation
+    them to extension names in dotted notation.
     """
 
     for file in os.listdir(dir):
@@ -60,7 +59,6 @@ def scandir(dir, files=[]):
     return files
 
 def makeExtension(extName):
-
     """Generate an Extension object from its dotted name"""
 
     extPath = extName.replace(".", os.path.sep) + ".pyx"
@@ -68,7 +66,7 @@ def makeExtension(extName):
         extName,
         [extPath],
         include_dirs = ['%s' % SLURM_INC, '.'],   # adding the '.' to include_dirs is CRUCIAL!!
-        library_dirs = ['%s' % SLURM_LIB, '%s/slurm' % SLURM_LIB], 
+        library_dirs = ['%s' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
         libraries = ['slurmdb'],
         runtime_library_dirs = ['%s/' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
         extra_objects = [],
@@ -77,13 +75,11 @@ def makeExtension(extName):
     )
 
 def read(fname):
-
     """Read the README.rst file for long description"""
 
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 def read_inc_version(fname):
-
     """Read the supplied include file and extract slurm version number
     in the line #define SLURM_VERSION_NUMBER 0x020600 """
 
@@ -98,23 +94,19 @@ def read_inc_version(fname):
     return hex
 
 def inc_vers2str(hex_inc_version):
-
-    """Return a slurm version number string decoded from the bit shifted components of the 
-           slurm version hex string supplied in slurm.h
-    """
+    """Return a slurm version number string decoded from the bit shifted components of the
+    slurm version hex string supplied in slurm.h."""
 
     a = int(hex_inc_version,16)
     b = ( a >> 16 & 0xff, a >> 8 & 0xff, a & 0xff)
     return '{0:02d}.{1:02d}.{2:02d}'.format(*b)
 
 def clean():
-
     """
-    Cleanup build directory and temporary files
-    
-    I wonder if disutils.dir_util.remove_tree should be used instead ?
-    
-        """
+    Cleanup build directory and temporary files.
+
+    I wonder if disutils.dir_util.remove_tree should be used instead?
+    """
 
     info("Clean - checking for objects to clean")
     if os.path.isdir("build/"):
@@ -122,10 +114,10 @@ def clean():
         try:
             shutil.rmtree("build/")
         except:
-            fatal("Clean - failed to remove pyslurm build/ directory !") 
+            fatal("Clean - failed to remove pyslurm build/ directory !")
             sys.exit(-1)
 
-    files = [ "pyslurm/__init__.pyc", "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi", "pyslurm/pyslurm.so", "pyslurm/slurm_version.pxi" ]
+    files = ["pyslurm/__init__.pyc", "pyslurm/pyslurm.c", "pyslurm/bluegene.pxi", "pyslurm/pyslurm.so", "pyslurm/slurm_version.pxi" ]
 
     for file in files:
 
