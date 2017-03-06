@@ -22,9 +22,9 @@ logging.basicConfig(level=20)
 # PySlurm Version
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
-__version__ = "16.05.5"
-__min_slurm_hex_version__ = "0x100505"
-__max_slurm_hex_version__ = "0x10050a"
+__version__ = "17.02.0"
+__min_slurm_hex_version__ = "0x110200"
+__max_slurm_hex_version__ = "0x110201"
 
 def fatal(logstring, code=1):
     logger.error("Fatal: " + logstring)
@@ -41,7 +41,7 @@ def usage():
     info("Please use --slurm=PATH or --slurm-lib=PATH and --slurm-inc=PATH")
     info("i.e If slurm is installed in /usr use :")
     info("\t--slurm=/usr or --slurm-lib=/usr/lib64 and --slurm-inc=/usr/include")
-    info("For now if using BlueGene cluster set the type with --bgl --bgp or --bgq")
+    info("For now if using BlueGene Cluster set the type with --bgq")
     sys.exit(1)
 
 def scandir(dir, files=[]):
@@ -204,13 +204,7 @@ if args[1] == 'build' or args[1] == 'build_ext':
             SLURM_INC = arg.split('=')[1]
             sys.argv.remove(arg)
 
-        BGL = BGP = BGQ = 0
-        if arg.find('--bgl') == 0:
-            BGL=1
-            sys.argv.remove(arg)
-        if arg.find('--bgp') == 0:
-            BGP=1
-            sys.argv.remove(arg)
+        BGQ = 0
         if arg.find('--bgq') == 0:
             BGQ=1
             sys.argv.remove(arg)
@@ -259,22 +253,17 @@ if args[1] == 'build' or args[1] == 'build_ext':
         fatal("Build - Unable to write Slurm version to pyslurm/slurm_version.pxi")
         sys.exit(-1)
 
-    # BlueGene Types
+    # BlueGene
 
-    if (BGL + BGP + BGQ) > 1:
-        fatal("Please specifiy one BG Type either --bgl or --bgp or --bgq")
-    else:
-        info("Build - Generating pyslurm/bluegene.pxi file")
-        try:
-            f = open("pyslurm/bluegene.pxi", "w")
-            f.write("DEF BG=1\n")
-            f.write("DEF BGL=%d\n" % BGL)
-            f.write("DEF BGP=%d\n" % BGP)
-            f.write("DEF BGQ=%d\n" % BGQ)
-            f.close()
-        except:
-            fatal("Build - Unable to write Blue Gene type to pyslurm/bluegene.pxd")
-            sys.exit(-1)
+    info("Build - Generating pyslurm/bluegene.pxi file")
+    try:
+        f = open("pyslurm/bluegene.pxi", "w")
+        f.write("DEF BG=1\n")
+        f.write("DEF BGQ=%d\n" % BGQ)
+        f.close()
+    except:
+        fatal("Build - Unable to write Blue Gene type to pyslurm/bluegene.pxd")
+        sys.exit(-1)
 
 # Get the list of extensions
 

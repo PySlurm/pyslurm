@@ -2,14 +2,14 @@
 PySlurm: Slurm Interface for Python
 ***********************************
 
-:Authors: Mark Roberts <mark@gingergeeks.co.uk> and Giovanni Torres <giovanni.torres@gmail.com>
+:Authors: Mark Roberts <mark@gingergeeks.co.uk> and Giovanni Torres <giovanni.torres/gmail/com>
 
 Overview
 ========
 
 Currently `PySlurm` is under development to move from it's thin layer on top of the Slurm C API to an object orientated interface.
 
-This release is based on Slurm 16.05.
+This release is based on Slurm 17.02.
 
 Prerequisites
 *************
@@ -22,9 +22,7 @@ This PySlurm branch has been tested with:
 
     * Cython 0.15.1, 0.19.2, and 0.24
     * Python 2.6 and 2.7
-    * Slurm 16.05.5 thru 16.05.10
-
-*For Slurm 16.05.0 - 16.05.4 support, use the 16.05.0 branch.*
+    * Slurm 17.02.0 thru 17.02.1
 
 Installation
 ************
@@ -38,9 +36,9 @@ directory or where the Slurm libraries and Slurm include files are :
 
     * python setup.py install
 
-#. Indicate Blue Gene type (L/P/Q) on build line:
+#. Indicate Blue Gene type Q on build line:
 
-    * --bgl or --bgp or --bgq
+    * --bgq
 
 #. Slurm root directory (Alternate installation directory):
 

@@ -571,6 +571,7 @@ cdef class config:
             Ctl_dict[u'licenses'] = __get_licenses(self.__Config_ptr.licenses)
             Ctl_dict[u'licenses_used'] = __get_licenses(self.__Config_ptr.licenses_used)
             Ctl_dict[u'log_fmt'] = self.__Config_ptr.log_fmt
+            Ctl_dict[u'mail_domain'] = slurm.stringOrNone(self.__Config_ptr.mail_domain, '')
             Ctl_dict[u'mail_prog'] = slurm.stringOrNone(self.__Config_ptr.mail_prog, '')
             Ctl_dict[u'max_array_sz'] = self.__Config_ptr.max_array_sz
             Ctl_dict[u'max_job_cnt'] = self.__Config_ptr.max_job_cnt
@@ -628,13 +629,12 @@ cdef class config:
             Ctl_dict[u'ret2service'] = self.__Config_ptr.ret2service
             Ctl_dict[u'route_plugin'] = slurm.stringOrNone(self.__Config_ptr.route_plugin, '')
             Ctl_dict[u'salloc_default_command'] = slurm.stringOrNone(self.__Config_ptr.salloc_default_command, '')
+            Ctl_dict[u'sbcast_parameters'] = slurm.stringOrNone(self.__Config_ptr.sbcast_parameters, '')
             Ctl_dict[u'sched_logfile'] = slurm.stringOrNone(self.__Config_ptr.sched_logfile, '')
             Ctl_dict[u'sched_log_level'] = self.__Config_ptr.sched_log_level
             Ctl_dict[u'sched_params'] = slurm.stringOrNone(self.__Config_ptr.sched_params, '')
             Ctl_dict[u'sched_time_slice'] = self.__Config_ptr.sched_time_slice
             Ctl_dict[u'schedtype'] = slurm.stringOrNone(self.__Config_ptr.schedtype, '')
-            Ctl_dict[u'schedport'] = self.__Config_ptr.schedport
-            Ctl_dict[u'schedrootfltr'] = bool(self.__Config_ptr.schedrootfltr)
             Ctl_dict[u'select_type'] = slurm.stringOrNone(self.__Config_ptr.select_type, '')
             Ctl_dict[u'select_type_param'] = self.__Config_ptr.select_type_param
             Ctl_dict[u'slurm_conf'] = slurm.stringOrNone(self.__Config_ptr.slurm_conf, '')
@@ -979,8 +979,15 @@ cdef class partition:
                 Part_dict[u'name'] = slurm.stringOrNone(record.name, '')
                 Part_dict[u'nodes'] = slurm.stringOrNone(record.nodes, '')
 
+                if record.over_time_limit == slurm.NO_VAL16:
+                    Part_dict[u'over_time_limit'] = "NONE"
+                elif record.over_time_limit == <uint16_t>slurm.INFINITE:
+                    Part_dict[u'over_time_limit'] = "UNLIMITED"
+                else:
+                    Part_dict[u'over_time_limit'] = record.over_time_limit
+
                 preempt_mode = record.preempt_mode
-                if preempt_mode == <uint16_t> slurm.NO_VAL:
+                if preempt_mode == slurm.NO_VAL16:
                     preempt_mode = slurm.slurm_get_preempt_mode()
                 Part_dict[u'preempt_mode'] = slurm.slurm_preempt_mode_string(preempt_mode)
 
@@ -1993,6 +2000,7 @@ cdef class job:
             Job_dict = {}
 
             Job_dict[u'account'] = slurm.stringOrNone(self._record.account, '')
+            Job_dict[u'admin_comment'] = slurm.stringOrNone(self._record.admin_comment, '')
             Job_dict[u'alloc_node'] = slurm.stringOrNone(self._record.alloc_node, '')
             Job_dict[u'alloc_sid'] = self._record.alloc_sid
 
@@ -2020,13 +2028,13 @@ cdef class job:
             Job_dict[u'batch_flag'] = self._record.batch_flag
             Job_dict[u'batch_host'] = slurm.stringOrNone(self._record.batch_host, '')
             Job_dict[u'batch_script'] = slurm.stringOrNone(
-                self._record.batch_script, '')
-
+                self._record.batch_script, ''
+            )
             Job_dict[u'billable_tres'] = self._record.billable_tres
             Job_dict[u'bitflags'] = self._record.bitflags
-
             Job_dict[u'boards_per_node'] = self._record.boards_per_node
             Job_dict[u'burst_buffer'] = slurm.stringOrNone(self._record.burst_buffer, '')
+            Job_dict[u'burst_buffer_state'] = slurm.stringOrNone(self._record.burst_buffer_state, '')
             Job_dict[u'command'] = slurm.stringOrNone(self._record.command, '')
             Job_dict[u'comment'] = slurm.stringOrNone(self._record.comment, '')
             Job_dict[u'contiguous'] = bool(self._record.contiguous)
@@ -2070,6 +2078,8 @@ cdef class job:
             Job_dict[u'exit_code'] = str(exit_status) + ":" + str(term_sig)
 
             Job_dict[u'features'] = slurm.listOrNone(self._record.features, ',')
+            Job_dict[u'fed_origin'] = slurm.stringOrNone(self._record.fed_origin_str, '')
+            Job_dict[u'fed_siblings'] = slurm.stringOrNone(self._record.fed_siblings_str, '')
             Job_dict[u'gres'] = slurm.listOrNone(self._record.gres, ',')
             Job_dict[u'group_id'] = self._record.group_id
 
@@ -2589,7 +2599,7 @@ cdef class node:
             uint16_t err_cpus
             uint16_t alloc_cpus
             uint32_t i
-            uint32_t alloc_mem
+            uint64_t alloc_mem
             uint32_t node_state
             slurm.node_info_t *record
             dict Host_dict
@@ -2656,6 +2666,7 @@ cdef class node:
                 else:
                     Host_dict[u'owner'] = record.owner
 
+                Host_dict[u'partitions'] = slurm.listOrNone(record.partitions, ',')
                 Host_dict[u'real_memory'] = record.real_memory
                 Host_dict[u'slurmd_start_time'] = record.slurmd_start_time
                 Host_dict[u'sockets'] = record.sockets
@@ -2994,6 +3005,10 @@ cdef class jobstep:
                     job_step_info_ptr.job_steps[i].resv_ports, '')
 
                 Step_dict[u'run_time'] = job_step_info_ptr.job_steps[i].run_time
+                Step_dict[u'srun_host'] = slurm.stringOrNone(
+                    job_step_info_ptr.job_steps[i].srun_host, ''
+                )
+                Step_dict[u'srun_pid'] = job_step_info_ptr.job_steps[i].srun_pid
                 Step_dict[u'start_time'] = job_step_info_ptr.job_steps[i].start_time
                 Step_dict[u'state'] = slurm.slurm_job_state_string(
                     job_step_info_ptr.job_steps[i].state)
