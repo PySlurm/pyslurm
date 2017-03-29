@@ -4892,7 +4892,7 @@ cdef class qos:
         self._QOSDict = Q_dict
 
 #
-# sludbd jobs Class
+# slurmdbd jobs Class
 #
 cdef class slurmdb_jobs:
     u"""Class to access/update slurmdbd Jobs information."""
@@ -5080,7 +5080,7 @@ cdef class slurmdb_jobs:
         self._JOBSDict = J_dict
 
 #
-# sludbd Reservations Class
+# slurmdbd Reservations Class
 #
 cdef class slurmdb_reservations:
     u"""Class to access/update slurmdbd reservations information."""
@@ -5223,7 +5223,7 @@ cdef class slurmdb_reservations:
         self._RESERVATIONSDict = R_dict
 
 #
-# sludbd clusters Class
+# slurmdbd clusters Class
 #
 cdef class slurmdb_clusters:
     u"""Class to access/update slurmdbd Clusters information."""
@@ -5372,6 +5372,127 @@ cdef class slurmdb_clusters:
             slurm.slurm_list_iterator_destroy(iters)
             slurm.slurm_list_destroy(self._CLUSTERSList)
         self._CLUSTERSDict = C_dict
+
+
+#
+# slurmdbd Events Class
+#
+cdef class slurmdb_events:
+    u"""Class to access/update slurmdbd events information."""
+
+    cdef:
+        slurm.slurmdb_event_cond_t *event_cond
+        void *dbconn
+        dict _EVENTSDict
+        slurm.List _EVENTSList
+
+    def __cinit__(self):
+        self.dbconn = <void *>NULL
+        self._EVENTSDict = {}
+        self.event_cond = <slurm.slurmdb_event_cond_t *>NULL
+
+    def __dealloc__(self):
+        self.__destroy()
+
+    cpdef __destroy(self):
+        u"""events Destructor method."""
+        self._EVENTSDict = {}
+        if self.event_cond != NULL:
+            slurm.slurmdb_destroy_event_cond(self.event_cond)
+
+    def set_event_condition(self, start_time, end_time):
+        u""" set slurmdb_event_cond_t values start and end time in linux time stamp format"""
+        return self.__set_event_condition(start_time, end_time)
+
+    cpdef __set_event_condition(self, slurm.time_t start_time, slurm.time_t end_time):
+        self.event_cond = <slurm.slurmdb_event_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_event_cond_t))
+        if self.event_cond != NULL:
+            ##self.event_cond.with_usage = 1
+            self.event_cond.period_start = <slurm.time_t>start_time
+            self.event_cond.period_end = <slurm.time_t>end_time
+            return "Time range is set from {} to {}".format( \
+                    self.event_cond.period_start, self.event_cond.period_end)
+        else:
+            print("Not set")
+            return "Memory Allocation Failure!"
+
+    def load(self):
+        u"""Load slurm events information."""
+        self.__load()
+
+    cpdef int __load(self) except? -1:
+        u"""Load slurmdbd events list. start and end is linux time stamp values"""
+        cdef:
+            int apiError = 0
+            void* dbconn = slurm.slurmdb_connection_get()
+            slurm.List EVENTSList = slurm.slurmdb_events_get(dbconn, self.event_cond)
+
+        if EVENTSList is NULL:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.slurm_strerror(apiError), apiError)
+        else:
+            self._EVENTSList = EVENTSList
+
+        slurm.slurmdb_connection_close(&dbconn)
+        return 0
+
+    def lastUpdate(self):
+        u"""Return last time (sepoch seconds) the EVENTS data was updated.
+
+        :returns: epoch seconds
+        :rtype: `integer`
+        """
+        return self._lastUpdate
+
+    def ids(self):
+        u"""Return the EVENTS IDs from retrieved data.
+
+        :returns: Dictionary of EVENTS IDs
+        :rtype: `dict`
+        """
+        return self._EVENTSDict.keys()
+
+    def get(self):
+        u"""Get slurm EVENTS information.
+
+        :returns: Dictionary whose key is the EVENTS ID
+        :rtype: `dict`
+        """
+        self.__load()
+        self.__get()
+        return self._EVENTSDict
+
+    cpdef __get(self):
+        cdef:
+            slurm.List events_list = NULL
+            slurm.ListIterator iters = NULL
+            int i = 0
+            int listNum = 0
+            dict E_dict = {}
+
+        if self._EVENTSList is not NULL:
+            listNum = slurm.slurm_list_count(self._EVENTSList)
+            iters = slurm.slurm_list_iterator_create(self._EVENTSList)
+            for i in range(listNum):
+                event = <slurm.slurmdb_event_rec_t *>slurm.slurm_list_next(iters)
+
+                # EVENTS infos
+                EVENTS_info = {}
+                if event is not NULL:
+                    event_id = event.period_start
+                    EVENTS_info[u'cluster'] = slurm.stringOrNone(event.cluster, '')
+                    EVENTS_info[u'cluster_nodes'] = slurm.stringOrNone(event.cluster_nodes, '')
+                    EVENTS_info[u'node_name'] = slurm.stringOrNone(event.node_name, '')
+                    EVENTS_info[u'reason'] = slurm.stringOrNone(event.reason, '')
+                    EVENTS_info[u'tres_str'] = slurm.stringOrNone(event.tres_str, '')
+                    EVENTS_info[u'event_type'] = event.event_type
+                    EVENTS_info[u'time_start'] = event.period_start
+                    EVENTS_info[u'time_end'] = event.period_end
+                    EVENTS_info[u'tres_str'] = event.tres_str
+                    E_dict[event_id] = EVENTS_info
+            slurm.slurm_list_iterator_destroy(iters)
+            slurm.slurm_list_destroy(self._EVENTSList)
+        self._EVENTSDict = E_dict
 
 #
 # Helper functions to convert numerical States

@@ -2523,6 +2523,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     ctypedef slurmdb_job_rec slurmdb_job_rec_t
 
+    # Reservations
     ctypedef struct slurmdb_reservation_cond:
         List cluster_list
         uint16_t flags
@@ -2551,6 +2552,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     ctypedef slurmdb_reservation_rec slurmdb_reservation_rec_t
 
+    # Qos
     ctypedef struct slurmdb_qos_usage_t:
         List job_list
         uint32_t grp_used_jobs
@@ -2613,6 +2615,35 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     ctypedef slurmdb_qos_cond slurmdb_qos_cond_t
 
+    # Events
+    ctypedef struct slurmdb_event_cond:
+        List cluster_list
+        uint32_t cpus_max
+        uint32_t cpus_min
+        uint16_t event_type
+        List node_list
+        time_t period_end
+        time_t period_start
+        List reason_list
+        List reason_uid_list
+        List state_list
+
+    ctypedef slurmdb_event_cond slurmdb_event_cond_t
+
+    ctypedef struct slurmdb_event_rec:
+        char *cluster
+        char *cluster_nodes
+        uint16_t event_type
+        char *node_name
+        time_t period_end
+        time_t period_start
+        char *reason
+        uint32_t reason_uid
+        uint16_t state
+        char *tres_str
+
+    ctypedef slurmdb_event_rec slurmdb_event_rec_t
+
     #
     # Accounting Storage
     #
@@ -2650,6 +2681,12 @@ cdef extern from 'slurm/slurmdb.h' nogil:
     #cdef extern void slurmdb_init_cluster_rec(slurmdb_cluster_rec_t *cluster, bool free_it)
     cdef extern void slurmdb_destroy_cluster_rec(void *object)
     #cdef extern void slurmdb_destroy_report_cluster_rec(void *object)
+
+    # event accounting details
+    cdef extern List slurmdb_events_get(void *db_conn,
+                         slurmdb_event_cond_t *resv_cond)
+    cdef extern void slurmdb_destroy_event_cond(void *object)
+    cdef extern void slurmdb_destroy_event_rec(void *object);
 
 #
 # Slurm declarations not in slurm.h
