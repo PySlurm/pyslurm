@@ -19,6 +19,7 @@ def format_seconds_to_dayhhmmss(seconds):
     
 def event_display(event):
     if event:
+        print("===", event)
         for key,value in event.items():
            if (key == "time_start") or (key == "time_end") :
                print ("\t{}={}  <->  {}".format(key, value, datetime.fromtimestamp(value)))
@@ -43,11 +44,13 @@ if __name__ == "__main__":
         events = pyslurm.slurmdb_events()
         events.set_event_condition(start, end)
         events_dict = events.get()
+        ii = 0
         if len(events_dict):
             for key, value in events_dict.items():
                 d = int(value['time_end']) - int(value['time_start'])
-                print("duration: {}".format(format_seconds_to_dayhhmmss(d)))
-                print("}")
+                print("{}: duration: {}".format(ii, format_seconds_to_dayhhmmss(d)))
+                ii +=1
+                print("{")
                 event_display(value)
                 print("}")
         else:
