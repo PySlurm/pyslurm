@@ -5343,6 +5343,8 @@ cdef class slurmdb_events:
                     EVENTS_info[u'time_start'] = event.period_start
                     EVENTS_info[u'time_end'] = event.period_end
                     EVENTS_info[u'tres_str'] = event.tres_str
+                    EVENTS_info[u'state'] = event.state
+                    EVENTS_info[u'reason_uid'] = event.reason_uid
                     E_dict[event_id] = EVENTS_info
             slurm.slurm_list_iterator_destroy(iters)
             slurm.slurm_list_destroy(self._EVENTSList)
