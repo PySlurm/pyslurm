@@ -2644,6 +2644,13 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     ctypedef slurmdb_event_rec slurmdb_event_rec_t
 
+    ctypedef struct slurmdb_selected_step:
+        uint32_t array_task_id
+        uint32_t jobid
+        uint32_t stepid
+
+    ctypedef slurmdb_selected_step slurmdb_selected_step_t
+
     #
     # Accounting Storage
     #
@@ -2667,6 +2674,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
     cdef extern List slurmdb_jobs_get(void *db_conn, slurmdb_job_cond_t *job_cond)
     cdef extern void slurmdb_destroy_job_cond(void *object)
     cdef extern void slurmdb_destroy_job_rec(void *object)
+    cdef extern void slurmdb_destroy_selected_step(void *object)
 
     # reservation accounting details
     cdef extern List slurmdb_reservations_get(void *db_conn,
