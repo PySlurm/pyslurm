@@ -2338,6 +2338,36 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     ctypedef slurmdb_job_rec slurmdb_job_rec_t
 
+    ctypedef struct slurmdb_step_rec:
+        uint32_t elapsed
+        time_t end
+        int32_t exitcode
+        slurmdb_job_rec_t *job_ptr
+        uint32_t nnodes
+        char *nodes
+        uint32_t ntasks
+        char *pid_str
+        uint32_t req_cpufreq_min
+        uint32_t req_cpufreq_max
+        uint32_t req_cpufreq_gov
+        uint32_t requid
+        time_t start
+        uint32_t state
+        slurmdb_stats_t stats
+        uint32_t stepid    #	/* job's step number */
+        char *stepname
+        uint32_t suspended
+        uint32_t sys_cpu_sec
+        uint32_t sys_cpu_usec
+        uint32_t task_dist
+        uint32_t tot_cpu_sec
+        uint32_t tot_cpu_usec
+        char *tres_alloc_str
+        uint32_t user_cpu_sec
+        uint32_t user_cpu_usec
+
+    ctypedef slurmdb_step_rec slurmdb_step_rec_t
+
     # Reservations
     ctypedef struct slurmdb_reservation_cond:
         List cluster_list
