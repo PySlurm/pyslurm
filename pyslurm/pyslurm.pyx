@@ -291,6 +291,15 @@ def slurm_api_version():
             SLURM_VERSION_MINOR(version),
             SLURM_VERSION_MICRO(version))
 
+def noneToAnother(value, value2):
+    if value is None:
+        if value2 is not None:
+            return value2.decode('utf-8', 'replace')
+        else:
+            return u''
+    else:
+        if value2 is not None:
+            return (value.decode('utf-8', 'replace') + value2.decode('utf-8', 'replace'))
 
 cpdef dict slurm_load_slurmd_status():
     u"""Issue RPC to get and load the status of Slurmd daemon.
@@ -4784,6 +4793,16 @@ cdef class slurmdb_jobs:
         u"""Destructor method."""
         pass
 
+    def find_hostname(self, pos, hosts):
+        if (len(hosts) == 0) or (pos == slurm.NO_VAL) :
+            return '';
+        hl = hostlist()
+        hl.create(hosts)
+        nodelist = hl.get_list()
+        hl.destroy()
+        return nodelist[pos]
+
+
     def get(self, jobids=[], starttime=0, endtime=0):
         u"""Get Slurmdb information about some jobs.
 
@@ -4807,6 +4826,13 @@ cdef class slurmdb_jobs:
             slurm.slurmdb_job_cond_t query
             slurm.List query_step_list = slurm.slurm_list_create(slurm.slurmdb_destroy_selected_step)
             slurm.slurmdb_selected_step_t* selstep
+            char * username 
+#==== step analysis
+            int iStep = 0
+            slurm.ListIterator itersteps = NULL
+            int listNumSteps = 0
+            slurm.List steps_list = NULL
+#====
         for j in jobids:
             selstep = <slurm.slurmdb_selected_step_t*> slurm.xmalloc(sizeof(slurm.slurmdb_selected_step_t))
             selstep.array_task_id = slurm.NO_VAL
@@ -4854,6 +4880,8 @@ cdef class slurmdb_jobs:
 
         listNum = slurm.slurm_list_count(JOBSList)
         iters = slurm.slurm_list_iterator_create(JOBSList)
+        exit_status = 0
+        term_sig = 0
 
         for i in range(listNum):
             job = <slurm.slurmdb_job_rec_t *>slurm.slurm_list_next(iters)
@@ -4861,82 +4889,192 @@ cdef class slurmdb_jobs:
             JOBS_info = {}
             if job is not NULL:
                 jobid = job.jobid
-                JOBS_info[u'account'] = slurm.stringOrNone(job.account, '')
-                JOBS_info[u'allocated_gres'] = slurm.stringOrNone(job.alloc_gres, '')
+                JOBS_info[u'account'] = noneToAnother(slurm.stringOrNone(job.account, ''), '')
+                JOBS_info[u'allocated_gres'] = noneToAnother(slurm.stringOrNone(job.alloc_gres, ''), '0')
                 JOBS_info[u'allocated_nodes'] = job.alloc_nodes
                 JOBS_info[u'array_job_id'] = job.array_job_id
                 JOBS_info[u'array_max_tasks'] = job.array_max_tasks
                 JOBS_info[u'array_task_id'] = job.array_task_id
-                JOBS_info[u'array_task_str'] = slurm.stringOrNone(job.array_task_str, '')
+                JOBS_info[u'array_task_str'] = noneToAnother(slurm.stringOrNone(job.array_task_str, ''), '0')
                 JOBS_info[u'associd'] = job.associd
-                JOBS_info[u'blockid'] = slurm.stringOrNone(job.blockid, '')
+                JOBS_info[u'blockid'] = noneToAnother(slurm.stringOrNone(job.blockid, ''), '0')
                 JOBS_info[u'cluster'] = slurm.stringOrNone(job.cluster, '')
-                JOBS_info[u'derived_ec'] = job.derived_ec
+                if WIFSIGNALED(job.derived_ec):
+                        term_sig = WTERMSIG(job.derived_ec)
+                else:
+                        term_sig = 0
+                exit_status = WEXITSTATUS(job.derived_ec)
+                JOBS_info[u'derived_ec'] = str(exit_status) + ":" + str(term_sig)
                 JOBS_info[u'derived_es'] = slurm.stringOrNone(job.derived_es, '')
                 JOBS_info[u'elapsed'] = job.elapsed
                 JOBS_info[u'eligible'] = job.eligible
                 JOBS_info[u'end'] = job.end
-                JOBS_info[u'exit_code'] = job.exitcode
+                if WIFSIGNALED(job.exitcode):
+                        term_sig = WTERMSIG(job.exitcode)
+                else:
+                        term_sig = 0
+                exit_status = WEXITSTATUS(job.exitcode)
+                JOBS_info[u'exit_code'] = str(exit_status) + ":" + str(term_sig)
                 JOBS_info[u'gid'] = job.gid
                 JOBS_info[u'jobid'] = job.jobid
                 JOBS_info[u'jobname'] = slurm.stringOrNone(job.jobname, '')
                 JOBS_info[u'lft'] = job.lft
-                JOBS_info[u'partition'] = slurm.stringOrNone(job.partition, '')
-                JOBS_info[u'nodes'] = slurm.stringOrNone(job.nodes, '')
+                JOBS_info[u'partition'] = noneToAnother(slurm.stringOrNone(job.partition, ''), '0')
+                JOBS_info[u'nodes'] = noneToAnother(slurm.stringOrNone(job.nodes, ''), '0')
                 JOBS_info[u'priority'] = job.priority
                 JOBS_info[u'qosid'] = job.qosid
                 JOBS_info[u'req_cpus'] = job.req_cpus
-                JOBS_info[u'req_gres'] = slurm.stringOrNone(job.req_gres, '')
-                JOBS_info[u'req_mem'] = job.req_mem
+                JOBS_info[u'req_gres'] = noneToAnother(slurm.stringOrNone(job.req_gres, ''), '0')
+                JOBS_info[u'req_mem'] = noneToAnother(slurm.stringOrNone(str(job.req_mem), ''), '0.0')
                 JOBS_info[u'requid'] = job.requid
-                JOBS_info[u'resvid'] = job.resvid
-                JOBS_info[u'resv_name'] = slurm.stringOrNone(job.resv_name,'')
+                if job.resvid == 0 :
+                    JOBS_info[u'resvid'] = ''
+                else:
+                    JOBS_info[u'resvid'] = job.resvid
+                JOBS_info[u'resv_name'] = slurm.stringOrNone(job.resv_name, '')
+                if JOBS_info[u'resv_name'] is None:
+                        JOBS_info[u'resv_name'] = ''
                 JOBS_info[u'show_full'] = job.show_full
                 JOBS_info[u'start'] = job.start
-                JOBS_info[u'state'] = job.state
+                JOBS_info[u'state'] = slurm.slurm_job_state_string(job.state)
+
+
+                JOBS_info[u'steps'] = "Not filled, string should be handled"
                 job_statistics = <slurm.slurmdb_stats_t> job.stats
+#====
+                if job.steps is not NULL:
+                    steps_list = <slurm.List>job.steps
+
+                    listNumSteps = slurm.slurm_list_count(steps_list)
+                    itersteps = slurm.slurm_list_iterator_create(steps_list)
+                    for iStep in range(listNumSteps):
+                        step = <slurm.slurmdb_step_rec_t *>slurm.slurm_list_next(itersteps)
+                        if step.state < slurm.JOB_COMPLETE :
+                            continue
+                        # /* now aggregate the aggregatable */
+                        job.tot_cpu_sec += step.tot_cpu_sec
+                        job.tot_cpu_usec += step.tot_cpu_usec
+                        job.user_cpu_sec += step.user_cpu_sec
+                        job.user_cpu_usec += step.user_cpu_usec
+                        job.sys_cpu_sec += step.sys_cpu_sec
+                        job.sys_cpu_usec += step.sys_cpu_usec
+                        # /* get the max for all the sacct_t struct */
+                        step_statistics = <slurm.slurmdb_stats_t> step.stats
+###                        self._aggregate_stats(job_statistics, step_statistics)
+                        
+                        if step_statistics.cpu_min != slurm.NO_VAL : # /* Means it is a blank record */
+                            if job_statistics.vsize_max < step_statistics.vsize_max :
+                                job_statistics.vsize_max = step_statistics.vsize_max
+                                job_statistics.vsize_max_nodeid = step_statistics.vsize_max_nodeid
+                                job_statistics.vsize_max_taskid = step_statistics.vsize_max_taskid
+                            job_statistics.vsize_ave += step_statistics.vsize_ave
+
+                            if job_statistics.rss_max < step_statistics.rss_max :
+                                job_statistics.rss_max = step_statistics.rss_max
+                                job_statistics.rss_max_nodeid = step_statistics.rss_max_nodeid
+                                job_statistics.rss_max_taskid = step_statistics.rss_max_taskid
+                            job_statistics.rss_ave += step_statistics.rss_ave
+
+                            if job_statistics.pages_max < step_statistics.pages_max :
+                                job_statistics.pages_max = step_statistics.pages_max
+                                job_statistics.pages_max_nodeid = step_statistics.pages_max_nodeid
+                                job_statistics.pages_max_taskid = step_statistics.pages_max_taskid
+                            job_statistics.pages_ave += step_statistics.pages_ave;
+
+                            if (job_statistics.cpu_min > step_statistics.cpu_min) or (job_statistics.cpu_min == slurm.NO_VAL) :
+                                job_statistics.cpu_min = step_statistics.cpu_min
+                                job_statistics.cpu_min_nodeid = step_statistics.cpu_min_nodeid
+                                job_statistics.cpu_min_taskid = step_statistics.cpu_min_taskid
+                            job_statistics.cpu_ave += step_statistics.cpu_ave
+                            if (step_statistics.consumed_energy == slurm.NO_VAL) or (job_statistics.consumed_energy == slurm.NO_VAL) :
+                                job_statistics.consumed_energy = slurm.NO_VAL
+                            else :
+                                job_statistics.consumed_energy += step_statistics.consumed_energy
+                            job_statistics.act_cpufreq += step_statistics.act_cpufreq
+                            if job_statistics.disk_read_max < step_statistics.disk_read_max :
+                                job_statistics.disk_read_max = step_statistics.disk_read_max
+                                job_statistics.disk_read_max_nodeid = step_statistics.disk_read_max_nodeid
+                                job_statistics.disk_read_max_taskid = step_statistics.disk_read_max_taskid
+                            job_statistics.disk_read_ave += step_statistics.disk_read_ave
+                            if job_statistics.disk_write_max < step_statistics.disk_write_max :
+                                job_statistics.disk_write_max = step_statistics.disk_write_max
+                                job_statistics.disk_write_max_nodeid = step_statistics.disk_write_max_nodeid
+                                job_statistics.disk_write_max_taskid = step_statistics.disk_write_max_taskid
+                            job_statistics.disk_write_ave += step_statistics.disk_write_ave
+### end _aggregate_stats
+                    slurm.slurm_list_iterator_destroy(itersteps)
+#====
                 JOBS_info[u'stat_actual_cpufreq'] = job_statistics.act_cpufreq
                 JOBS_info[u'stat_cpu_ave'] = job_statistics.cpu_ave
                 JOBS_info[u'stat_consumed_energy'] = job_statistics.consumed_energy
                 JOBS_info[u'stat_cpu_min'] = job_statistics.cpu_min
-                JOBS_info[u'stat_cpu_min_nodeid'] = job_statistics.cpu_min_nodeid
                 JOBS_info[u'stat_cpu_min_taskid'] = job_statistics.cpu_min_taskid
-                JOBS_info[u'stat_disk_read_ave'] = job_statistics.disk_read_ave
-                JOBS_info[u'stat_disk_read_max'] = job_statistics.disk_read_max
-                JOBS_info[u'stat_disk_read_max_nodeid'] = job_statistics.disk_read_max_nodeid
+                JOBS_info[u'stat_disk_read_ave'] = noneToAnother(slurm.stringOrNone(str(job_statistics.disk_read_ave), ''), '0')
+                JOBS_info[u'stat_disk_read_max'] =  noneToAnother(slurm.stringOrNone(str(job_statistics.disk_read_max), ''), '0')
+                if job.alloc_nodes > 0 :
+                    JOBS_info[u'stat_cpu_min_node'] = self.find_hostname(job_statistics.cpu_min_nodeid, job.nodes)
+                    JOBS_info[u'stat_disk_read_max_node'] = self.find_hostname(job_statistics.disk_read_max_nodeid, job.nodes)
+                    JOBS_info[u'stat_disk_write_max_node'] = self.find_hostname(job_statistics.disk_write_max_nodeid, job.nodes)
+                    JOBS_info[u'stat_pages_max_node'] = self.find_hostname(job_statistics.pages_max_nodeid, job.nodes)
+                    JOBS_info[u'stat_rss_max_node'] = self.find_hostname(job_statistics.rss_max_nodeid, job.nodes)
+                    JOBS_info[u'stat_vsize_max_node'] = self.find_hostname(job_statistics.vsize_max_nodeid, job.nodes)
+                else :              
+                    JOBS_info[u'stat_cpu_min_node'] = ''
+                    JOBS_info[u'stat_disk_read_max_node'] = ''
+                    JOBS_info[u'stat_disk_write_max_node'] = ''
+                    JOBS_info[u'stat_pages_max_node'] = ''
+                    JOBS_info[u'stat_rss_max_node'] = ''
+                    JOBS_info[u'stat_vsize_max_node'] = ''
                 JOBS_info[u'stat_disk_read_max_taskid'] = job_statistics.disk_read_max_taskid
-                JOBS_info[u'stat_disk_write_ave'] = job_statistics.disk_write_ave
-                JOBS_info[u'stat_disk_write_max'] = job_statistics.disk_write_max
-                JOBS_info[u'stat_disk_write_max_nodeid'] = job_statistics.disk_write_max_nodeid
+                JOBS_info[u'stat_disk_write_ave'] = str(job_statistics.disk_write_ave)
+                JOBS_info[u'stat_disk_write_max'] = str(job_statistics.disk_write_max)
                 JOBS_info[u'stat_disk_write_max_taskid'] = job_statistics.disk_write_max_taskid
                 JOBS_info[u'stat_pages_ave'] = job_statistics.pages_ave
                 JOBS_info[u'stat_pages_max'] = job_statistics.pages_max
-                JOBS_info[u'stat_pages_max_nodeid'] = job_statistics.pages_max_nodeid
                 JOBS_info[u'stat_pages_max_taskid'] = job_statistics.pages_max_taskid
-                JOBS_info[u'stat_rss_ave'] = job_statistics.rss_ave
-                JOBS_info[u'stat_rss_max'] = job_statistics.rss_max
-                JOBS_info[u'stat_rss_max_nodeid'] = job_statistics.rss_max_nodeid
+                JOBS_info[u'stat_rss_ave'] = str(int(job_statistics.rss_ave)) + 'K'
+                JOBS_info[u'stat_rss_max'] = str(job_statistics.rss_max) + 'K'
                 JOBS_info[u'stat_rss_max_taskid'] = job_statistics.rss_max_taskid
-                JOBS_info[u'stat_vsize_ave'] = job_statistics.vsize_ave
-                JOBS_info[u'stat_vsize_max'] = job_statistics.vsize_max
-                JOBS_info[u'stat_vize_max_nodeid'] = job_statistics.vsize_max_nodeid
+                JOBS_info[u'stat_vsize_ave'] = str(int(job_statistics.vsize_ave)) + 'K'
+                JOBS_info[u'stat_vsize_max'] = str(job_statistics.vsize_max) + 'K'
                 JOBS_info[u'stat_vsize_max_taskid'] = job_statistics.vsize_max_taskid
-                JOBS_info[u'steps'] = "Not filled, string should be handled"
+
                 JOBS_info[u'submit'] = job.submit
                 JOBS_info[u'suspended'] = job.suspended
                 JOBS_info[u'sys_cpu_sec'] = job.sys_cpu_sec
                 JOBS_info[u'sys_cpu_usec'] = job.sys_cpu_usec
-                JOBS_info[u'timelimit'] = job.timelimit
+                if job.timelimit == slurm.INFINITE:
+                    JOBS_info[u'timelimit'] = u"UNLIMITED"
+                elif job.timelimit == slurm.NO_VAL:
+                    JOBS_info[u'timelimit'] = u"Partition_Limit"
+                else:
+                    JOBS_info[u'timelimit'] = mins2time_str(job.timelimit)
                 JOBS_info[u'tot_cpu_sec'] = job.tot_cpu_sec
                 JOBS_info[u'tot_cpu_usec'] = job.tot_cpu_usec
                 JOBS_info[u'track_steps'] = job.track_steps
                 JOBS_info[u'tres_alloc_str'] = slurm.stringOrNone(job.tres_alloc_str,'')
                 JOBS_info[u'tres_req_str'] = slurm.stringOrNone(job.tres_req_str,'')
-                JOBS_info[u'uid'] = job.uid
+                if job.user is not NULL :
+                    try:
+                        username = job.user
+                        JOBS_info[u'uid'] = getpwnam(username)[2]
+                    except KeyError:
+                        raise KeyError("user " + username + " not found")
+                else :
+                    JOBS_info[u'uid'] = job.uid
                 JOBS_info[u'used_gres'] = slurm.stringOrNone(job.used_gres, '')
-                JOBS_info[u'user'] = slurm.stringOrNone(job.user,'')
+                if job.user is not NULL :
+                    JOBS_info[u'user'] = job.user
+                elif job.uid != -1 :
+                    try:
+                        uid = job.uid
+                        JOBS_info[u'user'] = getpwuid(job.uid).pw_name
+                    except KeyError:
+                        raise KeyError("user name not found for uid: " + uid)
+                else :
+                    JOBS_info[u'user'] = ''
                 JOBS_info[u'user_cpu_sec'] = job.user_cpu_sec
-                JOBS_info[u'user_cpu_sec'] = job.user_cpu_usec
+                JOBS_info[u'user_cpu_usec'] = job.user_cpu_usec
                 JOBS_info[u'wckey'] = slurm.stringOrNone(job.wckey, '')
                 JOBS_info[u'wckeyid'] = job.wckeyid
                 J_dict[jobid] = JOBS_info
@@ -4944,6 +5082,7 @@ cdef class slurmdb_jobs:
         slurm.slurm_list_iterator_destroy(iters)
         slurm.slurm_list_destroy(JOBSList)
         return J_dict
+
 
 #
 # slurmdbd Reservations Class
@@ -4989,6 +5128,14 @@ cdef class slurmdb_reservations:
         else:
             raise MemoryError()
 
+    def ids(self):
+        u"""Return the slurmdb_reservations IDs from retrieved data.
+
+        :returns: Dictionary of slurmdb_reservations IDs
+        :rtype: `dict`
+        """
+        return self._RSVDict.keys()
+
     cpdef int __load(self) except? -1:
         cdef:
             int apiError = 0
@@ -5005,7 +5152,7 @@ cdef class slurmdb_reservations:
         return 0
 
     def get(self):
-        u"""Get slurm reservations information.
+        u"""Get slurm reservations information from accouting (slurmdb).
 
         :returns: Dictionary whose keys are the reservations ids
         :rtype: `dict`
@@ -5133,7 +5280,9 @@ cdef class slurmdb_clusters:
     def get(self):
         u"""Get slurm clusters information.
 
-        :returns: Dictionary whose keys are the clusters ids
+        :returns: Dictionary whose keys are the clusters ids.
+           for each cluster, the accounting field is a dictionnary with key the tres id and value a list of dictionnary 
+           build from slurmdb_cluster_accounting_rec structure
         :rtype: `dict`
         """
         self.__load()
@@ -5145,6 +5294,7 @@ cdef class slurmdb_clusters:
             slurm.List clusters_list = NULL
             slurm.ListIterator iters = NULL
             int i = 0
+            int j = 0
             int listNum = 0
             dict C_dict = {}
 
@@ -5168,7 +5318,7 @@ cdef class slurmdb_clusters:
                     CLUSTERS_info[u'flags'] = cluster.flags
                     CLUSTERS_info[u'dimensions'] = cluster.dimensions
                     CLUSTERS_info[u'classification'] = cluster.classification
-                    if cluster.accounting_list != NULL:
+                    if cluster.accounting_list is not NULL:
                         num_acct = slurm.slurm_list_count(cluster.accounting_list)
                         acct_iters = slurm.slurm_list_iterator_create(cluster.accounting_list)
                         acct_dict = {}
@@ -5176,23 +5326,31 @@ cdef class slurmdb_clusters:
                         for j in range(num_acct):
                             acct_tres = <slurm.slurmdb_cluster_accounting_rec_t *>slurm.slurm_list_next(acct_iters)
                             if acct_tres is not NULL:
-                                acct_tres_dict = {}
-                                acct_tres_id = acct_tres_rec.id
+                                acct_rec_dict = {}
+                                tres_rec_dict = {}
+
                                 acct_tres_rec = <slurm.slurmdb_tres_rec_t>acct_tres.tres_rec
+                                acct_tres_id = acct_tres_rec.id
                                 if (acct_tres_rec.name is not NULL):
-                                    acct_tres_dict[u'name'] = slurm.stringOrNone(acct_tres_rec.name,'')
+                                    tres_rec_dict[u'name'] = slurm.stringOrNone(acct_tres_rec.name,'')
                                 if (acct_tres_rec.type is not NULL):
-                                    acct_tres_dict[u'type'] = slurm.stringOrNone(acct_tres_rec.type,'')
-                                acct_tres_dict[u'rec_count'] = acct_tres_rec.rec_count
-                                acct_tres_dict[u'count'] = acct_tres_rec.count
-                                acct_tres_dict[u'alloc_secs'] = acct_tres.alloc_secs
-                                acct_tres_dict[u'down_secs'] = acct_tres.down_secs
-                                acct_tres_dict[u'idle_secs'] = acct_tres.idle_secs
-                                acct_tres_dict[u'resv_secs'] = acct_tres.resv_secs
-                                acct_tres_dict[u'pdown_secs'] = acct_tres.pdown_secs
-                                acct_tres_dict[u'over_secs'] = acct_tres.over_secs
-                                acct_tres_dict[u'period_start'] = acct_tres.period_start
-                                acct_dict[acct_tres_id] = acct_tres_dict
+                                    tres_rec_dict[u'type'] = slurm.stringOrNone(acct_tres_rec.type,'')
+                                tres_rec_dict[u'rec_count'] = acct_tres_rec.rec_count
+                                tres_rec_dict[u'count'] = acct_tres_rec.count
+                                tres_rec_dict[u'alloc_secs'] = acct_tres_rec.alloc_secs
+                                tres_rec_dict[u'id'] = acct_tres_rec.id
+
+                                acct_rec_dict[u'tres_rec'] = tres_rec_dict
+                                acct_rec_dict[u'alloc_secs'] = acct_tres.alloc_secs
+                                acct_rec_dict[u'down_secs'] = acct_tres.down_secs
+                                acct_rec_dict[u'idle_secs'] = acct_tres.idle_secs
+                                acct_rec_dict[u'resv_secs'] = acct_tres.resv_secs
+                                acct_rec_dict[u'pdown_secs'] = acct_tres.pdown_secs
+                                acct_rec_dict[u'over_secs'] = acct_tres.over_secs
+                                acct_rec_dict[u'period_start'] = acct_tres.period_start
+                                if not acct_dict.has_key(acct_tres_id):
+                                    acct_dict[acct_tres_id] = []
+                                acct_dict[acct_tres_id].append(acct_rec_dict)
                         CLUSTERS_info[u'accounting'] = acct_dict
                         slurm.slurm_list_iterator_destroy(acct_iters)
                     C_dict[cluster_name] = CLUSTERS_info
@@ -5245,6 +5403,14 @@ cdef class slurmdb_events:
             self.event_cond.period_end = <slurm.time_t>end_time
         else:
             raise MemoryError()
+
+    def ids(self):
+        u"""Return the slurmdb_events IDs from retrieved data.
+
+        :returns: Dictionary of slurmdb_events IDs
+        :rtype: `dict`
+        """
+        return self._EVENTSDict.keys()
 
     cpdef int __load(self) except? -1:
         cdef:
