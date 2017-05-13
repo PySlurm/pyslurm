@@ -27,7 +27,7 @@ Extensions
 import sys
 import ctypes
 
-__version__ = "dev-16.05-props"
+__version__ = "dev-17.02-props"
 
 sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 

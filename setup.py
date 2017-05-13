@@ -98,7 +98,7 @@ def setup_package():
 
     setup (
         name="pyslurm",
-        version="16.05.6",
+        version="17.02",
         description="Python Bindings for Slurm",
         long_description=long_description,
         maintainer = "PySlurm Developers",
