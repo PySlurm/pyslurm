@@ -51,7 +51,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t cpu_freq_govs
         char *crypto_type
         uint64_t debug_flags
-        uint32_t def_mem_per_cpu
+        uint64_t def_mem_per_cpu
         uint16_t disable_root_jobs
         uint16_t eio_timeout
         uint16_t enforce_part_limits
@@ -97,11 +97,12 @@ cdef extern from "slurm/slurm.h" nogil:
         char *licenses
         char *licenses_used
         uint16_t log_fmt
+        char *mail_domain
         char *mail_prog
         uint32_t max_array_sz
         uint32_t max_job_cnt
         uint32_t max_job_id
-        uint32_t max_mem_per_cpu
+        uint64_t max_mem_per_cpu
         uint32_t max_step_cnt
         uint16_t max_tasks_per_node
         char *mcs_plugin
@@ -159,13 +160,12 @@ cdef extern from "slurm/slurm.h" nogil:
         uint16_t ret2service
         char *route_plugin
         char *salloc_default_command
+        char *sbcast_parameters
         char *sched_logfile
         uint16_t sched_log_level
         char *sched_params
         uint16_t sched_time_slice
         char *schedtype
-        uint16_t schedport
-        uint16_t schedrootfltr
         char *select_type
         void *select_conf_key_pairs
         uint16_t select_type_param
@@ -281,6 +281,7 @@ cdef extern from "slurm/slurm.h" nogil:
         DEBUG_FLAG_DB_TRES
         DEBUG_FLAG_ESEARCH
         DEBUG_FLAG_NODE_FEATURES
+        DEBUG_FLAG_FLAG_FEDR
 
     enum:
         HEALTH_CHECK_NODE_IDLE
@@ -305,11 +306,13 @@ cdef extern from "slurm/slurm.h" nogil:
         PRIORITY_FLAGS_DEPTH_OBLIVIOUS
         PRIORITY_FLAGS_CALCULATE_RUNNING
         PRIORITY_FLAGS_FAIR_TREE
+        PRIORITY_FLAGS_INCR_ONLY
 
     enum:
         PROLOG_FLAG_ALLOC
         PROLOG_FLAG_NOHOLD
         PROLOG_FLAG_CONTAIN
+        PROLOG_FLAG_SERIAL
 
     enum:
         RECONFIG_KEEP_PART_INFO

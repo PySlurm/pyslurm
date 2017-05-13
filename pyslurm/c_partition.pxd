@@ -11,14 +11,14 @@ cdef extern from "slurm/slurm.h" nogil:
         char *alternate
         char *billing_weights_str
         uint16_t cr_type
-        uint32_t def_mem_per_cpu
+        uint64_t def_mem_per_cpu
         uint32_t default_time
         char *deny_accounts
         char *deny_qos
         uint16_t flags
         uint32_t grace_time
         uint32_t max_cpus_per_node
-        uint32_t max_mem_per_cpu
+        uint64_t max_mem_per_cpu
         uint32_t max_nodes
         uint16_t max_share
         uint32_t max_time
@@ -26,6 +26,7 @@ cdef extern from "slurm/slurm.h" nogil:
         char *name
         int32_t *node_inx
         char *nodes
+        uint16_t over_time_limit
         uint16_t preempt_mode
         uint16_t priority_job_factor
         uint16_t priority_tier

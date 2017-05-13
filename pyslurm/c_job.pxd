@@ -15,6 +15,7 @@ cdef extern from "slurm/slurm.h" nogil:
 
     ctypedef struct slurm_job_info_t:
         char *account
+        char *admin_comment
         char *alloc_node
         uint32_t alloc_sid
         void *array_bitmap
@@ -29,6 +30,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t bitflags
         uint16_t boards_per_node
         char *burst_buffer
+        char *burst_buffer_state
         char *command
         char *comment
         uint16_t contiguous
@@ -40,6 +42,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t cpu_freq_max
         uint32_t cpu_freq_gov
         time_t deadline
+        uint32_t delay_boot
         char *dependency
         uint32_t derived_ec
         time_t eligible_time
@@ -48,7 +51,12 @@ cdef extern from "slurm/slurm.h" nogil:
         int32_t *exc_node_inx
         uint32_t exit_code
         char *features
+        char *fed_origin_str
+        uint64_t fed_siblings
+        char *fed_siblings_str
         char *gres
+        uint32_t gres_detail_cnt
+        char **gres_detail_str
         uint32_t group_id
         uint32_t job_id
         job_resources_t *job_resrcs
@@ -70,7 +78,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t num_nodes
         uint32_t num_tasks
         char *partition
-        uint32_t pn_min_memory
+        uint64_t pn_min_memory
         uint16_t pn_min_cpus
         uint32_t pn_min_tmp_disk
         uint8_t power_flags
@@ -301,6 +309,8 @@ cdef extern from "slurm/slurm.h" nogil:
         WAIT_QOS_MAX_SUB_JOB_PER_ACCT
         WAIT_PART_CONFIG
         WAIT_ACCOUNT_POLICY
+        WAIT_FED_JOB_LOCK
+        FAIL_OOM
 
     enum select_jobdata_type:
         SELECT_JOBDATA_GEOMETRY
@@ -346,13 +356,19 @@ cdef extern from "slurm/slurm.h" nogil:
         JOB_PREEMPTED
         JOB_BOOT_FAIL
         JOB_DEADLINE
+        JOB_OOM
         JOB_END
 
-    enum: JOB_STATE_BASE
+    enum:
+        JOB_STATE_BASE
+        JOB_RECONFIG_FAIL
+        JOB_REVOKED
+        JOB_REQUEUE_FED
 
     ctypedef struct job_desc_msg_t:
         char *account
         char *acctg_freq
+        char *admin_comment
         char *alloc_node
         uint16_t alloc_resp_port
         uint32_t alloc_sid
@@ -375,14 +391,17 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t cpu_freq_max
         uint32_t cpu_freq_gov
         time_t deadline
+        uint32_t delay_boot
         char *dependency
         time_t end_time
         char **environment
         uint32_t env_size
         char *exc_nodes
         char *features
+        uint64_t fed_siblings
         char *gres
         uint32_t group_id
+        uint32_t group_number
         uint16_t immediate
         uint32_t job_id
         char * job_id_str
@@ -396,11 +415,15 @@ cdef extern from "slurm/slurm.h" nogil:
         char *name
         char *network
         uint32_t nice
+        uint32_t numpack
         uint32_t num_tasks
         uint8_t open_mode
         uint16_t other_port
         uint8_t overcommit
+        uint32_t pack_leader
         char *partition
+        char **pelog_env
+        uint32_t pelog_env_size
         uint16_t plane_size
         uint8_t power_flags
         uint32_t priority
@@ -408,6 +431,8 @@ cdef extern from "slurm/slurm.h" nogil:
         char *qos
         uint16_t reboot
         char *resp_host
+        uint16_t restart_cnt
+        uint8_t resv_port
         char *req_nodes
         uint16_t requeue
         char *reservation
@@ -440,7 +465,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint16_t ntasks_per_core
         uint16_t ntasks_per_board
         uint16_t pn_min_cpus
-        uint32_t pn_min_memory
+        uint64_t pn_min_memory
         uint32_t pn_min_tmp_disk
         # The following parameters are only meaningful on a Blue Gene
         # system at present. Some will be of value on other system. Don't remove these
@@ -475,6 +500,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t env_size
         char **environment
         uint32_t error_code
+        slurm_addr_t *node_addr
         uint32_t node_cnt
         char *node_list
         uint16_t ntasks_per_board
@@ -482,7 +508,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint16_t ntasks_per_socket
         uint32_t num_cpu_groups
         char *partition
-        uint32_t pn_min_memory
+        uint64_t pn_min_memory
         char *qos
         char *resv_name
         dynamic_plugin_data_t *select_jobinfo

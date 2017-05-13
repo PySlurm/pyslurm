@@ -12,6 +12,7 @@ cdef extern from "slurm/slurm.h" nogil:
         TRIGGER_RES_TYPE_SLURMDBD
         TRIGGER_RES_TYPE_DATABASE
         TRIGGER_RES_TYPE_FRONT_END
+        TRIGGER_RES_TYPE_OTHER
 
     enum:
         TRIGGER_TYPE_UP
@@ -34,6 +35,7 @@ cdef extern from "slurm/slurm.h" nogil:
         TRIGGER_TYPE_PRI_DBD_RES_OP
         TRIGGER_TYPE_PRI_DB_FAIL
         TRIGGER_TYPE_PRI_DB_RES_OP
+        TRIGGER_TYPE_BURST_BUFFER
 
     ctypedef struct trigger_info_t:
         uint16_t flags

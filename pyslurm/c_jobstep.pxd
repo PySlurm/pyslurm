@@ -23,10 +23,14 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t cpu_freq_max
         uint32_t cpu_freq_gov
         uint32_t num_tasks
+        uint32_t packjobid
+        uint32_t packstepid
         char *partition
         char *resv_ports
         time_t run_time
         dynamic_plugin_data_t *select_jobinfo
+        char *srun_host
+        uint32_t srun_pid
         time_t start_time
         uint16_t start_protocol_ver
         uint32_t state
@@ -40,6 +44,17 @@ cdef extern from "slurm/slurm.h" nogil:
         time_t last_update
         uint32_t job_step_count
         job_step_info_t *job_steps
+
+    ctypedef struct slurm_step_layout_req_t:
+        char *node_list
+        uint16_t *cpus_per_node
+        uint32_t *cpu_count_reps
+        uint32_t num_hosts
+        uint32_t num_tasks
+        uint16_t *cpus_per_task
+        uint32_t *cpus_task_reps
+        uint32_t task_dist
+        uint16_t plane_size
 
     ctypedef struct slurm_step_layout_t:
         char *front_end

@@ -9,9 +9,13 @@ from posix.types cimport time_t
 cdef extern from "slurm/slurm.h" nogil:
     enum:
         INFINITE
+        INFINITE16
         INFINITE64
         NO_VAL
+        NO_VAL16
         NO_VAL64
+        MAX_TASKS_PER_NODE
+        MAX_JOB_ID
 
     enum:
         CR_CORE
@@ -26,6 +30,7 @@ cdef extern from "slurm/slurm.h" nogil:
         SHOW_DETAIL
         SHOW_DETAIL2
         SHOW_MIXED
+        SHOW_FED_TRACK
 
     ctypedef struct dynamic_plugin_data_t:
         void *data

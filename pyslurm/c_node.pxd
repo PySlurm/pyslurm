@@ -38,7 +38,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint16_t cores
         uint16_t core_spec_cnt
         uint32_t cpu_load
-        uint32_t free_mem
+        uint64_t free_mem
         uint16_t cpus
         char *cpu_spec_list
         acct_gather_energy_t *energy
@@ -50,14 +50,16 @@ cdef extern from "slurm/slurm.h" nogil:
         char *gres_drain
         char *gres_used
         char *mcs_label
-        uint32_t mem_spec_limit
+        uint64_t mem_spec_limit
         char *name
         char *node_addr
         char *node_hostname
         uint32_t node_state
         char *os
         uint32_t owner
-        uint32_t real_memory
+        char *partitions
+        uint16_t port
+        uint64_t real_memory
         char *reason
         time_t reason_time
         uint32_t reason_uid
@@ -96,6 +98,8 @@ cdef extern from "slurm/slurm.h" nogil:
         SELECT_NODEDATA_EXTRA_INFO
         SELECT_NODEDATA_RACK_MP
         SELECT_NODEDATA_MEM_ALLOC
+        SELECT_NODEDATA_TRES_ALLOC_FMT_STR
+        SELECT_NODEDATA_TRES_ALLOC_WEIGHTED
 
     ctypedef struct update_node_msg_t:
         char *features
