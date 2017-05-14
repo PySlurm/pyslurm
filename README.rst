@@ -14,6 +14,10 @@ PySlurm: Python Bindings for Slurm
    :target: https://github.com/PySlurm/pyslurm
    :alt: API Version
 
+.. image:: https://travis-ci.org/PySlurm/pyslurm.svg?branch=dev-17.02-props
+   :target: https://travis-ci.org/PySlurm/pyslurm
+   :alt: Build Status
+
 PySlurm is a Cython wrapper around functions and data structures exposed in
 `Slurm's C API <https://slurm.schedmd.com/api.html>`_.
 
