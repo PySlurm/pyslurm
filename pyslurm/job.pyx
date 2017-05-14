@@ -193,7 +193,7 @@ cdef class Job:
     @property
     def delay_boot(self):
         """Delay boot for desired node state"""
-        char tmp1[128]
+        cdef char tmp1[128]
         slurm_secs2time_str(<time_t>self.delay_boot, tmp1, sizeof(tmp1))
         return tmp1
 
@@ -631,7 +631,7 @@ cdef get_job_info_msg(jobid, ids=False):
             # Line 14a
             if record.fed_siblings:
                 this_job.fed_origin = tounicode(record.fed_origin_str)
-                this_job.fed_siblings = tounicode(record.red_siblings_str)
+                this_job.fed_siblings = tounicode(record.fed_siblings_str)
 
             # Line 15
             if (cluster_flags & CLUSTER_FLAG_BG):
