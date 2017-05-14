@@ -3,7 +3,7 @@ language: python
 services:
   - docker
 before_install:
-- docker pull giovtorres/docker-centos7-slurm
+- docker pull giovtorres/docker-centos7-slurm:latest
 install: true
 script:
-  - docker run giovtorres/docker-centos7-slurm /bin/sh -c "git clone https://github.com/pyslurm/pyslurm.git && cd pyslurm && git checkout dev-16.05-props && python setup.py build && python setup.py install"
+  - docker run giovtorres/docker-centos7-slurm /bin/sh -c "git clone https://github.com/pyslurm/pyslurm.git && cd pyslurm && git checkout dev-17.02-props && python setup.py build && python setup.py install"
