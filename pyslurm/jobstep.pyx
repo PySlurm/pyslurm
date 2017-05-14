@@ -59,6 +59,8 @@ cdef class Jobstep:
         readonly unicode nodes
         readonly unicode partition
         readonly unicode resv_ports
+        readonly unicode srun_host
+        readonly uint32_t srun_pid
         readonly time_t start_time
         readonly unicode start_time_str
         readonly unicode state
@@ -151,6 +153,8 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
             this_jobstep = Jobstep()
 
             this_jobstep.start_time = record.start_time
+
+            # Line 1
             slurm_make_time_str(<time_t *>&record.start_time,
                                 time_str, sizeof(time_str))
             this_jobstep.start_time_str = time_str
@@ -169,6 +173,7 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
             this_jobstep.step_id = record.step_id
             this_jobstep.job_id = record.job_id
 
+            # Line 2
             if record.state:
                 this_jobstep.state = slurm_job_state_string(record.state)
 
@@ -192,6 +197,7 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
             if record.gres:
                 this_jobstep.gres = record.gres
 
+            # Line 3
             if (cluster_flags & CLUSTER_FLAG_BGQ):
                 # no access to convert_num_unit()
                 pass
@@ -209,9 +215,11 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
             if record.network:
                 this_jobstep.network = record.network
 
+            # Line 4
             if record.tres_alloc_str:
                 this_jobstep.tres = record.tres_alloc_str
 
+            # Line 5
             if record.resv_ports:
                 this_jobstep.resv_ports = record.resv_ports
 
@@ -226,6 +234,12 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
                 this_jobstep.dist = slurm_step_layout_type_name(
                     <task_dist_states_t>record.task_dist
                 )
+
+            # Line 7
+            if record.srun_host:
+                this_jobstep.srun_host = record.srun_host
+
+            this_jobstep.srun_pid = record.srun_pid
 
             jobstep_list.append(this_jobstep)
 

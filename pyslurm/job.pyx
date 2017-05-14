@@ -60,6 +60,7 @@ cdef class Job:
     """An object to wrap `job_info_t` structs."""
     cdef:
         readonly unicode account
+        readonly unicode admin_comment
         readonly unicode alloc_node
         readonly uint32_t alloc_sid
         readonly uint32_t array_job_id
@@ -70,12 +71,14 @@ cdef class Job:
         readonly unicode batch_script
         uint16_t boards_per_node
         readonly unicode burst_buffer
+        readonly unicode burst_buffer_state
         readonly unicode command
         readonly unicode comment
         readonly uint16_t contiguous
         uint16_t cores_per_socket
         uint16_t core_spec
         readonly uint16_t cpus_per_task
+        uint32_t delay_boot
         readonly unicode dependency
         uint32_t derived_exit_code
         readonly time_t eligible_time
@@ -86,7 +89,10 @@ cdef class Job:
         readonly list exc_node_list
         uint32_t exit_code
         readonly list features
+        readonly unicode fed_origin
+        readonly unicode fed_siblings
         readonly list gres
+        readonly unicode gres_enforce_bind
         readonly uint32_t group_id
         readonly uint32_t job_id
         readonly unicode job_name
@@ -133,6 +139,7 @@ cdef class Job:
         readonly unicode sched_midplane_list
         readonly unicode sched_node_list
         readonly int secs_pre_suspend
+        readonly unicode spread_job
         readonly time_t start_time
         readonly unicode start_time_str
         readonly unicode std_err
@@ -182,6 +189,13 @@ cdef class Job:
             return "*"
         else:
             return self.cores_per_socket
+
+    @property
+    def delay_boot(self):
+        """Delay boot for desired node state"""
+        char tmp1[128]
+        slurm_secs2time_str(<time_t>self.delay_boot, tmp1, sizeof(tmp1))
+        return tmp1
 
     @property
     def derived_exit_code(self):
@@ -614,6 +628,11 @@ cdef get_job_info_msg(jobid, ids=False):
             if record.batch_host:
                 this_job.batch_host = tounicode(record.batch_host)
 
+            # Line 14a
+            if record.fed_siblings:
+                this_job.fed_origin = tounicode(record.fed_origin_str)
+                this_job.fed_siblings = tounicode(record.red_siblings_str)
+
             # Line 15
             if (cluster_flags & CLUSTER_FLAG_BG):
                 slurm_get_select_jobinfo(record.select_jobinfo,
@@ -708,6 +727,9 @@ cdef get_job_info_msg(jobid, ids=False):
             if record.features:
                 this_job.features = tounicode(record.features).split(",")
 
+            if record.delay_boot:
+                this_job.delay_boot = record.delay_boot
+
             if record.gres:
                 this_job.gres = tounicode(record.gres).split(",")
 
@@ -735,7 +757,11 @@ cdef get_job_info_msg(jobid, ids=False):
             # TODO
             # Lines 23 - 28: need select_g_select_jobinfo_sprint()
 
-            # Line 29
+            # Line
+            if record.admin_comment:
+                this_job.admin_comment = tounicode(record.admin_comment)
+
+            # Line
             if record.comment:
                 this_job.comment = tounicode(record.comment)
 
@@ -750,10 +776,6 @@ cdef get_job_info_msg(jobid, ids=False):
                 slurm_get_job_stdout(tmp_line, sizeof(tmp_line), &record)
                 this_job.std_out = tounicode(tmp_line)
 
-            # Line 33
-            if record.batch_script:
-                this_job.batch_script = tounicode(record.batch_script)
-
             # Line 34
             if record.req_switch:
                 this_job.req_switch = record.req_switch
@@ -763,6 +785,10 @@ cdef get_job_info_msg(jobid, ids=False):
             if record.burst_buffer:
                 this_job.burst_buffer = tounicode(record.burst_buffer)
 
+            # Line
+            if record.burst_buffer_state:
+                this_job.burst_buffer_state = tounicode(record.burst_buffer_state)
+
             # Line 36: cpu_freq_debug
 
             if (record.power_flags & SLURM_POWER_FLAGS_LEVEL):
@@ -771,10 +797,18 @@ cdef get_job_info_msg(jobid, ids=False):
                 this_job.power = tounicode("")
 
             if record.bitflags:
+                if (record.bitflags & GRES_ENFORCE_BIND):
+                    this_job.gres_enforce_bind = tounicode("Yes")
                 if (record.bitflags & KILL_INV_DEP):
                     this_job.kill_o_in_invalid_dependent = tounicode("Yes")
                 if (record.bitflags & NO_KILL_INV_DEP):
                     this_job.kill_o_in_invalid_dependent = tounicode("No")
+                if (record.bitflags & SPREAD_JOB):
+                    this_job.spread_job = tounicode("Yes")
+
+            # Last line
+            if record.batch_script:
+                this_job.batch_script = tounicode(record.batch_script)
 
             job_list.append(this_job)
 

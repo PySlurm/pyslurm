@@ -50,12 +50,14 @@ include "node.pxi"
 cdef class Node:
     """An object to wrap `node_info_t` structs."""
     cdef:
-        readonly uint32_t alloc_mem
+        readonly uint64_t alloc_mem
+        readonly unicode alloc_tres
         readonly object arch
         readonly uint16_t boards
         readonly time_t boot_time
         readonly unicode boot_time_str
         uint32_t cap_watts
+        readonly unicode cfg_tres
         uint64_t consumed_joules
         readonly uint16_t cores_per_socket
         readonly uint16_t core_spec_cnt
@@ -75,13 +77,14 @@ cdef class Node:
         readonly list gres_drain
         readonly list gres_used
         uint32_t lowest_joules
-        readonly uint32_t mem_spec_limit
+        readonly uint64_t mem_spec_limit
         readonly unicode node_name
         readonly unicode node_addr
         readonly unicode node_host_name
         readonly unicode os
         uint32_t owner
-        readonly uint32_t real_memory
+        readonly unicode partitions
+        readonly uint64_t real_memory
         readonly unicode rack_midplane
         readonly unicode reason
         readonly unicode reason_str
@@ -165,7 +168,7 @@ cdef class Node:
     @property
     def free_mem(self):
         """Free memory in MiB"""
-        if self.free_mem == NO_VAL:
+        if self.free_mem == NO_VAL64:
             return "N/A"
         else:
             return self.free_mem
@@ -264,6 +267,7 @@ cdef get_node_info_msg(node, ids=False):
         char* cloud_str = ""
         char* comp_str = ""
         char* drain_str = ""
+        char* node_alloc_tres = NULL
         char* power_str = ""
         char* reason_str = NULL
         char* select_reason_str = NULL
@@ -274,7 +278,7 @@ cdef get_node_info_msg(node, ids=False):
         uint16_t err_cpus = 0
         uint16_t alloc_cpus = 0
         uint32_t i
-        uint32_t alloc_memory
+        uint64_t alloc_memory
         uint32_t my_state
         uint32_t cluster_flags = slurmdb_setup_cluster_flags()
 
@@ -408,6 +412,7 @@ cdef get_node_info_msg(node, ids=False):
                 if record.mem_spec_limit:
                     this_node.mem_spec_limit = record.mem_spec_limit
 
+            # Line
             this_node.state = (tounicode(slurm_node_state_string(my_state)) +
                                tounicode(cloud_str) +
                                tounicode(comp_str) +
@@ -419,6 +424,11 @@ cdef get_node_info_msg(node, ids=False):
             this_node.weight = record.weight
             this_node.owner = record.owner
 
+            # Line
+            if record.partitions:
+                this_node.partitions = tounicode(record.partitions)
+
+            # Line
             if record.boot_time:
                 this_node.boot_time = record.boot_time
                 slurm_make_time_str(<time_t *>&record.boot_time,
@@ -433,13 +443,26 @@ cdef get_node_info_msg(node, ids=False):
                 b_time_str = time_str
                 this_node.slurmd_start_time_str = tounicode(b_time_str)
 
-            # Power Management
+            # TRES line
+            select_g_select_nodeinfo_get(record.select_nodeinfo,
+                                         SELECT_NODEDATA_TRES_ALLOC_FMT_STR,
+                                         NODE_STATE_ALLOCATED, &node_alloc_tres)
+            if record.tres_fmt_str:
+                this_node.cfg_tres = tounicode(record.tres_fmt_str)
+            if node_alloc_tres != NULL:
+                this_node.alloc_tres = tounicode(node_alloc_tres)
+                # TODO:
+                # xfree(node_alloc_tres)
+            else:
+                this_node.alloc_tres = tounicode("")
+
+            # Power Management Line
             if (not record.power or (record.power.cap_watts == NO_VAL)):
                 this_node.cap_watts = NO_VAL
             else:
                 this_node.cap_watts = record.power.cap_watts
 
-            # Power Consumption
+            # Power Consumption Line
             if (not record.energy or (record.energy.current_watts == NO_VAL)):
                 this_node.current_watts = NO_VAL
                 this_node.lowest_joules = NO_VAL

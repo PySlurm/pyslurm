@@ -47,7 +47,7 @@ cdef class Powercap:
     def power_cap(self):
         """Power cap value in watts"""
         if self.power_cap == 0:
-            return "Powercapping disabled by configuration"
+            return "Powercapping disabled by configuration. See PowerParameters in `man slurm.conf`"
         elif self.power_cap == INFINITE:
             return "INFINITE"
         else:

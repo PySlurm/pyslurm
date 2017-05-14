@@ -57,8 +57,8 @@ cdef class Partition:
         readonly uint16_t cr_type
         #readonly unicode default # doesn't work
         unicode default
-        uint32_t def_mem_per_cpu
-        uint32_t def_mem_per_node
+        uint64_t def_mem_per_cpu
+        uint64_t def_mem_per_node
         uint32_t default_time
         uint32_t default_time_str
         readonly list deny_accounts
@@ -70,8 +70,8 @@ cdef class Partition:
         readonly unicode hidden
         readonly unicode lln
         uint32_t max_cpus_per_node
-        uint32_t max_mem_per_cpu
-        uint32_t max_mem_per_node
+        uint64_t max_mem_per_cpu
+        uint64_t max_mem_per_node
         uint32_t max_nodes
         readonly uint16_t max_share
         uint32_t max_time
@@ -79,6 +79,7 @@ cdef class Partition:
         readonly unicode midplanes
         readonly uint32_t min_nodes
         readonly unicode nodes
+        uint16_t over_time_limit
         readonly unicode partition_name
         readonly uint16_t preempt_mode
         readonly unicode preempt_mode_str
@@ -235,6 +236,17 @@ cdef class Partition:
         else:
             slurm_secs2time_str(self.max_time * 60, time_line, sizeof(time_line))
             return time_line
+
+    @property
+    def over_time_limit(self):
+        """Job's time limit can be exceeded by this number of minutes before
+        cancellation"""
+        if self.over_time_limit == NO_VAL16:
+            return None
+        elif self.over_time_limit == <uint16_t>INFINITE:
+            return "UNLIMITED"
+        else:
+            return self.over_time_limit
 
     @property
     def select_type_parameters(self):
@@ -417,10 +429,11 @@ cdef get_partition_info_msg(partition, ids=False):
                 this_part.req_resv = "NO"
 
             this_part.max_share = record.max_share
+            this_part.over_time_limit = record.over_time_limit
             this_part.preempt_mode = record.preempt_mode
             preempt_mode = record.preempt_mode
 
-            if preempt_mode == <uint16_t>NO_VAL:
+            if preempt_mode == NO_VAL16:
                 preempt_mode = slurm_get_preempt_mode()
             this_part.preempt_mode_str = tounicode(
                 slurm_preempt_mode_string(preempt_mode)

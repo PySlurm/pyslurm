@@ -159,9 +159,6 @@ cdef get_block_info_msg(block, ids=False):
             this_block.job_list = record.job_list
             this_block.conn_type = slurm_conn_type_string_full(record.conn_type)
 
-            if (cluster_flags & CLUSTER_FLAG_BGL):
-                this_block.node_use = slurm_node_use_string(record.node_use)
-
             # Line 3
             if record.ionode_str and record.mp_str:
                 this_block.mid_planes = "%s[%s]" % (record.mp_str, record.ionode_str)
@@ -174,27 +171,8 @@ cdef get_block_info_msg(block, ids=False):
             if record.mloaderimage:
                 this_block.mloader_image = record.mloaderimage
 
-            if (cluster_flags & CLUSTER_FLAG_BGL):
-                # Line 5
-                if record.blrtsimage:
-                    this_block.blrts_image = record.blrtsimage
-                # Line 6
-                if record.linuximage:
-                    this_block.linux_image = record.linuximage
-                # Line 7
-                if record.ramdiskimage:
-                    this_block.ramdisk_image = record.ramdiskimage
-            elif (cluster_flags & CLUSTER_FLAG_BGP):
-                # Line 5
-                if record.linuximage:
-                    this_block.cnload_image = record.linuximage
-                # Line 6
-                if record.ramdiskimage:
-                    this_block.ioload_image = record.ramdiskimage
-
             if record.reason:
                 this_block.reason = record.reason
-
 
             block_list.append(this_block)
 

@@ -76,8 +76,8 @@ cdef class Config:
         readonly unicode crypto_type
         readonly uint64_t debug_flags
         readonly list debug_flags_str
-        uint32_t def_mem_per_cpu
-        uint32_t def_mem_per_node
+        uint64_t def_mem_per_cpu
+        uint64_t def_mem_per_node
         readonly unicode disable_root_jobs
         readonly uint16_t eio_timeout
         readonly unicode enforce_part_limits
@@ -130,12 +130,13 @@ cdef class Config:
         readonly unicode layouts
         readonly list licenses
         readonly list licenses_used
+        readonly unicode mail_domain
         readonly unicode mail_prog
         readonly uint32_t max_array_size
         readonly uint32_t max_job_count
         readonly uint32_t max_job_id
-        uint32_t max_mem_per_cpu
-        uint32_t max_mem_per_node
+        uint64_t max_mem_per_cpu
+        uint64_t max_mem_per_node
         readonly uint32_t max_step_count
         readonly uint16_t max_tasks_per_node
         readonly unicode mem_limit_enforce
@@ -199,9 +200,8 @@ cdef class Config:
         readonly uint16_t return_to_service
         readonly unicode route_plugin
         readonly unicode salloc_default_command
+        readonly unicode sbcast_parameters
         readonly list scheduler_parameters
-        readonly uint16_t scheduler_port
-        readonly uint16_t scheduler_root_filter
         readonly uint16_t scheduler_time_slice
         unicode scheduler_time_slice_str
         readonly unicode scheduler_type
@@ -282,7 +282,7 @@ cdef class Config:
     @property
     def def_mem_per_node(self):
         """Default MB memory per allocated Node"""
-        if self.def_mem_per_cpu == INFINITE:
+        if self.def_mem_per_cpu == INFINITE64:
             return "UNLIMITED"
         elif self.def_mem_per_cpu:
             return self.def_mem_per_cpu
@@ -335,7 +335,7 @@ cdef class Config:
 
     def max_mem_per_node(self):
         """Maximum MB memory per allocated Node"""
-        if self.max_mem_per_cpu == INFINITE:
+        if self.max_mem_per_cpu == INFINITE64:
             return "UNLIMITED"
         elif self.max_mem_per_cpu:
             return self.max_mem_per_cpu
@@ -736,6 +736,9 @@ def get_config():
         if conf_info_msg_ptr.licenses_used:
             config.licenses_used = conf_info_msg_ptr.licenses_used.split(",")
 
+        if conf_info_msg_ptr.mail_domain:
+            config.mail_domain = conf_info_msg_ptr.mail_domain
+
         if conf_info_msg_ptr.mail_prog:
             config.mail_prog = conf_info_msg_ptr.mail_prog
 
@@ -908,13 +911,16 @@ def get_config():
                 conf_info_msg_ptr.salloc_default_command
             )
 
+        if conf_info_msg_ptr.sbcast_parameters:
+            config.sbcast_parameters = (
+                conf_info_msg_ptr.sbcast_parameters.split(",")
+            )
+
         if conf_info_msg_ptr.sched_params:
             config.scheduler_parameters = (
                 conf_info_msg_ptr.sched_params.split(",")
             )
 
-        config.scheduler_port = conf_info_msg_ptr.schedport
-        config.scheduler_root_filter = conf_info_msg_ptr.schedrootfltr
         config.scheduler_time_slice = conf_info_msg_ptr.sched_time_slice
 
         if conf_info_msg_ptr.schedtype:
