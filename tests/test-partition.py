@@ -51,7 +51,8 @@ def test_partition_scontrol():
     # FIXME:
     # Check if partition is root_only.  If there is a root only partition, or
     # even hidden, it may not return and tests will fail.
-    test_partition = all_partition_ids[4]
+    # ... then increment++ index
+    test_partition = all_partition_ids[0]
 #    assert isinstance(test_partition, basestring)
 
     obj = pyslurm.partition.get_partition(test_partition)
