@@ -24,3 +24,6 @@ pyslurm/slurm_version.pxi
 
 # Doc build
 doc/build/
+
+# Slurm output files
+*.out
