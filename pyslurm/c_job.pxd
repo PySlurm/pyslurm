@@ -5,29 +5,29 @@ from libc.stdint cimport int32_t
 from posix.types cimport pid_t, time_t
 from .slurm_common cimport dynamic_plugin_data_t
 
-cdef extern from "bits/sockaddr.h" nogil:
-    ctypedef unsigned short int sa_family_t
-    short __SOCKADDR_COMMON_SIZE(sizeof (unsigned short int))
-    short __SOCKADDR_COMMON(sa_prefix) safamily_t sa_prefix##family
+#cdef extern from "bits/sockaddr.h" nogil:
+#    ctypedef unsigned short int sa_family_t
+#    short __SOCKADDR_COMMON_SIZE(sizeof (unsigned short int))
+#    short __SOCKADDR_COMMON(sa_prefix) safamily_t sa_prefix##family
 
-cdef extern from "netinet/in.h" nogil:
-    ctypedef uint16_t in_port_t:
-        pass
-
-    ctypedef uint32_t in_addr_t:
-        pass
-
-    ctypedef struct in_addr:
-        in_addr_t s_addr
-
-    ctypedef struct sockaddr_in:
-        __SOCKADDR_COMMON(sin_)
-        in_port_t sin_port
-        in_addr sin_addr
-        unsigned char sin_zero[sizeof (struct sockaddr) -
-                               __SOCKADDR_COMMON_SIZE -
-                               sizeof (in_port_t) -
-                               sizeof (struct in_addr)]
+#cdef extern from "netinet/in.h" nogil:
+#    ctypedef uint16_t in_port_t:
+#        pass
+#
+#    ctypedef uint32_t in_addr_t:
+#        pass
+#
+#    ctypedef struct in_addr:
+#        in_addr_t s_addr
+#
+#    ctypedef struct sockaddr_in:
+#        __SOCKADDR_COMMON(sin_)
+#        in_port_t sin_port
+#        in_addr sin_addr
+#        unsigned char sin_zero[sizeof (struct sockaddr) -
+#                               __SOCKADDR_COMMON_SIZE -
+#                               sizeof (in_port_t) -
+#                               sizeof (struct in_addr)]
 
 cdef extern from "slurm/slurm.h" nogil:
     enum:
@@ -526,7 +526,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t env_size
         char **environment
         uint32_t error_code
-        slurm_addr_t *node_addr
+#        slurm_addr_t *node_addr
         uint32_t node_cnt
         char *node_list
         uint16_t ntasks_per_board
@@ -544,8 +544,8 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t step_id
         uint32_t error_code
 
-    ctypedef sockaddr_in slurm_addr_t:
-        pass
+#    ctypedef sockaddr_in slurm_addr_t:
+#        pass
 
     int slurm_load_job(job_info_msg_t **resp, uint32_t job_id,
                        uint16_t show_flags)

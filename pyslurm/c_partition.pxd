@@ -1,4 +1,4 @@
-from libc.stdint cimport int32_t, uint16_t, uint32_t
+from libc.stdint cimport int32_t, uint16_t, uint32_t, uint64_t
 from libc.stdio cimport FILE
 from posix.types cimport time_t
 

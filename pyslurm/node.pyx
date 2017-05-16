@@ -444,9 +444,9 @@ cdef get_node_info_msg(node, ids=False):
                 this_node.slurmd_start_time_str = tounicode(b_time_str)
 
             # TRES line
-            select_g_select_nodeinfo_get(record.select_nodeinfo,
-                                         SELECT_NODEDATA_TRES_ALLOC_FMT_STR,
-                                         NODE_STATE_ALLOCATED, &node_alloc_tres)
+            slurm_get_select_nodeinfo(record.select_nodeinfo,
+                                      SELECT_NODEDATA_TRES_ALLOC_FMT_STR,
+                                      NODE_STATE_ALLOCATED, &node_alloc_tres)
             if record.tres_fmt_str:
                 this_node.cfg_tres = tounicode(record.tres_fmt_str)
             if node_alloc_tres != NULL:
