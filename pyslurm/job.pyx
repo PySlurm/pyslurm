@@ -103,7 +103,7 @@ cdef class Job:
         readonly bool mem_per_node
         readonly unicode midplane_list
         unicode mcs_label
-        readonly unicode min_cpus_node
+        readonly uint16_t min_cpus_node
         readonly unicode min_memory_cpu
         readonly unicode min_memory_node
         readonly unicode min_tmp_disk_node
@@ -114,7 +114,7 @@ cdef class Job:
         uint16_t ntasks_per_core
         uint16_t ntasks_per_node
         uint16_t ntasks_per_socket
-        readonly unicode num_cpus
+        readonly uint32_t num_cpus
         readonly unicode num_nodes
         readonly uint32_t num_tasks
         uint16_t over_subscribe
@@ -530,7 +530,7 @@ cdef get_job_info_msg(jobid, ids=False):
 
             this_job.run_time = run_time
             slurm_secs2time_str(run_time, time_str, sizeof(time_str))
-            this_job.run_time_str = time_str[:32].decode("UTF-8", "replace")
+            this_job.run_time_str = time_str.decode("UTF-8", "replace")
 
             this_job.time_limit = record.time_limit
             this_job.time_min = record.time_min
@@ -539,25 +539,25 @@ cdef get_job_info_msg(jobid, ids=False):
             this_job.submit_time = record.submit_time
             slurm_make_time_str(<time_t *>&record.submit_time, time_str,
                                 sizeof(time_str))
-            this_job.submit_time_str = time_str[:32].decode("UTF-8", "replace")
+            this_job.submit_time_str = time_str.decode("UTF-8", "replace")
 
             this_job.eligible_time = record.eligible_time
             slurm_make_time_str(<time_t *>&record.eligible_time, time_str,
                                 sizeof(time_str))
-            this_job.eligible_time_str = time_str[:32].decode("UTF-8", "replace")
+            this_job.eligible_time_str = time_str.decode("UTF-8", "replace")
 
             # Line 8
             if record.resize_time:
                 this_job.resize_time = record.resize_time
                 slurm_make_time_str(<time_t *>&record.resize_time, time_str,
                                     sizeof(time_str))
-                this_job.resize_time_str = time_str[:32].decode("UTF-8", "replace")
+                this_job.resize_time_str = time_str.decode("UTF-8", "replace")
 
             # Line 9
             this_job.start_time = record.start_time
             slurm_make_time_str(<time_t *>&record.start_time, time_str,
                                 sizeof(time_str))
-            this_job.start_time_str = time_str[:32].decode("UTF-8", "replace")
+            this_job.start_time_str = time_str.decode("UTF-8", "replace")
 
             this_job.end_time = record.end_time
             if (record.time_limit == INFINITE) and (record.end_time > c_time(NULL)):
@@ -565,7 +565,7 @@ cdef get_job_info_msg(jobid, ids=False):
             else:
                 slurm_make_time_str(<time_t *>&record.end_time, time_str,
                                     sizeof(time_str))
-                this_job.end_time_str = time_str[:32].decode("UTF-8", "replace")
+                this_job.end_time_str = time_str.decode("UTF-8", "replace")
 
             # Line 10
             this_job.preempt_time = record.preempt_time
@@ -575,13 +575,13 @@ cdef get_job_info_msg(jobid, ids=False):
             else:
                 slurm_make_time_str(<time_t *>&record.preempt_time, time_str,
                                     sizeof(time_str))
-                this_job.preempt_time_str = time_str[:32].decode("UTF-8", "replace")
+                this_job.preempt_time_str = time_str.decode("UTF-8", "replace")
 
             this_job.suspend_time = record.suspend_time
             if record.suspend_time:
                 slurm_make_time_str(<time_t *>&record.suspend_time, time_str,
                                     sizeof(time_str))
-                this_job.suspend_time_str = time_str[:32].decode("UTF-8", "replace")
+                this_job.suspend_time_str = time_str.decode("UTF-8", "replace")
 #            else:
 #                this_job.suspend_time_str = None
             this_job.secs_pre_suspend = <int>record.pre_sus_time
@@ -658,7 +658,7 @@ cdef get_job_info_msg(jobid, ids=False):
             this_job.threads_per_core = record.threads_per_core
 
             this_job.num_nodes = tounicode(_get_range(min_nodes, max_nodes))
-            this_job.num_cpus = tounicode(_get_range(record.num_cpus, record.max_cpus))
+            this_job.num_cpus = _get_range(record.num_cpus, record.max_cpus)
             this_job.num_tasks = record.num_tasks
             this_job.cpus_per_task = record.cpus_per_task
 
@@ -691,7 +691,9 @@ cdef get_job_info_msg(jobid, ids=False):
                 )
                 this_job.min_cpus_node = tounicode(tmp1)
             else:
-                this_job.min_cpus_node = tounicode(str(record.pn_min_cpus))
+                this_job.min_cpus_node = record.pn_min_cpus
+
+            print record.pn_min_memory
 
             slurm_convert_num_unit(
                 <float>record.pn_min_memory,
