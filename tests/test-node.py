@@ -94,8 +94,13 @@ def test_node_scontrol():
     assert_equals(obj.ext_sensors_joules, sctl["ExtSensorsJoules"])
     assert_equals(obj.ext_sensors_temp, sctl["ExtSensorsTemp"])
     assert_equals(obj.ext_sensors_watts, sctl["ExtSensorsWatts"])
-    assert_equals(obj.available_features, sctl["AvailableFeatures"].split(","))
-    assert_equals(obj.active_features, sctl["ActiveFeatures"].split(","))
+
+    if sctl.get("AvailableFeatures"):
+        assert_equals(obj.available_features, sctl["AvailableFeatures"].split(","))
+
+    if sctl.get("ActiveFeatures"):
+        assert_equals(obj.active_features, sctl["ActiveFeatures"].split(","))
+
     assert_equals(obj.free_mem, sctl["FreeMem"])
 
     if sctl.get("Gres"):
@@ -124,5 +129,8 @@ def test_node_scontrol():
     assert_equals(obj.state, sctl["State"])
     assert_equals(obj.threads_per_core, sctl["ThreadsPerCore"])
     assert_equals(obj.tmp_disk, sctl["TmpDisk"])
-    assert_equals(obj.version, sctl["Version"])
+
+    if sctl.get("Version"):
+        assert_equals(obj.version, sctl["Version"])
+
     assert_equals(obj.weight, sctl["Weight"])

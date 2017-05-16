@@ -72,7 +72,7 @@ cdef class Node:
         uint64_t ext_sensors_watts
         readonly list available_features
         readonly list active_features
-        uint32_t free_mem
+        uint64_t free_mem
         readonly list gres
         readonly list gres_drain
         readonly list gres_used
@@ -371,9 +371,15 @@ cdef get_node_info_msg(node, ids=False):
             this_node.cpu_err = err_cpus
             this_node.cpu_tot = record.cpus
             this_node.cpu_load = record.cpu_load
-            this_node.available_features = tounicode(record.features).split(",")
-            this_node.active_features = tounicode(record.features_act).split(",")
-            this_node.gres = tounicode(record.gres).split(",")
+
+            if record.features:
+                this_node.available_features = tounicode(record.features).split(",")
+
+            if record.features_act:
+                this_node.active_features = tounicode(record.features_act).split(",")
+
+            if record.gres:
+                this_node.gres = tounicode(record.gres).split(",")
 
             if record.gres_drain:
                 this_node.gres_drain = tounicode(record.gres_drain).split(",")
