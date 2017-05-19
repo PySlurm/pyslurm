@@ -4991,7 +4991,7 @@ def get_res_state(uint16_t inx):
         pass
 
 
-def get_debug_flags(uint32_t inx):
+def get_debug_flags(uint64_t inx):
     u""" Returns a string that represents the slurm debug flags.
 
     :param int flags: Slurm debug flags
@@ -5046,7 +5046,7 @@ def get_debug_flags(uint32_t inx):
     """
     return __get_debug_flags(inx)
 
-cdef inline list __get_debug_flags(uint32_t flags):
+cdef inline list __get_debug_flags(uint64_t flags):
     cdef list debugFlags = []
 
     if (flags & DEBUG_FLAG_BG_ALGO):
