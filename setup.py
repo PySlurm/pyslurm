@@ -68,8 +68,8 @@ def makeExtension(extName):
         extName,
         [extPath],
         include_dirs = ['%s' % SLURM_INC, '.'],   # adding the '.' to include_dirs is CRUCIAL!!
-        library_dirs = ['%s' % SLURM_LIB, '%s/slurm' % SLURM_LIB], 
-        libraries = ['slurmdb'],
+        library_dirs = ['%s' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
+        libraries = ['slurmdb', 'slurm'],
         runtime_library_dirs = ['%s/' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
         extra_objects = [],
         extra_compile_args = [],
