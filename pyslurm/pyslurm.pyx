@@ -2536,8 +2536,8 @@ cdef class node:
 
         if rc == slurm.SLURM_SUCCESS:
             all_nodes = []
-            for i in range(self._Node_ptr.record_count):
-                all_nodes.append(self._Node_ptr.node_array[i].name)
+            for record in self._Node_ptr.node_array[:self._Node_ptr.record_count]:
+                all_nodes.append(slurm.stringOrNone(record.name, ''))
             slurm.slurm_free_node_info_msg(self._Node_ptr)
             self._Node_ptr = NULL
             return all_nodes
