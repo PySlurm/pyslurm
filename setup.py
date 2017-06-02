@@ -136,21 +136,22 @@ def clean():
 
     info("Clean - completed")
 
+
 def check_libPath(slurm_path):
 
     if not slurm_path:
         slurm_path = DEFAULT_SLURM
 
     slurm_path = os.path.normpath(slurm_path)
-    print slurm_path
 
     # if base dir given then check this
 
     if os.path.basename(slurm_path) in ['lib','lib64']:
         if os.path.exists("%s/libslurm.so" % slurm_path):
+            info("Build - Found Slurm shared library in %s" % slurm_path)
             return slurm_path
         else:
-            info("Build - Cannot locate the Slurm shared library in %s....." % slurm_path)
+            info("Build - Cannot locate Slurm shared library in %s" % slurm_path)
             return ''
 
     # if base dir given then search lib64 and then lib
@@ -158,12 +159,11 @@ def check_libPath(slurm_path):
     for libpath in ['lib64', 'lib']:
 
         slurmlibPath = "%s/%s" % (slurm_path, libpath)
-        info("Build - Checking for the Slurm shared library in %s....." % slurmlibPath)
         if os.path.exists("%s/libslurm.so" % slurmlibPath):
+            info("Build - Found Slurm shared library in %s" % slurmlibPath)
             return slurmlibPath
-        else:
-            info("Build - Cannot locate the Slurm shared library in %s....." % slurmlibPath)
 
+    info("Build - Could not locate Slurm shared library in %s" % slurm_path)
     return ''
 
 #
