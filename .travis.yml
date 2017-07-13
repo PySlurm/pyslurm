@@ -33,9 +33,9 @@ before_install:
 install: true
 before_script:
   - docker run -d -it -h ernie --name slurm-$SLURM_VERSION giovtorres/docker-centos$VER-slurm:$SLURM_VERSION
+  - docker exec slurm-$SLURM_VERSION bash -c "pip install Cython==$CYTHON_VERSION"
   - docker exec slurm-$SLURM_VERSION git clone https://github.com/PySlurm/pyslurm.git
   - docker exec slurm-$SLURM_VERSION bash -c "cd pyslurm && python setup.py build"
   - docker exec slurm-$SLURM_VERSION bash -c "cd pyslurm && python setup.py install"
-  - docker exec slurm-$SLURM_VERSION bash -c "pip install Cython==$CYTHON_VERSION"
 script:
   - docker exec slurm-$SLURM_VERSION python -c "import pyslurm; print pyslurm.version()"
