@@ -1,20 +1,19 @@
 sudo: required
 language: python
-python:
-  - 2.6
-  - 2.7
 env:
-  - SLURM_VERSION=17.02.6
-  - SLURM_VERSION=17.02.5
+  matrix:
+    - SLURM_VERSION=17.02.6 CYTHON_VERSION=0.25.2 VER="7"
+    - SLURM_VERSION=17.02.5 CYTHON_VERSION=0.24.1 VER="6"
 services:
   - docker
 before_install:
   - docker pull giovtorres/docker-centos7-slurm:$SLURM_VERSION
-  - pip install Cython
 install: true
-script:
-  - docker run -d -it -h ernie --name slurm-$SLURM_VERSION giovtorres/docker-centos7-slurm:$SLURM_VERSION
+before_script:
+  - docker run -d -it -h ernie --name slurm-$SLURM_VERSION giovtorres/docker-centos$VER-slurm:$SLURM_VERSION
   - docker exec slurm-$SLURM_VERSION git clone https://github.com/PySlurm/pyslurm.git
   - docker exec slurm-$SLURM_VERSION bash -c "cd pyslurm && python setup.py build"
   - docker exec slurm-$SLURM_VERSION bash -c "cd pyslurm && python setup.py install"
+  - docker exec slurm-$SLURM_VERSION bash -c "pip install Cython==$CYTHON_VERSION"
+script:
   - docker exec slurm-$SLURM_VERSION python -c "import pyslurm; print pyslurm.version()"
