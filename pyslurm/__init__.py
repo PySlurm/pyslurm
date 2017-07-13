@@ -11,8 +11,11 @@ import sys
 old_dlopen_flags = ''
 if hasattr(sys, "setdlopenflags"):
     old_dlopen_flags = sys.getdlopenflags()
-    import DLFCN
-    sys.setdlopenflags(old_dlopen_flags | DLFCN.RTLD_GLOBAL)
+    if sys.version_info >= (3,6):
+        from os import RTLD_GLOBAL
+    else:
+        from DLFCN import RTLD_GLOBAL
+    sys.setdlopenflags(old_dlopen_flags | RTLD_GLOBAL)
 
 from .pyslurm import *
 
