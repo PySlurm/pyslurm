@@ -2,40 +2,35 @@ sudo: required
 language: python
 env:
   matrix:
-    - SLURM_VERSION=17.02.6 CYTHON_VERSION=0.24 VER="7"
-    - SLURM_VERSION=17.02.5 CYTHON_VERSION=0.24 VER="7"
-    - SLURM_VERSION=17.02.4 CYTHON_VERSION=0.24 VER="7"
-    - SLURM_VERSION=17.02.3 CYTHON_VERSION=0.24 VER="7"
-    - SLURM_VERSION=17.02.2 CYTHON_VERSION=0.24 VER="7"
-    - SLURM_VERSION=17.02.1 CYTHON_VERSION=0.24 VER="7"
-    - SLURM_VERSION=17.02.6 CYTHON_VERSION=0.24 VER="6"
-    - SLURM_VERSION=17.02.5 CYTHON_VERSION=0.24 VER="6"
-    - SLURM_VERSION=17.02.4 CYTHON_VERSION=0.24 VER="6"
-    - SLURM_VERSION=17.02.3 CYTHON_VERSION=0.24 VER="6"
-    - SLURM_VERSION=17.02.2 CYTHON_VERSION=0.24 VER="6"
-    - SLURM_VERSION=17.02.1 CYTHON_VERSION=0.24 VER="6"
-    - SLURM_VERSION=17.02.6 CYTHON_VERSION=0.19.2 VER="7"
-    - SLURM_VERSION=17.02.5 CYTHON_VERSION=0.19.2 VER="7"
-    - SLURM_VERSION=17.02.4 CYTHON_VERSION=0.19.2 VER="7"
-    - SLURM_VERSION=17.02.3 CYTHON_VERSION=0.19.2 VER="7"
-    - SLURM_VERSION=17.02.2 CYTHON_VERSION=0.19.2 VER="7"
-    - SLURM_VERSION=17.02.1 CYTHON_VERSION=0.19.2 VER="7"
-    - SLURM_VERSION=17.02.6 CYTHON_VERSION=0.19.2 VER="6"
-    - SLURM_VERSION=17.02.5 CYTHON_VERSION=0.19.2 VER="6"
-    - SLURM_VERSION=17.02.4 CYTHON_VERSION=0.19.2 VER="6"
-    - SLURM_VERSION=17.02.3 CYTHON_VERSION=0.19.2 VER="6"
-    - SLURM_VERSION=17.02.2 CYTHON_VERSION=0.19.2 VER="6"
-    - SLURM_VERSION=17.02.1 CYTHON_VERSION=0.19.2 VER="6"
+    - SLURM=17.02.6 CYTHON=0.24 CENTOS=7 PYTHON=2.7
+    - SLURM=17.02.5 CYTHON=0.24 CENTOS=7 PYTHON=2.7
+    - SLURM=17.02.4 CYTHON=0.24 CENTOS=7 PYTHON=2.7
+    - SLURM=17.02.3 CYTHON=0.24 CENTOS=7 PYTHON=2.7
+    - SLURM=17.02.2 CYTHON=0.24 CENTOS=7 PYTHON=2.7
+    - SLURM=17.02.1 CYTHON=0.24 CENTOS=7 PYTHON=2.7
+    - SLURM=17.02.6 CYTHON=0.24 CENTOS=7 PYTHON=3.4
+    - SLURM=17.02.5 CYTHON=0.24 CENTOS=7 PYTHON=3.4
+    - SLURM=17.02.4 CYTHON=0.24 CENTOS=7 PYTHON=3.4
+    - SLURM=17.02.3 CYTHON=0.24 CENTOS=7 PYTHON=3.4
+    - SLURM=17.02.2 CYTHON=0.24 CENTOS=7 PYTHON=3.4
+    - SLURM=17.02.1 CYTHON=0.24 CENTOS=7 PYTHON=3.4
+    - SLURM=17.02.6 CYTHON=0.24 CENTOS=6 PYTHON=2.6
+    - SLURM=17.02.5 CYTHON=0.24 CENTOS=6 PYTHON=2.6
+    - SLURM=17.02.4 CYTHON=0.24 CENTOS=6 PYTHON=2.6
+    - SLURM=17.02.3 CYTHON=0.24 CENTOS=6 PYTHON=2.6
+    - SLURM=17.02.2 CYTHON=0.24 CENTOS=6 PYTHON=2.6
+    - SLURM=17.02.1 CYTHON=0.24 CENTOS=6 PYTHON=2.6
 services:
   - docker
 before_install:
-  - docker pull giovtorres/docker-centos7-slurm:$SLURM_VERSION
+  - docker pull giovtorres/docker-centos$CENTOS-slurm:$SLURM
 install: true
 before_script:
-  - docker run -d -it -h ernie --name slurm-$SLURM_VERSION giovtorres/docker-centos$VER-slurm:$SLURM_VERSION
-  - docker exec slurm-$SLURM_VERSION bash -c "pip install Cython==$CYTHON_VERSION"
-  - docker exec slurm-$SLURM_VERSION git clone https://github.com/PySlurm/pyslurm.git
-  - docker exec slurm-$SLURM_VERSION bash -c "cd pyslurm && python setup.py build"
-  - docker exec slurm-$SLURM_VERSION bash -c "cd pyslurm && python setup.py install"
+  - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos$CENTOS-slurm:$SLURM
+  - docker exec slurm-$SLURM pip$PYTHON install nose Cython==$CYTHON
+  - test $CENTOS -eq 7 && yum -y install python34{,-devel,-pip}
+  - docker exec slurm-$SLURM git clone https://github.com/PySlurm/pyslurm.git
+  - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py build"
+  - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py install"
 script:
-  - docker exec slurm-$SLURM_VERSION python -c "import pyslurm; print pyslurm.version()"
+  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print pyslurm.version()"
