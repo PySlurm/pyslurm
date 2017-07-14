@@ -25,9 +25,12 @@ Prerequisites
 
 This PySlurm branch has been tested with:
 
-    * Cython 0.15.1, 0.19.2, and the latest stable (0.25.2)
+    * Cython 0.15.1*, 0.19.2, and the latest stable (0.25.2)
     * Python 2.6 and 2.7
     * Slurm 17.02.0 thru 17.02.6
+
+.. note::  Cython 0.15.1 is only supported on Python 2.6 and 2.7.
+
 
 Installation
 ************
