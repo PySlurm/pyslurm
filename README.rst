@@ -7,7 +7,12 @@ PySlurm: Slurm Interface for Python
 Overview
 ========
 
-Currently `PySlurm` is under development to move from it's thin layer on top of the Slurm C API to an object orientated interface.
+Currently `PySlurm` is under development to move from it's thin layer on top of
+the Slurm C API to an object orientated interface.
+
+For a preview of version 2 of the API, see the
+[dev-17.02-props](https://github.com/PySlurm/pyslurm/tree/dev-17.02-props)
+branch.
 
 This release is based on Slurm 17.02.
 
@@ -20,7 +25,7 @@ Prerequisites
 
 This PySlurm branch has been tested with:
 
-    * Cython 0.15.1, 0.19.2, and 0.24
+    * Cython 0.15.1, 0.19.2, and the latest stable (0.25.2)
     * Python 2.6 and 2.7
     * Slurm 17.02.0 thru 17.02.6
 
