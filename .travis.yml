@@ -33,4 +33,4 @@ before_script:
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py build"
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py install"
 script:
-  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print pyslurm.version()"
+  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.version())"
