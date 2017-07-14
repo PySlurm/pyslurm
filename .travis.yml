@@ -27,7 +27,7 @@ before_install:
 install: true
 before_script:
   - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos$CENTOS-slurm:$SLURM
-  - test $CENTOS -eq 7 && docker exec slurm-$SLURM bash-c "yum makecache fast && yum -y install python34{,-devel,-pip}"
+  - test $CENTOS -eq 7 && docker exec slurm-$SLURM bash -c "yum makecache fast && yum -y install python34{,-devel,-pip}"
   - docker exec slurm-$SLURM pip$PYTHON install nose Cython==$CYTHON
   - docker exec slurm-$SLURM git clone https://github.com/PySlurm/pyslurm.git
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py build"
