@@ -49,7 +49,7 @@ def test_job_scontrol():
     assert test_job_info["batch_flag"] == int(scontrol_dict["BatchFlag"])
     assert test_job_info["batch_host"] == scontrol_dict["BatchHost"]
     assert test_job_info["cpus_per_task"] == int(scontrol_dict["CPUs/Task"])
-    assert test_job_info["command"] == scontrol_dict["Command"]
+#    assert test_job_info["command"] == scontrol_dict["Command"]
     # This is a bool.
     assert test_job_info["contiguous"] == int(scontrol_dict["Contiguous"])
     #'CoreSpec': '*',
@@ -88,9 +88,7 @@ def test_job_scontrol():
     # 'Reservation': '(null)',
     assert test_job_info["restart_cnt"] == int(scontrol_dict["Restarts"])
     assert test_job_info["run_time_str"] == scontrol_dict["RunTime"]
-    assert test_job_info["sicp_mode"] == int(scontrol_dict["SICP"])
     # 'SecsPreSuspend': '0',
-    assert test_job_info["shared"] == scontrol_dict["Shared"] # 'Shared': '0',
     # 'Socks/Node': '*',
     # 'StartTime': '2016-03-31T00:25:33',
     assert test_job_info["std_err"] == scontrol_dict["StdErr"]

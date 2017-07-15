@@ -47,8 +47,8 @@ def test_partition_scontrol():
     assert test_partition_info["allow_accounts"] == scontrol_dict["AllowAccounts"]
     assert test_partition_info["allow_groups"] == scontrol_dict["AllowGroups"]
     assert test_partition_info["allow_qos"] == scontrol_dict["AllowQos"]
-    # 'DefMemPerCpu': 'UNLIMITED',
-    assert test_partition_info["def_mem_per_node"] == scontrol_dict["DefMemPerNode"]
+#    assert test_partition_info["def_mem_per_node"] == scontrol_dict["DefMemPerNode"]
+    assert test_partition_info["def_mem_per_cpu"] == int(scontrol_dict["DefMemPerCPU"])
     # 'Default': 'YES',
     assert test_partition_info["default_time_str"] == scontrol_dict["DefaultTime"]
     # 'DisableRootJobs': 'NO',
@@ -65,12 +65,12 @@ def test_partition_scontrol():
     assert test_partition_info["nodes"] == scontrol_dict["Nodes"]
     assert test_partition_info["name"] == scontrol_dict["PartitionName"]
     assert test_partition_info["preempt_mode"] == scontrol_dict["PreemptMode"]
-    assert test_partition_info["priority"] == int(scontrol_dict["Priority"])
+    # Replace with priorityjobfactor and prioritytier
+#    assert test_partition_info["priority"] == int(scontrol_dict["Priority"])
     # 'QoS': 'N/A',
     # 'ReqResv': 'NO',
     # 'RootOnly': 'NO',
     # 'SelectTypeParameters': 'N/A',
-    assert test_partition_info["flags"]["Shared"] == scontrol_dict["Shared"]
     assert test_partition_info["state"] == scontrol_dict["State"]
     assert test_partition_info["total_cpus"] == int(scontrol_dict["TotalCPUs"])
     assert test_partition_info["total_nodes"] == int(scontrol_dict["TotalNodes"])
