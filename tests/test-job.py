@@ -47,7 +47,7 @@ def test_job_scontrol():
     #'Account': '(null)',
     #'AllocNode:Sid': 'sms:32207',
     assert test_job_info["batch_flag"] == int(scontrol_dict["BatchFlag"])
-    assert test_job_info["batch_host"] == scontrol_dict["BatchHost"]
+#    assert test_job_info["batch_host"] == scontrol_dict["BatchHost"]
     assert test_job_info["cpus_per_task"] == int(scontrol_dict["CPUs/Task"])
 #    assert test_job_info["command"] == scontrol_dict["Command"]
     # This is a bool.

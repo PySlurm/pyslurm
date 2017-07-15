@@ -66,4 +66,7 @@ script:
   - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.version())"
   - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
   - docker exec slurm-$SLURM sbatch --wrap="sleep 1000"
-  - docker exec slurm-$SLURM nosetests-$PYTHON -v /pyslurm/tests
+  - docker exec slurm-$SLURM scontrol -d show job
+  - docker exec slurm-$SLURM scontrol -d show node c1
+  - docker exec slurm-$SLURM scontrol -d show partition
+  - docker exec slurm-$SLURM nosetests -v /pyslurm/tests
