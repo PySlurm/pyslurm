@@ -59,7 +59,7 @@ before_script:
   - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos$CENTOS-slurm:$SLURM
   - if [ $CENTOS -eq 7 ]; then docker exec slurm-$SLURM bash -c "yum makecache fast && yum -y install python34{,-devel,-pip}"; fi
   - docker exec slurm-$SLURM pip$PYTHON install nose Cython==$CYTHON
-  - docker exec slurm-$SLURM git clone https://github.com/PySlurm/pyslurm.git
+  - docker exec slurm-$SLURM git clone --branch=$TRAVIS_BRANCH https://github.com/PySlurm/pyslurm.git
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py build"
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py install"
 script:
