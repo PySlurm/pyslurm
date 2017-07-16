@@ -133,8 +133,7 @@ cdef get_reservation_info_msg(reservation, ids=False):
     if rc == SLURM_SUCCESS:
         for record in resv_info_msg_ptr.reservation_array[:resv_info_msg_ptr.record_count]:
             if reservation:
-                b_reservation = reservation.encode("UTF-8")
-                if b_reservation and (b_reservation != record.name):
+                if reservation and (reservation != <unicode>record.name):
                     continue
 
             if ids and reservation is None:

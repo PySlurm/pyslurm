@@ -127,8 +127,7 @@ cdef get_block_info_msg(block, ids=False):
     if rc == SLURM_SUCCESS:
         for record in block_info_msg_ptr.block_array[:block_info_msg_ptr.record_count]:
             if block:
-                b_block = block.encode("UTF-8")
-                if b_block and (b_block != record.bg_block_id):
+                if block and (block != <unicode>record.bg_block_id):
                     continue
 
             if ids and block is None:

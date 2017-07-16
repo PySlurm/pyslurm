@@ -95,8 +95,7 @@ cdef get_topo_info_msg(topology, ids=False):
     if rc == SLURM_SUCCESS:
         for record in topo_info_msg_ptr.topo_array[:topo_info_msg_ptr.record_count]:
             if topology:
-                b_topology = topology.encode("UTF-8")
-                if b_topology and (b_topology != record.name):
+                if topology and (topology != <unicode>record.name):
                     continue
 
             if ids and topology is None:

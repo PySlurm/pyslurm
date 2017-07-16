@@ -106,8 +106,7 @@ cdef get_front_end_info_msg(front_end, ids=False):
     if rc == SLURM_SUCCESS:
         for record in front_end_info_msg_ptr.front_end_array[:front_end_info_msg_ptr.record_count]:
             if front_end:
-                b_front_end = front_end.encode("UTF-8")
-                if b_front_end and (b_front_end != record.name):
+                if front_end and (front_end != <unicode>record.name):
                     continue
 
             if ids and front_end is None:
