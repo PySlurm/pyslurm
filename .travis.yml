@@ -27,4 +27,5 @@ script:
   - docker exec slurm-$SLURM scontrol -d show node c1
   - docker exec slurm-$SLURM scontrol -d show partition
   - docker exec slurm-$SLURM scontrol -d show license
+  - docker exec slurm-$SLURM scontrol -d show steps
   - if [ $PYTHON = "3.4" ]; then docker exec slurm-$SLURM nosetests-$PYTHON -v /pyslurm/tests; else docker exec slurm-$SLURM nosetests -v /pyslurm/tests; fi
