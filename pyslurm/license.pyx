@@ -32,6 +32,7 @@ from posix.types cimport time_t
 
 from .c_license cimport *
 from .slurm_common cimport *
+from .utils cimport *
 from .exceptions import PySlurmError
 
 cdef class License:
@@ -101,8 +102,7 @@ cdef get_license_info_msg(license, ids=False):
     if rc == SLURM_PROTOCOL_SUCCESS:
         for record in license_info_msg_ptr.lic_array[:license_info_msg_ptr.num_lic]:
             if license:
-                b_license = license.encode("UTF-8")
-                if b_license and (b_license != record.name):
+                if license and (license != <unicode>record.name):
                     continue
 
             if ids and record.name and license is None:
@@ -112,7 +112,7 @@ cdef get_license_info_msg(license, ids=False):
             this_license = License()
 
             if record.name:
-                this_license.license_name = record.name
+                this_license.license_name = tounicode(record.name)
 
             this_license.total = record.total
             this_license.used = record.in_use
