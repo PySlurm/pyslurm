@@ -19,11 +19,11 @@ def test_powercap_scontrol():
         stdout=subprocess.PIPE
     ).communicate()
 
-    if "Powercapping disabled" in scontrol[0]:
+    scontrol_stdout = scontrol[0].strip().decode("UTF-8")
+
+    if "Powercapping disabled" in scontrol_stdout:
         assert_true("Powercapping disabled" in obj.power_cap)
     else:
-        scontrol_stdout = scontrol[0].strip().decode("UTF-8").split()
-
         # Convert scontrol show powercap into a dictionary of key value pairs.
         sctl = {}
         for item in scontrol_stdout:
