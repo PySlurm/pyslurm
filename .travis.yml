@@ -23,6 +23,7 @@ script:
   - docker exec slurm-$SLURM bash -c "echo 'Licenses=fluent:30,ansys:100,matlab:50' >> /etc/slurm/slurm.conf"
   - docker exec slurm-$SLURM scontrol reconfigure
   - docker exec slurm-$SLURM sbatch --wrap="srun sleep 1000"
+  - sleep 10
   - docker exec slurm-$SLURM scontrol -d show job
   - docker exec slurm-$SLURM scontrol -d show node c1
   - docker exec slurm-$SLURM scontrol -d show partition
