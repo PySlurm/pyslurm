@@ -1,4 +1,5 @@
 # cython: embedsignature=True
+# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ================
 :mod:`partition`
@@ -301,24 +302,17 @@ cdef get_partition_info_msg(partition, ids=False):
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         uint16_t preempt_mode
         uint32_t cluster_flags = slurmdb_setup_cluster_flags()
-#        uint32_t i
         int rc
-
-#    if partition:
-#        b_partition = partition.encode("UTF-8")
 
     rc = slurm_load_partitions(<time_t> NULL, &part_info_msg_ptr, show_flags)
 
     part_list = []
     if rc == SLURM_SUCCESS:
 
-#        for i in part_info_msg_ptr.record_count:
         for record in part_info_msg_ptr.partition_array[:part_info_msg_ptr.record_count]:
-#            record = &part_info_msg_ptr.partition_array[i]
 
             if partition:
-                b_partition = partition.encode("UTF-8")
-                if b_partition and (b_partition != record.name):
+                if partition and (partition != <unicode>record.name):
                     continue
 
             if ids and partition is None:
