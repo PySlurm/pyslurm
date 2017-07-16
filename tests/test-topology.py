@@ -19,11 +19,12 @@ def test_topology_scontrol():
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     ).communicate()
 
-    if "No topology information" in scontrol[0]:
+    scontrol_stdout = scontrol[0].strip().decode("UTF-8")
+    scontrol_stderr = scontrol[1].strip().decode("UTF-8")
+
+    if "No topology information" in scontrol_stderr:
         pass
     else:
-        scontrol_stdout = scontrol[0].strip().decode("UTF-8").split()
-
         # Convert scontrol show topology into a dictionary of key value pairs.
         sctl = {}
         for item in scontrol_stdout:
