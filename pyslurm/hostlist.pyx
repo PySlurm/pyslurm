@@ -59,7 +59,7 @@ cdef class Hostlist:
         if not hostnames:
             self.hl = slurm_hostlist_create(NULL)
         else:
-            self.hl = slurm_hostlist_create(hostnames)
+            self.hl = slurm_hostlist_create(hostnames.encode("UTF-8"))
 
         if not self.hl:
             raise PySlurmError("No memory")
@@ -117,7 +117,7 @@ cdef class Hostlist:
             Number of hostnames inserted into the hostlist or 0 on failure
         """
         if self.hl is not NULL:
-            return slurm_hostlist_push(self.hl, hosts)
+            return slurm_hostlist_push(self.hl, hosts.encode("UTF-8"))
 
     def push_host(self, host):
         """
@@ -132,7 +132,7 @@ cdef class Hostlist:
             1 for success, 0 for failure
         """
         if self.hl is not NULL:
-            return slurm_hostlist_push_host(self.hl, host)
+            return slurm_hostlist_push_host(self.hl, host.encode("UTF-8"))
 
     def find(self, hostname):
         """
@@ -145,7 +145,7 @@ cdef class Hostlist:
             Position in the list if found or -1 if host not found
         """
         if self.hl is not NULL:
-            return slurm_hostlist_find(self.hl, hostname)
+            return slurm_hostlist_find(self.hl, hostname.encode("UTF-8"))
 
     def shift(self):
         """
