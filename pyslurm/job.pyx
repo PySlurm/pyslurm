@@ -115,8 +115,8 @@ cdef class Job:
         uint16_t ntasks_per_core
         uint16_t ntasks_per_node
         uint16_t ntasks_per_socket
-#        readonly unicode num_cpus
-#        readonly unicode num_nodes
+        readonly unicode num_cpus
+        readonly unicode num_nodes
         readonly uint32_t num_tasks
         uint16_t over_subscribe
         readonly unicode partition
@@ -666,8 +666,8 @@ cdef get_job_info_msg(jobid, ids=False):
             this_job.cores_per_socket = record.cores_per_socket
             this_job.threads_per_core = record.threads_per_core
 
-#            this_job.num_nodes = tounicode(_get_range(min_nodes, max_nodes))
-#            this_job.num_cpus = tounicode(_get_range(record.num_cpus, record.max_cpus))
+            this_job.num_nodes = _get_range(min_nodes, max_nodes)
+            this_job.num_cpus = _get_range(record.num_cpus, record.max_cpus)
             this_job.num_tasks = record.num_tasks
             this_job.cpus_per_task = record.cpus_per_task
 
