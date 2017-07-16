@@ -18,8 +18,8 @@ before_script:
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py build"
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py install"
 script:
-  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.version())"
-  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
+  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.__version__)"
+  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.config.api_version())"
   - docker exec slurm-$SLURM bash -c "echo 'Licenses=fluent:30,ansys:100,matlab:50' >> /etc/slurm/slurm.conf"
   - docker exec slurm-$SLURM scontrol reconfigure
   - docker exec slurm-$SLURM bash -c "srun sleep 1000 &"
