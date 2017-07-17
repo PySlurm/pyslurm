@@ -2,7 +2,8 @@
 PySlurm: Slurm Interface for Python
 ***********************************
 
-:Authors: Mark Roberts <mark@gingergeeks.co.uk> and Giovanni Torres <giovanni.torres/gmail/com>
+.. image:: https://travis-ci.org/PySlurm/pyslurm.svg?branch=master
+    :target: https://travis-ci.org/PySlurm/pyslurm
 
 Overview
 ========
@@ -73,6 +74,13 @@ and can be regenerated at any time :
     * cd doc
     * make clean
     * make html
+
+
+Authors
+*******
+
+* Mark Roberts <mark@gingergeeks.co.uk>
+* Giovanni Torres <giovanni.torres/gmail/com>
 
 Help
 ****
