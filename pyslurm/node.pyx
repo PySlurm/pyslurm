@@ -681,7 +681,7 @@ def find_nodes(nodeattr, pattern, ids=False):
     return matched_nodes
 
 
-def int update_node(dict node_dict):
+def update_node(dict node_dict):
     """
     Request that the state of one or more nodes be updated.
 
