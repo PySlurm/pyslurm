@@ -305,7 +305,7 @@ cdef get_node_info_msg(node, ids=False):
         for record in node_info_msg_ptr.node_array[:node_info_msg_ptr.record_count]:
 
             # get_node(node)
-            if node is not None and node.encode("UTF-8") != tounicode(record.name):
+            if node is not None and node != tounicode(record.name):
                 continue
             # get_nodes(ids=True)
             elif ids and node is None:
