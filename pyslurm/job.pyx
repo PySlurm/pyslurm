@@ -834,7 +834,7 @@ cdef get_job_info_msg(jobid, ids=False):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef list get_user_jobs(user):
+def get_user_jobs(user):
     """
     Return all jobs associated with a specific user.
 
@@ -872,7 +872,7 @@ cpdef list get_user_jobs(user):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef int pid2jobid(pid_t job_pid):
+def pid2jobid(pid_t job_pid):
     """
     Return a Slurm job id corresponding to the given local process id.
 
@@ -1036,7 +1036,7 @@ cdef _get_range(uint32_t lower, uint32_t upper):
             return "%s" % lower
 
 
-cpdef int allocate_resources(dict job_descriptor) except -1:
+def allocate_resources(dict job_descriptor):
     """
     Example:
 
@@ -1081,7 +1081,7 @@ cpdef int allocate_resources(dict job_descriptor) except -1:
         raise PySlurmError(slurm_strerror(errno), errno)
 
 
-cpdef allocate_resources_blocking(dict job_descriptor):
+def allocate_resources_blocking(dict job_descriptor):
     """
     """
     cdef:
@@ -1106,7 +1106,7 @@ cpdef allocate_resources_blocking(dict job_descriptor):
         raise PySlurmError("slurm_allocate_resources_blocking error")
 
 
-cpdef int submit_batch_job(dict jobdict) except -1:
+def submit_batch_job(dict jobdict):
     """
     """
     cdef:
@@ -1341,7 +1341,7 @@ cpdef int submit_batch_job(dict jobdict) except -1:
         raise PySlurmError(slurm_strerror(errno), errno)
 
 
-cpdef int update_job(dict update) except -1:
+def update_job(dict update):
     """
     Issue RPC to update a job's configuration.
 
