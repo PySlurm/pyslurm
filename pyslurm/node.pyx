@@ -1,6 +1,5 @@
 # cython: embedsignature=True
 # cython: cdivision=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ===========
 :mod:`node`
@@ -564,7 +563,7 @@ cdef get_node_info_msg(node, ids=False):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef print_node_info_msg(int one_liner=False):
+def print_node_info_msg(int one_liner=False):
     """
     Print information about all nodes to stdout.
 
@@ -595,7 +594,7 @@ cpdef print_node_info_msg(int one_liner=False):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef print_node_info_table(node, int one_liner=False):
+def print_node_info_table(node, int one_liner=False):
     """
     Print information about a specific node to stdout.
 
@@ -616,8 +615,7 @@ cpdef print_node_info_table(node, int one_liner=False):
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int rc
 
-    u_node = node.encode("UTF-8")
-    rc = slurm_load_node_single(&node_info_msg_ptr, u_node, show_flags)
+    rc = slurm_load_node_single(&node_info_msg_ptr, node.encode("UTF-8"), show_flags)
 
     if rc == SLURM_SUCCESS:
         slurm_print_node_table(stdout, &node_info_msg_ptr.node_array[0],
@@ -683,7 +681,7 @@ def find_nodes(nodeattr, pattern, ids=False):
     return matched_nodes
 
 
-cpdef int update_node(dict node_dict):
+def int update_node(dict node_dict):
     """
     Request that the state of one or more nodes be updated.
 
