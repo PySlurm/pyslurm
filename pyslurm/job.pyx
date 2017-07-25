@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ===========
 :mod:`job`
@@ -196,7 +195,7 @@ cdef class Job:
         """Delay boot for desired node state"""
         cdef char tmp1[128]
         slurm_secs2time_str(<time_t>self.delay_boot, tmp1, sizeof(tmp1))
-        return tmp1
+        return tounicode(tmp1)
 
     @property
     def derived_exit_code(self):
@@ -269,7 +268,7 @@ cdef class Job:
     @property
     def over_subscribe(self):
         """1 if job can share nodes with other jobs"""
-        return slurm_job_share_string(self.over_subscribe)
+        return tounicode(slurm_job_share_string(self.over_subscribe))
 
     @property
     def sockets_per_board(self):
@@ -291,7 +290,7 @@ cdef class Job:
     def switches(self):
         cdef char time_buf[32]
         slurm_secs2time_str(<time_t>self.wait4switch, time_buf, sizeof(time_buf))
-        return str(self.req_switch) + "@" + time_buf
+        return str(self.req_switch) + "@" + tounicode(time_buf)
 
     @property
     def thread_spec(self):
@@ -315,7 +314,7 @@ cdef class Job:
             return "Partition_Limit"
         else:
             slurm_mins2time_str(<time_t>self.time_limit, time_str, sizeof(time_str))
-            return time_str
+            return tounicode(time_str)
 
     @property
     def time_min_str(self):
@@ -325,7 +324,7 @@ cdef class Job:
             return "N/A"
         else:
             slurm_mins2time_str(<time_t>self.time_min, time_str, sizeof(time_str))
-            return time_str
+            return tounicode(time_str)
 
 
 cdef class Jobmsg:
@@ -415,6 +414,8 @@ def get_job(jobid):
     """
     if isinstance(jobid, int):
         jobid = str(jobid).encode("UTF-8")
+    else:
+        jobid = jobid.encode("UTF-8")
 
     jobid_xlate = slurm_xlate_job_id(jobid)
     return get_job_info_msg(jobid_xlate)
@@ -702,8 +703,6 @@ cdef get_job_info_msg(jobid, ids=False):
             else:
                 this_job.min_cpus_node = record.pn_min_cpus
 
-            print record.pn_min_memory
-
             slurm_convert_num_unit(
                 <float>record.pn_min_memory,
                 tmp1,
@@ -853,12 +852,10 @@ def get_user_jobs(user):
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int rc
         uint32_t user_id
-        char *username
 
     if isinstance(user, str):
         try:
-            username = user
-            user_id = getpwnam(username)[2]
+            user_id = getpwnam(user)[2]
         except KeyError:
             raise PySlurmError("user " + user + " not found")
     else:
@@ -941,8 +938,8 @@ def notify_job(uint32_t jobid, message):
     cdef:
         int rc
 
-    b_message = message.encode("UTF-8")
-    rc = slurm_notify_job(jobid, b_message)
+#    b_message = message.encode("UTF-8")
+    rc = slurm_notify_job(jobid, message.encode("UTF-8", "replace"))
 
     if rc == SLURM_SUCCESS:
         return rc
@@ -1096,8 +1093,7 @@ def allocate_resources_blocking(dict job_descriptor):
     job_desc_msg.user_id = job_descriptor["user_id"]
     job_desc_msg.group_id = job_descriptor["group_id"]
 
-    slurm_alloc_msg_ptr = slurm_allocate_resources_blocking(
-        &job_desc_msg, 0, NULL)
+    slurm_alloc_msg_ptr = slurm_allocate_resources_blocking(&job_desc_msg, 0, NULL)
 
     if slurm_alloc_msg_ptr:
         slurm_free_resource_allocation_response_msg(slurm_alloc_msg_ptr)
