@@ -2,6 +2,7 @@ from libc.stdint cimport uint16_t, uint32_t, uint64_t
 from libc.stdio cimport FILE
 from posix.types cimport time_t
 from .slurm_common cimport dynamic_plugin_data_t
+from .c_partition cimport partition_info_msg_t
 
 include "node.pxi"
 
@@ -136,6 +137,9 @@ cdef extern from "slurm/slurm.h" nogil:
     int slurm_update_node(update_node_msg_t *node_msg)
     void slurm_init_update_node_msg(update_node_msg_t *update_node_msg)
     void slurm_free_node_info_msg(node_info_msg_t *node_buffer_ptr)
+    void slurm_populate_node_partitions(node_info_msg_t *node_buffer_ptr,
+                                    partition_info_msg_t *part_buffer_ptr)
+
 
 
 #

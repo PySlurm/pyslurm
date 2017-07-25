@@ -23,6 +23,7 @@ This module declares and wraps the following Slurm API functions:
 - slurm_print_node_info_msg
 - slurm_print_node_table
 - slurm_update_node
+- slurm_populate_node_partitions
 
 Node Objects
 ------------
@@ -42,6 +43,7 @@ from pwd import getpwuid
 
 from libc.stdio cimport stdout
 from .c_node cimport *
+from .c_partition cimport partition_info_msg_t, slurm_load_partitions, slurm_free_partition_info_msg
 from .slurm_common cimport *
 from .utils cimport *
 from .exceptions import PySlurmError
@@ -259,8 +261,10 @@ cdef get_node_info_msg(node, ids=False):
     """
     cdef:
         node_info_msg_t *node_info_msg_ptr = NULL
+        partition_info_msg_t *part_info_msg_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int cpus_per_node = 1
+        int error_code
         int idle_cpus
         int inx
         int rc
@@ -283,17 +287,28 @@ cdef get_node_info_msg(node, ids=False):
         uint32_t my_state
         uint32_t cluster_flags = slurmdb_setup_cluster_flags()
 
-    if node is None:
-        rc = slurm_load_node(<time_t>NULL, &node_info_msg_ptr, show_flags)
-    else:
-        b_node = node.encode("UTF-8")
-        rc = slurm_load_node_single(&node_info_msg_ptr, b_node, show_flags)
+    rc = slurm_load_node(<time_t>NULL, &node_info_msg_ptr, show_flags)
 
     node_list = []
+
     if rc == SLURM_SUCCESS:
+        # Populate node partition list
+        error_code = slurm_load_partitions(<time_t>NULL, &part_info_msg_ptr, show_flags)
+        if error_code != SLURM_SUCCESS:
+            part_info_msg_ptr = NULL
+            raise PySlurmError(slurm_strerror(error_code), error_code)
+
+        slurm_populate_node_partitions(node_info_msg_ptr, part_info_msg_ptr)
+        slurm_free_partition_info_msg(part_info_msg_ptr)
+        part_info_msg_ptr = NULL
+
         for record in node_info_msg_ptr.node_array[:node_info_msg_ptr.record_count]:
 
-            if ids and node is None:
+            # get_node(node)
+            if node is not None and node.encode("UTF-8") != tounicode(record.name):
+                continue
+            # get_nodes(ids=True)
+            elif ids and node is None:
                 node_list.append(tounicode(record.name))
                 continue
 
@@ -601,8 +616,8 @@ cpdef print_node_info_table(node, int one_liner=False):
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         int rc
 
-    b_node = node.encode("UTF-8")
-    rc = slurm_load_node_single(&node_info_msg_ptr, b_node, show_flags)
+    u_node = node.encode("UTF-8")
+    rc = slurm_load_node_single(&node_info_msg_ptr, u_node, show_flags)
 
     if rc == SLURM_SUCCESS:
         slurm_print_node_table(stdout, &node_info_msg_ptr.node_array[0],
