@@ -122,6 +122,7 @@ def test_node_scontrol():
     assert_equals(obj.node_host_name, sctl["NodeHostName"])
     assert_equals(obj.os, sctl.get("OS"))
     assert_equals(obj.owner, sctl["Owner"])
+    assert_equals(obj.partitions, sctl["Partitions"])
     assert_equals(obj.real_memory, sctl["RealMemory"])
     assert_equals(obj.reason_str, sctl.get("Reason"))
     assert_equals(obj.slurmd_start_time_str, sctl["SlurmdStartTime"])
