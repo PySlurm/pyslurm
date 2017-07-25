@@ -2,9 +2,9 @@ sudo: required
 language: python
 env:
   matrix:
-    - SLURM=17.02.3 CYTHON=0.25.2 CENTOS=7 PYTHON=2.7
-    - SLURM=17.02.3 CYTHON=0.25.2 CENTOS=7 PYTHON=3.4
-    - SLURM=17.02.3 CYTHON=0.25.2 CENTOS=6 PYTHON=2.6
+    - SLURM=17.02.6 CYTHON=0.25.2 CENTOS=7 PYTHON=2.7
+    - SLURM=17.02.6 CYTHON=0.25.2 CENTOS=7 PYTHON=3.4
+    - SLURM=17.02.6 CYTHON=0.25.2 CENTOS=6 PYTHON=2.6
 services:
   - docker
 before_install:
