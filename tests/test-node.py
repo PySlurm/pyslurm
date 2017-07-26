@@ -33,7 +33,7 @@ def test_node_scontrol():
 
     sctl = subprocess.Popen(["scontrol", "-d", "show", "node", test_node],
                             stdout=subprocess.PIPE).communicate()
-    sctl_stdout = sctl[0].strip().split()
+    sctl_stdout = sctl[0].strip().decode("UTF-8").split()
     sctl_dict = dict((value.split("=")[0], value.split("=")[1])
                      for value in sctl_stdout)
 

@@ -2621,24 +2621,24 @@ cdef class node:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
-    cpdef find_id(self, char *nodeID):
+    def find_id(self, nodeID):
         u"""Get node information for a given node.
 
         :param str nodeID: Node key string to search
         :returns: Dictionary of values for given node
         :rtype: `dict`
         """
-        return self.get_node(nodeID).values()[0]
+        return list(self.get_node(nodeID).values())[0]
 
-    cpdef get(self):
+    def get(self):
         u"""Get all slurm node information.
 
         :returns: Dictionary of dictionaries whose key is the node name.
         :rtype: `dict`
         """
-        return self.get_node(NULL)
+        return self.get_node(None)
 
-    cpdef get_node(self, char *nodeID):
+    def get_node(self, nodeID):
         u"""Get single slurm node information.
 
         :param str nodeID: Node key string to search. Default NULL.
@@ -2661,11 +2661,12 @@ cdef class node:
             slurm.node_info_t *record
             dict Host_dict
 
-        if nodeID == NULL:
+        if nodeID is None:
             rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr,
                                        self._ShowFlags)
         else:
-            rc = slurm.slurm_load_node_single(&self._Node_ptr, nodeID,
+            rc = slurm.slurm_load_node_single(&self._Node_ptr,
+                                              nodeID.encode("UTF-8"),
                                               self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
@@ -2711,7 +2712,7 @@ cdef class node:
                     Host_dict[u'mcs_label'] = None
                 else:
                     Host_dict[u'mcs_label'] = record.mcs_label
-                    
+
                 Host_dict[u'mem_spec_limit'] = record.mem_spec_limit
                 Host_dict[u'name'] = slurm.stringOrNone(record.name, '')
                 Host_dict[u'node_addr'] = slurm.stringOrNone(record.node_addr, '')
@@ -2806,8 +2807,10 @@ cdef class node:
                     node_state &= NODE_STATE_FLAGS
                     node_state |= NODE_STATE_MIXED
 
-                Host_dict[u'state'] = (slurm.slurm_node_state_string(node_state) +
-                                       cloud_str + comp_str + drain_str + power_str)
+                Host_dict[u'state'] = slurm.stringOrNone(
+                    slurm.slurm_node_state_string(node_state) +
+                    cloud_str + comp_str + drain_str + power_str, ''
+                )
 
                 slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
                                                 SELECT_NODEDATA_MEM_ALLOC,
