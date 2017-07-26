@@ -30,13 +30,12 @@ def test_job_scontrol():
     # Make sure job is running first
     test_job = all_job_ids[0]
 
-    test_job_info = pyslurm.job().find_id(str(test_job))[0]
+    test_job_info = pyslurm.job().find_id(test_job)[0]
     assert_equals(test_job, test_job_info["job_id"])
 
-    sctl = subprocess.Popen(["scontrol", "-d", "show", "job",
-                            str(test_job)],
+    sctl = subprocess.Popen(["scontrol", "-d", "show", "job", str(test_job)],
                             stdout=subprocess.PIPE).communicate()
-    sctl_stdout = sctl[0].strip().split()
+    sctl_stdout = sctl[0].strip().decode("UTF-8", "replace").split()
     sctl_dict = dict((value.split("=")[0], value.split("=")[1])
                      for value in sctl_stdout)
 

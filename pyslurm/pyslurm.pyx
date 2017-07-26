@@ -335,7 +335,7 @@ cpdef dict slurm_load_slurmd_status():
 
 def get_private_data_list(data):
     u"""Return the list of enciphered Private Data configuration."""
-    
+
     result = []
     exponent = 7
     types = ['jobs', 'node', 'partitions', 'usage', 'users', 'accounts', 'reservations', 'cloud_nodes']
@@ -1895,7 +1895,7 @@ cdef class job:
 
         return retList
 
-    cpdef find_id(self, char *jobid_str):
+    def find_id(self, jobid):
         u"""Retrieve job ID data.
 
         This method calls slurm_xlate_job_id() to convert a jobid string to a
@@ -1910,13 +1910,17 @@ cdef class job:
         cdef:
             int apiError
             int rc
-            uint32_t jobid
 
-        jobid = slurm.slurm_xlate_job_id(jobid_str)
-        rc = slurm.slurm_load_job(&self._job_ptr, jobid, self._ShowFlags)
+        if isinstance(jobid, int):
+            jobid = str(jobid).encode("UTF-8")
+        else:
+            jobid = jobid.encode("UTF-8")
+
+        jobid_xlate = slurm.slurm_xlate_job_id(jobid)
+        rc = slurm.slurm_load_job(&self._job_ptr, jobid_xlate, self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
-            return self.get_job_ptr().values()
+            return list(self.get_job_ptr().values())
         else:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.slurm_strerror(apiError), apiError)
@@ -2085,8 +2089,9 @@ cdef class job:
 
             # JOB RESOURCES HERE
             Job_dict[u'job_id'] = self._record.job_id
-            Job_dict[u'job_state'] = slurm.slurm_job_state_string(
-                self._record.job_state)
+            Job_dict[u'job_state'] = slurm.stringOrNone(
+                slurm.slurm_job_state_string(self._record.job_state), ''
+            )
 
             Job_dict[u'licenses'] = __get_licenses(self._record.licenses)
             Job_dict[u'max_cpus'] = self._record.max_cpus
@@ -2101,7 +2106,7 @@ cdef class job:
             Job_dict[u'ntasks_per_board'] = self._record.ntasks_per_board
             Job_dict[u'num_cpus'] = self._record.num_cpus
             Job_dict[u'num_nodes'] = self._record.num_nodes
-            Job_dict[u'partition'] = self._record.partition
+            Job_dict[u'partition'] = slurm.stringOrNone(self._record.partition, '')
 
             if self._record.pn_min_memory & slurm.MEM_PER_CPU:
                 self._record.pn_min_memory &= (~slurm.MEM_PER_CPU)
@@ -2170,20 +2175,23 @@ cdef class job:
             Job_dict[u'start_time'] = self._record.start_time
 
             if self._record.state_desc:
-                Job_dict[u'state_reason'] = self._record.state_desc.decode().replace(" ", "_")
+                Job_dict[u'state_reason'] = self._record.state_desc.decode("UTF-8").replace(" ", "_")
             else:
-                Job_dict[u'state_reason'] = slurm.slurm_job_reason_string(
-                    <slurm.job_state_reason>self._record.state_reason)
+                Job_dict[u'state_reason'] = slurm.stringOrNone(
+                    slurm.slurm_job_reason_string(
+                        <slurm.job_state_reason>self._record.state_reason
+                    ), ''
+                )
 
             if self._record.batch_flag:
                 slurm.slurm_get_job_stderr(tmp_line, sizeof(tmp_line), self._record)
-                Job_dict[u'std_err'] = tmp_line
+                Job_dict[u'std_err'] = slurm.stringOrNone(tmp_line, '')
 
                 slurm.slurm_get_job_stdin(tmp_line, sizeof(tmp_line), self._record)
-                Job_dict[u'std_in'] = tmp_line
+                Job_dict[u'std_in'] = slurm.stringOrNone(tmp_line, '')
 
                 slurm.slurm_get_job_stdout(tmp_line, sizeof(tmp_line), self._record)
-                Job_dict[u'std_out'] = tmp_line
+                Job_dict[u'std_out'] = slurm.stringOrNone(tmp_line, '')
             else:
                 Job_dict[u'std_err'] = None
                 Job_dict[u'std_in'] = None
