@@ -55,7 +55,6 @@ def test_job_scontrol():
     assert_equals(test_job_info["reboot"], int(sctl_dict["Reboot"]))
     assert_equals(test_job_info["requeue"], int(sctl_dict["Requeue"]))
     assert_equals(test_job_info["restart_cnt"], int(sctl_dict["Restarts"]))
-    assert_equals(test_job_info["run_time_str"], sctl_dict["RunTime"])
     assert_equals(test_job_info["std_err"], sctl_dict["StdErr"])
     assert_equals(test_job_info["std_in"], sctl_dict["StdIn"])
     assert_equals(test_job_info["std_out"], sctl_dict["StdOut"])
