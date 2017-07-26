@@ -558,8 +558,12 @@ cdef class config:
             Ctl_dict[u'job_comp_type'] = slurm.stringOrNone(self.__Config_ptr.job_comp_type, '')
             Ctl_dict[u'job_comp_user'] = slurm.stringOrNone(self.__Config_ptr.job_comp_user, '')
             Ctl_dict[u'job_container_plugin'] = slurm.stringOrNone(self.__Config_ptr.job_container_plugin, '')
-            Ctl_dict[u'job_credential_private_key'] = slurm.stringOrNone(self.__Config_ptr.job_credential_private_key, '')
-            Ctl_dict[u'job_credential_public_certificate'] = slurm.stringOrNone(self.__Config_ptr.job_credential_public_certificate, '')
+            Ctl_dict[u'job_credential_private_key'] = slurm.stringOrNone(
+                self.__Config_ptr.job_credential_private_key, ''
+            )
+            Ctl_dict[u'job_credential_public_certificate'] = slurm.stringOrNone(
+                self.__Config_ptr.job_credential_public_certificate, ''
+            )
             Ctl_dict[u'job_file_append'] = bool(self.__Config_ptr.job_file_append)
             Ctl_dict[u'job_requeue'] = bool(self.__Config_ptr.job_requeue)
             Ctl_dict[u'job_submit_plugins'] = slurm.stringOrNone(self.__Config_ptr.job_submit_plugins, '')
@@ -592,7 +596,10 @@ cdef class config:
             Ctl_dict[u'plugstack'] = slurm.stringOrNone(self.__Config_ptr.plugstack, '')
             Ctl_dict[u'power_parameters'] = slurm.stringOrNone(self.__Config_ptr.power_parameters, '')
             Ctl_dict[u'power_plugin'] = slurm.stringOrNone(self.__Config_ptr.power_plugin, '')
-            Ctl_dict[u'preempt_mode'] = get_preempt_mode(self.__Config_ptr.preempt_mode)
+
+            config_get_preempt_mode = get_preempt_mode(self.__Config_ptr.preempt_mode)
+            Ctl_dict[u'preempt_mode'] = slurm.stringOrNone(config_get_preempt_mode, '')
+
             Ctl_dict[u'preempt_type'] = slurm.stringOrNone(self.__Config_ptr.preempt_type, '')
             Ctl_dict[u'priority_decay_hl'] = self.__Config_ptr.priority_decay_hl
             Ctl_dict[u'priority_calc_period'] = self.__Config_ptr.priority_calc_period
