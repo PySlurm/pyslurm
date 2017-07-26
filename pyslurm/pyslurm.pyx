@@ -2668,9 +2668,8 @@ cdef class node:
             rc = slurm.slurm_load_node(<time_t> NULL, &self._Node_ptr,
                                        self._ShowFlags)
         else:
-            rc = slurm.slurm_load_node_single(&self._Node_ptr,
-                                              nodeID.encode("UTF-8"),
-                                              self._ShowFlags)
+            b_nodeID = nodeID.encode("UTF-8")
+            rc = slurm.slurm_load_node_single(&self._Node_ptr, b_nodeID, self._ShowFlags)
 
         if rc == slurm.SLURM_SUCCESS:
             self._NodeDict = {}
@@ -2810,9 +2809,12 @@ cdef class node:
                     node_state &= NODE_STATE_FLAGS
                     node_state |= NODE_STATE_MIXED
 
-                Host_dict[u'state'] = slurm.stringOrNone(
-                    slurm.slurm_node_state_string(node_state) +
-                    cloud_str + comp_str + drain_str + power_str, ''
+                Host_dict[u'state'] = (
+                    slurm.stringOrNone(slurm.slurm_node_state_string(node_state), '') +
+                    slurm.stringOrNone(cloud_str, '') +
+                    slurm.stringOrNone(comp_str, '') +
+                    slurm.stringOrNone(drain_str, '') +
+                    slurm.stringOrNone(power_str, '')
                 )
 
                 slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
