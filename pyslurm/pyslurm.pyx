@@ -1911,7 +1911,7 @@ cdef class job:
             int apiError
             int rc
 
-        if isinstance(jobid, int):
+        if isinstance(jobid, int) or isinstance(jobid, long):
             jobid = str(jobid).encode("UTF-8")
         else:
             jobid = jobid.encode("UTF-8")
