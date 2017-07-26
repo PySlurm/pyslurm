@@ -59,8 +59,14 @@ before_script:
   - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos$CENTOS-slurm:$SLURM
   - if [ $CENTOS -eq 7 ]; then docker exec slurm-$SLURM bash -c "yum makecache fast && yum -y install python34{,-devel,-pip}"; fi
   - docker exec slurm-$SLURM pip$PYTHON install nose Cython==$CYTHON
-  - docker exec slurm-$SLURM git clone https://github.com/PySlurm/pyslurm.git
+  - docker exec slurm-$SLURM git clone --branch=$TRAVIS_BRANCH https://github.com/PySlurm/pyslurm.git
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py build"
   - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py install"
 script:
   - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.version())"
+  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
+  - docker exec slurm-$SLURM sbatch --wrap="sleep 1000"
+  - docker exec slurm-$SLURM scontrol -d show job
+  - docker exec slurm-$SLURM scontrol -d show node c1
+  - docker exec slurm-$SLURM scontrol -d show partition
+  - docker exec slurm-$SLURM nosetests -v /pyslurm/tests
