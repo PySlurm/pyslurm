@@ -739,7 +739,7 @@ cdef class partition:
         """
         return self._lastUpdate
 
-    cpdef list ids(self):
+    def ids(self):
         u"""Return the partition IDs from retrieved data.
 
         :returns: Dictionary of partition IDs
@@ -749,7 +749,6 @@ cdef class partition:
             int rc
             int apiError
             uint32_t i
-            list all_partitions
 
         rc = slurm.slurm_load_partitions(<time_t> NULL, &self._Partition_ptr,
                                          slurm.SHOW_ALL)
@@ -757,8 +756,10 @@ cdef class partition:
         if rc == slurm.SLURM_SUCCESS:
             self._lastUpdate = self._Partition_ptr.last_update
             all_partitions = []
-            for i in range(self._Partition_ptr.record_count):
-                all_partitions.append(self._Partition_ptr.partition_array[i].name)
+
+            for record in self._Partition_ptr.partition_array[:self._Partition_ptr.record_count]:
+                all_partitions.append(slurm.stringOrNone(record.name, ''))
+
             slurm.slurm_free_partition_info_msg(self._Partition_ptr)
             self._Partition_ptr = NULL
             return all_partitions
@@ -766,7 +767,7 @@ cdef class partition:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
-    cpdef dict find_id(self, char *partID):
+    def find_id(self, partID):
         u"""Get partition information for a given partition.
 
         :param str partID: Partition key string to search
@@ -863,7 +864,7 @@ cdef class partition:
             for i in range(self._Partition_ptr.record_count):
                 Part_dict = {}
                 record = &self._Partition_ptr.partition_array[i]
-                name = record.name
+                name = slurm.stringOrNone(record.name, '')
 
                 if record.allow_accounts or not record.deny_accounts:
                     if record.allow_accounts == NULL or \
@@ -989,7 +990,9 @@ cdef class partition:
                 preempt_mode = record.preempt_mode
                 if preempt_mode == slurm.NO_VAL16:
                     preempt_mode = slurm.slurm_get_preempt_mode()
-                Part_dict[u'preempt_mode'] = slurm.slurm_preempt_mode_string(preempt_mode)
+                Part_dict[u'preempt_mode'] = slurm.stringOrNone(
+                    slurm.slurm_preempt_mode_string(preempt_mode), ''
+                )
 
                 Part_dict[u'priority_job_factor'] = record.priority_job_factor
                 Part_dict[u'priority_tier'] = record.priority_tier

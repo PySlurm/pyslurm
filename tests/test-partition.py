@@ -34,7 +34,7 @@ def test_partition_scontrol():
     sctl = subprocess.Popen(["scontrol", "-d", "show", "partition",
                             str(test_partition)],
                             stdout=subprocess.PIPE).communicate()
-    sctl_stdout = sctl[0].strip().split()
+    sctl_stdout = sctl[0].strip().decode("UTF-8").split()
     sctl_dict = dict((value.split("=")[0], value.split("=")[1])
                      for value in sctl_stdout)
 
