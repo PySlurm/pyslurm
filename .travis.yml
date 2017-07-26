@@ -65,8 +65,13 @@ before_script:
 script:
   - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.version())"
   - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
-  - docker exec slurm-$SLURM sbatch --wrap="sleep 1000"
+  - docker exec slurm-$SLURM bash -c "echo 'Licenses=fluent:30,ansys:100,matlab:50' >> /etc/slurm/slurm.conf"
+  - docker exec slurm-$SLURM scontrol reconfigure
+  - docker exec slurm-$SLURM sbatch --wrap="srun sleep 1000"
+  - sleep 10
   - docker exec slurm-$SLURM scontrol -d show job
   - docker exec slurm-$SLURM scontrol -d show node c1
   - docker exec slurm-$SLURM scontrol -d show partition
-  - docker exec slurm-$SLURM nosetests -v /pyslurm/tests
+  - docker exec slurm-$SLURM scontrol -d show license
+  - docker exec slurm-$SLURM scontrol -d show steps
+  - if [ $PYTHON = "3.4" ]; then docker exec slurm-$SLURM nosetests-$PYTHON -v /pyslurm/tests; else docker exec slurm-$SLURM nosetests -v /pyslurm/tests; fi
