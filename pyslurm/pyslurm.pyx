@@ -3165,30 +3165,24 @@ cdef class hostlist:
     def __dealloc__(self):
         self.destroy()
 
+    def create(self, hostnames=None):
+        if not hostnames:
+            self.hl = slurm.slurm_hostlist_create(NULL)
+        else:
+            b_hostnames = hostnames.encode("UTF-8")
+            self.hl = slurm.slurm_hostlist_create(b_hostnames)
+        if not self.hl:
+            raise ValueError("No memory")
+        else:
+            return True
+
     def destroy(self):
         if self.hl is not NULL:
             slurm.slurm_hostlist_destroy(self.hl)
             self.hl = NULL
 
-    cpdef int count(self):
-        cdef int errCode = -1
-        if self.hl is not NULL:
-            errCode = slurm.slurm_hostlist_count(self.hl)
-        return errCode
-
-    cpdef int create(self, char *HostList=''):
-        # convert python byte string to C char
-        if self.hl is not NULL:
-            self.destroy()
-
-        if HostList is not NULL:
-            self.hl = slurm.slurm_hostlist_create(HostList)
-            if self.hl is not NULL:
-                return True
-        return False
-
-    cpdef get(self):
-        return self.__get()
+    def count(self):
+        return slurm.slurm_hostlist_count(self.hl)
 
     cpdef get_list(self):
         u"""Get the list of hostnames composing the hostlist.
@@ -3227,7 +3221,7 @@ cdef class hostlist:
 
         return host_list
 
-    cpdef __get(self):
+    def get(self):
         cdef:
             char *hostlist_s = NULL
             char *tmp_str = NULL
@@ -3244,34 +3238,33 @@ cdef class hostlist:
 
         return py_string
 
-    cpdef int find(self, char* Host):
-        # convert python byte string to C char
-        cdef int errCode = -1
+    def ranged_string(self):
         if self.hl is not NULL:
-            if Host is not NULL:
-                errCode = slurm.slurm_hostlist_find(self.hl, Host)
-        return errCode
+            return slurm.slurm_hostlist_ranged_string_malloc(self.hl)
 
-    cpdef pop(self):
-        # convert C char to python byte string
-        cdef char *Host = ''
-
-        host = None
+    def find(self, hostname):
         if self.hl is not NULL:
-            Host = slurm.slurm_hostlist_shift(self.hl)
-            host = Host
-            free(Host)
-        return host
+            b_hostname = hostname.encode("UTF-8")
+            return slurm.slurm_hostlist_find(self.hl, b_hostname)
 
-    cpdef int push(self, char *Hosts):
-        # convert python byte string to C char
-        cdef int errCode = -1
+    def pop(self):
         if self.hl is not NULL:
-            if Hosts is not NULL:
-                errCode = slurm.slurm_hostlist_push_host(self.hl, Hosts)
-        return errCode
+            return slurm.slurm_hostlist_shift(self.hl)
 
-    cpdef uniq(self):
+    def shift(self):
+        return self.pop()
+
+    def push(self, hosts):
+        if self.hl is not NULL:
+            b_hosts = hosts.encode("UTF-8")
+            return slurm.slurm_hostlist_push(self.hl, b_hosts)
+
+    def push_host(self, host):
+        if self.hl is not NULL:
+            b_host = host.encode("UTF-8")
+            return slurm.slurm_hostlist_push_host(self.hl, b_host)
+
+    def uniq(self):
         if self.hl is not NULL:
             slurm.slurm_hostlist_uniq(self.hl)
 
