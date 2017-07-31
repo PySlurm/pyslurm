@@ -5535,7 +5535,6 @@ cdef class licenses:
         cdef:
             int rc
             int apiError
-            uint32_t i
             dict License_dict
 
         rc = slurm.slurm_load_licenses(<time_t> NULL, &self._msg,
@@ -5545,13 +5544,14 @@ cdef class licenses:
             self._licDict = {}
             self._lastUpdate = self._msg.last_update
 
-            for i in range(self._msg.num_lic):
+            for record in self._msg.lic_array[:self._msg.num_lic]:
                 License_dict = {}
-                License_dict["total"] = self._msg.lic_array[i].total
-                License_dict["in_use"] = self._msg.lic_array[i].in_use
-                License_dict["available"] = self._msg.lic_array[i].available
-                License_dict["remote"] = self._msg.lic_array[i].remote
-                self._licDict[u"%s" % self._msg.lic_array[i].name] = License_dict
+                license_name = slurm.stringOrNone(record.name, '')
+                License_dict["total"] = record.total
+                License_dict["in_use"] = record.in_use
+                License_dict["available"] = record.available
+                License_dict["remote"] = record.remote
+                self._licDict[license_name] = License_dict
             slurm.slurm_free_license_info_msg(self._msg)
             self._msg = NULL
             return self._licDict
