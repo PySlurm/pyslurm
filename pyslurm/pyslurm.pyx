@@ -2248,7 +2248,8 @@ cdef class job:
             Job_dict[u'cpus_alloc_layout'] = {}
             if self._record.nodes is not NULL:
                 hl = hostlist()
-                hl.create(self._record.nodes)
+                _nodes = slurm.stringOrNone(self._record.nodes, '')
+                hl.create(_nodes)
                 host_list = hl.get_list()
                 if host_list:
                     for node_name in host_list:
@@ -3240,7 +3241,7 @@ cdef class hostlist:
 
     def ranged_string(self):
         if self.hl is not NULL:
-            return slurm.slurm_hostlist_ranged_string_malloc(self.hl)
+            return slurm.stringOrNone(slurm.slurm_hostlist_ranged_string_malloc(self.hl), '')
 
     def find(self, hostname):
         if self.hl is not NULL:
@@ -3249,7 +3250,7 @@ cdef class hostlist:
 
     def pop(self):
         if self.hl is not NULL:
-            return slurm.slurm_hostlist_shift(self.hl)
+            return slurm.stringOrNone(slurm.slurm_hostlist_shift(self.hl), '')
 
     def shift(self):
         return self.pop()

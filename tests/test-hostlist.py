@@ -35,6 +35,7 @@ def test_hostlist_create_new():
 
 
 def test_hostlist_create_empty():
+    """Hostlist: Test create empty hostlist."""
     hl = pyslurm.hostlist()
 
     hl.create()
