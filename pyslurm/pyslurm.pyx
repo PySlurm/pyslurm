@@ -4140,15 +4140,12 @@ cdef class topology:
 
                 Topo_dict = {}
 
-                name = u"%s" % self._topo_info_ptr.topo_array[i].name
+                name = slurm.stringOrNone(self._topo_info_ptr.topo_array[i].name, '')
                 Topo_dict[u'name'] = name
-                Topo_dict[u'nodes'] = slurm.stringOrNone(
-                    self._topo_info_ptr.topo_array[i].nodes, '')
-
+                Topo_dict[u'nodes'] = slurm.stringOrNone(self._topo_info_ptr.topo_array[i].nodes, '')
                 Topo_dict[u'level'] = self._topo_info_ptr.topo_array[i].level
                 Topo_dict[u'link_speed'] = self._topo_info_ptr.topo_array[i].link_speed
-                Topo_dict[u'switches'] = slurm.stringOrNone(
-                    self._topo_info_ptr.topo_array[i].switches, '')
+                Topo_dict[u'switches'] = slurm.stringOrNone(self._topo_info_ptr.topo_array[i].switches, '')
 
                 Topo[name] = Topo_dict
 
