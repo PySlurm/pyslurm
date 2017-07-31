@@ -66,6 +66,8 @@ script:
   - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.version())"
   - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
   - docker exec slurm-$SLURM bash -c "echo 'Licenses=fluent:30,ansys:100,matlab:50' >> /etc/slurm/slurm.conf"
+  - docker exec slurm-$SLURM bash -c "echo -e 'SwitchName=s0 Nodes=c[0-5]\nSwitchName=s1 Nodes=c[6-10]\nSwitchName=s2 Switches=s[0-1]' >> /etc/slurm/topology.conf"
+  - docker exec slurm-$SLURM bash -c "echo 'TopologyPlugin=topology/tree' >> /etc/slurm/slurm.conf"
   - docker exec slurm-$SLURM scontrol reconfigure
   - docker exec slurm-$SLURM sbatch --wrap="srun sleep 1000"
   - sleep 10
@@ -74,4 +76,5 @@ script:
   - docker exec slurm-$SLURM scontrol -d show partition
   - docker exec slurm-$SLURM scontrol -d show license
   - docker exec slurm-$SLURM scontrol -d show steps
+  - docker exec slurm-$SLURM scontrol -d show topology
   - if [ $PYTHON = "3.4" ]; then docker exec slurm-$SLURM nosetests-$PYTHON -v /pyslurm/tests; else docker exec slurm-$SLURM nosetests -v /pyslurm/tests; fi
