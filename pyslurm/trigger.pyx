@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ==============
 :mod:`trigger`
@@ -33,11 +32,14 @@ Each trigger record in a ``trigger_info_msg_t`` struct is converted to a
 """
 from __future__ import absolute_import, unicode_literals
 
+import time
+
 from libc.stdio cimport stdout
+from libc.errno cimport EAGAIN
 
 from .c_trigger cimport *
 from .slurm_common cimport *
-from .utils cimport trigger_res_type, trigger_type, trig_offset, trig_flags
+from .utils cimport *
 from .exceptions import PySlurmError
 
 cdef class Trigger:
@@ -108,12 +110,12 @@ cdef get_triggers_msg(trigger, ids=False):
 
             this_trigger.trig_id = record.trig_id
             this_trigger.res_type = trigger_res_type(record.res_type)
-            this_trigger.res_id = record.res_id
+            this_trigger.res_id = tounicode(record.res_id)
             this_trigger.trig_type = trigger_type(record.trig_type)
             this_trigger.offset = trig_offset(record.offset)
             this_trigger.user_id = record.user_id
             this_trigger.flags = trig_flags(record.flags)
-            this_trigger.program = record.program
+            this_trigger.program = tounicode(record.program)
 
             trigger_list.append(this_trigger)
 
@@ -126,3 +128,136 @@ cdef get_triggers_msg(trigger, ids=False):
             return trigger_list
     else:
         raise PySlurmError(slurm_strerror(rc), rc)
+
+
+def clear_trigger(trigger_id=None, user_id=None, job_id=None):
+    """
+    """
+    cdef:
+        trigger_info_t ti
+        int rc
+
+    if not (trigger_id or user_id or job_id):
+        raise PySlurmError("""
+        The `trigger_id`, `user_id` or `job_id` options must be specified to
+        identify the trigger(s) to be cleared.
+        """)
+
+    slurm_init_trigger_msg(&ti)
+
+    if trigger_id is not None:
+        ti.trig_id = trigger_id
+
+    if user_id is not None:
+        ti.user_id = user_id
+
+    if job_id is not None:
+        ti.res_type = TRIGGER_RES_TYPE_JOB
+        b_job_id = str(job_id).encode("UTF-8")
+        ti.res_id = b_job_id
+
+    rc = slurm_clear_trigger(&ti)
+
+    if rc == SLURM_SUCCESS:
+        return rc
+    else:
+        raise PySlurmError(slurm_strerror(rc), rc)
+
+
+def set_trigger(dict trigger_dict):
+    """
+    """
+    cdef:
+        trigger_info_t ti
+        int rc
+
+    slurm_init_trigger_msg(&ti)
+
+    if trigger_dict.get("job_id"):
+        ti.res_type = TRIGGER_RES_TYPE_JOB
+        b_job_id = str(trigger_dict.get("job_id")).encode("UTF-8")
+        ti.res_id = b_job_id
+        if trigger_dict.get("job_fini"):
+            ti.trig_type |= TRIGGER_TYPE_FINI
+        if trigger_dict.get("time_limit"):
+            ti.trig_type |= TRIGGER_TYPE_TIME
+    elif trigger_dict.get("front_end"):
+        ti.res_type = TRIGGER_RES_TYPE_FRONT_END
+    elif trigger_dict.get("burst_buffer"):
+        ti.res_type = TRIGGER_RES_TYPE_OTHER
+    else:
+        ti.res_type = TRIGGER_RES_TYPE_NODE
+        if trigger_dict.get("node_id"):
+            b_node_id = trigger_dict.get("node_id").encode("UTF-8")
+            ti.res_id = b_node_id
+        else:
+            ti.res_id = "*"
+
+    if trigger_dict.get("block_err"):
+        ti.trig_type |= TRIGGER_TYPE_BLOCK_ERR;
+    if trigger_dict.get("burst_buffer"):
+        ti.trig_type |= TRIGGER_TYPE_BURST_BUFFER;
+    if trigger_dict.get("node_down"):
+        ti.trig_type |= TRIGGER_TYPE_DOWN;
+    if trigger_dict.get("node_drained"):
+        ti.trig_type |= TRIGGER_TYPE_DRAINED;
+    if trigger_dict.get("node_fail"):
+        ti.trig_type |= TRIGGER_TYPE_FAIL;
+    if trigger_dict.get("node_idle"):
+        ti.trig_type |= TRIGGER_TYPE_IDLE;
+    if trigger_dict.get("node_up"):
+        ti.trig_type |= TRIGGER_TYPE_UP;
+    if trigger_dict.get("reconfig"):
+        ti.trig_type |= TRIGGER_TYPE_RECONFIG;
+    if trigger_dict.get("pri_ctld_fail"):
+        ti.trig_type |= TRIGGER_TYPE_PRI_CTLD_FAIL;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMCTLD;
+    if trigger_dict.get("pri_ctld_res_op"):
+        ti.trig_type |= TRIGGER_TYPE_PRI_CTLD_RES_OP;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMCTLD;
+    if trigger_dict.get("pri_ctld_res_ctrl"):
+        ti.trig_type |=  TRIGGER_TYPE_PRI_CTLD_RES_CTRL;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMCTLD;
+    if trigger_dict.get("pri_ctld_acct_buffer_full"):
+        ti.trig_type |= TRIGGER_TYPE_PRI_CTLD_ACCT_FULL;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMCTLD;
+    if trigger_dict.get("bu_ctld_fail"):
+        ti.trig_type |= TRIGGER_TYPE_BU_CTLD_FAIL;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMCTLD;
+    if trigger_dict.get("bu_ctld_res_op"):
+        ti.trig_type |= TRIGGER_TYPE_BU_CTLD_RES_OP;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMCTLD;
+    if trigger_dict.get("bu_ctld_as_ctrl"):
+        ti.trig_type |= TRIGGER_TYPE_BU_CTLD_AS_CTRL;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMCTLD;
+    if trigger_dict.get("pri_dbd_fail"):
+        ti.trig_type |= TRIGGER_TYPE_PRI_DBD_FAIL;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMDBD;
+    if trigger_dict.get("pri_dbd_res_op"):
+        ti.trig_type |= TRIGGER_TYPE_PRI_DBD_RES_OP;
+        ti.res_type = TRIGGER_RES_TYPE_SLURMDBD;
+    if trigger_dict.get("pri_dbd_fail"):
+        ti.trig_type |= TRIGGER_TYPE_PRI_DB_FAIL;
+        ti.res_type = TRIGGER_RES_TYPE_DATABASE;
+    if trigger_dict.get("pri_db_res_op"):
+        ti.trig_type |= TRIGGER_TYPE_PRI_DB_RES_OP;
+        ti.res_type = TRIGGER_RES_TYPE_DATABASE;
+
+    if trigger_dict.get("flags"):
+        ti.flags = trigger_dict.get("flags")
+
+    if trigger_dict.get("offset"):
+        ti.offset = trigger_dict.get("offset") + 0x8000
+    else:
+        ti.offset = 0x8000
+
+    b_program = trigger_dict.get("program").encode("UTF-8")
+    ti.program = b_program
+
+    while slurm_set_trigger(&ti):
+        if slurm_get_errno() != EAGAIN:
+            print(slurm_strerror(slurm_get_errno()), slurm_get_errno())
+            return 1
+        time.sleep(5)
+
+    return 0

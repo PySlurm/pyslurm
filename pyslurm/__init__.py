@@ -44,3 +44,4 @@ from . import powercap
 from . import reservation
 from . import statistics
 from . import topology
+from . import trigger
