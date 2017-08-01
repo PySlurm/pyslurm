@@ -3277,7 +3277,7 @@ cdef class hostlist:
 
 cdef class trigger:
 
-    cpdef int set(self, dict trigger_dict):
+    def set(self, dict trigger_dict):
         u"""Set or create a slurm trigger.
 
         :param dict trigger_dict: A populated dictionary of trigger information
@@ -3286,17 +3286,19 @@ cdef class trigger:
         """
         cdef:
             slurm.trigger_info_t trigger_set
-            char tmp_c[128]
-            char *JobId
-            int  errCode = -1
+            int errCode = -1
 
         slurm.slurm_init_trigger_msg(&trigger_set)
 
         if 'jobid' in trigger_dict:
             JobId = trigger_dict[u'jobid']
             trigger_set.res_type = TRIGGER_RES_TYPE_JOB  # 1
-            memcpy(tmp_c, JobId, 128)
-            trigger_set.res_id = tmp_c
+
+            if isinstance(JobId, int):
+                JobId = str(JobId)
+
+            b_JobId = JobId.encode("UTF-8")
+            trigger_set.res_id = b_JobId
 
             if 'fini' in trigger_dict:
                 trigger_set.trig_type = trigger_set.trig_type | TRIGGER_TYPE_FINI  # 0x0010
@@ -3308,13 +3310,15 @@ cdef class trigger:
             if trigger_dict[u'node'] == '':
                 trigger_set.res_id = '*'
             else:
-                trigger_set.res_id = trigger_dict[u'node']
+                b_node = trigger_dict[u'node'].encode("UTF-8")
+                trigger_set.res_id = b_node
 
-        trigger_set.offset = 32768
+        trigger_set.offset = 0x8000
         if 'offset' in trigger_dict:
             trigger_set.offset = trigger_set.offset + trigger_dict[u'offset']
 
-        trigger_set.program = trigger_dict[u'program']
+        b_program = trigger_dict[u'program'].encode("UTF-8")
+        trigger_set.program = b_program
 
         event = trigger_dict[u'event']
         if event == 'block_err':
@@ -3349,7 +3353,7 @@ cdef class trigger:
 
         return 0
 
-    cpdef get(self):
+    def get(self):
         u"""Get the information on slurm triggers.
 
         :returns: Where key is the trigger ID
@@ -3357,29 +3361,22 @@ cdef class trigger:
         """
         cdef:
             slurm.trigger_info_msg_t *trigger_get = NULL
-            int i = 0
             int errCode = slurm.slurm_get_triggers(&trigger_get)
-
             dict Triggers = {}, Trigger_dict
 
         if errCode == 0:
-
-            for i in range(trigger_get.record_count):
-
-                trigger_id = trigger_get.trigger_array[i].trig_id
+            for record in trigger_get.trigger_array[:trigger_get.record_count]:
+                trigger_id = record.trig_id
 
                 Trigger_dict = {}
-                Trigger_dict[u'flags'] = trigger_get.trigger_array[i].flags
-                Trigger_dict[u'trig_id'] = trigger_get.trigger_array[i].trig_id
-                Trigger_dict[u'res_type'] = trigger_get.trigger_array[i].res_type
-                Trigger_dict[u'res_id'] = slurm.stringOrNone(
-                    trigger_get.trigger_array[i].res_id, '')
-
-                Trigger_dict[u'trig_type'] = trigger_get.trigger_array[i].trig_type
-                Trigger_dict[u'offset'] = trigger_get.trigger_array[i].offset-0x8000
-                Trigger_dict[u'user_id'] = trigger_get.trigger_array[i].user_id
-                Trigger_dict[u'program'] = slurm.stringOrNone(
-                    trigger_get.trigger_array[i].program, '')
+                Trigger_dict[u'flags'] = record.flags
+                Trigger_dict[u'trig_id'] = trigger_id
+                Trigger_dict[u'res_type'] = record.res_type
+                Trigger_dict[u'res_id'] = slurm.stringOrNone(record.res_id, '')
+                Trigger_dict[u'trig_type'] = record.trig_type
+                Trigger_dict[u'offset'] = record.offset - 0x8000
+                Trigger_dict[u'user_id'] = record.user_id
+                Trigger_dict[u'program'] = slurm.stringOrNone(record.program, '')
 
                 Triggers[trigger_id] = Trigger_dict
 
@@ -3387,8 +3384,7 @@ cdef class trigger:
 
         return Triggers
 
-    cpdef int clear(self, uint32_t TriggerID=-1,
-                    uint32_t UserID=-1, char* ID='') except? -1:
+    def clear(self, TriggerID=0, UserID=slurm.NO_VAL, ID=0):
         u"""Clear or remove a slurm trigger.
 
         :param string TriggerID: Trigger Identifier
@@ -3399,58 +3395,23 @@ cdef class trigger:
         """
         cdef:
             slurm.trigger_info_t trigger_clear
-            char tmp_c[128]
-            int apiError = 0
-            int errCode = 0
+            int errCode
 
-        memset(&trigger_clear, 0, sizeof(slurm.trigger_info_t))
+        if not (TriggerID or UserID or ID):
+            raise ValueError("One of `TriggerID` or `UserID` or `ID` must be provided.")
 
-        if TriggerID != -1:
-            trigger_clear.trig_id = TriggerID
-        if UserID != -1:
-            trigger_clear.user_id = UserID
+        trigger_clear.trig_id = TriggerID
+        trigger_clear.user_id = UserID
 
         if ID:
             trigger_clear.res_type = TRIGGER_RES_TYPE_JOB  # 1
-            memcpy(tmp_c, ID, 128)
-            trigger_clear.res_id = tmp_c
+            b_job_id = str(ID).encode("UTF-8")
+            trigger_clear.res_id = b_job_id
 
         errCode = slurm.slurm_clear_trigger(&trigger_clear)
-        if errCode != 0:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
-        return errCode
-
-    cpdef int pull(self, uint32_t TriggerID, uint32_t UserID, char* ID) except? -1:
-        u"""Pull a slurm trigger.
-
-        :param int TriggerID: Trigger Identifier
-        :param int UserID: User Identifier
-        :param string ID: Job Identifier
-        :returns: 0 for success or a slurm error code
-        :rtype: `integer`
-        """
-        cdef:
-            slurm.trigger_info_t trigger_pull
-            char tmp_c[128]
-            int apiError = 0
-            int errCode = 0
-
-        memset(&trigger_pull, 0, sizeof(slurm.trigger_info_t))
-
-        trigger_pull.trig_id = TriggerID
-        trigger_pull.user_id = UserID
-
-        if ID:
-            trigger_pull.res_type = TRIGGER_RES_TYPE_JOB  # 1
-            memcpy(tmp_c, ID, 128)
-            trigger_pull.res_id = tmp_c
-
-        errCode = slurm.slurm_pull_trigger(&trigger_pull)
-        if errCode != 0:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.slurm_strerror(apiError), apiError)
+        if errCode != slurm.SLURM_SUCCESS:
+            raise ValueError(slurm.slurm_strerror(errCode), errCode)
 
         return errCode
 
