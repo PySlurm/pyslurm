@@ -87,10 +87,11 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
 
 cdef extern from 'slurm/slurm.h' nogil:
 
-    enum: SLURM_ID_HASH_NUM = 10000000000
-    enum: SLURM_VERSION_NUMBER = 0x0f0800
-    enum: SYSTEM_DIMENSIONS = 1
-    enum: HIGHEST_DIMENSIONS = 5
+    enum:
+        SLURM_ID_HASH_NUM
+        SLURM_VERSION_NUMBER
+        SYSTEM_DIMENSIONS
+        HIGHEST_DIMENSIONS
 
     uint32_t INFINITE
     uint64_t INFINITE64
