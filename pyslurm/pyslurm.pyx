@@ -3874,9 +3874,9 @@ cdef class block:
         :returns: Dictionary of block IDs
         :rtype: `dict`
         """
-        return self._BlockDict.keys()
+        return list(self._BlockDict.keys())
 
-    def find_id(self, char *blockID=''):
+    def find_id(self, blockID=None):
         u"""Retrieve block ID data.
 
         :param str blockID: Block key string to search
@@ -3906,7 +3906,7 @@ cdef class block:
         u"""Load slurm block information."""
         self.__load()
 
-    cpdef int __load(self) except? -1:
+    cdef int __load(self) except? -1:
         cdef:
             slurm.block_info_msg_t *new_block_info_ptr = NULL
             time_t last_time = <time_t>NULL
@@ -3931,7 +3931,7 @@ cdef class block:
 
         if errCode != 0:
             apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.slurm_strerror(apiError), apiError)
+            raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
         else:
             self._block_ptr = new_block_info_ptr
 
@@ -3948,49 +3948,37 @@ cdef class block:
 
         return self._BlockDict
 
-    cpdef __get(self):
+    cdef __get(self):
         cdef:
-            int i
             dict Block = {}, Block_dict
 
         if self._block_ptr is not NULL:
             self._lastUpdate = self._block_ptr.last_update
-            for i in range(self._block_ptr.record_count):
+            for record in self._block_ptr.block_array[:self._block_ptr.record_count]:
                 Block_dict = {}
 
-                name = self._block_ptr.block_array[i].bg_block_id
+                name = slurm.stringOrNone(record.bg_block_id, '')
                 Block_dict[u'bg_block_id'] = name
-                Block_dict[u'blrtsimage'] = slurm.stringOrNone(
-                    self._block_ptr.block_array[i].blrtsimage, '')
+                Block_dict[u'blrtsimage'] = slurm.stringOrNone(record.blrtsimage, '')
 
-                # Block_dict[u'conn_type'] = self._block_ptr.block_array[i].conn_type[HIGHEST_DIMENSIONS]
-                Block_dict[u'conn_type'] = get_conn_type_string(
-                    self._block_ptr.block_array[i].conn_type[HIGHEST_DIMENSIONS])
+                conn_type = get_conn_type_string(record.conn_type[HIGHEST_DIMENSIONS])
+                Block_dict[u'conn_type'] = slurm.stringOrNone(conn_type, '')
 
-                Block_dict[u'ionode_str'] = slurm.listOrNone(
-                    self._block_ptr.block_array[i].ionode_str, ',')
+                Block_dict[u'ionode_str'] = slurm.listOrNone(record.ionode_str, ',')
+                Block_dict[u'linuximage'] = slurm.stringOrNone(record.linuximage, '')
+                Block_dict[u'mloaderimage'] = slurm.stringOrNone(record.mloaderimage, '')
+                Block_dict[u'cnode_cnt'] = record.cnode_cnt
+                Block_dict[u'cnode_err_cnt'] = record.cnode_err_cnt
+                Block_dict[u'mp_str'] = slurm.stringOrNone(record.mp_str, '')
 
-                Block_dict[u'linuximage'] = slurm.stringOrNone(
-                    self._block_ptr.block_array[i].linuximage, '')
+                node_use = get_node_use(record.node_use)
+                Block_dict[u'node_use'] = slurm.stringOrNone(node_use, '')
 
-                Block_dict[u'mloaderimage'] = slurm.stringOrNone(
-                    self._block_ptr.block_array[i].mloaderimage, '')
+                Block_dict[u'ramdiskimage'] = slurm.stringOrNone(record.ramdiskimage, '')
+                Block_dict[u'reason'] = slurm.stringOrNone(record.reason, '')
 
-                Block_dict[u'cnode_cnt'] = self._block_ptr.block_array[i].cnode_cnt
-                Block_dict[u'cnode_err_cnt'] = self._block_ptr.block_array[i].cnode_err_cnt
-                Block_dict[u'mp_str'] = slurm.stringOrNone(
-                    self._block_ptr.block_array[i].mp_str, '')
-
-                Block_dict[u'node_use'] = get_node_use(self._block_ptr.block_array[i].node_use)
-                Block_dict[u'ramdiskimage'] = slurm.stringOrNone(
-                    self._block_ptr.block_array[i].ramdiskimage, '')
-
-                Block_dict[u'reason'] = slurm.stringOrNone(
-                    self._block_ptr.block_array[i].reason, '')
-
-                # Block_dict[u'state'] = self._block_ptr.block_array[i].state
-                Block_dict[u'state'] = get_bg_block_state_string(
-                    self._block_ptr.block_array[i].state)
+                block_state = get_bg_block_state_string(record.state)
+                Block_dict[u'state'] = slurm.stringOrNone(block_state, '')
 
                 # Implement List job_list
 
@@ -3998,66 +3986,66 @@ cdef class block:
 
         self._BlockDict = Block
 
-    cpdef print_info_msg(self, int oneLiner=False):
+    def print_info_msg(self, int oneLiner=0):
         u"""Output information about all slurm blocks
 
         This is based upon data returned by the slurm_load_block.
 
-        :param int oneLiner: Print information on one line - False (Default), True
+        :param int oneLiner: Print information on one line - 0 (Default), 1
         """
         if self._block_ptr is not NULL:
             slurm.slurm_print_block_info_msg(slurm.stdout, self._block_ptr, oneLiner)
 
-    cpdef __free(self):
+    cdef __free(self):
         u"""Free the memory returned by load method."""
         if self._block_ptr is not NULL:
             slurm.slurm_free_block_info_msg(self._block_ptr)
 
-    cpdef update_error(self, char *blockID=''):
+    def update_error(self, blockID):
         u"""Set slurm block to ERROR state.
 
         :param string blockID: The ID string of the block
         """
         return self.update(blockID, BLOCK_ERROR)
 
-    cpdef update_free(self, char *blockID=''):
+    def update_free(self, blockID):
         u"""Set slurm block to FREE state.
 
         :param string blockID: The ID string of the block
         """
         return self.update(blockID, BLOCK_FREE)
 
-    cpdef update_recreate(self, char *blockID=''):
+    def update_recreate(self, blockID):
         u"""Set slurm block to RECREATE state.
 
         :param string blockID: The ID string of the block
         """
         return self.update(blockID, BLOCK_RECREATE)
 
-    cpdef update_remove(self, char *blockID=''):
+    def update_remove(self, blockID):
         u"""Set slurm block to REMOVE state.
 
         :param string blockID: The ID string of the block
         """
         return self.update(blockID, BLOCK_REMOVE)
 
-    cpdef update_resume(self, char *blockID=''):
+    def update_resume(self, blockID):
         u"""Set slurm block to RESUME state.
 
         :param string blockID: The ID string of the block
         """
         return self.update(blockID, BLOCK_RESUME)
 
-    cpdef update(self, char *blockID='', int blockOP=0):
-        cdef:
-            int i, dictlen
-            slurm.update_block_msg_t block_msg
+    def update(self, blockID, int blockOP=0):
+        cdef slurm.update_block_msg_t block_msg
 
         if not blockID:
             return
 
         slurm.slurm_init_update_block_msg(&block_msg)
-        block_msg.bg_block_id = blockID
+
+        b_blockid = blockID
+        block_msg.bg_block_id = b_blockid
         block_msg.state = blockOP
 
         if slurm.slurm_update_block(&block_msg):
@@ -4906,7 +4894,7 @@ def get_connection_type(int inx):
     return slurm.slurm_conn_type_string(inx)
 
 
-def get_node_use(int inx):
+def get_node_use(inx):
     u"""Returns a string that represents the block node mode.
 
     :param int ResType: Slurm block node usage
@@ -4916,11 +4904,7 @@ def get_node_use(int inx):
     :returns: Block node usage string
     :rtype: `string`
     """
-    return __get_node_use(inx)
-
-
-cdef inline object __get_node_use(uint32_t NodeType):
-    return slurm.slurm_node_state_string(NodeType)
+    return slurm.slurm_node_state_string(inx)
 
 
 def get_trigger_res_type(uint16_t inx):
@@ -5370,7 +5354,7 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
     return mode
 
 
-def get_conn_type_string(uint16_t inx):
+def get_conn_type_string(inx):
     u"""Return the state of the Slurm bluegene connection type.
 
     :param int inx: Slurm BG connection state
@@ -5380,7 +5364,7 @@ def get_conn_type_string(uint16_t inx):
     return slurm.slurm_conn_type_string(inx)
 
 
-def get_bg_block_state_string(uint16_t inx):
+def get_bg_block_state_string(inx):
     u"""Return the state of the slurm bluegene block state.
 
     :param int inx: Slurm BG block state
@@ -5390,7 +5374,7 @@ def get_bg_block_state_string(uint16_t inx):
     return slurm.slurm_bg_block_state_string(inx)
 
 
-def get_job_state(uint16_t inx):
+def get_job_state(inx):
     u"""Return the state of the slurm job state.
 
     :param int inx: Slurm job state
@@ -5409,19 +5393,21 @@ def get_job_state(uint16_t inx):
     :rtype: `string`
     """
     try:
-        return slurm.slurm_job_state_string(inx)
+        job_state = slurm.stringOrNone(slurm.slurm_job_state_string(inx), '')
+        return job_state
     except:
         pass
 
 
-def get_job_state_reason(uint16_t inx):
+def get_job_state_reason(inx):
     u"""Returns a reason why the slurm job is in a provided state.
 
     :param int inx: Slurm job state reason
     :returns: Reason string
     :rtype: `string`
     """
-    return slurm.slurm_job_reason_string(inx)
+    job_reason = slurm.stringOrNone(slurm.slurm_job_reason_string(inx), '')
+    return job_reason
 
 
 def epoch2date(epochSecs):
