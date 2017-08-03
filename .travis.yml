@@ -69,7 +69,7 @@ script:
   - docker exec slurm-$SLURM bash -c "echo -e 'SwitchName=s0 Nodes=c[0-5]\nSwitchName=s1 Nodes=c[6-10]\nSwitchName=s2 Switches=s[0-1]' >> /etc/slurm/topology.conf"
   - docker exec slurm-$SLURM bash -c "echo 'TopologyPlugin=topology/tree' >> /etc/slurm/slurm.conf"
   - docker exec slurm-$SLURM supervisorctl restart all
-  - sleep 5
+  - sleep 10
   - docker exec slurm-$SLURM sbatch --wrap="srun sleep 1000"
   - sleep 5
   - docker exec slurm-$SLURM scontrol -d show job
