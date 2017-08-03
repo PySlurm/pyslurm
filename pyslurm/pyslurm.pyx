@@ -3455,7 +3455,7 @@ cdef class reservation:
         """
         return self._ResDict.keys()
 
-    def find_id(self, char *resID=''):
+    def find_id(self, resID):
         u"""Retrieve reservation ID data.
 
         :param str resID: Reservation key string to search
@@ -3485,7 +3485,7 @@ cdef class reservation:
     def load(self):
         self.__load()
 
-    cpdef int __load(self) except? -1:
+    cdef int __load(self) except? -1:
         u"""Load slurm reservation information."""
 
         cdef:
@@ -3497,7 +3497,7 @@ cdef class reservation:
 
             errCode = slurm.slurm_load_reservations(self._Res_ptr.last_update,
                                                     &new_reserve_info_ptr)
-            if errCode == 0:  # SLURM_SUCCESS
+            if errCode == slurm.SLURM_SUCCESS:
                 slurm.slurm_free_reservation_info_msg(self._Res_ptr)
             elif slurm.slurm_get_errno() == 1900:   # SLURM_NO_CHANGE_IN_DATA
                 errCode = 0
@@ -3515,7 +3515,7 @@ cdef class reservation:
 
         return errCode
 
-    cpdef __free(self):
+    cdef __free(self):
         u"""Free slurm reservation pointer."""
 
         if self._Res_ptr is not NULL:
@@ -3532,49 +3532,35 @@ cdef class reservation:
 
         return self._ResDict
 
-    cpdef __get(self):
+    cdef __get(self):
         cdef:
-            int i
             dict Reservations = {}
             dict Res_dict
 
         if self._Res_ptr is not NULL:
 
-            for i in range(self._Res_ptr.record_count):
+            for record in self._Res_ptr.reservation_array[:self._Res_ptr.record_count]:
+
+                name = slurm.stringOrNone(record.name, '')
 
                 Res_dict = {}
+                Res_dict[u'accounts'] = slurm.listOrNone(record.accounts, ',')
+                Res_dict[u'burst_buffer'] = slurm.listOrNone(record.burst_buffer, ',')
+                Res_dict[u'core_cnt'] = record.core_cnt
+                Res_dict[u'end_time'] = record.end_time
+                Res_dict[u'features'] = slurm.listOrNone(record.features, ',')
 
-                name = self._Res_ptr.reservation_array[i].name
-                Res_dict[u'accounts'] = slurm.listOrNone(
-                    self._Res_ptr.reservation_array[i].accounts, ',')
+                flags = slurm.slurm_reservation_flags_string(record.flags)
+                Res_dict[u'flags'] = slurm.stringOrNone(flags, '')
 
-                Res_dict[u'burst_buffer'] = slurm.listOrNone(
-                    self._Res_ptr.reservation_array[i].burst_buffer, ',')
-
-                Res_dict[u'core_cnt'] = self._Res_ptr.reservation_array[i].core_cnt
-                Res_dict[u'end_time'] = self._Res_ptr.reservation_array[i].end_time
-                Res_dict[u'features'] = slurm.listOrNone(
-                    self._Res_ptr.reservation_array[i].features, ',')
-
-                Res_dict[u'flags'] = slurm.slurm_reservation_flags_string(
-                    self._Res_ptr.reservation_array[i].flags)
-
-                Res_dict[u'licenses'] = __get_licenses(
-                    self._Res_ptr.reservation_array[i].licenses)
-                Res_dict[u'node_cnt'] = self._Res_ptr.reservation_array[i].node_cnt
-                Res_dict[u'node_list'] = slurm.stringOrNone(
-                    self._Res_ptr.reservation_array[i].node_list, ',')
-
-                Res_dict[u'partition'] = slurm.stringOrNone(
-                    self._Res_ptr.reservation_array[i].partition, '')
-
-                Res_dict[u'start_time'] = self._Res_ptr.reservation_array[i].start_time
-                Res_dict[u'resv_watts'] = self._Res_ptr.reservation_array[i].resv_watts
-                Res_dict[u'tres_str'] = slurm.stringOrNone(
-                    self._Res_ptr.reservation_array[i].tres_str, '')
-
-                Res_dict[u'users'] = slurm.listOrNone(
-                    self._Res_ptr.reservation_array[i].users, ',')
+                Res_dict[u'licenses'] = __get_licenses(record.licenses)
+                Res_dict[u'node_cnt'] = record.node_cnt
+                Res_dict[u'node_list'] = slurm.stringOrNone(record.node_list, '')
+                Res_dict[u'partition'] = slurm.stringOrNone(record.partition, '')
+                Res_dict[u'start_time'] = record.start_time
+                Res_dict[u'resv_watts'] = record.resv_watts
+                Res_dict[u'tres_str'] = slurm.listOrNone(record.tres_str, ',')
+                Res_dict[u'users'] = slurm.listOrNone(record.users, ',')
 
                 Reservations[name] = Res_dict
 
@@ -3584,7 +3570,7 @@ cdef class reservation:
         u"""Create slurm reservation."""
         return slurm_create_reservation(reservation_dict)
 
-    def delete(self, char *ResID=''):
+    def delete(self, ResID):
         u"""Delete slurm reservation.
 
         :returns: 0 for success or a slurm error code
@@ -3600,10 +3586,10 @@ cdef class reservation:
         """
         return slurm_update_reservation(reservation_dict)
 
-    def print_reservation_info_msg(self, int oneLiner=False):
+    def print_reservation_info_msg(self, int oneLiner=0):
         u"""Output information about all slurm reservations.
 
-        :param int Flags: Print on one line - False (Default) or True
+        :param int Flags: Print on one line - 0 (Default) or 1
         """
         if self._Res_ptr is not NULL:
             slurm.slurm_print_reservation_info_msg(slurm.stdout, self._Res_ptr, oneLiner)
@@ -3635,60 +3621,61 @@ def slurm_create_reservation(dict reservation_dict={}):
 
     slurm.slurm_init_resv_desc_msg(&resv_msg)
 
-    time_value = reservation_dict[u'start_time']
-    resv_msg.start_time = time_value
+    resv_msg.start_time = reservation_dict[u'start_time']
 
-    uint32_value = reservation_dict[u'duration']
-    resv_msg.duration = uint32_value
+    if not (reservation_dict.get('duration') or reservation_dict.get('end_time')):
+        raise ValueError("You must provide either duration or end_time.")
 
-    if reservation_dict[u'node_cnt'] != -1:
+    if (reservation_dict.get('duration') and reservation_dict.get('end_time')):
+        raise ValueError("You must provide either duration or end_time.")
+
+    if reservation_dict.get('duration'):
+        resv_msg.duration = reservation_dict[u'duration']
+
+    if reservation_dict.get('end_time'):
+        resv_msg.end_time = reservation_dict[u'end_time']
+
+    if reservation_dict.get('node_cnt'):
         int_value = reservation_dict[u'node_cnt']
         resv_msg.node_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * 2)
         resv_msg.node_cnt[0] = int_value
         resv_msg.node_cnt[1] = 0
 
-    if reservation_dict[u'node_list'] is not '':
-        name = reservation_dict[u'node_list']
-        resv_msg.node_list = name
+    if reservation_dict.get('node_list'):
+        b_node_list = reservation_dict[u'node_list'].encode("UTF-8")
+        resv_msg.node_list = b_node_list
 
-    if reservation_dict[u'users'] is not '':
-        name = reservation_dict[u'users']
-        resv_msg.users = strcpy(<char*>slurm.xmalloc(strlen(name)+1), name)
-        free_users = 1
+    if reservation_dict.get('users'):
+        b_users = reservation_dict[u'users'].encode("UTF-8", "replace")
+        resv_msg.users = b_users
 
-    if reservation_dict[u'accounts'] is not '':
-        name = reservation_dict[u'accounts']
-        resv_msg.accounts = strcpy(<char*>slurm.xmalloc(strlen(name)+1), name)
-        free_accounts = 1
+    if reservation_dict.get('accounts'):
+        b_accounts = reservation_dict[u'accounts'].encode("UTF-8", "replace")
+        resv_msg.accounts = b_accounts
 
-    if reservation_dict[u'licenses'] is not '':
-        name = reservation_dict[u'licenses']
-        resv_msg.licenses = name
+    if reservation_dict.get('licenses'):
+        b_licenses = reservation_dict[u'licenses'].encode("UTF-8")
+        resv_msg.licenses = b_licenses
 
-    if reservation_dict[u'flags'] is not '':
+    if reservation_dict.get('flags'):
         int_value = reservation_dict[u'flags']
         resv_msg.flags = int_value
 
-    if reservation_dict[u'name'] is not '':
-        name = reservation_dict[u'name']
-        resv_msg.name = name
+    if reservation_dict.get('name'):
+        b_name = reservation_dict[u'name'].encode("UTF-8")
+        resv_msg.name = b_name
 
     resid = slurm.slurm_create_reservation(&resv_msg)
 
-    if free_users == 1:
-        slurm.xfree(resv_msg.users)
-    if free_accounts == 1:
-        slurm.xfree(resv_msg.accounts)
-
     resID = ''
     if resid is not NULL:
-        resID = resid
+        resID = slurm.stringOrNone(resid, '')
         free(resid)
     else:
         apiError = slurm.slurm_get_errno()
         raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    return u"%s" % resID
+    return resID
 
 
 def slurm_update_reservation(dict reservation_dict={}):
@@ -3709,48 +3696,40 @@ def slurm_update_reservation(dict reservation_dict={}):
 
     slurm.slurm_init_resv_desc_msg(&resv_msg)
 
-    time_value = reservation_dict[u'start_time']
-    if time_value != -1:
-        resv_msg.start_time = time_value
+    if reservation_dict.get('start_time'):
+        resv_msg.start_time = reservation_dict.get('start_time')
 
-    uint32_value = reservation_dict[u'duration']
-    if uint32_value != -1:
-        resv_msg.duration = uint32_value
+    if reservation_dict.get('duration'):
+        resv_msg.duration = reservation_dict.get('duration')
 
-    if reservation_dict[u'name'] is not '':
-        resv_msg.name = reservation_dict[u'name']
+    if reservation_dict.get('name'):
+        b_name = reservation_dict[u'name'].encode("UTF-8", "replace")
+        resv_msg.name = b_name
 
-#    if reservation_dict[u'node_cnt'] != -1:
-#        uint32_value = reservation_dict[u'node_cnt']
-#        resv_msg.node_cnt = uint32_value
+    if reservation_dict.get('node_cnt'):
+        int_value = reservation_dict[u'node_cnt']
+        resv_msg.node_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * 2)
+        resv_msg.node_cnt[0] = int_value
+        resv_msg.node_cnt[1] = 0
 
-    if reservation_dict[u'users'] is not '':
-        name = reservation_dict[u'users']
-        resv_msg.users = <char*>slurm.xmalloc((len(name)+1)*sizeof(char))
-        strcpy(resv_msg.users, name)
-        free_users = 1
+    if reservation_dict.get('users'):
+        b_users = reservation_dict[u'users'].encode("UTF-8", "replace")
+        resv_msg.users = b_users
 
-    if reservation_dict[u'accounts'] is not '':
-        name = reservation_dict[u'accounts']
-        resv_msg.accounts = <char*>slurm.xmalloc((len(name)+1)*sizeof(char))
-        strcpy(resv_msg.accounts, name)
-        free_accounts = 1
+    if reservation_dict.get('accounts'):
+        b_accounts = reservation_dict[u'accounts'].encode("UTF-8", "replace")
+        resv_msg.accounts = b_accounts
 
-    if reservation_dict[u'licenses'] is not '':
-        name = reservation_dict[u'licenses']
-        resv_msg.licenses = name
+    if reservation_dict.get('licenses'):
+        b_licenses = reservation_dict[u'licenses'].encode("UTF-8")
+        resv_msg.licenses = b_licenses
 
     errCode = slurm.slurm_update_reservation(&resv_msg)
-
-    if free_users == 1:
-        slurm.xfree(resv_msg.users)
-    if free_accounts == 1:
-        slurm.xfree(resv_msg.accounts)
 
     return errCode
 
 
-def slurm_delete_reservation(char* ResID=''):
+def slurm_delete_reservation(ResID):
     u"""Delete a slurm reservation.
 
     :param string ResID: Reservation Identifier
@@ -3762,7 +3741,8 @@ def slurm_delete_reservation(char* ResID=''):
     if not ResID:
         return -1
 
-    resv_msg.name = ResID
+    b_resid = ResID.encode("UTF-8", "replace")
+    resv_msg.name = b_resid
 
     cdef int apiError = 0
     cdef int errCode = slurm.slurm_delete_reservation(&resv_msg)
@@ -3784,17 +3764,17 @@ def create_reservation_dict():
     :rtype: `dict`
     """
     return {
-        u'start_time': -1,
-        u'end_time': -1,
-        u'duration': -1,
-        u'node_cnt': -1,
-        u'name': '',
-        u'node_list': '',
-        u'flags': '',
-        u'partition': '',
-        u'licenses': '',
-        u'users': '',
-        u'accounts': ''
+        u'start_time': 0,
+        u'end_time': 0,
+        u'duration': None,
+        u'node_cnt': 0,
+        u'name': None,
+        u'node_list': None,
+        u'flags': None,
+        u'partition': None,
+        u'licenses': None,
+        u'users': None,
+        u'accounts': None
     }
 
 
