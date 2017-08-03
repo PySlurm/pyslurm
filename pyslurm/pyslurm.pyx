@@ -230,7 +230,7 @@ ctypedef struct config_key_pair_t:
 #
 
 
-cpdef tuple get_controllers():
+def get_controllers():
     u"""Get information about slurm controllers.
 
     :return: Name of primary controller, Name of backup controller
@@ -250,16 +250,16 @@ cpdef tuple get_controllers():
     if slurm_ctl_conf_ptr is not NULL:
 
         if slurm_ctl_conf_ptr.control_machine is not NULL:
-            primary = u"%s" % slurm_ctl_conf_ptr.control_machine
+            primary = slurm.stringOrNone(slurm_ctl_conf_ptr.control_machine, '')
         if slurm_ctl_conf_ptr.backup_controller is not NULL:
-            backup = u"%s" % slurm_ctl_conf_ptr.backup_controller
+            backup = slurm.stringOrNone(slurm_ctl_conf_ptr.backup_controller, '')
 
         slurm.slurm_free_ctl_conf(slurm_ctl_conf_ptr)
 
     return primary, backup
 
 
-def is_controller(Host):
+def is_controller(Host=None):
     u"""Return slurm controller status for host.
 
     :param string Host: Name of host to check
@@ -276,8 +276,6 @@ def is_controller(Host):
     if backup == Host:
         return u'backup'
 
-    return None
-
 
 def slurm_api_version():
     u"""Return the slurm API version number.
@@ -292,7 +290,7 @@ def slurm_api_version():
             SLURM_VERSION_MICRO(version))
 
 
-cpdef dict slurm_load_slurmd_status():
+def slurm_load_slurmd_status():
     u"""Issue RPC to get and load the status of Slurmd daemon.
 
     :returns: Slurmd information
@@ -301,11 +299,10 @@ cpdef dict slurm_load_slurmd_status():
     cdef:
         dict Status = {}, Status_dict = {}
         slurm.slurmd_status_t *slurmd_status = NULL
-        char* hostname = NULL
         int errCode = slurm.slurm_load_slurmd_status(&slurmd_status)
 
-    if errCode == 0:
-        hostname = slurmd_status.hostname
+    if errCode == slurm.SLURM_SUCCESS:
+        hostname = slurm.stringOrNone(slurmd_status.hostname, '')
         Status_dict[u'actual_boards'] = slurmd_status.actual_boards
         Status_dict[u'booted'] = slurmd_status.booted
         Status_dict[u'actual_cores'] = slurmd_status.actual_cores
@@ -314,7 +311,7 @@ cpdef dict slurm_load_slurmd_status():
         Status_dict[u'actual_sockets'] = slurmd_status.actual_sockets
         Status_dict[u'actual_threads'] = slurmd_status.actual_threads
         Status_dict[u'actual_tmp_disk'] = slurmd_status.actual_tmp_disk
-        Status_dict[u'hostname'] = slurm.stringOrNone(slurmd_status.hostname, '')
+        Status_dict[u'hostname'] = hostname
         Status_dict[u'last_slurmctld_msg'] = slurmd_status.last_slurmctld_msg
         Status_dict[u'pid'] = slurmd_status.pid
         Status_dict[u'slurmd_debug'] = slurmd_status.slurmd_debug
