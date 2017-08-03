@@ -16,7 +16,6 @@ def test_reservation_create():
         "name": "resv_test"
     }
     r = pyslurm.reservation().create(resv_test)
-    assert_true(isinstance(r, str))
     assert_equals(r, "resv_test")
 
 
