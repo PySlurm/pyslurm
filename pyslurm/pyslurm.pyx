@@ -800,7 +800,7 @@ cdef class partition:
                     retList.append(key)
         return retList
 
-    cpdef print_info_msg(self, int oneLiner=False):
+    def print_info_msg(self, int oneLiner=0):
         u"""Display the partition information from previous load partition method.
 
         :param int oneLiner: Display on one line (default=0)
@@ -823,7 +823,7 @@ cdef class partition:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    cpdef int delete(self, char *PartID='') except? -1:
+    def delete(self, PartID):
         u"""Delete a give slurm partition.
 
         :param string PartID: Name of slurm partition
@@ -833,18 +833,21 @@ cdef class partition:
         """
         cdef:
             slurm.delete_part_msg_t part_msg
-            int apiError = 0, errCode = -1
+            int apiError
+            int errCode
 
-        if PartID is not None:
-            part_msg.name = PartID
-            errCode = slurm.slurm_delete_partition(&part_msg)
-            if errCode != 0:
-                apiError = slurm.slurm_get_errno()
-                raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+        b_partid = PartID.encode("UTF-8", "replace")
+        part_msg.name = b_partid
+
+        errCode = slurm.slurm_delete_partition(&part_msg)
+
+        if errCode != slurm.SLURM_SUCCESS:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
         return errCode
 
-    cpdef dict get(self):
+    def get(self):
         u"""Get all slurm partition information
 
         :returns: Dictionary of dictionaries whose key is the partition name.
@@ -856,7 +859,6 @@ cdef class partition:
             uint16_t preempt_mode
             uint32_t i
             slurm.partition_info_t *record
-            dict Part_dict = {}
 
         rc = slurm.slurm_load_partitions(<time_t> NULL, &self._Partition_ptr,
                                          slurm.SHOW_ALL)
@@ -865,9 +867,8 @@ cdef class partition:
             self._PartDict = {}
             self._lastUpdate = self._Partition_ptr.last_update
 
-            for i in range(self._Partition_ptr.record_count):
+            for record in self._Partition_ptr.partition_array[:self._Partition_ptr.record_count]:
                 Part_dict = {}
-                record = &self._Partition_ptr.partition_array[i]
                 name = slurm.stringOrNone(record.name, '')
 
                 if record.allow_accounts or not record.deny_accounts:
@@ -1015,7 +1016,7 @@ cdef class partition:
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
 
-    cpdef int update(self, dict Partition_dict):
+    def update(self, dict Partition_dict):
         u"""Update a slurm partition.
 
         :param dict partition_dict: A populated partition dictionary,
@@ -1027,7 +1028,7 @@ cdef class partition:
         cdef int errCode = slurm_update_partition(Partition_dict)
         return errCode
 
-    cpdef int create(self, dict Partition_dict):
+    def create(self, dict Partition_dict):
         u"""Create a slurm partition.
 
         :param dict partition_dict: A populated partition dictionary,
@@ -1048,25 +1049,25 @@ def create_partition_dict():
     :rtype: `dict`
     """
     return {
-        u'Alternate': u'',
-        u'Name': u'',
-        u'MaxTime': -1,
-        u'DefaultTime': -1,
-        u'MaxNodes': -1,
-        u'MinNodes': -1,
+        u'Alternate': None,
+        u'Name': None,
+        u'MaxTime': 0,
+        u'DefaultTime': 0,
+        u'MaxNodes': 0,
+        u'MinNodes': 0,
         u'Default': 0,
         u'Hidden': 0,
         u'RootOnly': 0,
         u'Shared': 0,
-        u'Priority': -1,
+        u'Priority': 0,
         u'State': 0,
-        u'Nodes': u'',
-        u'AllowGroups': u'',
-        u'AllocNodes': u''
+        u'Nodes': None,
+        u'AllowGroups': None,
+        u'AllocNodes': None
     }
 
 
-cpdef int slurm_create_partition(dict partition_dict):
+def slurm_create_partition(dict partition_dict):
     u"""Create a slurm partition.
 
     :param dict partition_dict: A populated partition dictionary,
@@ -1077,33 +1078,27 @@ cpdef int slurm_create_partition(dict partition_dict):
     """
     cdef:
         slurm.update_part_msg_t part_msg_ptr
-        int int_value = 0
-        int errCode = 0
-        unsigned int uint32_value
-        unsigned int time_value
+        int errCode
 
     slurm.slurm_init_part_desc_msg(&part_msg_ptr)
 
-    if partition_dict[u'Name'] is not '':
-        part_msg_ptr.name = partition_dict[u'Name']
+    b_name = partition_dict['Name'].encode("UTF-8", "replace")
+    part_msg_ptr.name = b_name
 
-    if partition_dict[u'DefaultTime'] != -1:
-        int_value = partition_dict[u'DefaultTime']
-        part_msg_ptr.default_time = int_value
+    if partition_dict.get('DefaultTime'):
+        part_msg_ptr.default_time = partition_dict[u'DefaultTime']
 
-    if partition_dict[u'MaxNodes'] != -1:
-        int_value = partition_dict[u'MaxNodes']
-        part_msg_ptr.max_nodes = int_value
+    if partition_dict.get('MaxNodes'):
+        part_msg_ptr.max_nodes = partition_dict[u'MaxNodes']
 
-    if partition_dict[u'MinNodes'] != -1:
-        int_value = partition_dict[u'MinNodes']
-        part_msg_ptr.min_nodes = int_value
+    if partition_dict.get('MinNodes'):
+        part_msg_ptr.min_nodes = partition_dict[u'MinNodes']
 
     errCode = slurm.slurm_create_partition(&part_msg_ptr)
     return errCode
 
 
-cpdef int slurm_update_partition(dict partition_dict):
+def slurm_update_partition(dict partition_dict):
     u"""Update a slurm partition.
 
     :param dict partition_dict: A populated partition dictionary,
@@ -1118,55 +1113,57 @@ cpdef int slurm_update_partition(dict partition_dict):
         unsigned int time_value
         int int_value = 0
         int errCode = 0
-        char* name
 
     slurm.slurm_init_part_desc_msg(&part_msg_ptr)
 
-    if partition_dict[u'Name'] is not '':
-        part_msg_ptr.name = partition_dict[u'Name']
+    if partition_dict.get(u'Name'):
+        b_name = partition_dict[u'Name'].encode("UTF-8", "replace")
+        part_msg_ptr.name = b_name
 
-    if partition_dict[u'Alternate'] is not '':
-        part_msg_ptr.alternate = partition_dict[u'Alternate']
+    if partition_dict.get(u'Alternate'):
+        b_alternate = partition_dict[u'Alternate'].encode("UTF-8", "replace")
+        part_msg_ptr.alternate = b_alternate
 
-    int_value = partition_dict[u'MaxTime']
-    part_msg_ptr.max_time = int_value
+    if partition_dict.get(u'MaxTime'):
+        part_msg_ptr.max_time = partition_dict[u'MaxTime']
 
-    int_value = partition_dict[u'DefaultTime']
-    part_msg_ptr.default_time = int_value
+    if partition_dict.get(u'DefaultTime'):
+        part_msg_ptr.default_time = partition_dict[u'DefaultTime']
 
-    if partition_dict[u'MaxNodes'] != -1:
-        int_value = partition_dict[u'MaxNodes']
-        part_msg_ptr.max_nodes = int_value
+    if partition_dict.get(u'MaxNodes'):
+        part_msg_ptr.max_nodes = partition_dict[u'MaxNodes']
 
-    if partition_dict[u'MinNodes'] != -1:
-        int_value = partition_dict[u'MinNodes']
-        part_msg_ptr.min_nodes = int_value
+    if partition_dict.get(u'MinNodes'):
+        part_msg_ptr.min_nodes = partition_dict[u'MinNodes']
 
-    pystring = partition_dict['State']
-    if pystring is not '':
-        if pystring == u'DOWN':
-            part_msg_ptr.state_up = 0x01      # PARTITION_DOWN (PARTITION_SUBMIT 0x01)
-        elif pystring == u'UP':
-            part_msg_ptr.state_up = 0x01|0x0  # PARTITION_UP (PARTITION_SUBMIT|PARTITION_SCHED)
-        elif pystring == u'DRAIN':
-            part_msg_ptr.state_up = 0x02      # PARTITION_DRAIN (PARTITION_SCHED=0x02)
+    state = partition_dict.get('State')
+    if state:
+        if state == u'DOWN':
+            part_msg_ptr.state_up = PARTITION_DOWN
+        elif state == u'UP':
+            part_msg_ptr.state_up = PARTITION_UP
+        elif state == u'DRAIN':
+            part_msg_ptr.state_up = PARTITION_DRAIN
         else:
             errCode = -1
 
-    if partition_dict[u'Nodes'] is not '':
-        part_msg_ptr.nodes = partition_dict[u'Nodes']
+    if partition_dict.get('Nodes'):
+        b_nodes = partition_dict[u'Nodes'].encode("UTF-8")
+        part_msg_ptr.nodes = b_nodes
 
-    if partition_dict[u'AllowGroups'] is not '':
-        part_msg_ptr.allow_groups = partition_dict[u'AllowGroups']
+    if partition_dict.get('AllowGroups'):
+        b_allow_groups = partition_dict[u'AllowGroups'].encode("UTF-8")
+        part_msg_ptr.allow_groups = b_allow_groups
 
-    if partition_dict[u'AllocNodes'] is not '':
-        part_msg_ptr.allow_alloc_nodes = partition_dict[u'AllocNodes']
+    if partition_dict.get('AllocNodes'):
+        b_allow_alloc_nodes = partition_dict[u'AllocNodes'].encode("UTF-8")
+        part_msg_ptr.allow_alloc_nodes = b_allow_alloc_nodes
 
     errCode = slurm.slurm_update_partition(&part_msg_ptr)
     return errCode
 
 
-cpdef int slurm_delete_partition(char* PartID) except? -1:
+def slurm_delete_partition(PartID):
     u"""Delete a slurm partition.
 
     :param string PartID: Name of slurm partition
@@ -1175,14 +1172,16 @@ cpdef int slurm_delete_partition(char* PartID) except? -1:
     """
     cdef:
         slurm.delete_part_msg_t part_msg
-        int apiError = 0, errCode = -1
+        int apiError
+        int errCode
 
-    if PartID is not None:
-        part_msg.name = PartID
-        errCode = slurm.slurm_delete_partition(&part_msg)
-        if errCode != 0:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+    b_partid = PartID.encode("UTF-8", "replace")
+    part_msg.name = b_partid
+    errCode = slurm.slurm_delete_partition(&part_msg)
+
+    if errCode != slurm.SLURM_SUCCESS:
+        apiError = slurm.slurm_get_errno()
+        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
 
@@ -3609,7 +3608,6 @@ def slurm_create_reservation(dict reservation_dict={}):
     cdef:
         slurm.resv_desc_msg_t resv_msg
         char *resid = NULL
-        char *name = NULL
         int int_value = 0
         int free_users = 0
         int free_accounts = 0

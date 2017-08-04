@@ -31,8 +31,7 @@ def test_partition_scontrol():
     test_partition_info = pyslurm.partition().find_id(test_partition)
     assert_equals(test_partition, test_partition_info["name"])
 
-    sctl = subprocess.Popen(["scontrol", "-d", "show", "partition",
-                            str(test_partition)],
+    sctl = subprocess.Popen(["scontrol", "-d", "show", "partition", str(test_partition)],
                             stdout=subprocess.PIPE).communicate()
     sctl_stdout = sctl[0].strip().decode("UTF-8").split()
     sctl_dict = dict((value.split("=")[0], value.split("=")[1])
@@ -56,3 +55,35 @@ def test_partition_scontrol():
     assert_equals(test_partition_info["state"], sctl_dict["State"])
     assert_equals(test_partition_info["total_cpus"], int(sctl_dict["TotalCPUs"]))
     assert_equals(test_partition_info["total_nodes"], int(sctl_dict["TotalNodes"]))
+
+
+def test_partition_create():
+    """Partition: Test partition().create()."""
+    part_test = {"Name": "part_test"}
+    rc = pyslurm.partition().create(part_test)
+    assert_equals(rc, 0)
+
+    partition_ids = pyslurm.partition().ids()
+    assert_true("part_test" in partition_ids)
+
+
+def test_partition_update():
+    """Partition: Test partition().update()."""
+    part_test_before = pyslurm.partition().find_id("part_test")
+    assert_equals(part_test_before["state"], "UP")
+
+    part_test_update = {"Name": "part_test", "State": "DOWN"}
+    rc = pyslurm.partition().update(part_test_update)
+    assert_equals(rc, 0)
+
+    part_test_after = pyslurm.partition().find_id("part_test")
+    assert_equals(part_test_after["state"], "DOWN")
+
+
+def test_partition_delete():
+    """Partition: Test partition().delete()."""
+    rc = pyslurm.partition().delete("part_test")
+    assert_equals(rc, 0)
+
+    partition_ids = pyslurm.partition().ids()
+    assert_true("part_test" not in partition_ids)
