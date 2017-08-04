@@ -1406,7 +1406,7 @@ cpdef time_t slurm_get_end_time(uint32_t JobID=0) except? -1:
 
 
 cpdef int slurm_job_node_ready(uint32_t JobID=0) except? -1:
-    u"""Return if a node could run a slurm job now if despatched.
+    u"""Return if a node could run a slurm job now if dispatched.
 
     :param int JobID: Job identifier
     :returns: Node Ready code
@@ -2237,11 +2237,13 @@ cdef class job:
             Job_dict[u'resv_id'] = self.__get_select_jobinfo(SELECT_JOBDATA_RESV_ID)
             Job_dict[u'rotate'] = bool(self.__get_select_jobinfo(SELECT_JOBDATA_ROTATE))
 
-            Job_dict[u'conn_type'] = slurm.slurm_conn_type_string(
-                self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE))
+            Job_dict[u'conn_type'] = slurm.stringOrNone(
+                slurm.slurm_conn_type_string(self.__get_select_jobinfo(SELECT_JOBDATA_CONN_TYPE)), ''
+            )
 
             Job_dict[u'cpus_allocated'] = {}
             Job_dict[u'cpus_alloc_layout'] = {}
+
             if self._record.nodes is not NULL:
                 hl = hostlist()
                 _nodes = slurm.stringOrNone(self._record.nodes, '')
@@ -2249,8 +2251,9 @@ cdef class job:
                 host_list = hl.get_list()
                 if host_list:
                     for node_name in host_list:
-                        Job_dict[u'cpus_allocated'][node_name] = self.__cpus_allocated_on_node(node_name)
-                        Job_dict[u'cpus_alloc_layout'][node_name] = self.__cpus_allocated_list_on_node(node_name)
+                        b_node_name = node_name.decode("UTF-8")
+                        Job_dict[u'cpus_allocated'][b_node_name] = self.__cpus_allocated_on_node(node_name)
+                        Job_dict[u'cpus_alloc_layout'][b_node_name] = self.__cpus_allocated_list_on_node(node_name)
                 hl.destroy()
 
             self._JobDict[self._record.job_id] = Job_dict
@@ -2341,7 +2344,7 @@ cdef class job:
 
         return retval
 
-    cpdef int __cpus_allocated_on_node(self, char* nodeName=''):
+    cdef int __cpus_allocated_on_node(self, char* nodeName=''):
         u"""Get the number of cpus allocated to a slurm job on a node by node name.
 
         :param string nodeName: Name of node
@@ -2354,7 +2357,7 @@ cdef class job:
 
         return retval
 
-    cpdef list __cpus_allocated_list_on_node(self, char* nodeName=''):
+    cdef list __cpus_allocated_list_on_node(self, char* nodeName=''):
         u"""Get a list of cpu ids allocated to current slurm job on a node by node name.
 
         :param string nodeName: Name of node
@@ -2388,12 +2391,12 @@ cdef class job:
         """
         r_list = []
 
-        if bit_str is None:
+        if not bit_str:
             return []
 
         for cpu_set in bit_str.split(','):
             try:
-                cpus = map(int, cpu_set.split('-'))
+                cpus = list(map(int, cpu_set.split('-')))
                 for i in range(cpus[0], cpus[-1] + 1):
                     r_list.append(i)
             except:
