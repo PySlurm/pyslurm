@@ -2891,26 +2891,32 @@ def slurm_update_node(dict node_dict):
     slurm.slurm_init_update_node_msg(&node_msg)
 
     if 'node_state' in node_dict:
+        # see enum node_states
         node_msg.node_state = <uint16_t>node_dict['node_state']
 
     if 'features' in node_dict:
-        node_msg.features = node_dict['features']
+        b_features = node_dict['features'].encode("UTF-8", "replace")
+        node_msg.features = b_features
 
     if 'gres' in node_dict:
-        node_msg.gres = node_dict['gres']
+        b_gres = node_dict['gres'].encode("UTF-8")
+        node_msg.gres = b_gres
 
     if 'node_names' in node_dict:
-        node_msg.node_names = node_dict['node_names']
+        b_node_names = node_dict['node_names'].encode("UTF-8")
+        node_msg.node_names = b_node_names
 
     if 'reason' in node_dict:
-        node_msg.reason = node_dict['reason']
+        b_reason = node_dict['reason'].encode("UTF-8")
+        node_msg.reason = b_reason
         node_msg.reason_uid = <uint32_t>os.getuid()
 
     if 'weight' in node_dict:
         node_msg.weight = <uint32_t>node_dict['weight']
 
     errCode = slurm.slurm_update_node(&node_msg)
-    if errCode != 0:
+
+    if errCode != slurm.SLURM_SUCCESS:
         apiError = slurm.slurm_get_errno()
         raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
@@ -2927,12 +2933,12 @@ def create_node_dict():
     :rtype: `dict`
     """
     return {
-        'node_names': '',
-        'gres': '',
-        'reason': '',
-        'node_state': -1,
-        'weight': -1,
-        'features': ''
+        'node_names': None,
+        'gres': None,
+        'reason': None,
+        'node_state': 0,
+        'weight': 0,
+        'features': None
     }
 
 
