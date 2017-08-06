@@ -4607,7 +4607,10 @@ cdef class front_end:
                 FE_dict[u'allow_users'] = slurm.stringOrNone(record.allow_users, '')
                 FE_dict[u'deny_groups'] = slurm.stringOrNone(record.deny_groups, '')
                 FE_dict[u'deny_users'] = slurm.stringOrNone(record.deny_users, '')
-                FE_dict[u'node_state'] = slurm.stringOrNone(get_node_state(record.node_state), '')
+
+                fe_node_state = get_node_state(record.node_state)
+                FE_dict[u'node_state'] = slurm.stringOrNone(fe_node_state, '')
+
                 FE_dict[u'reason'] = slurm.stringOrNone(record.reason, '')
                 FE_dict[u'reason_time'] = record.reason_time
                 FE_dict[u'reason_uid'] = record.reason_uid
