@@ -4714,7 +4714,7 @@ cdef class qos:
                 # QOS infos
                 QOS_info = {}
 
-                if name is not NULL:
+                if name:
                     QOS_info[u'description'] = slurm.stringOrNone(qos.description, '')
                     QOS_info[u'flags'] = qos.flags
                     QOS_info[u'grace_time'] = qos.grace_time
@@ -4743,7 +4743,7 @@ cdef class qos:
                     QOS_info[u'max_wall_pj'] = qos.max_wall_pj
                     QOS_info[u'min_tres_pj'] = slurm.stringOrNone(qos.min_tres_pj, '')
                     # QOS_info[u'min_tres_pj_ctld']
-                    QOS_info[u'name'] = slurm.stringOrNone(name, '')
+                    QOS_info[u'name'] = name
                     # QOS_info[u'*preempt_bitstr'] =
                     # QOS_info[u'preempt_list'] = qos.preempt_list
                     QOS_info[u'preempt_mode'] = slurm.stringOrNone(
@@ -4755,7 +4755,7 @@ cdef class qos:
 
                     # NB - Need to add code to decode types of grp_tres_ctld (uint64t list) etc
 
-                if name is not NULL:
+                if name:
                     Q_dict[name] = QOS_info
 
             slurm.slurm_list_iterator_destroy(iters)
