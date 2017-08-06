@@ -2830,7 +2830,8 @@ cdef class node:
 
                 Host_dict[u'alloc_mem'] = alloc_mem
 
-                self._NodeDict[u'%s' % record.name] = Host_dict
+                b_name = slurm.stringOrNone(record.name, '')
+                self._NodeDict[b_name] = Host_dict
 
             slurm.slurm_free_node_info_msg(self._Node_ptr)
             self._Node_ptr = NULL
@@ -3129,16 +3130,17 @@ cdef class jobstep:
 
             Layout[u'front_end'] = slurm.stringOrNone(old_job_step_ptr.front_end, '')
             Layout[u'node_cnt'] = Node_cnt
-            Layout[u'node_list'] = old_job_step_ptr.node_list
+            Layout[u'node_list'] = slurm.stringOrNone(old_job_step_ptr.node_list, '')
             Layout[u'plane_size'] = old_job_step_ptr.plane_size
             Layout[u'task_cnt'] = old_job_step_ptr.task_cnt
             Layout[u'task_dist'] = old_job_step_ptr.task_dist
             Layout[u'task_dist'] = slurm.stringOrNone(
-                    slurm.slurm_step_layout_type_name(<slurm.task_dist_states_t>old_job_step_ptr.task_dist), ''
+                slurm.slurm_step_layout_type_name(<slurm.task_dist_states_t>old_job_step_ptr.task_dist), ''
             )
 
             hl = hostlist()
-            hl.create(old_job_step_ptr.node_list)
+            node_list = slurm.stringOrNone(old_job_step_ptr.node_list, '')
+            hl.create(node_list)
             Nodes = hl.get_list()
             hl.destroy()
 
@@ -3146,7 +3148,7 @@ cdef class jobstep:
                 Tids_list = []
                 for j in range(old_job_step_ptr.tasks[i]):
                     Tids_list.append(old_job_step_ptr.tids[i][j])
-                Node_list.append([node, Tids_list])
+                Node_list.append([slurm.stringOrNone(node, ''), Tids_list])
 
             Layout[u'tasks'] = Node_list
 

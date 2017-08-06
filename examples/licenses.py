@@ -8,10 +8,10 @@ def display(lic_dict):
         print("State last updated : {0}".format(slurm.epoch2date(licenses.lastUpdate())))
         print('{0:*^80}'.format(''))
 
-        for key, value in lic_dict.iteritems():
+        for key, value in lic_dict.items():
 
             print("{0} :".format(key))
-            for part_key in sorted(value.iterkeys()):
+            for part_key in sorted(value.keys()):
 
                 print("\t{0:<17} : {1}".format(part_key, value[part_key]))
 

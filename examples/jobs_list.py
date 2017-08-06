@@ -19,10 +19,10 @@ def display(job_dict):
                 'eligible_time',
                 'resize_time']
 
-        for key, value in sorted(job_dict.iteritems()):
+        for key, value in sorted(job_dict.items()):
 
             print("JobID {0} :".format(key))
-            for part_key in sorted(value.iterkeys()):
+            for part_key in sorted(value.keys()):
 
                 if part_key in time_fields:
                     print("\t{0:<20} : Infinite".format(part_key))

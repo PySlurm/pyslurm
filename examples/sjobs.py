@@ -12,7 +12,7 @@ def list_users(job_dict):
     users = []
     if job_dict:
 
-        for jobid, value in sorted(job_dict.iteritems()):
+        for jobid, value in sorted(job_dict.items()):
 
             if value["account"] not in users:
 
