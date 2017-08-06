@@ -4544,7 +4544,7 @@ cdef class front_end:
         u"""Load slurm front end node information."""
         self.__load()
 
-    cpdef int __load(self) except? -1:
+    cdef int __load(self) except? -1:
         u"""Load slurm front end node."""
         cdef:
             # slurm.front_end_info_msg_t *new_FrontEndNode_ptr = NULL
@@ -4579,7 +4579,7 @@ cdef class front_end:
         :returns: Dictionary of node IDs
         :rtype: `dict`
         """
-        return self._FrontEndDict.keys()
+        return list(self._FrontEndDict.keys())
 
     def get(self):
         u"""Get front end node information.
@@ -4592,41 +4592,27 @@ cdef class front_end:
 
         return self._FrontEndDict
 
-    cpdef __get(self):
+    cdef __get(self):
         cdef:
-            int i = 0
             dict FENode = {}
             dict FE_dict = {}
 
         if self._FrontEndNode_ptr is not NULL:
-            for i in range(self._FrontEndNode_ptr.record_count):
+            for record in self._FrontEndNode_ptr.front_end_array[:self._FrontEndNode_ptr.record_count]:
                 FE_dict = {}
+                name = slurm.stringOrNone(record.name, '')
 
-                name = u"%s" % self._FrontEndNode_ptr.front_end_array[i].name
-                FE_dict[u'boot_time'] = self._FrontEndNode_ptr.front_end_array[i].boot_time
-                FE_dict[u'allow_groups'] = slurm.stringOrNone(
-                    self._FrontEndNode_ptr.front_end_array[i].allow_groups, '')
-
-                FE_dict[u'allow_users'] = slurm.stringOrNone(
-                    self._FrontEndNode_ptr.front_end_array[i].allow_users, '')
-
-                FE_dict[u'deny_groups'] = slurm.stringOrNone(
-                    self._FrontEndNode_ptr.front_end_array[i].deny_groups, '')
-
-                FE_dict[u'deny_users'] = slurm.stringOrNone(
-                    self._FrontEndNode_ptr.front_end_array[i].deny_users, '')
-
-                FE_dict[u'node_state'] = get_node_state(
-                    self._FrontEndNode_ptr.front_end_array[i].node_state)
-
-                FE_dict[u'reason'] = slurm.stringOrNone(
-                    self._FrontEndNode_ptr.front_end_array[i].reason, '')
-
-                FE_dict[u'reason_time'] = self._FrontEndNode_ptr.front_end_array[i].reason_time
-                FE_dict[u'reason_uid'] = self._FrontEndNode_ptr.front_end_array[i].reason_uid
-                FE_dict[u'slurmd_start_time'] = self._FrontEndNode_ptr.front_end_array[i].slurmd_start_time
-                FE_dict[u'version'] = slurm.stringOrNone(
-                    self._FrontEndNode_ptr.front_end_array[i].version, '')
+                FE_dict[u'boot_time'] = record.boot_time
+                FE_dict[u'allow_groups'] = slurm.stringOrNone(record.allow_groups, '')
+                FE_dict[u'allow_users'] = slurm.stringOrNone(record.allow_users, '')
+                FE_dict[u'deny_groups'] = slurm.stringOrNone(record.deny_groups, '')
+                FE_dict[u'deny_users'] = slurm.stringOrNone(record.deny_users, '')
+                FE_dict[u'node_state'] = slurm.stringOrNone(get_node_state(record.node_state), '')
+                FE_dict[u'reason'] = slurm.stringOrNone(record.reason, '')
+                FE_dict[u'reason_time'] = record.reason_time
+                FE_dict[u'reason_uid'] = record.reason_uid
+                FE_dict[u'slurmd_start_time'] = record.slurmd_start_time
+                FE_dict[u'version'] = slurm.stringOrNone(record.version, '')
 
                 FENode[name] = FE_dict
 
