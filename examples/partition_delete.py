@@ -4,7 +4,8 @@ from __future__ import print_function
 
 import pyslurm
 
-partition = "mark"
+partition = "part_test"
+
 try:
     pyslurm.slurm_delete_partition(partition)
 except ValueError as e:

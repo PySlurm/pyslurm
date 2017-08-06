@@ -15,7 +15,7 @@ except ValueError as e:
 # Process the sorted Slurm configuration dictionary
 
 date_fields = [ 'boot_time', 'last_update' ]
-for key in sorted(ctl_dict.iterkeys()):
+for key in sorted(ctl_dict.items()):
 
     if key in date_fields:
 
@@ -26,17 +26,17 @@ for key in sorted(ctl_dict.iterkeys()):
             print("\t{0:<35} : {1}".format(key, ddate))
 
     elif 'debug_flags' in key:
-        print("\t{0:<35s} : {1}".format(key, pyslurm.get_debug_flags(ctl_dict[key])))
+        print("\t{0:<35s} : {1}".format(key[0], pyslurm.get_debug_flags(key[1])))
     else:
         if 'key_pairs' not in key:
-            print("\t{0:<35} : {1}".format(key, ctl_dict[key]))
+            print("\t{0:<35} : {1}".format(key[0], key[1]))
 
-if ctl_dict.has_key('key_pairs'):
+if "key_pairs" in ctl_dict:
 
     print()
     print("Additional Information :")
     print("------------------------")
     print()
 
-    for key in sorted(ctl_dict['key_pairs'].iterkeys()):
+    for key in sorted(ctl_dict['key_pairs'].items()):
         print("\t{0:<35} : {1}".format(key, ctl_dict['key_pairs'][key]))

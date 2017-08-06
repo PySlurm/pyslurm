@@ -13,10 +13,10 @@ def display(block_dict):
 
         print('{0:*^80}'.format(''))
 
-        for key, value in block_dict.iteritems():
+        for key, value in block_dict.items():
 
             print("{0} :".format(key))
-            for part_key in sorted(value.iterkeys()):
+            for part_key in sorted(value.items()):
 
                 if part_key in date_fields:
                     ddate = value[part_key]

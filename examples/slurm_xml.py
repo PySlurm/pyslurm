@@ -12,10 +12,10 @@ import sys
 import os
 import os.path
 
-hosts = socket.gethostbyaddr(socket.gethostname())[1]
-my_host = hosts[0]
+#hosts = socket.gethostbyaddr(socket.gethostname())[1]
+my_host = socket.gethostname()
 
-if "makalu" not in my_host:
+if "ernie" not in my_host:
     sys.exit()
 
 now = int(time.time())
@@ -45,23 +45,23 @@ a = pyslurm.job()
 jobs = a.get()
 
 xml_file.write("\t<jobs>\n")
-for key, value in jobs.iteritems():
+for key, value in jobs.items():
 
     xml_file.write('\t\t<job>\n')
     xml_file.write("\t\t\t<id>{0}</id>\n".format(key))
-    for job_key in sorted(value.iterkeys()):
-        xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(job_key, value[job_key], job_key))
+    for job_key in sorted(value.items()):
+        xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(job_key[0], job_key[1], job_key[0]))
 
     b = pyslurm.jobstep(key, 0, 0)
     steps = b.get()
-    for job, job_step in sorted(steps.iteritems()):
+    for job, job_step in sorted(steps.items()):
         xml_file.write('\t\t\t<jobstep>\n')
 
-        for step in sorted(job_step.iterkeys()):
+        for step in sorted(job_step.items()):
             xml_file.write("\t\t\t\t<id>{0}</id>\n".format(step))
             step_info = pyslurm.slurm_job_step_layout_get(int(job), int(step))
-            for task in sorted(step_info.iterkeys()):
-                xml_file.write('\t\t\t\t<{0}>{1}</{2}>\n'.format(task, step_info[task], task))
+            for task in sorted(step_info.items()):
+                xml_file.write('\t\t\t\t<{0}>{1}</{2}>\n'.format(task[0], task[1], task[0]))
 
         xml_file.write('\t\t\t</jobstep>\n')
 
@@ -77,12 +77,12 @@ a = pyslurm.node()
 node_dict = a.get()
 
 xml_file.write( "\t<nodes>\n")
-for key, value in node_dict.iteritems():
+for key, value in node_dict.items():
 
     xml_file.write('\t\t<node>\n')
     xml_file.write("\t\t\t<id>{0}</id>\n".format(key))
-    for part_key in sorted(value.iterkeys()):
-        xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(part_key, value[part_key], part_key))
+    for part_key in sorted(value.items()):
+        xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(part_key[0], part_key[1], part_key[0]))
 
     if primary and key in primary:
         xml_file.write("\t\t\t<controller>Primary</controller>\n")
@@ -102,10 +102,10 @@ a = pyslurm.partition()
 part_dict = a.get()
 
 xml_file.write("\t<partitions>\n")
-for key, value in part_dict.iteritems():
+for key, value in part_dict.items():
 
     xml_file.write('\t\t<partition>\n')
-    for part_key, part_value in value.iteritems():
+    for part_key, part_value in value.items():
         xml_file.write("\t\t\t<{0}>{1}</{2}>\n".format(part_key, part_value, part_key))
 
     xml_file.write('\t\t</partition>\n')

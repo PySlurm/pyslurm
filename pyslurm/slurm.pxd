@@ -36,16 +36,17 @@ cdef extern from *:
 # PySlurm helper functions
 #
 
-cdef inline listOrNone(char* value, char* sep_char):
+cdef inline listOrNone(char* value, sep_char):
     if value is NULL:
         return []
-    if sep_char is NULL:
-        return value
+
+    if not sep_char:
+        return value.decode("UTF-8", "replace")
 
     if sep_char == b'':
-        return value
+        return value.decode("UTF-8", "replace")
 
-    return value.split(sep_char)
+    return value.decode("UTF_8", "replace").split(sep_char)
 
 
 cdef inline stringOrNone(char* value, value2):
@@ -53,7 +54,7 @@ cdef inline stringOrNone(char* value, value2):
         if value2 is '':
             return None
         return u"%s" % value2
-    return u"%s" % value.decode('utf-8', 'replace')
+    return u"%s" % value.decode("UTF-8", "replace")
 
 cdef inline boolToString(int value):
     if value == 0:
@@ -87,10 +88,11 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
 
 cdef extern from 'slurm/slurm.h' nogil:
 
-    enum: SLURM_ID_HASH_NUM = 10000000000
-    enum: SLURM_VERSION_NUMBER = 0x0f0800
-    enum: SYSTEM_DIMENSIONS = 1
-    enum: HIGHEST_DIMENSIONS = 5
+    enum:
+        SLURM_ID_HASH_NUM
+        SLURM_VERSION_NUMBER
+        SYSTEM_DIMENSIONS
+        HIGHEST_DIMENSIONS
 
     uint32_t INFINITE
     uint64_t INFINITE64

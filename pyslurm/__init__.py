@@ -1,25 +1,21 @@
+"""
+PySlurm: Python bindings for the Slurm C API
+============================================
 
-#
-# Absolute Import introduced in Python2.5 ?
-#
+PySlurm is a Cython wrapper around Slurm C API functions.
 
+More information about Slurm can be found at http://slurm.schedmd.com.
+"""
 from __future__ import absolute_import
 
-import os
+import ctypes
 import sys
 
-old_dlopen_flags = ''
-if hasattr(sys, "setdlopenflags"):
-    old_dlopen_flags = sys.getdlopenflags()
-    import DLFCN
-    sys.setdlopenflags(old_dlopen_flags | DLFCN.RTLD_GLOBAL)
+__version__ = "17.02.0"
+
+sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
 from .pyslurm import *
 
-if old_dlopen_flags:
-    if hasattr(sys, "setdlopenflags"):
-        sys.setdlopenflags(old_dlopen_flags)
-
-__version__ = "17.02.0"
 def version():
     return __version__

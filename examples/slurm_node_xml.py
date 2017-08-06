@@ -133,9 +133,9 @@ if __name__ == '__main__':
 
     a = pyslurm.slurm_load_slurmd_status()
     if a:
-        for host, data in a.iteritems():
+        for host, data in a.items():
             sys.stdout.write("\t<slurmd>\n")
-            for key, value in data.iteritems():
+            for key, value in data.items():
                 sys.stdout.write("\t\t<{0}>{1}</{0}>\n".format(key,value,key))
                 sys.stdout.write("\t</slurmd>\n")
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
     now = int(time.time())
     PiDs = {}
-    for key, value in jobs.iteritems():
+    for key, value in jobs.items():
 
         jobid = key
         if value['job_state'] == "RUNNING":
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     if len(PiDs) > 0:
 
         sys.stdout.write("\t<jobs>\n")
-        for job, value in PiDs.iteritems():
+        for job, value in PiDs.items():
             sys.stdout.write("\t\t<job>\n")
             sys.stdout.write("\t\t\t<id>{0}</id>\n".format(job))
             for pid in value:

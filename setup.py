@@ -67,7 +67,7 @@ def makeExtension(extName):
         [extPath],
         include_dirs = ['%s' % SLURM_INC, '.'],   # adding the '.' to include_dirs is CRUCIAL!!
         library_dirs = ['%s' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
-        libraries = ['slurmdb','slurm'],
+        libraries = ['slurmdb', 'slurm'],
         runtime_library_dirs = ['%s/' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
         extra_objects = [],
         extra_compile_args = [],
@@ -326,9 +326,7 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.1',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ]
