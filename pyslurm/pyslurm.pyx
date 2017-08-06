@@ -4746,9 +4746,10 @@ cdef class qos:
                     QOS_info[u'name'] = name
                     # QOS_info[u'*preempt_bitstr'] =
                     # QOS_info[u'preempt_list'] = qos.preempt_list
-                    QOS_info[u'preempt_mode'] = slurm.stringOrNone(
-                        get_preempt_mode(qos.preempt_mode), ''
-                    )
+
+                    qos_preempt_mode = get_preempt_mode(qos.preempt_mode)
+                    QOS_info[u'preempt_mode'] = slurm.stringOrNone(qos_preempt_mode, '')
+
                     QOS_info[u'priority'] = qos.priority
                     QOS_info[u'usage_factor'] = qos.usage_factor
                     QOS_info[u'usage_thres'] = qos.usage_thres
