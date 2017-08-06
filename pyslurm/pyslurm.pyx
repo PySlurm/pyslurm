@@ -4639,7 +4639,7 @@ cdef class qos:
     def __dealloc__(self):
         self.__destroy()
 
-    cpdef __destroy(self):
+    cdef __destroy(self):
         u"""QOS Destructor method."""
         self._QOSDict = {}
 
@@ -4648,7 +4648,7 @@ cdef class qos:
 
         self.__load()
 
-    cpdef int __load(self) except? -1:
+    cdef int __load(self) except? -1:
         u"""Load slurm QOS list."""
         cdef:
             slurm.slurmdb_qos_cond_t *new_qos_cond = NULL
@@ -4692,7 +4692,7 @@ cdef class qos:
 
         return self._QOSDict
 
-    cpdef __get(self):
+    cdef __get(self):
         cdef:
             slurm.List qos_list = NULL
             slurm.ListIterator iters = NULL
@@ -4706,7 +4706,7 @@ cdef class qos:
 
             for i in range(listNum):
                 qos = <slurm.slurmdb_qos_rec_t *>slurm.slurm_list_next(iters)
-                name = qos.name
+                name = slurm.stringOrNone(qos.name, '')
 
                 # QOS infos
                 QOS_info = {}
@@ -4743,7 +4743,9 @@ cdef class qos:
                     QOS_info[u'name'] = slurm.stringOrNone(name, '')
                     # QOS_info[u'*preempt_bitstr'] =
                     # QOS_info[u'preempt_list'] = qos.preempt_list
-                    QOS_info[u'preempt_mode'] = get_preempt_mode(qos.preempt_mode)
+                    QOS_info[u'preempt_mode'] = slurm.stringOrNone(
+                        get_preempt_mode(qos.preempt_mode), ''
+                    )
                     QOS_info[u'priority'] = qos.priority
                     QOS_info[u'usage_factor'] = qos.usage_factor
                     QOS_info[u'usage_thres'] = qos.usage_thres
@@ -4777,7 +4779,7 @@ def get_last_slurm_error():
     if rc == 0:
         return (rc, 'Success')
     else:
-        return (rc, slurm.slurm_strerror(rc))
+        return (rc, slurm.stringOrNone(slurm.slurm_strerror(rc), ''))
 
 cdef inline dict __get_licenses(char *licenses):
     u"""Returns a dict of licenses from the slurm license string.
