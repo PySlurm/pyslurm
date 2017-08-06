@@ -13,9 +13,9 @@ else:
     if len(trig_dict) > 0:
 
         print('{0:*^80}'.format(''))
-        for key, value in trig_dict.iteritems():
+        for key, value in trig_dict.items():
             print("Trigger ID                : {0}".format(key))
-            for part_key in sorted(value.iterkeys()):
+            for part_key in sorted(value.items()):
 
                 if 'res_type' in part_key:
                     print("{0:<25} : {1}".format(part_key, pyslurm.get_trigger_res_type(value[part_key])))

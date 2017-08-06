@@ -6,7 +6,7 @@ import pyslurm
 
 a = pyslurm.partition()
 partition_dict = pyslurm.create_partition_dict()
-partition_dict['Name'] ='mark'
+partition_dict['Name'] ='part_test'
 
 try:
     a.create(partition_dict)

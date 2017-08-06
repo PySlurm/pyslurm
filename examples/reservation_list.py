@@ -12,10 +12,10 @@ def display(res_dict):
 
         date_fields = ['end_time', 'start_time']
 
-        for key, value in res_dict.iteritems():
+        for key, value in res_dict.items():
 
             print("{0} :".format(key))
-            for res_key in sorted(value.iterkeys()):
+            for res_key in sorted(value.keys()):
 
                 if res_key in date_fields:
 

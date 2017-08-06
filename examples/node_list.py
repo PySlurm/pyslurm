@@ -9,10 +9,10 @@ def display(node_dict):
         date_fields = [ 'boot_time', 'slurmd_start_time', 'last_update', 'reason_time' ]
 
         print('{0:*^80}'.format(''))
-        for key, value in node_dict.iteritems():
+        for key, value in node_dict.items():
 
             print("{0} :".format(key))
-            for part_key in sorted(value.iterkeys()):
+            for part_key in sorted(value.items()):
 
                 if part_key in date_fields:
                     ddate = value[part_key]
@@ -22,9 +22,9 @@ def display(node_dict):
                         ddate = pyslurm.epoch2date(ddate)
                         print("\t{0:<17} : {1}".format(part_key, ddate))
                 elif ('reason_uid' in part_key and value['reason'] is None):
-                    print("\t{0:<17} : ".format(part_key))
+                    print("\t{0:<17} : ".format(part_key[0]))
                 else:
-                    print("\t{0:<17} : {1}".format(part_key, value[part_key]))
+                    print("\t{0:<17} : {1}".format(part_key[0], part_key[1]))
 
             print('{0:*^80}'.format(''))
 

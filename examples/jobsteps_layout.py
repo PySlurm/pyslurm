@@ -9,13 +9,13 @@ def display(steps):
     time_fields = ['time_limit']
     date_fields = ['start_time']
 
-    for job, job_step in sorted(steps.iteritems()):
+    for job, job_step in sorted(steps.items()):
 
         print("Job: {0}".format(job))
-        for step, step_dict in job_step.iteritems():
+        for step, step_dict in job_step.items():
 
             print("\tStep: {0}".format(step))
-            for task, value in sorted(step_dict.iteritems()):
+            for task, value in sorted(step_dict.items()):
 
                 if task in date_fields:
 

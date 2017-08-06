@@ -20,7 +20,7 @@ from __future__ import print_function
 import pyslurm
 
 Node_dict = {
-    'node_names': 'bps000',
+    'node_names': 'c10',
     'node_state': pyslurm.NODE_STATE_DRAIN,
     'reason': 'API test'
     }

@@ -4,19 +4,15 @@ from __future__ import print_function
 
 import pyslurm
 import sys
-import string
 import time
-import datetime
 
-dstring = "2020-12-31T18:00:00"
-dpattern = "%Y-%m-%dT%H:%M:%S"
-start_epoch = int(time.mktime(time.strptime(dstring, dpattern)))
+epoch_now = int(time.time())
 
 a = pyslurm.reservation()
 res_dict = pyslurm.create_reservation_dict()
 res_dict["node_cnt"] = 1
 res_dict["users"] = "root"
-res_dict["start_time"] = start_epoch
+res_dict["start_time"] = epoch_now
 res_dict["duration"] = 600
 res_dict["name"] = "res_test"
 
@@ -28,13 +24,13 @@ else:
     print("Success - Created reservation {0}\n".format(resid))
 
     res_dict = a.get()
-    if res_dict.has_key(resid):
+    if res_dict.get(resid):
 
         date_fields = [ 'end_time', 'start_time' ]
 
         value = res_dict[resid]
         print("Res ID : {0}".format(resid))
-        for res_key in sorted(value.iterkeys()):
+        for res_key in sorted(value.keys()):
 
             if res_key in date_fields:
 

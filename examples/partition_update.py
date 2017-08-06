@@ -6,7 +6,7 @@ import pyslurm
 
 part_dict = pyslurm.create_partition_dict()
 
-part_dict['Name'] = 'compute'
+part_dict['Name'] = 'part_test'
 part_dict['State'] = 'DOWN'
 part_dict['Reason'] = 'API test'
 

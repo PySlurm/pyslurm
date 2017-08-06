@@ -54,3 +54,32 @@ def test_node_scontrol():
     assert_equals(test_node_info["threads"], int(sctl_dict["ThreadsPerCore"]))
     assert_equals(test_node_info["tmp_disk"], int(sctl_dict["TmpDisk"]))
     assert_equals(test_node_info["weight"], int(sctl_dict["Weight"]))
+
+
+def test_node_update():
+    """Node: Test node().update()."""
+    node_test_before = pyslurm.node().find_id("c10")
+    assert_equals(node_test_before["state"], "IDLE")
+
+    node_test_update = {
+        "node_names": "c10",
+        "node_state": pyslurm.NODE_STATE_DRAIN,
+        "reason": "unit testing"
+    }
+
+    rc = pyslurm.node().update(node_test_update)
+    assert_equals(rc, 0)
+
+    node_test_during = pyslurm.node().find_id("c10")
+    assert_equals(node_test_during["state"], "IDLE+DRAIN")
+
+    node_test_update = {
+        "node_names": "c10",
+        "node_state": pyslurm.NODE_RESUME
+    }
+
+    rc = pyslurm.node().update(node_test_update)
+    assert_equals(rc, 0)
+
+    node_test_after = pyslurm.node().find_id("c10")
+    assert_equals(node_test_after["state"], "IDLE")

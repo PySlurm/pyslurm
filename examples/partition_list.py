@@ -6,11 +6,11 @@ def display(part_dict):
 
     if len(part_dict) > 0:
 
-        for key, value in part_dict.iteritems():
+        for key, value in part_dict.items():
 
             print("{0} :".format(key))
 
-            for part_key in sorted(value.iterkeys()):
+            for part_key in sorted(value.keys()):
 
                 valStr = value[part_key]
 
