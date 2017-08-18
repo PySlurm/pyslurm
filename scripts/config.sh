@@ -18,6 +18,9 @@ EOF
 # Configure topology plugin
 echo 'TopologyPlugin=topology/tree' >> /etc/slurm/slurm.conf
 
+# Add the cluster to the slurm database
+sacctmgr --immediate add cluster name=linux
+
 # Restart Slurm components to apply configuration changes
 supervisorctl restart slurmctld
 supervisorctl restart slurmd

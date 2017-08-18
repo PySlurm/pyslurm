@@ -21,6 +21,9 @@ sbatch --wrap="srun sleep 1000"
 # from PENDING to RUNNING
 sleep 10
 
+# Show cluster
+sacctmgr list cluster
+
 # Get output from various scontrol show commands
 scontrol -d show job
 scontrol -d show node c1
