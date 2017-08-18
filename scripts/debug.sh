@@ -14,15 +14,6 @@ python$PYTHON -c "import pyslurm; print(pyslurm.version())"
 # Print the Slurm API version
 python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
 
-docker exec slurm-$SLURM sbatch --wrap="srun sleep 1000"
-  - sleep 10
-  - docker exec slurm-$SLURM scontrol -d show job
-  - docker exec slurm-$SLURM scontrol -d show node c1
-  - docker exec slurm-$SLURM scontrol -d show partition
-  - docker exec slurm-$SLURM scontrol -d show license
-  - docker exec slurm-$SLURM scontrol -d show steps
-  - docker exec slurm-$SLURM scontrol -d show topology
-
 # Submit test job with jobstep via srun for testing
 sbatch --wrap="srun sleep 1000"
 
