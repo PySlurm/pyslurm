@@ -65,25 +65,9 @@ before_install:
 install: true
 before_script:
   - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos$CENTOS-slurm:$SLURM
-  - if [ $CENTOS -eq 7 ]; then docker exec slurm-$SLURM bash -c "yum makecache fast && yum -y install python34{,-devel,-pip}"; fi
-  - docker exec slurm-$SLURM pip$PYTHON install nose Cython==$CYTHON
   - docker exec slurm-$SLURM git clone --branch=$TRAVIS_BRANCH https://github.com/PySlurm/pyslurm.git
-  - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py build"
-  - docker exec slurm-$SLURM bash -c "cd pyslurm && python$PYTHON setup.py install"
+  - docker exec slurm-$SLURM /pyslurm/scripts/build.sh
+  - docker exec slurm-$SLURM /pyslurm/scripts/config.sh
+  - docker exec slurm-$SLURM /pyslurm/scripts/debug.sh
 script:
-  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.version())"
-  - docker exec slurm-$SLURM python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
-  - docker exec slurm-$SLURM bash -c "echo 'Licenses=fluent:30,ansys:100,matlab:50' >> /etc/slurm/slurm.conf"
-  - docker exec slurm-$SLURM bash -c "echo -e 'SwitchName=s0 Nodes=c[0-5]\nSwitchName=s1 Nodes=c[6-10]\nSwitchName=s2 Switches=s[0-1]' >> /etc/slurm/topology.conf"
-  - docker exec slurm-$SLURM bash -c "echo 'TopologyPlugin=topology/tree' >> /etc/slurm/slurm.conf"
-  - docker exec slurm-$SLURM supervisorctl restart all
-  - sleep 10
-  - docker exec slurm-$SLURM sbatch --wrap="srun sleep 1000"
-  - sleep 10
-  - docker exec slurm-$SLURM scontrol -d show job
-  - docker exec slurm-$SLURM scontrol -d show node c1
-  - docker exec slurm-$SLURM scontrol -d show partition
-  - docker exec slurm-$SLURM scontrol -d show license
-  - docker exec slurm-$SLURM scontrol -d show steps
-  - docker exec slurm-$SLURM scontrol -d show topology
-  - if [ $PYTHON = "3.4" ]; then docker exec slurm-$SLURM nosetests-$PYTHON -v /pyslurm/tests; else docker exec slurm-$SLURM nosetests -v /pyslurm/tests; fi
+  - docker exec slurm-$SLURM /pyslurm/scripts/run_tests.sh
