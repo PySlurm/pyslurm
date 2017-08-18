@@ -9,7 +9,7 @@ set -e
 cd ..
 
 # Run tests
-if [ $PYTHON == "2.6"]
+if [ "$PYTHON" == "2.6" ]
 then
     nosetests -v pyslurm/tests
 else

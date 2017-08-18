@@ -6,7 +6,7 @@ set -e
 #
 
 # Install Python
-if [ $PYTHON == "3.4" ]
+if [ "$PYTHON" == "3.4" ]
 then
     yum makecache fast && yum -y install python34{,-devel,-pip}
 fi
