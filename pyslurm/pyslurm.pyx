@@ -3623,7 +3623,7 @@ def slurm_create_reservation(dict reservation_dict={}):
         int free_users = 0
         int free_accounts = 0
         unsigned int uint32_value
-        unsigned int time_value
+        slurm.time_t time_value
 
     slurm.slurm_init_resv_desc_msg(&resv_msg)
 
@@ -3647,9 +3647,25 @@ def slurm_create_reservation(dict reservation_dict={}):
         resv_msg.node_cnt[0] = int_value
         resv_msg.node_cnt[1] = 0
 
+    if reservation_dict.get('core_cnt') and not reservation_dict.get('node_list'):
+        uint32_value = reservation_dict[u'core_cnt'][0]
+        resv_msg.core_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t))
+        resv_msg.core_cnt[0] = uint32_value
+
     if reservation_dict.get('node_list'):
         b_node_list = reservation_dict[u'node_list'].encode("UTF-8")
         resv_msg.node_list = b_node_list
+        if reservation_dict.get('core_cnt'):
+            hl = hostlist()
+            hl.create(b_node_list)
+            if len(reservation_dict[u'core_cnt']) != hl.count():
+                raise ValueError("core_cnt list must have the same # elements as the expanded hostlist")
+            resv_msg.core_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * hl.count())
+            int_value = 0
+            for cores in reservation_dict[u'core_cnt']:
+                uint32_value = cores
+                resv_msg.core_cnt[int_value] = uint32_value
+                int_value += 1
 
     if reservation_dict.get('users'):
         b_users = reservation_dict[u'users'].encode("UTF-8", "replace")
@@ -3667,6 +3683,10 @@ def slurm_create_reservation(dict reservation_dict={}):
         int_value = reservation_dict[u'flags']
         resv_msg.flags = int_value
 
+    if reservation_dict.get('partition'):
+        b_name = reservation_dict[u'partition'].encode("UTF-8")
+        resv_msg.partition = b_name
+
     if reservation_dict.get('name'):
         b_name = reservation_dict[u'name'].encode("UTF-8")
         resv_msg.name = b_name
@@ -3682,7 +3702,6 @@ def slurm_create_reservation(dict reservation_dict={}):
         raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return resID
-
 
 def slurm_update_reservation(dict reservation_dict={}):
     u"""Update a slurm reservation.
@@ -3702,8 +3721,13 @@ def slurm_update_reservation(dict reservation_dict={}):
 
     slurm.slurm_init_resv_desc_msg(&resv_msg)
 
+    # Be careful: Updating the start_time fails, if the previous start_time
+    # of the reservation is in the past.
+    # Set reservation_dict[u'start_time'] = -1 to handle this case.
     if reservation_dict.get('start_time'):
-        resv_msg.start_time = reservation_dict.get('start_time')
+        time_value = reservation_dict.get('start_time')
+        if time_value != -1:
+            resv_msg.start_time = time_value
 
     if reservation_dict.get('duration'):
         resv_msg.duration = reservation_dict.get('duration')
@@ -3718,6 +3742,26 @@ def slurm_update_reservation(dict reservation_dict={}):
         resv_msg.node_cnt[0] = int_value
         resv_msg.node_cnt[1] = 0
 
+    if reservation_dict.get('core_cnt') and not reservation_dict.get('node_list'):
+        uint32_value = reservation_dict[u'core_cnt'][0]
+        resv_msg.core_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t))
+        resv_msg.core_cnt[0] = uint32_value
+
+    if reservation_dict.get('node_list'):
+        b_node_list = reservation_dict[u'node_list'].encode("UTF-8")
+        resv_msg.node_list = b_node_list
+        if reservation_dict.get('core_cnt'):
+            hl = hostlist()
+            hl.create(b_node_list)
+            if len(reservation_dict[u'core_cnt']) != hl.count():
+                raise ValueError("core_cnt list must have the same # elements as the expanded hostlist")
+            resv_msg.core_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * hl.count())
+            int_value = 0
+            for cores in reservation_dict[u'core_cnt']:
+                uint32_value = cores
+                resv_msg.core_cnt[int_value] = uint32_value
+                int_value += 1
+
     if reservation_dict.get('users'):
         b_users = reservation_dict[u'users'].encode("UTF-8", "replace")
         resv_msg.users = b_users
@@ -3729,6 +3773,14 @@ def slurm_update_reservation(dict reservation_dict={}):
     if reservation_dict.get('licenses'):
         b_licenses = reservation_dict[u'licenses'].encode("UTF-8")
         resv_msg.licenses = b_licenses
+
+    if reservation_dict.get('partition'):
+        b_name = reservation_dict[u'partition'].encode("UTF-8")
+        resv_msg.partition = b_name
+
+    if reservation_dict.get('flags'):
+        int_value = reservation_dict[u'flags']
+        resv_msg.flags = int_value
 
     errCode = slurm.slurm_update_reservation(&resv_msg)
 
