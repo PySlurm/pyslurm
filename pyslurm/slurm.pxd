@@ -1547,7 +1547,7 @@ cdef extern from 'slurm/slurm.h' nogil:
     ctypedef struct resv_desc_msg:
         char *accounts
         char *burst_buffer
-        uint32_t core_cnt
+        uint32_t *core_cnt
         uint32_t duration
         time_t end_time
         char *features
