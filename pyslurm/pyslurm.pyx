@@ -38,6 +38,10 @@ cdef extern from "sys/wait.h" nogil:
     int WEXITSTATUS(int status)
     int WIFEXITED(int status)
 
+cdef extern from *:
+    # deprecated backwards compatiblity declaration
+    ctypedef const char const_char "const char"
+
 try:
     import __builtin__
 except ImportError:
