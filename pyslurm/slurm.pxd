@@ -107,6 +107,10 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
     int SLURM_ERROR
     int SLURM_FAILURE
 
+    enum:
+        ESLURM_ERROR_ON_DESC_TO_RECORD_COPY
+        ESLURM_NODES_BUSY
+
     cdef extern char * slurm_strerror (int)
     cdef void slurm_seterrno (int)
     cdef int slurm_get_errno ()
@@ -2116,6 +2120,15 @@ cdef extern from 'slurm/slurm.h' nogil:
     cdef extern int slurm_requeue2 (char *job_id, uint32_t state, job_array_resp_msg_t **resp)
 
     #
+    # Job Submit
+    #
+
+    cdef extern void slurm_init_job_desc_msg(job_desc_msg_t *job_desc_msg)
+    cdef extern int slurm_submit_batch_job(job_desc_msg_t *job_desc_msg,
+                                           submit_response_msg_t **slurm_alloc_msg)
+    cdef extern void slurm_free_submit_response_response_msg(submit_response_msg_t *msg)
+
+    #
     # Checkpoint
     #
 
@@ -2404,3 +2417,10 @@ cdef extern void *slurm_xmalloc (size_t, const_char_ptr, int, const_char_ptr)
 cdef extern void slurm_free_stats_response_msg (stats_info_response_msg_t *msg)
 cdef extern char *slurm_step_layout_type_name (task_dist_states_t task_dist)
 cdef extern void slurm_make_time_str (time_t *time, char *string, int size)
+
+cdef extern char **environ
+cdef extern char **slurm_env_array_create()
+cdef extern void slurm_env_array_merge(char ***dest_array, const char **src_array)
+cdef extern int slurm_env_array_overwrite(char ***array_ptr, const char *name, const char *value)
+cdef extern slurm_env_array_overwrite_fmt(char ***array_ptr, const char *name, const char *value_fmt, ...)
+cdef extern char *slurm_get_checkpoint_dir()
