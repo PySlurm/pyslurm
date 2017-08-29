@@ -8,10 +8,12 @@ from socket import gethostname
 from collections import defaultdict
 from pwd import getpwnam, getpwuid
 
+from libc.errno cimport errno, EAGAIN
 from libc.string cimport strlen, strcpy, memset, memcpy
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 from libc.stdint cimport int64_t, uint64_t
 from libc.stdlib cimport malloc, free
+from posix.unistd cimport getuid, getgid
 
 from cpython cimport bool
 
@@ -76,6 +78,7 @@ cdef inline SLURM_VERSION_NUM(a):
             ((SLURM_VERSION_MINOR(a)) << 8) +
             (SLURM_VERSION_MICRO(a)))
 
+DEF MAX_RETRIES = 15
 #
 # SLURM_ID_HASH
 # Description:
@@ -2431,6 +2434,348 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
+    cdef int fill_job_desc_from_opts(self, dict job_opts, slurm.job_desc_msg_t *desc):
+        """
+        https://github.com/SchedMD/slurm/blob/0bc4ac4902c4c150ee66b90fb41f3c67352f85ba/src/api/init_msg.c#L54
+        https://github.com/SchedMD/slurm/blob/a8f0ff71504e77feb7fa744ba1f6d44daedb6989/src/sbatch/opt.c#L294
+        https://github.com/SchedMD/slurm/blob/a8f0ff71504e77feb7fa744ba1f6d44daedb6989/src/sbatch/opt.c#L294
+
+        Do I even need to set some of the defaults?
+
+        python dict options should match slurm sbatch long options:
+            https://github.com/SchedMD/slurm/blob/63a06811441dd7882083c282d92ae6596ec00a8a/src/sbatch/opt.c#L755
+        """
+        cdef:
+            int i
+
+        # TODO: jobid_set
+        # https://github.com/SchedMD/slurm/blob/a8f0ff71504e77feb7fa744ba1f6d44daedb6989/src/sbatch/opt.c#L384
+        if job_opts.get("contiguous") == 1:
+            desc.contiguous = 1
+        else:
+            desc.contiguous = 0
+
+        if job_opts.get("core_spec"):
+            desc.core_spec = job_opts.get("core_spec")
+
+        if job_opts.get("constraints"):
+            features = job_opts.get("constraints").encode("UTF-8", "replace")
+            desc.features = features
+
+        if job_opts.get("immediate"):
+            desc.immediate = job_opts.get("immediate")
+#        else:
+#            desc.immediate = 0
+
+        if job_opts.get("gres"):
+            gres = job_opts.get("gres").encode("UTF-8", "replace")
+            desc.gres = gres
+
+        if job_opts.get("job_name"):
+            name = job_opts.get("job_name").encode("UTF-8", "replace")
+            desc.name = name
+        else:
+            desc.name = "sbatch"
+
+        if job_opts.get("reservation"):
+            reservation = job_opts.get("reservation").encode("UTF-8", "replace")
+            desc.reservation = reservation
+
+        if job_opts.get("wckey"):
+            wckey = job_opts.get("wckey").encode("UTF-8", "replace")
+            desc.wckey = wckey
+
+        if job_opts.get("nodelist"):
+            req_nodes = job_opts.get("nodelist").encode("UTF-8", "replace")
+            desc.req_nodes = req_nodes
+
+        if job_opts.get("exc_nodes"):
+            exc_nodes = job_opts.get("exc_nodes").encode("UTF-8", "replace")
+            desc.exc_nodes = exc_nodes
+
+        if job_opts.get("partition"):
+            partition = job_opts.get("partition").encode("UTF-8", "replace")
+            desc.partition = partition
+
+        if job_opts.get("profile"):
+            desc.profile = job_opts.get("profile")
+#        else:
+#            desc.profile = ACCT_GATHER_PROFILE_NOT_SET
+
+        if job_opts.get("licenses"):
+            licenses = job_opts.get("licenses").encode("UTF-8", "replace")
+            desc.licenses = licenses
+
+        # TODO: nodes_set
+
+        if job_opts.get("ntasks_per_node"):
+            ntasks_per_node = job_opts.get("ntasks_per_node")
+            desc.ntasks_per_node = ntasks_per_node
+
+        if job_opts.get("uid"):
+            desc.user_id = job_opts.get("uid")
+        else:
+            desc.user_id = getuid()
+
+        if job_opts.get("gid"):
+            desc.group_id = job_opts.get("gid")
+        else:
+            desc.group_id = getgid()
+
+        if job_opts.get("dependency"):
+            dependency = job_opts.get("dependency").encode("UTF-8", "replace")
+            desc.dependency = dependency
+
+        if job_opts.get("array_inx"):
+            array_inx = job_opts.get("array_inx").encode("UTF-8")
+            desc.array_inx = array_inx
+
+        if job_opts.get("mem_bind"):
+            mem_bind = job_opts.get("mem_bind").encode("UTF-8")
+            desc.mem_bind = mem_bind
+
+        if job_opts.get("mem_bind_type"):
+            desc.mem_bind_type = job_opts.get("mem_bind_type")
+
+        if job_opts.get("plane_size"):
+            desc.plane_size = job_opts.get("plane_size")
+#        else:
+#            desc.plane_size = slurm.NO_VAL
+
+        if job_opts.get("distribution"):
+            desc.task_dist = job_opts.get("distribution")
+#        else:
+#            desc.task_dist = slurm.SLURM_DIST_UNKNOWN
+
+        # TODO: what's the default opt.network?
+        if job_opts.get("network"):
+            network = job_opts.get("network").encode("UTF-8", "replace")
+            desc.network = network
+
+        if job_opts.get("nice"):
+            desc.nice = NICE_OFFSET + job_opts.get("nice")
+
+        if job_opts.get("priority"):
+            desc.priority = job_opts.get("priority")
+
+        if job_opts.get("mail_type"):
+            desc.mail_type = job_opts.get("mail_type")
+#        else:
+#            desc.mail_type = 0
+
+        if job_opts.get("mail_user"):
+            mail_user = job_opts.get("mail_user").encode("UTF-8", "replace")
+            desc.mail_user = mail_user
+
+        # TODO: does begin need to get translated from string/epoch to time_t?
+        if job_opts.get("begin"):
+            desc.begin_time = job_opts.get("begin")
+#        else:
+#            desc.begin_time = 0
+
+        # TODO: does deadline need to get translated from string/epoch to time_t?
+        if job_opts.get("deadline"):
+            desc.deadline = job_opts.get("deadline")
+#        else:
+#            desc.deadline = 0
+
+        if job_opts.get("delay_boot"):
+            desc.delay_boot = job_opts.get("delay_boot")
+
+        if job_opts.get("account"):
+            account = job_opts.get("account").encode("UTF-8", "replace")
+            desc.account = account
+
+        if job_opts.get("comment"):
+            comment = job_opts.get("comment").encode("UTF-8", "replace")
+            desc.comment = comment
+
+        if job_opts.get("qos"):
+            qos = job_opts.get("qos").encode("UTF-8", "replace")
+            desc.qos = qos
+
+        if job_opts.get("hold"):
+            desc.priority = 0
+
+        # BG parameters
+        # opt.geometry
+        #   slurmdb_setup_cluster_dims() doesn't appear to be externalized
+        # opt.conn_type
+
+        if job_opts.get("reboot"):
+            desc.reboot = job_opts.get("reboot")
+
+        # BG parameters cont'd
+        if job_opts.get("no_rotate"):
+            desc.rotate = job_opts.get("no_rotate")
+
+        if job_opts.get("blrtsimage"):
+            blrtsimage = job_opts.get("blrtsimage").encode("UTF-8", "replace")
+            desc.blrtsimage = blrtsimage
+
+        if job_opts.get("linuximage"):
+            linuximage = job_opts.get("linuximage").encode("UTF-8", "replace")
+            desc.linuximage = linuximage
+
+        if job_opts.get("mloaderimage"):
+            mloaderimage = job_opts.get("mloaderimage").encode("UTF-8", "replace")
+            desc.mloaderimage = mloaderimage
+
+        if job_opts.get("ramdiskimage"):
+            ramdiskimage = job_opts.get("ramdiskimage").encode("UTF-8", "replace")
+            desc.ramdiskimage = ramdiskimage
+
+        # job constraints
+        if job_opts.get("mincpus"):
+            desc.pn_min_cpus = job_opts.get("mincpus")
+
+        if job_opts.get("realmem"):
+            desc.pn_min_memory = job_opts.get("realmem")
+        elif job_opts.get("mem_per_cpu"):
+            desc.pn_min_memory = job_opts.get("mem_per_cpu") | slurm.MEM_PER_CPU
+
+        if job_opts.get("tmpdisk"):
+            desc.pn_min_tmp_disk = job_opts.get("tmpdisk")
+
+        # TODO: declare and use MAX macro or use python max()?
+#        if job_opts.get("overcommit"):
+#            desc.min_cpus = max(job_opts.get("min_nodes", 1)
+#            desc.overcommit = job_opts.get("overcommit")
+#        elif job_opts.get("cpus_set"):
+#            # TODO: cpus_set
+#            #       check for ntasks and cpus_per_task before multiplying
+#            desc.min_cpus = job_opts.get("ntasks") * job_opts.get("cpus_per_task")
+#        elif job_opts.get("nodes_set") and job_opts.get("min_nodes") == 0:
+#            desc.min_cpus = 0
+#        else:
+#            desc.min_cpus = job_opts.get("ntasks")
+
+        # TODO: ntasks_set, cpus_set
+        if job_opts.get("sockets_per_node"):
+            desc.sockets_per_node = job_opts.get("sockets_per_node")
+
+        if job_opts.get("cores_per_socket"):
+            desc.cores_per_socket = job_opts.get("cores_per_socket")
+
+        if job_opts.get("threads_per_core"):
+            desc.threads_per_core = job_opts.get("threads_per_core")
+
+        if job_opts.get("no_kill"):
+            desc.kill_on_node_fail = 0
+
+        if job_opts.get("time_limit"):
+            desc.time_limit = job_opts.get("time_limit")
+
+        if job_opts.get("time_min"):
+            desc.time_min = job_opts.get("time_min")
+
+        if job_opts.get("shared"):
+            desc.shared = job_opts.get("shared")
+
+        if job_opts.get("warn_flags"):
+            desc.warn_flags = job_opts.get("warn_flags")
+
+        if job_opts.get("warn_signal"):
+            desc.warn_signal = job_opts.get("warn_signal")
+
+        if job_opts.get("warn_time"):
+            desc.warn_time = job_opts.get("warn_time")
+
+        # https://github.com/SchedMD/slurm/blob/slurm-17-02-7-1/src/sbatch/sbatch.c#L595
+        desc.environment = NULL
+        if not job_opts.get("export_env"):
+            slurm.slurm_env_array_merge(&desc.environment, <const char **>slurm.environ)
+
+        desc.env_size = self.envcount(desc.environment)
+
+        # argv/argc
+        if job_opts.get("error"):
+            std_err = job_opts.get("error").encode("UTF-8", "replace")
+            desc.std_err = std_err
+
+        if job_opts.get("input"):
+            std_in = job_opts.get("input").encode("UTF-8", "replace")
+            desc.std_in = std_in
+
+        if job_opts.get("output"):
+            std_out = job_opts.get("output").encode("UTF-8", "replace")
+            desc.std_out = std_out
+
+#        cwd = os.getcwd()
+#        desc.work_dir = cwd
+
+        if job_opts.get("requeue"):
+            desc.requeue = job_opts.get("requeue")
+
+        if job_opts.get("open_mode"):
+            desc.open_mode = job_opts.get("open_mode")
+
+        if job_opts.get("acctg_freq"):
+            acctg_freq = job_opts.get("acctg_freq").encode("UTF-8")
+            desc.acctg_freq = acctg_freq
+
+        # TODO: needs to get xfree'd?
+        desc.ckpt_dir = slurm.slurm_get_checkpoint_dir()
+
+        if job_opts.get("ckpt_interval"):
+            desc.ckpt_interval = <uint16_t>job_opts.get("ckpt_interval")
+
+        return 0
+
+    cdef int envcount(self, char **env):
+        """Return the number of elements in the environment `env`."""
+        cdef int envc = 0
+        while (env[envc] != NULL):
+            envc += 1
+        return envc
+
+    def submit_batch_job(self, job_opts):
+        """Submit batch job."""
+        cdef:
+            slurm.job_desc_msg_t desc
+            slurm.submit_response_msg_t *resp
+            int rc = 0
+            int fill_job_desc_rc
+            int retries = 0
+
+        slurm.slurm_init_job_desc_msg(&desc)
+        fill_job_desc_rc = self.fill_job_desc_from_opts(job_opts, &desc)
+
+        if fill_job_desc_rc == -1:
+            raise ValueError("Failed to load job options", 1)
+
+        if job_opts.get("wrap"):
+            wrap_script = "#!/bin/bash\n"
+            wrap_script += "# This script was create by PySlurm.\n\n"
+            wrap_script += job_opts.get("wrap")
+            script_body = wrap_script.encode("UTF-8", "replace")
+            desc.script = script_body
+
+        cwd = os.getcwd().encode("UTF-8", "replace")
+        desc.work_dir = cwd
+
+        while slurm.slurm_submit_batch_job(&desc, &resp) < 0:
+            if errno == slurm.ESLURM_ERROR_ON_DESC_TO_RECORD_COPY:
+                msg = "Slurm job queue full, sleeping and retrying."
+            elif errno == slurm.ESLURM_NODES_BUSY:
+                msg = "Job step creation temporarily disabled, retrying"
+            elif errno == EAGAIN:
+                msg = "Slurm temporarily unable to accept job, sleeping and retrying."
+            else:
+                msg = None
+
+            if msg is None or retries >= MAX_RETRIES:
+                raise ValueError("Batch job submission failed: %s", msg)
+
+#            if retries:
+            retries += 1
+            p_time.sleep(retries)
+
+        job_id = resp.job_id
+        slurm.slurm_free_submit_response_response_msg(resp)
+
+        return "Submitted batch job %s" % job_id
+
 
 def slurm_pid2jobid(uint32_t JobPID=0):
     u"""Get the slurm job id from a process id.
@@ -2575,6 +2920,7 @@ def slurm_perror(char* Msg=''):
     slurm.slurm_perror(Msg)
 
 
+#
 #
 # Slurm Node Read/Print/Update Class
 #
