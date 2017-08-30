@@ -28,7 +28,9 @@ cdef extern from 'time.h' nogil:
     ctypedef long time_t
 
 cdef extern from *:
+    ctypedef char const_char "const char"
     ctypedef char* const_char_ptr "const char*"
+    ctypedef char** const_char_pptr "const char**"
 
 # ctypedef struct sockaddr_in slurm_addr_t
 
@@ -2294,7 +2296,7 @@ cdef extern char *slurm_step_layout_type_name (task_dist_states_t task_dist)
 
 cdef extern char **environ
 cdef extern char **slurm_env_array_create()
-cdef extern void slurm_env_array_merge(char ***dest_array, const char **src_array)
-cdef extern int slurm_env_array_overwrite(char ***array_ptr, const char *name, const char *value)
-cdef extern slurm_env_array_overwrite_fmt(char ***array_ptr, const char *name, const char *value_fmt, ...)
+cdef extern void slurm_env_array_merge(char ***dest_array, const_char_pptr src_array)
+cdef extern int slurm_env_array_overwrite(char ***array_ptr, const_char_ptr name, const_char_ptr value)
+cdef extern slurm_env_array_overwrite_fmt(char ***array_ptr, const_char_ptr name, const_char_ptr value_fmt, ...)
 cdef extern char *slurm_get_checkpoint_dir()

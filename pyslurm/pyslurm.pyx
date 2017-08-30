@@ -39,7 +39,7 @@ cdef extern from "sys/wait.h" nogil:
 
 cdef extern from *:
     # deprecated backwards compatiblity declaration
-    ctypedef char const_char "const char"
+    ctypedef char** const_char_pptr "const char**"
 
 try:
     import __builtin__
@@ -2694,7 +2694,7 @@ cdef class job:
             pass
 
         if not job_opts.get("export_env"):
-            slurm.slurm_env_array_merge(&desc.environment, <const char **>slurm.environ)
+            slurm.slurm_env_array_merge(&desc.environment, <const_char_pptr>slurm.environ)
         # get_user_env_time
 
         desc.env_size = self.envcount(desc.environment)
@@ -2708,7 +2708,7 @@ cdef class job:
             std_in = job_opts.get("input").encode("UTF-8", "replace")
             desc.std_in = std_in
         else:
-            desc.std_in = "dev_null"
+            desc.std_in = "/dev/null"
 
         if job_opts.get("output"):
             std_out = job_opts.get("output").encode("UTF-8", "replace")
@@ -2780,9 +2780,6 @@ cdef class job:
         elif job_opts.get("script") is None:
             raise ValueError("Did you forget to wrap command or submit script?", -1)
 
-        cwd = os.getcwd().encode("UTF-8", "replace")
-        desc.work_dir = cwd
-
         # process_options_second_pass
         # add burst buffer to script
         # spank_init_post_opt
@@ -2796,6 +2793,11 @@ cdef class job:
         slurm.slurm_init_job_desc_msg(&desc)
         fill_job_desc_rc = self.fill_job_desc_from_opts(job_opts, &desc)
         desc.script = script_body
+
+        # FIXME: should this by python's getcwd or C's getcwd?
+        # also, allow option to specify work_dir, if not, set default
+        cwd = os.getcwd().encode("UTF-8", "replace")
+        desc.work_dir = cwd
 
         if fill_job_desc_rc == -1:
             raise ValueError("Failed to load job options", 1)
