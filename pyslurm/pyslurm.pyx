@@ -1,8 +1,9 @@
 # cython: embedsignature=True
 # cython: profile=False
 
-import time as p_time
 import os
+import sys
+import time as p_time
 
 from socket import gethostname
 from collections import defaultdict
@@ -2496,6 +2497,8 @@ cdef class job:
 
         python dict options should match slurm sbatch long options:
             https://github.com/SchedMD/slurm/blob/63a06811441dd7882083c282d92ae6596ec00a8a/src/sbatch/opt.c#L755
+
+        * make sure options match sbatch command line opts and not struct member names.
         """
         cdef:
             int i
@@ -2788,7 +2791,9 @@ cdef class job:
         return envc
 
     def submit_batch_job(self, job_opts):
-        """Submit batch job."""
+        """Submit batch job.
+        * make sure options match sbatch command line opts and not struct member names.
+        """
         cdef:
             slurm.job_desc_msg_t desc
             slurm.submit_response_msg_t *resp
@@ -2826,7 +2831,7 @@ cdef class job:
                     raise ValueError(msg)
             script_body = script_body.encode("UTF-8", "replace")
         elif job_opts.get("script") is None:
-            raise ValueError("Did you forget to wrap command or submit script?", -1)
+            sys.exit(1)
 
         # process_options_second_pass
         # add burst buffer to script
@@ -2840,15 +2845,21 @@ cdef class job:
 
         slurm.slurm_init_job_desc_msg(&desc)
         fill_job_desc_rc = self.fill_job_desc_from_opts(job_opts, &desc)
+
+        if fill_job_desc_rc == -1:
+            raise ValueError("Failed to load job options", 1)
+
         desc.script = script_body
 
-        # FIXME: should this by python's getcwd or C's getcwd?
+        # FIXME: should this be python's getcwd or C's getcwd?
         # also, allow option to specify work_dir, if not, set default
         cwd = os.getcwd().encode("UTF-8", "replace")
         desc.work_dir = cwd
 
-        if fill_job_desc_rc == -1:
-            raise ValueError("Failed to load job options", 1)
+        if job_opts.get("test_only"):
+            if slurm.slurm_job_will_run(&desc) != slurm.SLURM_SUCCESS:
+                raise ValueError("allocation failure")
+            sys.exit(0)
 
         while slurm.slurm_submit_batch_job(&desc, &resp) < 0:
             if errno == slurm.ESLURM_ERROR_ON_DESC_TO_RECORD_COPY:
