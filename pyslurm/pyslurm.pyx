@@ -40,7 +40,7 @@ cdef extern from "sys/wait.h" nogil:
 
 cdef extern from *:
     # deprecated backwards compatiblity declaration
-    ctypedef const char const_char "const char"
+    ctypedef char const_char "const char"
 
 try:
     import __builtin__
@@ -2735,8 +2735,15 @@ cdef class job:
 
         # https://github.com/SchedMD/slurm/blob/slurm-17-02-7-1/src/sbatch/sbatch.c#L595
         desc.environment = NULL
+        if job_opts.get("export_file"):
+            # desc->environment = env_array_from_file(opt.export_file);
+            #   if (desc->environment == NULL)
+            #   exit(1);
+            pass
+
         if not job_opts.get("export_env"):
             slurm.slurm_env_array_merge(&desc.environment, <const char **>slurm.environ)
+        # get_user_env_time
 
         desc.env_size = self.envcount(desc.environment)
 
@@ -2748,13 +2755,12 @@ cdef class job:
         if job_opts.get("input"):
             std_in = job_opts.get("input").encode("UTF-8", "replace")
             desc.std_in = std_in
+        else:
+            desc.std_in = "dev_null"
 
         if job_opts.get("output"):
             std_out = job_opts.get("output").encode("UTF-8", "replace")
             desc.std_out = std_out
-
-#        cwd = os.getcwd()
-#        desc.work_dir = cwd
 
         if job_opts.get("requeue"):
             desc.requeue = job_opts.get("requeue")
@@ -2790,21 +2796,57 @@ cdef class job:
             int fill_job_desc_rc
             int retries = 0
 
-        slurm.slurm_init_job_desc_msg(&desc)
-        fill_job_desc_rc = self.fill_job_desc_from_opts(job_opts, &desc)
-
-        if fill_job_desc_rc == -1:
-            raise ValueError("Failed to load job options", 1)
+        # script_name
 
         if job_opts.get("wrap"):
             wrap_script = "#!/bin/bash\n"
             wrap_script += "# This script was create by PySlurm.\n\n"
             wrap_script += job_opts.get("wrap")
             script_body = wrap_script.encode("UTF-8", "replace")
-            desc.script = script_body
+        elif job_opts.get("script"):
+            with open(job_opts.get("script"), "r") as script:
+                script_body = script.read()
+                if len(script_body) == 0:
+                    raise ValueError("Batch script is empty!")
+                elif script_body.isspace():
+                    raise ValueError("Batch script contains only whitespace!.")
+                elif not script_body.startswith("#!"):
+                    msg = "This does not look like a batch script.  The first"
+                    msg += " line must start with #! followed by the path"
+                    msg += " to an interpreter."
+                    raise ValueError(msg)
+                elif "\x00" in script_body:
+                    # TODO: should this be \0 or \x00, are they the same?
+                    msg = "The SLURM controller does not allow scripts that"
+                    msg += " contain a NULL character '\\0'."
+                    raise ValueError(msg)
+                elif "\r\n" in script_body:
+                    msg = "Batch script contains DOS line breaks (\\r\\n)"
+                    msg += " instead of expected UNIX line breaks (\\n)."
+                    raise ValueError(msg)
+            script_body = script_body.encode("UTF-8", "replace")
+        elif job_opts.get("script") is None:
+            raise ValueError("Did you forget to wrap command or submit script?", -1)
 
         cwd = os.getcwd().encode("UTF-8", "replace")
         desc.work_dir = cwd
+
+        # process_options_second_pass
+        # add burst buffer to script
+        # spank_init_post_opt
+        # check get_user_env_time
+
+        if job_opts.get("export_file"):
+            # if the environment is coming from a file, the
+            # environment at execution startup must be unset
+            os.environ.clear()
+
+        slurm.slurm_init_job_desc_msg(&desc)
+        fill_job_desc_rc = self.fill_job_desc_from_opts(job_opts, &desc)
+        desc.script = script_body
+
+        if fill_job_desc_rc == -1:
+            raise ValueError("Failed to load job options", 1)
 
         while slurm.slurm_submit_batch_job(&desc, &resp) < 0:
             if errno == slurm.ESLURM_ERROR_ON_DESC_TO_RECORD_COPY:
