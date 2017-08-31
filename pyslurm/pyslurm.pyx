@@ -14,6 +14,7 @@ from libc.string cimport strlen, strcpy, memset, memcpy
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 from libc.stdint cimport int64_t, uint64_t
 from libc.stdlib cimport malloc, free
+from posix.resource cimport PRIO_PROCESS, getpriority
 from posix.unistd cimport getuid, getgid
 
 from cpython cimport bool
@@ -2781,6 +2782,8 @@ cdef class job:
         if job_opts.get("ckpt_interval"):
             desc.ckpt_interval = <uint16_t>job_opts.get("ckpt_interval")
 
+        # TODO: more
+
         return 0
 
     cdef int envcount(self, char **env):
@@ -2797,18 +2800,21 @@ cdef class job:
         cdef:
             slurm.job_desc_msg_t desc
             slurm.submit_response_msg_t *resp
+            #slurm.slurmdb_cluster_rec_t *working_cluster_rec = NULL
             int rc = 0
             int fill_job_desc_rc
             int retries = 0
 
-        # script_name
+        # script_name = process_options_first_pass() -> calls _opt_default(true)
 
         if job_opts.get("wrap"):
+            # _script_wrap
             wrap_script = "#!/bin/bash\n"
             wrap_script += "# This script was create by PySlurm.\n\n"
             wrap_script += job_opts.get("wrap")
             script_body = wrap_script.encode("UTF-8", "replace")
         elif job_opts.get("script"):
+            # _get_script_buffer
             with open(job_opts.get("script"), "r") as script:
                 script_body = script.read()
                 if len(script_body) == 0:
@@ -2842,6 +2848,41 @@ cdef class job:
             # if the environment is coming from a file, the
             # environment at execution startup must be unset
             os.environ.clear()
+
+        # _set_prio_process_env();
+        errno = 0
+        retval = 0
+        retval = getpriority(PRIO_PROCESS, 0)
+        if retval == -1:
+            if errno:
+                raise ValueError("getpriority(PRIO_PROCESS): %m")
+
+        try:
+            os.environ["SLURM_PRIO_PROCESS"] = retval
+        except:
+            raise ValueError("unable to set SLURM_PRIO_PROCESS in environment")
+
+        # _set_spank_env();
+
+        # _set_submit_dir_env();
+        try:
+            os.environ["SLURM_SUBMIT_DIR"] = os.getcwd()
+        except:
+            raise ValueError("unable to set SLURM_SUBMIT_DIR in environment")
+
+        try:
+            os.environ["SLURM_SUBMIT_HOST"] = gethostname()
+        except:
+            raise ValueError("unable to set SLURM_SUBMIT_HOST in environment")
+
+        # _set_umask_env();
+        if not os.environ.get("SLURM_UMASK"):
+            mask = os.umask(0)
+            _ = os.umask(mask)
+            try:
+                os.environ["SLURM_UMASK"] = "0" + str((mask>>6)&07) + str((mask>>3)&07) + str(mask&07)
+            except:
+                raise ValueError("unable to set SLURM_UMASK in environment")
 
         slurm.slurm_init_job_desc_msg(&desc)
         fill_job_desc_rc = self.fill_job_desc_from_opts(job_opts, &desc)
