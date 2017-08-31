@@ -14,7 +14,6 @@ from libc.string cimport strlen, strcpy, memset, memcpy
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 from libc.stdint cimport int64_t, uint64_t
 from libc.stdlib cimport malloc, free
-from posix.resource cimport PRIO_PROCESS, getpriority
 from posix.unistd cimport getuid, getgid
 
 from cpython cimport bool
@@ -38,6 +37,13 @@ cdef extern from "sys/wait.h" nogil:
     int WIFSIGNALED (int status)
     int WTERMSIG (int status)
     int WEXITSTATUS (int status)
+
+cdef extern from "<sys/types.h>" nogil:
+    ctypedef long id_t
+
+cdef extern from "<sys/resource.h>" nogil:
+    enum: PRIO_PROCESS
+    int getpriority(int, id_t)
 
 cdef extern from *:
     # deprecated backwards compatiblity declaration
