@@ -544,7 +544,7 @@ cdef class config:
             Ctl_dict[u'health_check_node_state'] = self.__Config_ptr.health_check_node_state
             Ctl_dict[u'health_check_program'] = slurm.stringOrNone(self.__Config_ptr.health_check_program, '')
             Ctl_dict[u'inactive_limit'] = self.__Config_ptr.inactive_limit
-            Ctl_dict[u'job_acct_gather_freq'] = self.__Config_ptr.job_acct_gather_freq
+            Ctl_dict[u'job_acct_gather_freq'] = slurm.stringOrNone(self.__Config_ptr.job_acct_gather_freq, '')
             Ctl_dict[u'job_acct_gather_type'] = slurm.stringOrNone(self.__Config_ptr.job_acct_gather_type, '')
             Ctl_dict[u'job_acct_gather_params'] = slurm.stringOrNone(self.__Config_ptr.job_acct_gather_params, '')
             Ctl_dict[u'job_ckpt_dir'] = slurm.stringOrNone(self.__Config_ptr.job_ckpt_dir, '')
