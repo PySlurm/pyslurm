@@ -71,3 +71,5 @@ before_script:
   - docker exec -e PYTHON=$PYTHON slurm-$SLURM /pyslurm/scripts/debug.sh
 script:
   - docker exec -e PYTHON=$PYTHON slurm-$SLURM /pyslurm/scripts/run_tests.sh
+after_success:
+  - docker exec slurm-$SLURM make -C /pyslurm/doc html
