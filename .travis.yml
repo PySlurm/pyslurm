@@ -2,9 +2,6 @@ sudo: required
 language: python
 env:
   matrix:
-    allow_failures:
-      - python: "3.5"
-      - python: "3.6"
     - SLURM=17.02.7 CYTHON=0.26 CENTOS=7 PYTHON=3.5
     - SLURM=17.02.7 CYTHON=0.26 CENTOS=7 PYTHON=3.6
     - SLURM=17.02.7 CYTHON=0.26 CENTOS=7 PYTHON=2.7
