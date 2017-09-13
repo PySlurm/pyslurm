@@ -22,7 +22,7 @@ fi
 python -V
 
 # Install nose
-pip$PYTHON install nose Cython==$CYTHON Sphinx
+python$PYTHON -m pip install nose Cython==$CYTHON Sphinx
 
 cd pyslurm
 python$PYTHON setup.py build
