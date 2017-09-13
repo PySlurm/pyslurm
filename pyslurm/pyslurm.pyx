@@ -2055,12 +2055,12 @@ cdef class job:
             if self._record.cpu_freq_gov == slurm.NO_VAL:
                 Job_dict[u'cpu_freq_gov'] = None
             else:
-                Job_dict[u'cpu_freq_gov'] = self._record.cpu_freq_min
+                Job_dict[u'cpu_freq_gov'] = self._record.cpu_freq_gov
 
             if self._record.cpu_freq_max == slurm.NO_VAL:
                 Job_dict[u'cpu_freq_max'] = None
             else:
-                Job_dict[u'cpu_freq_max'] = self._record.cpu_freq_min
+                Job_dict[u'cpu_freq_max'] = self._record.cpu_freq_max
 
             if self._record.cpu_freq_min == slurm.NO_VAL:
                 Job_dict[u'cpu_freq_min'] = None
