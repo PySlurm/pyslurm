@@ -271,6 +271,7 @@ SELECT_NAV_MODE = slurm.SELECT_NAV_MODE
 #INFINITE64 = 0xffffffffffffffff
 #NO_VAL = 0xfffffffe
 #NO_VAL64 = 0xfffffffffffffffe
+NO_VAL_DOUBLE = float(slurm.NO_VAL)
 
 SLURM_PENDING_STEP = 0xfffffffd
 SLURM_BATCH_SCRIPT = 0xfffffffe

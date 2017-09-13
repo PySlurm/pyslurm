@@ -56,6 +56,36 @@ cdef inline stringOrNone(char* value, value2):
         return u"%s" % value2
     return u"%s" % value.decode("UTF-8", "replace")
 
+cdef inline int16orNone(uint16_t value):
+    if value is NO_VAL16:
+        return None
+    else:
+        return value
+
+cdef inline int32orNone(uint32_t value):
+    if value is NO_VAL:
+        return None
+    else:
+        return value
+
+cdef inline int64orNone(uint64_t value):
+    if value is NO_VAL64:
+        return None
+    else:
+        return value
+
+cdef inline int16orUnlimited(uint16_t value, return_type):
+    if value is INFINITE16:
+        if return_type is "int":
+            return None
+        else:
+            return u"UNLIMITED"
+    else:
+        if return_type is "int":
+            return value
+        else:
+            return str(value)
+
 cdef inline boolToString(int value):
     if value == 0:
         return u'False'
@@ -94,6 +124,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         SYSTEM_DIMENSIONS
         HIGHEST_DIMENSIONS
 
+    uint16_t INFINITE16
     uint32_t INFINITE
     uint64_t INFINITE64
     uint16_t NO_VAL16
