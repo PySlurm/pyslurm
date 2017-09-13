@@ -521,7 +521,7 @@ cdef class config:
             Ctl_dict[u'complete_wait'] = self.__Config_ptr.complete_wait
             Ctl_dict[u'control_addr'] = slurm.stringOrNone(self.__Config_ptr.control_addr, '')
             Ctl_dict[u'control_machine'] = slurm.stringOrNone(self.__Config_ptr.control_machine, '')
-            Ctl_dict[u'cpu_freq_def'] = self.__Config_ptr.cpu_freq_def
+            Ctl_dict[u'cpu_freq_def'] = slurm.int32orNone(self.__Config_ptr.cpu_freq_def)
             Ctl_dict[u'cpu_freq_govs'] = self.__Config_ptr.cpu_freq_govs
             Ctl_dict[u'crypto_type'] = slurm.stringOrNone(self.__Config_ptr.crypto_type, '')
             Ctl_dict[u'debug_flags'] = self.__Config_ptr.debug_flags
@@ -564,7 +564,7 @@ cdef class config:
             Ctl_dict[u'job_file_append'] = bool(self.__Config_ptr.job_file_append)
             Ctl_dict[u'job_requeue'] = bool(self.__Config_ptr.job_requeue)
             Ctl_dict[u'job_submit_plugins'] = slurm.stringOrNone(self.__Config_ptr.job_submit_plugins, '')
-            Ctl_dict[u'keep_alive_time'] = self.__Config_ptr.keep_alive_time
+            Ctl_dict[u'keep_alive_time'] = slurm.int16orNone(self.__Config_ptr.keep_alive_time)
             Ctl_dict[u'kill_on_bad_exit'] = bool(self.__Config_ptr.kill_on_bad_exit)
             Ctl_dict[u'kill_wait'] = self.__Config_ptr.kill_wait
             Ctl_dict[u'launch_params'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
@@ -588,7 +588,7 @@ cdef class config:
             Ctl_dict[u'msg_timeout'] = self.__Config_ptr.msg_timeout
             Ctl_dict[u'next_job_id'] = self.__Config_ptr.next_job_id
             Ctl_dict[u'node_prefix'] = slurm.stringOrNone(self.__Config_ptr.node_prefix, '')
-            Ctl_dict[u'over_time_limit'] = self.__Config_ptr.over_time_limit
+            Ctl_dict[u'over_time_limit'] = slurm.int16orNone(self.__Config_ptr.over_time_limit)
             Ctl_dict[u'plugindir'] = slurm.stringOrNone(self.__Config_ptr.plugindir, '')
             Ctl_dict[u'plugstack'] = slurm.stringOrNone(self.__Config_ptr.plugstack, '')
             Ctl_dict[u'power_parameters'] = slurm.stringOrNone(self.__Config_ptr.power_parameters, '')
@@ -616,7 +616,7 @@ cdef class config:
             Ctl_dict[u'private_data_list'] = get_private_data_list(self.__Config_ptr.private_data)
             Ctl_dict[u'priority_weight_tres'] = slurm.stringOrNone(self.__Config_ptr.priority_weight_tres, '')
             Ctl_dict[u'prolog'] = slurm.stringOrNone(self.__Config_ptr.prolog, '')
-            Ctl_dict[u'prolog_epilog_timeout'] = self.__Config_ptr.prolog_epilog_timeout
+            Ctl_dict[u'prolog_epilog_timeout'] = slurm.int16orNone(self.__Config_ptr.prolog_epilog_timeout)
             Ctl_dict[u'prolog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.prolog_slurmctld, '')
             Ctl_dict[u'propagate_prio_process'] = self.__Config_ptr.propagate_prio_process
             Ctl_dict[u'prolog_flags'] = self.__Config_ptr.prolog_flags
@@ -2040,7 +2040,12 @@ cdef class job:
             Job_dict[u'batch_script'] = slurm.stringOrNone(
                 self._record.batch_script, ''
             )
-            Job_dict[u'billable_tres'] = self._record.billable_tres
+
+            if self._record.billable_tres == NO_VAL_DOUBLE:
+                Job_dict[u'billable_tres'] = None
+            else:
+                Job_dict[u'billable_tres'] = self._record.billable_tres
+
             Job_dict[u'bitflags'] = self._record.bitflags
             Job_dict[u'boards_per_node'] = self._record.boards_per_node
             Job_dict[u'burst_buffer'] = slurm.stringOrNone(self._record.burst_buffer, '')
@@ -2048,25 +2053,12 @@ cdef class job:
             Job_dict[u'command'] = slurm.stringOrNone(self._record.command, '')
             Job_dict[u'comment'] = slurm.stringOrNone(self._record.comment, '')
             Job_dict[u'contiguous'] = bool(self._record.contiguous)
-            Job_dict[u'core_spec'] = self._record.core_spec
-            Job_dict[u'cores_per_socket'] = self._record.cores_per_socket
+            Job_dict[u'core_spec'] = slurm.int16orNone(self._record.core_spec)
+            Job_dict[u'cores_per_socket'] = slurm.int16orNone(self._record.cores_per_socket)
             Job_dict[u'cpus_per_task'] = self._record.cpus_per_task
-
-            if self._record.cpu_freq_gov == slurm.NO_VAL:
-                Job_dict[u'cpu_freq_gov'] = None
-            else:
-                Job_dict[u'cpu_freq_gov'] = self._record.cpu_freq_gov
-
-            if self._record.cpu_freq_max == slurm.NO_VAL:
-                Job_dict[u'cpu_freq_max'] = None
-            else:
-                Job_dict[u'cpu_freq_max'] = self._record.cpu_freq_max
-
-            if self._record.cpu_freq_min == slurm.NO_VAL:
-                Job_dict[u'cpu_freq_min'] = None
-            else:
-                Job_dict[u'cpu_freq_min'] = self._record.cpu_freq_min
-
+            Job_dict[u'cpu_freq_gov'] = slurm.int32orNone(self._record.cpu_freq_gov)
+            Job_dict[u'cpu_freq_max'] = slurm.int32orNone(self._record.cpu_freq_max)
+            Job_dict[u'cpu_freq_min'] = slurm.int32orNone(self._record.cpu_freq_min)
             Job_dict[u'dependency'] = slurm.stringOrNone(self._record.dependency, '')
 
             if WIFSIGNALED(self._record.derived_ec):
@@ -2106,9 +2098,11 @@ cdef class job:
             Job_dict[u'network'] = slurm.stringOrNone(self._record.network, '')
             Job_dict[u'nodes'] = slurm.stringOrNone(self._record.nodes, '')
             Job_dict[u'nice'] = (<int64_t>self._record.nice) - NICE_OFFSET
-            Job_dict[u'ntasks_per_core'] = self._record.ntasks_per_core
+            Job_dict[u'ntasks_per_core'] = slurm.int16orUnlimited(self._record.ntasks_per_core, "int")
+            Job_dict[u'ntasks_per_core_str'] = slurm.int16orUnlimited(self._record.ntasks_per_core, "string")
             Job_dict[u'ntasks_per_node'] = self._record.ntasks_per_node
-            Job_dict[u'ntasks_per_socket'] = self._record.ntasks_per_socket
+            Job_dict[u'ntasks_per_socket'] = slurm.int16orUnlimited(self._record.ntasks_per_socket, "int")
+            Job_dict[u'ntasks_per_socket_str'] = slurm.int16orUnlimited(self._record.ntasks_per_socket, "string")
             Job_dict[u'ntasks_per_board'] = self._record.ntasks_per_board
             Job_dict[u'num_cpus'] = self._record.num_cpus
             Job_dict[u'num_nodes'] = self._record.num_nodes
@@ -2177,7 +2171,7 @@ cdef class job:
 
             Job_dict[u'show_flags'] = self._record.show_flags
             Job_dict[u'sockets_per_board'] = self._record.sockets_per_board
-            Job_dict[u'sockets_per_node'] = self._record.sockets_per_node
+            Job_dict[u'sockets_per_node'] = slurm.int16orNone(self._record.sockets_per_node)
             Job_dict[u'start_time'] = self._record.start_time
 
             if self._record.state_desc:
@@ -2218,7 +2212,8 @@ cdef class job:
                     self._record.time_limit)
 
             Job_dict[u'time_min'] = self._record.time_min
-            Job_dict[u'threads_per_core'] = self._record.threads_per_core
+            Job_dict[u'threads_per_core'] = slurm.int16orNone(self._record.threads_per_core)
+
             Job_dict[u'tres_req_str'] = slurm.stringOrNone(self._record.tres_req_str, '')
             Job_dict[u'tres_alloc_str'] = slurm.stringOrNone(self._record.tres_alloc_str, '')
             Job_dict[u'user_id'] = self._record.user_id
@@ -2708,11 +2703,11 @@ cdef class node:
                 Host_dict[u'cores'] = record.cores
                 Host_dict[u'core_spec_cnt'] = record.core_spec_cnt
                 Host_dict[u'cpus'] = record.cpus
-                Host_dict[u'cpu_load'] = record.cpu_load
+                Host_dict[u'cpu_load'] = slurm.int32orNone(record.cpu_load)
                 Host_dict[u'cpu_spec_list'] = slurm.listOrNone(record.cpu_spec_list, '')
                 Host_dict[u'features'] = slurm.listOrNone(record.features, '')
                 Host_dict[u'features_active'] = slurm.listOrNone(record.features_act, '')
-                Host_dict[u'free_mem'] = record.free_mem
+                Host_dict[u'free_mem'] = slurm.int64orNone(record.free_mem)
                 Host_dict[u'gres'] = slurm.listOrNone(record.gres, ',')
                 Host_dict[u'gres_drain'] = slurm.listOrNone(record.gres_drain, '')
                 Host_dict[u'gres_used'] = slurm.listOrNone(record.gres_used, ',')
@@ -3565,7 +3560,7 @@ cdef class reservation:
                 Res_dict[u'node_list'] = slurm.stringOrNone(record.node_list, '')
                 Res_dict[u'partition'] = slurm.stringOrNone(record.partition, '')
                 Res_dict[u'start_time'] = record.start_time
-                Res_dict[u'resv_watts'] = record.resv_watts
+                Res_dict[u'resv_watts'] = slurm.int32orNone(record.resv_watts)
                 Res_dict[u'tres_str'] = slurm.listOrNone(record.tres_str, ',')
                 Res_dict[u'users'] = slurm.listOrNone(record.users, ',')
 
