@@ -12,7 +12,7 @@ then
 fi
 
 # Install nose
-pip$PYTHON install nose Cython==$CYTHON
+pip$PYTHON install nose Cython==$CYTHON Sphinx
 
 cd pyslurm
 python$PYTHON setup.py build
