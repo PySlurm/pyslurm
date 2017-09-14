@@ -40,10 +40,6 @@ then
 fi
 
 
-python -V
-python$PYTHON -V
-pip$PYTHON -V
-
 # Install nose
 pip$PYTHON install nose Cython==$CYTHON Sphinx
 
