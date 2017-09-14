@@ -39,6 +39,7 @@ then
     yum makecache fast && yum -y install python36u{,-devel,-pip}
 fi
 
+
 # Install nose
 pip$PYTHON install nose Cython==$CYTHON Sphinx
 
