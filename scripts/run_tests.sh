@@ -9,9 +9,4 @@ set -e
 cd ..
 
 # Run tests
-if [ "$PYTHON" == "2.6" ]
-then
-    nosetests -v pyslurm/tests
-else
-    nosetests-$PYTHON -v pyslurm/tests
-fi
+python$PYTHON $(which nosetests) -v pyslurm/tests
