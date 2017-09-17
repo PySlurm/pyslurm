@@ -48,7 +48,11 @@ cdef extern from "<sys/resource.h>" nogil:
 
 cdef extern from *:
     # deprecated backwards compatiblity declaration
+    ctypedef char*  const_char_ptr  "const char*"
     ctypedef char** const_char_pptr "const char**"
+
+cdef extern from "alps_cray.h" nogil:
+    cdef int ALPS_CRAY_SYSTEM
 
 try:
     import __builtin__
@@ -2519,6 +2523,8 @@ cdef class job:
 
         if job_opts.get("core_spec"):
             desc.core_spec = job_opts.get("core_spec")
+        else:
+            desc.core_spec = slurm.NO_VAL16
 
         if job_opts.get("constraints"):
             features = job_opts.get("constraints").encode("UTF-8", "replace")
@@ -2526,8 +2532,8 @@ cdef class job:
 
         if job_opts.get("immediate"):
             desc.immediate = job_opts.get("immediate")
-#        else:
-#            desc.immediate = 0
+        else:
+            desc.immediate = 0
 
         if job_opts.get("gres"):
             gres = job_opts.get("gres").encode("UTF-8", "replace")
@@ -2561,8 +2567,8 @@ cdef class job:
 
         if job_opts.get("profile"):
             desc.profile = job_opts.get("profile")
-#        else:
-#            desc.profile = ACCT_GATHER_PROFILE_NOT_SET
+        else:
+            desc.profile = ACCT_GATHER_PROFILE_NOT_SET
 
         if job_opts.get("licenses"):
             licenses = job_opts.get("licenses").encode("UTF-8", "replace")
@@ -2598,18 +2604,19 @@ cdef class job:
 
         if job_opts.get("mem_bind_type"):
             desc.mem_bind_type = job_opts.get("mem_bind_type")
+        else:
+            desc.mem_bind_type = 0
 
         if job_opts.get("plane_size"):
             desc.plane_size = job_opts.get("plane_size")
-#        else:
-#            desc.plane_size = slurm.NO_VAL
 
         if job_opts.get("distribution"):
             desc.task_dist = job_opts.get("distribution")
-#        else:
-#            desc.task_dist = slurm.SLURM_DIST_UNKNOWN
+        else:
+            desc.task_dist = slurm.SLURM_DIST_UNKNOWN
 
         # TODO: what's the default opt.network?
+        # Slurm on Cray
         if job_opts.get("network"):
             network = job_opts.get("network").encode("UTF-8", "replace")
             desc.network = network
@@ -2622,8 +2629,8 @@ cdef class job:
 
         if job_opts.get("mail_type"):
             desc.mail_type = job_opts.get("mail_type")
-#        else:
-#            desc.mail_type = 0
+        else:
+            desc.mail_type = 0
 
         if job_opts.get("mail_user"):
             mail_user = job_opts.get("mail_user").encode("UTF-8", "replace")
@@ -2632,14 +2639,14 @@ cdef class job:
         # TODO: does begin need to get translated from string/epoch to time_t?
         if job_opts.get("begin"):
             desc.begin_time = job_opts.get("begin")
-#        else:
-#            desc.begin_time = 0
+        else:
+            desc.begin_time = 0
 
         # TODO: does deadline need to get translated from string/epoch to time_t?
         if job_opts.get("deadline"):
             desc.deadline = job_opts.get("deadline")
-#        else:
-#            desc.deadline = 0
+        else:
+            desc.deadline = 0
 
         if job_opts.get("delay_boot"):
             desc.delay_boot = job_opts.get("delay_boot")
@@ -2665,11 +2672,10 @@ cdef class job:
         # opt.conn_type
 
         if job_opts.get("reboot"):
-            desc.reboot = job_opts.get("reboot")
+            desc.reboot = 1
 
-        # BG parameters cont'd
         if job_opts.get("no_rotate"):
-            desc.rotate = job_opts.get("no_rotate")
+            desc.rotate = 0
 
         if job_opts.get("blrtsimage"):
             blrtsimage = job_opts.get("blrtsimage").encode("UTF-8", "replace")
@@ -2713,6 +2719,13 @@ cdef class job:
 #            desc.min_cpus = job_opts.get("ntasks")
 
         # TODO: ntasks_set, cpus_set
+        if job_opts.get("ntasks_per_socket"):
+            desc.ntasks_per_socket = job_opts.get("ntasks_per_socket")
+
+        if job_opts.get("ntasks_per_core"):
+            desc.ntasks_per_core = job_opts.get("ntasks_per_core")
+
+        # node constraints
         if job_opts.get("sockets_per_node"):
             desc.sockets_per_node = job_opts.get("sockets_per_node")
 
@@ -2734,6 +2747,11 @@ cdef class job:
         if job_opts.get("shared"):
             desc.shared = job_opts.get("shared")
 
+        if job_opts.get("wait_all_nodes"):
+            desc.wait_all_nodes = job_opts.get("wait_all_nodes")
+        else:
+            desc.wait_all_nodes = slurm.NO_VAL16
+
         if job_opts.get("warn_flags"):
             desc.warn_flags = job_opts.get("warn_flags")
 
@@ -2743,7 +2761,7 @@ cdef class job:
         if job_opts.get("warn_time"):
             desc.warn_time = job_opts.get("warn_time")
 
-        # https://github.com/SchedMD/slurm/blob/slurm-17-02-7-1/src/sbatch/sbatch.c#L595
+        # src/sbatch/sbatch.c#L595
         desc.environment = NULL
         if job_opts.get("export_file"):
             # desc->environment = env_array_from_file(opt.export_file);
@@ -2751,13 +2769,27 @@ cdef class job:
             #   exit(1);
             pass
 
+        job_opts["get_user_env_time"] = -1
+
         if not job_opts.get("export_env"):
             slurm.slurm_env_array_merge(&desc.environment, <const_char_pptr>slurm.environ)
-        # get_user_env_time
+        elif job_opts.get("export_env") == "ALL":
+            slurm.slurm_env_array_merge(&desc.environment, <const_char_pptr>slurm.environ)
+        elif job_opts.get("export_env") == "NONE":
+            desc.environment = slurm.slurm_env_array_create()
+            # env_array_merge_slurm(&desc->environment, (const char **)environ);
+            job_opts["get_user_env_time"] = 0
+        else:
+            # _env_merge_filter(desc)
+            job_opts["get_user_env_time"] = 0
+
+        if job_opts["get_user_env_time"] >= 0:
+            slurm.slurm_env_array_overwrite(&desc.environment, "SLURM_GET_USER_ENV", "1")
 
         desc.env_size = self.envcount(desc.environment)
 
-        # argv/argc
+        # don't need argv/argc since jobscript is not submitted via cmdline with arguments.
+
         if job_opts.get("error"):
             std_err = job_opts.get("error").encode("UTF-8", "replace")
             desc.std_err = std_err
@@ -2771,6 +2803,8 @@ cdef class job:
         if job_opts.get("output"):
             std_out = job_opts.get("output").encode("UTF-8", "replace")
             desc.std_out = std_out
+
+        # work_dir is in submit_batch_job()
 
         if job_opts.get("requeue"):
             desc.requeue = job_opts.get("requeue")
@@ -2787,8 +2821,41 @@ cdef class job:
 
         if job_opts.get("ckpt_interval"):
             desc.ckpt_interval = <uint16_t>job_opts.get("ckpt_interval")
+        else:
+            desc.ckpt_interval = <uint16_t>0
 
-        # TODO: more
+        # TODO: spank_job_env_size
+
+        if job_opts.get("cpu_freq_min"):
+            desc.cpu_freq_min = job_opts.get("cpu_freq_min")
+        else:
+            desc.cpu_freq_min = slurm.NO_VAL
+
+        if job_opts.get("cpu_freq_max"):
+            desc.cpu_freq_max = job_opts.get("cpu_freq_max")
+        else:
+            desc.cpu_freq_max = slurm.NO_VAL
+
+        if job_opts.get("cpu_freq_gov"):
+            desc.cpu_freq_gov = job_opts.get("cpu_freq_gov")
+        else:
+            desc.cpu_freq_gov = slurm.NO_VAL
+
+        if job_opts.get("req_switch") and job_opts.get("req_switch") >= 0:
+            desc.req_switch = job_opts.get("req_switch")
+
+        if job_opts.get("wait4switch") and job_opts.get("wait4switch") >= 0:
+            desc.wait4switch = job_opts.get("wait4switch")
+
+        if job_opts.get("power_flags"):
+            desc.power_flags = job_opts.get("power_flags")
+
+        if job_opts.get("job_flags"):
+            desc.bitflags = job_opts.get("job_flags")
+
+        if job_opts.get("mcs_label"):
+            mcs_label = job_opts.get("mcs_label").encode("UTF-8", "replace")
+            desc.mcs_label = mcs_label
 
         return 0
 
@@ -2798,6 +2865,46 @@ cdef class job:
         while (env[envc] != NULL):
             envc += 1
         return envc
+
+    cdef void print_db_notok(self, const_char_ptr cname, bool isenv):
+        b_all = "all".encode("UTF-8", "replace")
+        if errno:
+            sys.stderr.write("There is a problem talking to the database:") # %m.  "
+#                  "Only local cluster communication is available, remove "
+#                  "%s or contact your admin to resolve the problem.",
+#                  isenv ? "SLURM_CLUSTERS from your environment" :
+#                  "--cluster from your command line")
+            sys.exit(slurm.SLURM_ERROR)
+        elif cname == b_all:
+            sys.stderr.write("No clusters can be reached now. Contact your admin to resolve the problem.")
+            sys.exit(slurm.SLURM_ERROR)
+        else:
+            sys.stderr.write("%s can't be reached now, or it is an invalid entry for %s.  " % cname)
+#                  "Use 'sacctmgr list clusters' to see available clusters.",
+#                  cname, isenv ? "SLURM_CLUSTERS" : "--cluster")
+            sys.exit(slurm.SLURM_ERROR)
+
+    cdef bool is_alps_cray_system(self):
+        if slurm.working_cluster_rec:
+            return slurm.working_cluster_rec.flags & slurm.CLUSTER_FLAG_CRAY_A
+        if ALPS_CRAY_SYSTEM:
+            return True
+        return False
+
+    cdef int _check_cluster_specific_settings(self, slurm.job_desc_msg_t *req):
+        cdef int rc = slurm.SLURM_SUCCESS
+
+        if self.is_alps_cray_system():
+            if req.shared and req.shared != <uint16_t>slurm.NO_VAL:
+                print("--share is not supported on Cray/ALPS systems.")
+                req.shared = <uint16_t>slurm.NO_VAL
+            if req.overcommit and req.overcommit != <uint8_t>slurm.NO_VAL:
+                print("--overcommit is not supported on Cray/ALPS systems.")
+                req.overcommit = False
+            if req.wait_all_nodes and req.wait_all_nodes != <uint16_t>slurm.NO_VAL:
+                print("--wait-all-nodes is handled automatically on Cray/ALPS systems.")
+                req.wait_all_nodes = <uint16_t>slurm.NO_VAL
+        return rc
 
     def submit_batch_job(self, job_opts):
         """Submit batch job.
@@ -2810,8 +2917,20 @@ cdef class job:
             int rc = 0
             int fill_job_desc_rc
             int retries = 0
+            int error_exit = 1
+
+
+        # _set_exit_code()
+        val = os.environ.get("SLURM_EXIT_ERROR")
+        if val:
+            if int(val) == 0:
+                sys.stderr.write("SLURM_EXIT_ERROR has zero value")
+                sys.exit(slurm.SLURM_ERROR)
+            else:
+                error_exit = int(val)
 
         # script_name = process_options_first_pass() -> calls _opt_default(true)
+        # possibly not needed here in the API
 
         if job_opts.get("wrap"):
             # _script_wrap
@@ -2833,7 +2952,7 @@ cdef class job:
                     msg += " to an interpreter."
                     raise ValueError(msg)
                 elif "\x00" in script_body:
-                    # TODO: should this be \0 or \x00, are they the same?
+                    # TODO: should this be \0 or \x00, are these the same in Python?
                     msg = "The SLURM controller does not allow scripts that"
                     msg += " contain a NULL character '\\0'."
                     raise ValueError(msg)
@@ -2846,9 +2965,15 @@ cdef class job:
             sys.exit(1)
 
         # process_options_second_pass
+        #   - _opt_default(first_pass)
+        #   - _opt_batch_script( )
+        #   - _opt_env()
+        #   - _opt_verify()
+        #   - _opt_list ??
         # add burst buffer to script
         # spank_init_post_opt
         # check get_user_env_time
+        #   - _set_rlimit_env()
 
         if job_opts.get("export_file"):
             # if the environment is coming from a file, the
@@ -2864,7 +2989,7 @@ cdef class job:
                 raise ValueError("getpriority(PRIO_PROCESS): %m")
 
         try:
-            os.environ["SLURM_PRIO_PROCESS"] = retval
+            os.environ["SLURM_PRIO_PROCESS"] = str(retval)
         except:
             raise ValueError("unable to set SLURM_PRIO_PROCESS in environment")
 
@@ -2890,11 +3015,12 @@ cdef class job:
             except:
                 raise ValueError("unable to set SLURM_UMASK in environment")
 
+        # slurm_init_job_desc_msg(&desc)
         slurm.slurm_init_job_desc_msg(&desc)
         fill_job_desc_rc = self.fill_job_desc_from_opts(job_opts, &desc)
 
         if fill_job_desc_rc == -1:
-            raise ValueError("Failed to load job options", 1)
+            sys.exit(error_exit)
 
         desc.script = script_body
 
@@ -2903,9 +3029,24 @@ cdef class job:
         cwd = os.getcwd().encode("UTF-8", "replace")
         desc.work_dir = cwd
 
+        # If can run on multiple clusters, find the earliest run time
+        # and run it there
+        if job_opts.get("clusters"):
+            clusters = job_opts.get("clusters").encode("UTF-8", "replace")
+            desc.clusters = clusters
+            if slurm.slurmdb_get_first_avail_cluster(&desc, clusters,
+                &slurm.working_cluster_rec) != slurm.SLURM_SUCCESS:
+                    self.print_db_notok(clusters, 0)
+                    sys.exit(error_exit)
+
+        if self._check_cluster_specific_settings(&desc) != slurm.SLURM_SUCCESS:
+            sys.exit(error_exit)
+
+
         if job_opts.get("test_only"):
             if slurm.slurm_job_will_run(&desc) != slurm.SLURM_SUCCESS:
-                raise ValueError("allocation failure")
+                slurm.slurm_perror("allocation failure")
+                sys.exit(1)
             sys.exit(0)
 
         while slurm.slurm_submit_batch_job(&desc, &resp) < 0:
