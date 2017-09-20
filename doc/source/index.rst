@@ -6,7 +6,7 @@
 PySlurm: Slurm Interface to python
 ===================================
 
-:Authors: Mark Roberts, Stephan Gorget
+:Authors: Mark Roberts, Giovanni Torres
 :Date: |today|
 :Version: |version|
 
