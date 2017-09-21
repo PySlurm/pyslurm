@@ -146,12 +146,13 @@ def check_libPath(slurm_path):
 
     # if base dir given then check this
 
-    if os.path.exists("%s/libslurm.so" % slurm_path):
-        info("Build - Found Slurm shared library in %s" % slurm_path)
-        return slurm_path
-    else:
-        info("Build - Cannot locate Slurm shared library in %s" % slurm_path)
-        return ''
+    if os.path.basename(slurm_path) in ['lib','lib64']:
+        if os.path.exists("%s/libslurm.so" % slurm_path):
+            info("Build - Found Slurm shared library in %s" % slurm_path)
+            return slurm_path
+        else:
+            info("Build - Cannot locate Slurm shared library in %s" % slurm_path)
+            return ''
 
     # if base dir given then search lib64 and then lib
 
