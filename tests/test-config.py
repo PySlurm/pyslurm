@@ -74,7 +74,6 @@ def test_config_scontrol():
     assert_equals(config_info["preempt_type"], sctl_dict["PreemptType"])
     assert_equals(config_info["priority_type"], sctl_dict["PriorityType"])
     assert_equals(config_info["proctrack_type"], sctl_dict["ProctrackType"])
-    assert_equals(config_info["prolog_epilog_timeout"], int(sctl_dict["PrologEpilogTimeout"]))
     assert_equals(config_info["propagate_rlimits"], sctl_dict["PropagateResourceLimits"])
     assert_equals(config_info["route_plugin"], sctl_dict["RoutePlugin"])
     assert_equals(config_info["schedtype"], sctl_dict["SchedulerType"])
