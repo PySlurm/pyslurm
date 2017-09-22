@@ -26,9 +26,9 @@ Prerequisites
 
 This PySlurm branch has been tested with:
 
-* Cython 0.15.1*, 0.19.2, and the latest stable (0.25.2)
+* Cython 0.15.1*, 0.19.2, and the latest stable
 * Python 2.6, 2.7, and 3.4
-* Slurm 17.02.0 thru 17.02.6
+* Slurm 17.02.0 thru 17.02.7
 
     Note: Cython 0.15.1 is only supported on Python 2.6 and 2.7.
 
@@ -67,13 +67,17 @@ directory or where the Slurm libraries and Slurm include files are :
 Documentation
 *************
 
-`Sphinx <http://www.sphinx-doc.org>`_ (needs to be installed) is currently used to generate the 
-documentation from the reStructuredText based doc strings from the module once it is built 
-and can be regenerated at any time :
+The API documentation is hosted at https://pyslurm.github.io.
 
-    * cd doc
-    * make clean
-    * make html
+To build the docs locally, use `Sphinx <http://www.sphinx-doc.org>`_ to
+generate the documentation from the reStructuredText based docstrings found in
+the pyslurm module once it is built:
+
+.. code-block:: console
+
+    cd doc
+    make clean
+    make html
 
 
 Authors
