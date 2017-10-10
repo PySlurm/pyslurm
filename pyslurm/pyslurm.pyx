@@ -1501,7 +1501,7 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
     return errCode
 
 
-cpdef int slurm_kill_job2(const char* JobID='', uint16_t Signal=0,
+cpdef int slurm_kill_job2(slurm.const_char_ptr JobID='', uint16_t Signal=0,
                           uint16_t BatchFlag=0) except? -1:
     u"""Terminate a running slurm job step.
 

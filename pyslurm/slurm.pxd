@@ -2004,7 +2004,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
     cdef extern int slurm_kill_job (uint32_t, uint16_t, uint16_t)
     cdef extern int slurm_kill_job_step (uint32_t, uint32_t, uint16_t)
-    cdef extern int slurm_kill_job2 (char *, uint16_t, uint16_t)
+    cdef extern int slurm_kill_job2 (const_char_ptr, uint16_t, uint16_t)
     cdef extern int slurm_kill_job_step2 (char *, uint16_t, uint16_t)
     cdef extern int slurm_signal_job (uint32_t, uint16_t)
     cdef extern int slurm_signal_job_step (uint32_t, uint32_t, uint32_t)
