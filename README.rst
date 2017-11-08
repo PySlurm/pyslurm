@@ -11,11 +11,7 @@ Overview
 Currently PySlurm is under development to move from it's thin layer on top of
 the Slurm C API to an object orientated interface.
 
-For a preview of version 2 of the API, see the
-`dev-17.02-props <https://github.com/PySlurm/pyslurm/tree/dev-17.02-props>`_
-branch.
-
-This release is based on Slurm 17.02.
+This release is based on Slurm 17.11.
 
 Prerequisites
 *************
@@ -28,7 +24,7 @@ This PySlurm branch has been tested with:
 
 * Cython 0.15.1*, 0.19.2, and the latest stable
 * Python 2.6, 2.7, and 3.4
-* Slurm 17.02.0 thru 17.02.9
+* Slurm 17.11.0-0rc2
 
     Note: Cython 0.15.1 is only supported on Python 2.6 and 2.7.
 
