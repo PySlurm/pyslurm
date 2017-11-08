@@ -33,7 +33,7 @@ def test_slurm_api_version():
     """Misc: Test slurm_api_version()."""
     ver = pyslurm.slurm_api_version()
     assert_equals(ver[0], 17)
-    assert_equals(ver[1], 2)
+    assert_equals(ver[1], 11)
 
 
 def test_slurm_load_slurmd_status():
