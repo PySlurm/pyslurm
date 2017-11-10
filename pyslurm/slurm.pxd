@@ -124,14 +124,13 @@ cdef extern from 'slurm/slurm.h' nogil:
         SYSTEM_DIMENSIONS
         HIGHEST_DIMENSIONS
 
+    uint8_t  INFINITE8
     uint16_t INFINITE16
     uint32_t INFINITE
-    uint32_t INFINITE32
     uint64_t INFINITE64
     uint8_t  NO_VAL8
     uint16_t NO_VAL16
     uint32_t NO_VAL
-    uint32_t NO_VAL32
     uint64_t NO_VAL64
 
     cdef enum job_states:

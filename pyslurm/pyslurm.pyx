@@ -989,7 +989,7 @@ cdef class partition:
 
                 if record.over_time_limit == slurm.NO_VAL16:
                     Part_dict[u'over_time_limit'] = "NONE"
-                elif record.over_time_limit == <uint16_t>slurm.INFINITE:
+                elif record.over_time_limit == slurm.INFINITE16:
                     Part_dict[u'over_time_limit'] = "UNLIMITED"
                 else:
                     Part_dict[u'over_time_limit'] = record.over_time_limit
