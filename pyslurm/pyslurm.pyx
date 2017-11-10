@@ -1501,6 +1501,26 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
     return errCode
 
 
+cpdef int slurm_kill_job2(slurm.const_char_ptr JobID='', uint16_t Signal=0,
+                          uint16_t BatchFlag=0) except? -1:
+    u"""Terminate a running slurm job step.
+
+    :param const char * JobID: Job identifier
+    :param int Signal: Signal to send
+    :param int BatchFlag: Job batch flag (default=0)
+    :returns: 0 for success or -1 for error and set slurm errno
+    :rtype: `integer`
+    """
+    cdef int apiError = 0
+    cdef int errCode = slurm.slurm_kill_job2(JobID, Signal, BatchFlag)
+
+    if errCode != 0:
+        apiError = slurm.slurm_get_errno()
+        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+
+    return errCode
+
+
 cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0) except? -1:
     u"""Complete a running slurm job step.
 
