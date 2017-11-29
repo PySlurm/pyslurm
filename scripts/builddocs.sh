@@ -9,8 +9,9 @@ set -e
 make BUILDDIR=/root/docs -C /pyslurm/doc/ html
 
 # Only push to GitHub Pages once per build
-if [ "$PYTHON" == "2.7" ] && [ "$CYTHON" == "0.26" ] && [ "$SLURM" == "17.02.7" ]
+if [ "$PYTHON" == "2.7" ] && [ "$CYTHON" == "0.27.3" ] && [ "$SLURM" == "17.11.0" ]
 then
+    pip install Sphinx
     git clone https://github.com/pyslurm/pyslurm.github.io.git
     rsync -av --delete --exclude=.git /root/docs/html/ /pyslurm.github.io/
     cd pyslurm.github.io
