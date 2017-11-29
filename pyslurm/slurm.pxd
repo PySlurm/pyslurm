@@ -623,6 +623,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         time_t jobs_running_ts
         uint32_t bf_backfilled_jobs
         uint32_t bf_last_backfilled_jobs
+        uint32_t bf_backfilled_pack_jobs
         uint32_t bf_cycle_counter
         uint64_t bf_cycle_sum
         uint32_t bf_cycle_last
@@ -787,6 +788,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         char *origin_cluster
         uint16_t other_port
         uint8_t overcommit
+        uint32_t pack_job_offset
         char *partition
         uint16_t plane_size
         uint8_t power_flags
