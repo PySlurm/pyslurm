@@ -39,6 +39,9 @@ then
     yum makecache fast && yum -y install python36u{,-devel,-pip}
 fi
 
+# Upgrade pip
+pip install --upgrade pip
+
 # Install nose
 pip$PYTHON install nose Cython==$CYTHON
 
