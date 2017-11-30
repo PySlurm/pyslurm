@@ -41,7 +41,11 @@ def test_config_scontrol():
     assert_equals(config_info["accounting_storage_user"], sctl_dict["AccountingStorageUser"])
     assert_equals(config_info["acct_gather_energy_type"], sctl_dict["AcctGatherEnergyType"])
     assert_equals(config_info["acct_gather_filesystem_type"], sctl_dict["AcctGatherFilesystemType"])
-    assert_equals(config_info["acct_gather_infiniband_type"], sctl_dict["AcctGatherInfinibandType"])
+
+    assert_equals(
+        config_info["acct_gather_interconnect_type"], sctl_dict["AcctGatherInterconnectType"]
+    )
+
     assert_equals(config_info["acct_gather_profile_type"], sctl_dict["AcctGatherProfileType"])
     assert_equals(config_info["authtype"], sctl_dict["AuthType"])
     assert_equals(config_info["checkpoint_type"], sctl_dict["CheckpointType"])

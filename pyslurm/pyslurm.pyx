@@ -31,9 +31,10 @@ cdef extern from 'time.h' nogil:
     time_t time(time_t *t)
 
 cdef extern from "sys/wait.h" nogil:
-    int WIFSIGNALED (int status)
-    int WTERMSIG (int status)
-    int WEXITSTATUS (int status)
+    int WIFSIGNALED(int status)
+    int WTERMSIG(int status)
+    int WEXITSTATUS(int status)
+    int WIFEXITED(int status)
 
 try:
     import __builtin__
@@ -504,7 +505,7 @@ cdef class config:
             Ctl_dict[u'acctng_store_job_comment'] = self.__Config_ptr.acctng_store_job_comment
             Ctl_dict[u'acct_gather_energy_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_energy_type, '')
             Ctl_dict[u'acct_gather_profile_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_profile_type, '')
-            Ctl_dict[u'acct_gather_infiniband_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_infiniband_type, '')
+            Ctl_dict[u'acct_gather_interconnect_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_interconnect_type, '')
             Ctl_dict[u'acct_gather_filesystem_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_filesystem_type, '')
             Ctl_dict[u'acct_gather_node_freq'] = self.__Config_ptr.acct_gather_node_freq
             Ctl_dict[u'authinfo'] = slurm.stringOrNone(self.__Config_ptr.authinfo, '')
@@ -534,11 +535,13 @@ cdef class config:
             Ctl_dict[u'epilog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.epilog_slurmctld, '')
             Ctl_dict[u'ext_sensors_type'] = slurm.stringOrNone(self.__Config_ptr.ext_sensors_type, '')
             Ctl_dict[u'fast_schedule'] = bool(self.__Config_ptr.fast_schedule)
+            Ctl_dict[u'federation_parameters'] = slurm.stringOrNone(self.__Config_ptr.fed_params, '')
             Ctl_dict[u'first_job_id'] = self.__Config_ptr.first_job_id
             Ctl_dict[u'fs_dampening_factor'] = self.__Config_ptr.fs_dampening_factor
             Ctl_dict[u'get_env_timeout'] = self.__Config_ptr.get_env_timeout
             Ctl_dict[u'gres_plugins'] = slurm.listOrNone(self.__Config_ptr.gres_plugins, ',')
-            Ctl_dict[u'group_info'] = self.__Config_ptr.group_info
+            Ctl_dict[u'group_time'] = self.__Config_ptr.group_time
+            Ctl_dict[u'group_update_force'] = self.__Config_ptr.group_force
             Ctl_dict[u'hash_val'] = self.__Config_ptr.hash_val
             Ctl_dict[u'health_check_interval'] = self.__Config_ptr.health_check_interval
             Ctl_dict[u'health_check_node_state'] = self.__Config_ptr.health_check_node_state
@@ -651,12 +654,14 @@ cdef class config:
             Ctl_dict[u'slurmctld_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_pidfile, '')
             Ctl_dict[u'slurmctld_port'] = self.__Config_ptr.slurmctld_port
             Ctl_dict[u'slurmctld_port_count'] = self.__Config_ptr.slurmctld_port_count
+            Ctl_dict[u'slurmctld_syslog_debug'] = self.__Config_ptr.slurmctld_syslog_debug
             Ctl_dict[u'slurmctld_timeout'] = self.__Config_ptr.slurmctld_timeout
             Ctl_dict[u'slurmd_debug'] = self.__Config_ptr.slurmd_debug
             Ctl_dict[u'slurmd_logfile'] = slurm.stringOrNone(self.__Config_ptr.slurmd_logfile, '')
             Ctl_dict[u'slurmd_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmd_pidfile, '')
             Ctl_dict[u'slurmd_port'] = self.__Config_ptr.slurmd_port
             Ctl_dict[u'slurmd_spooldir'] = slurm.stringOrNone(self.__Config_ptr.slurmd_spooldir, '')
+            Ctl_dict[u'slurmd_syslog_debug'] = self.__Config_ptr.slurmd_syslog_debug
             Ctl_dict[u'slurmd_timeout'] = self.__Config_ptr.slurmd_timeout
             Ctl_dict[u'srun_epilog'] = slurm.stringOrNone(self.__Config_ptr.srun_epilog, '')
 
@@ -687,9 +692,6 @@ cdef class config:
             Ctl_dict[u'version'] = slurm.stringOrNone(self.__Config_ptr.version, '')
             Ctl_dict[u'vsize_factor'] = self.__Config_ptr.vsize_factor
             Ctl_dict[u'wait_time'] = self.__Config_ptr.wait_time
-            Ctl_dict[u'z_16'] = self.__Config_ptr.z_16
-            Ctl_dict[u'z_32'] = self.__Config_ptr.z_32
-            Ctl_dict[u'z_char'] = slurm.stringOrNone(self.__Config_ptr.z_char, '')
 
             #
             # Get key_pairs from Opaque data structure
@@ -987,7 +989,7 @@ cdef class partition:
 
                 if record.over_time_limit == slurm.NO_VAL16:
                     Part_dict[u'over_time_limit'] = "NONE"
-                elif record.over_time_limit == <uint16_t>slurm.INFINITE:
+                elif record.over_time_limit == slurm.INFINITE16:
                     Part_dict[u'over_time_limit'] = "UNLIMITED"
                 else:
                     Part_dict[u'over_time_limit'] = record.over_time_limit
@@ -2012,6 +2014,7 @@ cdef class job:
         :rtype: `dict`
         """
         cdef:
+            char time_str[32]
             char tmp_line[1024 * 128]
             time_t end_time
             time_t run_time
@@ -2057,9 +2060,6 @@ cdef class job:
             Job_dict[u'assoc_id'] = self._record.assoc_id
             Job_dict[u'batch_flag'] = self._record.batch_flag
             Job_dict[u'batch_host'] = slurm.stringOrNone(self._record.batch_host, '')
-            Job_dict[u'batch_script'] = slurm.stringOrNone(
-                self._record.batch_script, ''
-            )
 
             if self._record.billable_tres == NO_VAL_DOUBLE:
                 Job_dict[u'billable_tres'] = None
@@ -2069,7 +2069,15 @@ cdef class job:
             Job_dict[u'bitflags'] = self._record.bitflags
             Job_dict[u'boards_per_node'] = self._record.boards_per_node
             Job_dict[u'burst_buffer'] = slurm.stringOrNone(self._record.burst_buffer, '')
-            Job_dict[u'burst_buffer_state'] = slurm.stringOrNone(self._record.burst_buffer_state, '')
+            Job_dict[u'burst_buffer_state'] = slurm.stringOrNone(
+                self._record.burst_buffer_state, ''
+            )
+
+            if self._record.cluster_features:
+                Job_dict[u'cluster_features'] = slurm.stringOrNone(
+                    self._record.cluster_features, ''
+                )
+
             Job_dict[u'command'] = slurm.stringOrNone(self._record.command, '')
             Job_dict[u'comment'] = slurm.stringOrNone(self._record.comment, '')
             Job_dict[u'contiguous'] = bool(self._record.contiguous)
@@ -2083,10 +2091,9 @@ cdef class job:
 
             if WIFSIGNALED(self._record.derived_ec):
                 term_sig = WTERMSIG(self._record.derived_ec)
-            else:
-                term_sig = 0
+            elif WIFEXITED(self._record.derived_ec):
+                exit_status = WEXITSTATUS(self._record.derived_ec)
 
-            exit_status = WEXITSTATUS(self._record.derived_ec)
             Job_dict[u'derived_ec'] = str(exit_status) + ":" + str(term_sig)
 
             Job_dict[u'eligible_time'] = self._record.eligible_time
@@ -2095,13 +2102,24 @@ cdef class job:
 
             if WIFSIGNALED(self._record.exit_code):
                 term_sig = WTERMSIG(self._record.exit_code)
+            elif WIFEXITED(self._record.exit_code):
+                exit_status = WEXITSTATUS(self._record.exit_code)
 
-            exit_status = WEXITSTATUS(self._record.exit_code)
             Job_dict[u'exit_code'] = str(exit_status) + ":" + str(term_sig)
 
             Job_dict[u'features'] = slurm.listOrNone(self._record.features, ',')
-            Job_dict[u'fed_origin'] = slurm.stringOrNone(self._record.fed_origin_str, '')
-            Job_dict[u'fed_siblings'] = slurm.stringOrNone(self._record.fed_siblings_str, '')
+
+            if self._record.fed_siblings_active or self._record.fed_siblings_viable:
+                Job_dict[u'fed_origin'] = slurm.stringOrNone(
+                    self._record.fed_origin_str, ''
+                )
+                Job_dict[u'fed_viable_siblings'] = slurm.stringOrNone(
+                    self._record.fed_siblings_viable_str, ''
+                )
+                Job_dict[u'fed_active_siblings'] = slurm.stringOrNone(
+                    self._record.fed_siblings_active_str, ''
+                )
+
             Job_dict[u'gres'] = slurm.listOrNone(self._record.gres, ',')
             Job_dict[u'group_id'] = self._record.group_id
 
@@ -2110,6 +2128,10 @@ cdef class job:
             Job_dict[u'job_state'] = slurm.stringOrNone(
                 slurm.slurm_job_state_string(self._record.job_state), ''
             )
+
+            slurm.slurm_make_time_str(&self._record.last_sched_eval, time_str,
+                                      sizeof(time_str))
+            Job_dict[u'last_sched_eval'] = slurm.stringOrNone(time_str, '')
 
             Job_dict[u'licenses'] = __get_licenses(self._record.licenses)
             Job_dict[u'max_cpus'] = self._record.max_cpus
@@ -2126,6 +2148,14 @@ cdef class job:
             Job_dict[u'ntasks_per_board'] = self._record.ntasks_per_board
             Job_dict[u'num_cpus'] = self._record.num_cpus
             Job_dict[u'num_nodes'] = self._record.num_nodes
+
+            if self._record.pack_job_id:
+                Job_dict[u'pack_job_id'] = self._record.pack_job_id
+                Job_dict[u'pack_job_offset'] = self._record.pack_job_offset
+
+            if self._record.pack_job_id_set:
+                Job_dict[u'pack_job_id_set'] = self._record.pack_job_id_set
+
             Job_dict[u'partition'] = slurm.stringOrNone(self._record.partition, '')
 
             if self._record.pn_min_memory & slurm.MEM_PER_CPU:
@@ -2445,6 +2475,9 @@ cdef class job:
         else:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+
+    def slurm_job_batch_script(uint32_t jobid):
+        return slurm.slurm_job_batch_script(slurm.stdout, jobid)
 
 
 def slurm_pid2jobid(uint32_t JobPID=0):
@@ -3580,7 +3613,6 @@ cdef class reservation:
                 Res_dict[u'node_list'] = slurm.stringOrNone(record.node_list, '')
                 Res_dict[u'partition'] = slurm.stringOrNone(record.partition, '')
                 Res_dict[u'start_time'] = record.start_time
-                Res_dict[u'resv_watts'] = slurm.int32orNone(record.resv_watts)
                 Res_dict[u'tres_str'] = slurm.listOrNone(record.tres_str, ',')
                 Res_dict[u'users'] = slurm.listOrNone(record.users, ',')
 

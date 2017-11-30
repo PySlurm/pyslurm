@@ -39,8 +39,11 @@ then
     yum makecache fast && yum -y install python36u{,-devel,-pip}
 fi
 
+# Upgrade pip
+pip install --upgrade pip
+
 # Install nose
-pip$PYTHON install nose Cython==$CYTHON Sphinx
+pip$PYTHON install nose Cython==$CYTHON
 
 cd pyslurm
 python$PYTHON setup.py build
