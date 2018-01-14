@@ -10,7 +10,7 @@ import sys
 from stat import *
 from string import *
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 from distutils.extension import Extension
 from distutils.command import clean
 from distutils.sysconfig import get_python_lib
@@ -305,24 +305,25 @@ extensions = [makeExtension(name) for name in extNames]
 setup(
     name = "pyslurm",
     version = __version__,
-    license="GPL",
+    license="GPLv2",
     description = ("Slurm Interface for Python"),
     long_description=read("README.rst"),
     author = "Mark Roberts",
-    author_email = "mark@gingergeeks co uk",
-    url = "http://www.gingergeeks.co.uk/pyslurm/",
+    author_email = "mark@gingergeeks.co.uk",
+    url = "https://github.com/PySlurm/pyslurm",
     platforms = ["Linux"],
     keywords = ["Batch Scheduler", "Resource Manager", "Slurm", "Cython"],
     packages = ["pyslurm"],
+    install_requires = ["Cython"],
     ext_modules = extensions,
     cmdclass = {"build_ext": build_ext },
     classifiers = [
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
-        'License :: OSI Approved :: GPL',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        'Operating System :: Linux',
+        'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
