@@ -79,8 +79,8 @@ the pyslurm module once it is built:
 Authors
 *******
 
-* Mark Roberts <mark@gingergeeks.co.uk>
-* Giovanni Torres <giovanni.torres/gmail/com>
+* `Mark Roberts <https://github.com/gingergeeks>`_
+* `Giovanni Torres <https://github.com/giovtorres>`_
 
 Help
 ****
