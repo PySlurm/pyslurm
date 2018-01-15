@@ -50,11 +50,14 @@ then
 fi
 
 # Upgrade pip
-pip install --upgrade pip
+pip install --upgrade pip setuptools
 
 # Install nose
 pip$PYTHON install nose Cython==$CYTHON
 
 cd pyslurm
+echo "Building PySlurm..."
 python$PYTHON setup.py build
+
+echo "Installing PySlurm..."
 python$PYTHON setup.py install
