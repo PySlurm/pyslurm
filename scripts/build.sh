@@ -45,12 +45,12 @@ fi
 if [ "$PYTHON" == "2.6" ]
 then
     pip uninstall -y setuptools
-    yum -y reinstall python-setuptools
     pip install importlib
+    pip install setuptools==36.8.0
 fi
 
 # Upgrade pip
-pip install --upgrade pip setuptools
+pip install --upgrade pip
 
 # Install nose
 pip$PYTHON install nose Cython==$CYTHON
