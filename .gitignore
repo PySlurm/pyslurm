@@ -27,3 +27,7 @@ tests/*.pyc
 
 # Ignore job output files
 *.out
+
+# Source distribution files
+dist
+pyslurm.egg-info
