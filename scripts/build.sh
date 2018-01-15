@@ -45,8 +45,8 @@ fi
 if [ "$PYTHON" == "2.6" ]
 then
     pip uninstall -y setuptools
-    pip install importlib
     pip install setuptools==36.8.0
+    pip install importlib
 fi
 
 # Upgrade pip
