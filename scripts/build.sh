@@ -44,6 +44,7 @@ fi
 # requires importlib.
 if [ "$PYTHON" == "2.6" ]
 then
+    yum -y install python-setuptools
     pip install importlib
 fi
 
