@@ -22,7 +22,7 @@ logging.basicConfig(level=20)
 # PySlurm Version
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
-__version__ = "17.11.0"
+__version__ = "17.11.0.1"
 __min_slurm_hex_version__ = "0x110b00"
 __max_slurm_hex_version__ = "0x110b02"
 
@@ -306,10 +306,10 @@ setup(
     name = "pyslurm",
     version = __version__,
     license="GPLv2",
-    description = ("Slurm Interface for Python"),
+    description = ("Python Interface for Slurm"),
     long_description=read("README.rst"),
-    author = "Mark Roberts",
-    author_email = "mark@gingergeeks.co.uk",
+    author = "Mark Roberts, Giovanni Torres, et al.",
+    author_email = "pyslurm@googlegroups.com",
     url = "https://github.com/PySlurm/pyslurm",
     platforms = ["Linux"],
     keywords = ["Batch Scheduler", "Resource Manager", "Slurm", "Cython"],
@@ -324,11 +324,15 @@ setup(
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
+        'Programming Language :: Cython',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
-        'Topic :: Software Development :: Libraries',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ]
 )
