@@ -54,6 +54,21 @@ cdef extern from *:
 cdef extern from "alps_cray.h" nogil:
     cdef int ALPS_CRAY_SYSTEM
 
+cdef extern from "<sys/types.h>" nogil:
+    ctypedef long id_t
+
+cdef extern from "<sys/resource.h>" nogil:
+    enum: PRIO_PROCESS
+    int getpriority(int, id_t)
+
+cdef extern from *:
+    # deprecated backwards compatiblity declaration
+    ctypedef char*  const_char_ptr  "const char*"
+    ctypedef char** const_char_pptr "const char**"
+
+cdef extern from "alps_cray.h" nogil:
+    cdef int ALPS_CRAY_SYSTEM
+
 try:
     import __builtin__
 except ImportError:
