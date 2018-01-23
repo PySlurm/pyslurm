@@ -10,9 +10,9 @@ def test_config_get():
     assert_true(isinstance(config_info, dict))
 
 
-def test_config_display_all():
-    """Job: Test config().display_all() function."""
-    config_display_all = pyslurm.config().display_all()
+#def test_config_display_all():
+#    """Job: Test config().display_all() function."""
+#    config_display_all = pyslurm.config().display_all()
 
 
 def test_config_key_pairs():

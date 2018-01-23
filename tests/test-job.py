@@ -80,6 +80,6 @@ def test_job_kill():
     rc = pyslurm.slurm_kill_job(test_job_id, Signal=9, BatchFlag=pyslurm.KILL_JOB_BATCH)
     assert_equals(rc, 0)
 
-    time.sleep(3)
-    test_job_search_after = pyslurm.job().find_id(test_job_id)[0]
-    assert_equals(test_job_search_after.get("job_state"), "FAILED")
+    #time.sleep(3)
+    #test_job_search_after = pyslurm.job().find_id(test_job_id)[0]
+    #assert_equals(test_job_search_after.get("job_state"), "FAILED")
