@@ -2517,7 +2517,6 @@ cdef class job:
         """
         https://github.com/SchedMD/slurm/blob/0bc4ac4902c4c150ee66b90fb41f3c67352f85ba/src/api/init_msg.c#L54
         https://github.com/SchedMD/slurm/blob/a8f0ff71504e77feb7fa744ba1f6d44daedb6989/src/sbatch/opt.c#L294
-        https://github.com/SchedMD/slurm/blob/a8f0ff71504e77feb7fa744ba1f6d44daedb6989/src/sbatch/opt.c#L294
 
         Do I even need to set some of the defaults?
 
@@ -2819,7 +2818,10 @@ cdef class job:
             std_out = job_opts.get("output").encode("UTF-8", "replace")
             desc.std_out = std_out
 
-        # work_dir is in submit_batch_job()
+        # FIXME: should this be python's getcwd or C's getcwd?
+        # also, allow option to specify work_dir, if not, set default
+        cwd = os.getcwd().encode("UTF-8", "replace")
+        desc.work_dir = cwd
 
         if job_opts.get("requeue"):
             desc.requeue = job_opts.get("requeue")
@@ -3039,11 +3041,6 @@ cdef class job:
 
         desc.script = script_body
 
-        # FIXME: should this be python's getcwd or C's getcwd?
-        # also, allow option to specify work_dir, if not, set default
-        cwd = os.getcwd().encode("UTF-8", "replace")
-        desc.work_dir = cwd
-
         # If can run on multiple clusters, find the earliest run time
         # and run it there
         if job_opts.get("clusters"):
@@ -3084,7 +3081,8 @@ cdef class job:
         job_id = resp.job_id
         slurm.slurm_free_submit_response_response_msg(resp)
 
-        return "Submitted batch job %s" % job_id
+        #return "Submitted batch job %s" % job_id
+        return job_id
 
 
 def slurm_pid2jobid(uint32_t JobPID=0):

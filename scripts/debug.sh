@@ -15,11 +15,11 @@ python$PYTHON -c "import pyslurm; print(pyslurm.version())"
 python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
 
 # Submit test job with jobstep via srun for testing
-sbatch --wrap="srun sleep 1000"
+#sbatch --wrap="srun sleep 1000"
 
 # Sleep for a few seconds to wait for the job to transition
 # from PENDING to RUNNING
-sleep 10
+#sleep 10
 
 # Show cluster
 sacctmgr list cluster
