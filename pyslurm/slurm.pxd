@@ -2680,7 +2680,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
     cdef extern List slurmdb_reservations_get(void *db_conn,
                          slurmdb_reservation_cond_t *resv_cond)
     cdef extern void slurmdb_destroy_reservation_cond(void *object)
-    cdef extern void slurmdb_destroy_reservation_rec(void *object);
+    cdef extern void slurmdb_destroy_reservation_rec(void *object)
 
     # clusters accounting and report APIs
     cdef extern List slurmdb_clusters_get(void *db_conn, slurmdb_cluster_cond_t *cluster_cond)
@@ -2694,7 +2694,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
     cdef extern List slurmdb_events_get(void *db_conn,
                          slurmdb_event_cond_t *resv_cond)
     cdef extern void slurmdb_destroy_event_cond(void *object)
-    cdef extern void slurmdb_destroy_event_rec(void *object);
+    cdef extern void slurmdb_destroy_event_rec(void *object)
 
 #
 # Slurm declarations not in slurm.h
