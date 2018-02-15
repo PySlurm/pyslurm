@@ -483,6 +483,7 @@ cdef extern from 'slurm/slurm.h' nogil:
     uint16_t SHOW_LOCAL
     uint16_t SHOW_SIBLING
     uint16_t SHOW_FEDERATION
+    uint16_t SHOW_FUTURE
 
     uint64_t MEM_PER_CPU
 
