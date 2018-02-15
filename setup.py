@@ -10,7 +10,7 @@ import sys
 from stat import *
 from string import *
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 from distutils.extension import Extension
 from distutils.command import clean
 from distutils.sysconfig import get_python_lib
@@ -22,9 +22,9 @@ logging.basicConfig(level=20)
 # PySlurm Version
 
 #VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
-__version__ = "17.11.0"
+__version__ = "17.11.0.3"
 __min_slurm_hex_version__ = "0x110b00"
-__max_slurm_hex_version__ = "0x110b02"
+__max_slurm_hex_version__ = "0x110b03"
 
 def fatal(logstring, code=1):
     logger.error("Fatal: " + logstring)
@@ -305,29 +305,34 @@ extensions = [makeExtension(name) for name in extNames]
 setup(
     name = "pyslurm",
     version = __version__,
-    license="GPL",
-    description = ("Slurm Interface for Python"),
+    license="GPLv2",
+    description = ("Python Interface for Slurm"),
     long_description=read("README.rst"),
-    author = "Mark Roberts",
-    author_email = "mark@gingergeeks co uk",
-    url = "http://www.gingergeeks.co.uk/pyslurm/",
+    author = "Mark Roberts, Giovanni Torres, et al.",
+    author_email = "pyslurm@googlegroups.com",
+    url = "https://github.com/PySlurm/pyslurm",
     platforms = ["Linux"],
     keywords = ["Batch Scheduler", "Resource Manager", "Slurm", "Cython"],
     packages = ["pyslurm"],
+    install_requires = ["Cython"],
     ext_modules = extensions,
     cmdclass = {"build_ext": build_ext },
     classifiers = [
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
-        'License :: OSI Approved :: GPL',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        'Operating System :: Linux',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Cython',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
-        'Topic :: Software Development :: Libraries',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ]
 )

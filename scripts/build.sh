@@ -39,6 +39,16 @@ then
     yum makecache fast && yum -y install python36u{,-devel,-pip}
 fi
 
+# Install importlib dependency for setuptools in Python 2.6.  This needs to get
+# done before upgrading pip, as that will also upgrade setuptools, which
+# requires importlib.
+if [ "$PYTHON" == "2.6" ]
+then
+    pip uninstall -y setuptools
+    pip install setuptools==36.8.0
+    pip install importlib
+fi
+
 # Upgrade pip
 pip install --upgrade pip
 
@@ -46,5 +56,8 @@ pip install --upgrade pip
 pip$PYTHON install nose Cython==$CYTHON
 
 cd pyslurm
+echo "Building PySlurm..."
 python$PYTHON setup.py build
+
+echo "Installing PySlurm..."
 python$PYTHON setup.py install

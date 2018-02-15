@@ -24,7 +24,7 @@ This PySlurm branch has been tested with:
 
 * Cython 0.15.1*, 0.19.2, and the latest stable
 * Python 2.6, 2.7, and 3.4
-* Slurm 17.11.0 thru 17.11.2
+* Slurm 17.11.0 thru 17.11.3
 
     Note: Cython 0.15.1 is only tested on Python 2.7.
 
@@ -79,8 +79,8 @@ the pyslurm module once it is built:
 Authors
 *******
 
-* Mark Roberts <mark@gingergeeks.co.uk>
-* Giovanni Torres <giovanni.torres/gmail/com>
+* `Mark Roberts <https://github.com/gingergeeks>`_
+* `Giovanni Torres <https://github.com/giovtorres>`_
 
 Help
 ****
