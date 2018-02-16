@@ -22,7 +22,7 @@ logging.basicConfig(
 )
 
 # PySlurm Version
-__version__ = "17.11.0.3"
+__version__ = "17.11.0.4"
 
 # Slurm min/max supported (hex) versions
 __min_slurm_hex_version__ = "0x110b00"
