@@ -15,26 +15,28 @@ from distutils.extension import Extension
 from distutils.command import clean
 from distutils.sysconfig import get_python_lib
 
-logger = logging.getLogger()
-#logger.addHandler(logging.StreamHandler(sys.stderr))
-logging.basicConfig(level=20)
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format='%(levelname)s: %(message)s',
+    level=logging.DEBUG
+)
 
 # PySlurm Version
-
-#VERSION = imp.load_source("/tmp", "pyslurm/__init__.py").__version__
 __version__ = "17.11.0.3"
+
+# Slurm min/max supported (hex) versions
 __min_slurm_hex_version__ = "0x110b00"
 __max_slurm_hex_version__ = "0x110b03"
 
 def fatal(logstring, code=1):
-    logger.error("Fatal: " + logstring)
+    logger.error(logstring)
     sys.exit(code)
 
 def warn(logstring):
-    logger.error("Warning: " + logstring)
+    logger.error(logstring)
 
 def info(logstring):
-    logger.info("Info: " + logstring)
+    logger.info(logstring)
 
 def usage():
     info("Need to provide either SLURM dir location for build")
