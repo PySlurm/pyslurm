@@ -1,0 +1,5 @@
+include pyslurm/alps_cray.h
+include pyslurm/bluegene.pxi
+include pyslurm/slurm_defines.pxi
+include pyslurm/slurm.pxd
+include README.rst
