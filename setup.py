@@ -34,7 +34,7 @@ def info(logstring):
     logger.info(logstring)
 
 
-if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version[:2] < (3, 4):
+if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[:2] < (3, 4):
     fatal("Python >= 2.6 or >= 3.4 is required to run PySlurm.")
 
 try:
