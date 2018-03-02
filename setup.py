@@ -306,12 +306,6 @@ def parse_setuppy_commands():
         elif "build" in args or "build_ext" in args:
             build()
 
-# Get the list of extensions
-extNames = scandir("pyslurm/")
-
-# Build up the set of Extension objects
-extensions = [makeExtension(name) for name in extNames]
-
 here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, "README.rst")) as f:
@@ -319,6 +313,12 @@ with open(os.path.join(here, "README.rst")) as f:
 
 def setup_package():
     parse_setuppy_commands()
+
+    # Get the list of extensions
+    extNames = scandir("pyslurm/")
+
+    # Build up the set of Extension objects
+    extensions = [makeExtension(name) for name in extNames]
 
     setup(
         name="pyslurm",
