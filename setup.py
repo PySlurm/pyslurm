@@ -5,12 +5,12 @@ import os
 import logging
 import sys
 import textwrap
-from setuptools import setup 
+from setuptools import setup
 from distutils.dir_util import remove_tree
 from distutils.core import Extension
 from distutils.version import LooseVersion
 
-PYSLURM_VERSION = "17.11.0.5"
+PYSLURM_VERSION = "17.11.0.6"
 CYTHON_VERSION_MIN = "0.15"
 
 # Configure console logging
@@ -306,19 +306,18 @@ def parse_setuppy_commands():
         elif "build" in args or "build_ext" in args:
             build()
 
-# Get the list of extensions
-extNames = scandir("pyslurm/")
-
-# Build up the set of Extension objects
-extensions = [makeExtension(name) for name in extNames]
-
-here = os.path.abspath(os.path.dirname(__file__))
-
-with open(os.path.join(here, "README.rst")) as f:
-    long_description = f.read()
-
 def setup_package():
     parse_setuppy_commands()
+
+    # Get the list of extensions
+    extNames = scandir("pyslurm/")
+
+    # Build up the set of Extension objects
+    extensions = [makeExtension(name) for name in extNames]
+
+    here = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(here, "README.rst")) as f:
+        long_description = f.read()
 
     setup(
         name="pyslurm",
