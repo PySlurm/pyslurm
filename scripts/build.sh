@@ -27,14 +27,16 @@ if [ "$PYTHON" == "3.4" ]; then
 fi
 
 if [ "$PYTHON" == "3.5" ]; then
-    if [ "$(which python3.5)" == 1 ]; then
+    rc="$(which python3.5)"
+    if [ "$rc" == "1" ]; then
         centos_install_ius
         yum makecache fast && yum -y install python35u{,-devel,-pip}
     fi
 fi
 
 if [ "$PYTHON" == "3.6" ]; then
-    if [ "$(which python3.6)" == 1 ]; then
+    rc="$(which python3.6)"
+    if [ "$rc" == "1" ]; then
         centos_install_ius
         yum makecache fast && yum -y install python36u{,-devel,-pip}
     fi
