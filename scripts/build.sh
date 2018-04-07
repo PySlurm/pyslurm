@@ -27,21 +27,23 @@ if [ "$PYTHON" == "3.4" ]; then
 fi
 
 if [ "$PYTHON" == "3.5" ]; then
+    set +e
     command -v python3.5 &>> /dev/null
-    rc=$?
-    if [ "$rc" == "1" ]; then
+    if [ "$?" -eq 1 ]; then
         centos_install_ius
         yum makecache fast && yum -y install python35u{,-devel,-pip}
     fi
+    set -e
 fi
 
 if [ "$PYTHON" == "3.6" ]; then
+    set +e
     command -v python3.6 &>> /dev/null
-    rc=$?
-    if [ "$rc" == "1" ]; then
+    if [ "$?" -eq 1 ]; then
         centos_install_ius
         yum makecache fast && yum -y install python36u{,-devel,-pip}
     fi
+    set -e
 fi
 
 # Install importlib dependency for setuptools in Python 2.6.  This needs to get
