@@ -18,6 +18,9 @@ EOF
 # Configure topology plugin
 echo 'TopologyPlugin=topology/tree' >> /etc/slurm/slurm.conf
 
+# Add a delay to give time for database process to start
+sleep 10
+
 # Add the cluster to the slurm database
 sacctmgr --immediate add cluster name=linux
 
