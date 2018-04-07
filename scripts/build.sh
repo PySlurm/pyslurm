@@ -22,21 +22,22 @@ centos_install_ius(){
 }
 
 # Install Python
-if [ "$PYTHON" == "3.4" ]
-then
+if [ "$PYTHON" == "3.4" ]; then
     yum makecache fast && yum -y install python34{,-devel,-pip}
 fi
 
-if [ "$PYTHON" == "3.5" ]
-then
-    centos_install_ius
-    yum makecache fast && yum -y install python35u{,-devel,-pip}
+if [ "$PYTHON" == "3.5" ]; then
+    if [ "$(which python3.5)" == 1 ]; then
+        centos_install_ius
+        yum makecache fast && yum -y install python35u{,-devel,-pip}
+    fi
 fi
 
-if [ "$PYTHON" == "3.6" ]
-then
-    centos_install_ius
-    yum makecache fast && yum -y install python36u{,-devel,-pip}
+if [ "$PYTHON" == "3.6" ]; then
+    if [ "$(which python3.6)" == 1 ]; then
+        centos_install_ius
+        yum makecache fast && yum -y install python36u{,-devel,-pip}
+    fi
 fi
 
 # Install importlib dependency for setuptools in Python 2.6.  This needs to get
