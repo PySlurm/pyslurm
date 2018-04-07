@@ -13,6 +13,10 @@ from distutils.version import LooseVersion
 PYSLURM_VERSION = "17.11.0.7"
 CYTHON_VERSION_MIN = "0.15"
 
+# Slurm min/max supported (hex) versions
+__min_slurm_hex_version__ = "0x110b00"
+__max_slurm_hex_version__ = "0x110b05"
+
 # Configure console logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -56,10 +60,6 @@ SLURM_INC = ""
 
 # Set default Bluegene/Q emulation to 0
 BGQ = 0
-
-# Slurm min/max supported (hex) versions
-__min_slurm_hex_version__ = "0x110b00"
-__max_slurm_hex_version__ = "0x110b03"
 
 def usage():
     print(textwrap.dedent("""
