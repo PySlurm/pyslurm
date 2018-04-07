@@ -10,7 +10,7 @@ from distutils.dir_util import remove_tree
 from distutils.core import Extension
 from distutils.version import LooseVersion
 
-PYSLURM_VERSION = "17.11.0.6"
+PYSLURM_VERSION = "17.11.0.7"
 CYTHON_VERSION_MIN = "0.15"
 
 # Configure console logging
