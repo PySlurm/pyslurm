@@ -3,3 +3,9 @@ include pyslurm/bluegene.pxi
 include pyslurm/slurm_defines.pxi
 include pyslurm/slurm.pxd
 include README.rst
+include CONTRIBUTORS.rst
+include COPYING.txt
+include THANKS.rst
+recursive-include examples
+recursive-include tests
+recursive-include doc
