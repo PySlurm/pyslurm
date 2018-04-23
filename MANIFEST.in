@@ -6,6 +6,6 @@ include README.rst
 include CONTRIBUTORS.rst
 include COPYING.txt
 include THANKS.rst
-recursive-include examples
-recursive-include tests
-recursive-include doc
+graft examples
+graft tests
+graft doc
