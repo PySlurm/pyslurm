@@ -46,14 +46,9 @@ if [ "$PYTHON" == "3.6" ]; then
     set -e
 fi
 
-# Install importlib dependency for setuptools in Python 2.6.  This needs to get
-# done before upgrading pip, as that will also upgrade setuptools, which
-# requires importlib.
 if [ "$PYTHON" == "2.6" ]
 then
-    pip uninstall -y setuptools
-    pip install setuptools==36.8.0
-    pip install importlib
+    pip install --upgrade setuptools==36.8.0
 fi
 
 # Upgrade pip
