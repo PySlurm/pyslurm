@@ -10,12 +10,18 @@ from distutils.dir_util import remove_tree
 from distutils.core import Extension
 from distutils.version import LooseVersion
 
-PYSLURM_VERSION = "17.11.0.7"
+
 CYTHON_VERSION_MIN = "0.15"
 
 # Slurm min/max supported (hex) versions
 __min_slurm_hex_version__ = "0x110b00"
 __max_slurm_hex_version__ = "0x110b05"
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+about = {}
+with open(os.path.join(here, "pyslurm", "__version__.py"), "r") as f:
+    exec(f.read(), about)
 
 # Configure console logging
 logger = logging.getLogger(__name__)
@@ -210,7 +216,7 @@ def clean():
 
 def build():
     info("")
-    info("Building PySlurm (%s)" % PYSLURM_VERSION)
+    info("Building PySlurm (%s)" % about["__version__"])
     info("------------------------------")
     info("")
     info("Cython version %s installed" % cython_version)
@@ -315,13 +321,12 @@ def setup_package():
     # Build up the set of Extension objects
     extensions = [makeExtension(name) for name in extNames]
 
-    here = os.path.abspath(os.path.dirname(__file__))
     with open(os.path.join(here, "README.rst")) as f:
         long_description = f.read()
 
     setup(
         name="pyslurm",
-        version=PYSLURM_VERSION,
+        version=about["__version__"],
         license="GPLv2",
         description=("Python Interface for Slurm"),
         long_description=long_description,
