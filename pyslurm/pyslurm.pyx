@@ -2,6 +2,7 @@
 # cython: profile=False
 
 import os
+import re
 import sys
 import time as p_time
 
@@ -3304,6 +3305,10 @@ cdef class node:
         """
         return self.get_node(None)
 
+    def parse_gres(self, gres_str):
+        if gres_str:
+            return re.split(r',(?![^(]*\))', gres_str)
+
     def get_node(self, nodeID):
         u"""Get single slurm node information.
 
@@ -3378,7 +3383,9 @@ cdef class node:
                 Host_dict[u'free_mem'] = slurm.int64orNone(record.free_mem)
                 Host_dict[u'gres'] = slurm.listOrNone(record.gres, ',')
                 Host_dict[u'gres_drain'] = slurm.listOrNone(record.gres_drain, '')
-                Host_dict[u'gres_used'] = slurm.listOrNone(record.gres_used, ',')
+                Host_dict[u'gres_used'] = self.parse_gres(
+                    slurm.stringOrNone(record.gres_used, '')
+                )
 
                 if record.mcs_label == NULL:
                     Host_dict[u'mcs_label'] = None
