@@ -3,6 +3,7 @@ set -e
 
 # CMD - Command to run for up to 30 seconds
 # MSG - Message to print while waiting for command to run
+RESULT=""
 wait_for_cmd() {
     CMD="$1"
     MSG="$2"
@@ -13,6 +14,11 @@ wait_for_cmd() {
         sleep 1
         MAX_WAIT=$((MAX_WAIT - 1))
     done
+
+    if [ $MAX_WAIT -eq 0 ]
+    then
+    RESULT=false
+    fi
 }
 
 ######################################################
@@ -37,6 +43,12 @@ echo 'TopologyPlugin=topology/tree' >> /etc/slurm/slurm.conf
 
 # Wait for database process to start
 wait_for_cmd "2>/dev/null > /dev/tcp/0.0.0.0/6819" "Waiting for Slurmdbd"
+
+if [ "$RESULT" = false ]
+then
+    supervisorctl restart slurmdbd
+    supervisorctl status
+fi
 
 # Add the cluster to the slurm database
 sacctmgr --immediate add cluster name=linux
