@@ -7,7 +7,7 @@ wait_for_cmd() {
     CMD="$1"
     MSG="$2"
     MAX_WAIT=30
-    until ${CMD} || [ $MAX_WAIT -lt 1 ]
+    until eval ${CMD} || [ $MAX_WAIT -lt 1 ]
     do
         echo "---> ${MSG} (retries left $MAX_WAIT)"
         sleep 1
