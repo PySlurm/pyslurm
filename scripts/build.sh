@@ -50,18 +50,21 @@ fi
 
 if [ "$PYTHON" == "2.6" ]
 then
+    echo "---> Upgrading setuptools to 36.8.0..."
     pip install --upgrade setuptools==36.8.0
 fi
 
 # Upgrade pip
+echo "---> Upgrading pip to 9.0.3..."
 pip install --upgrade pip==9.0.3
 
 # Install nose
+echo "---> Installing nose and Cython pip packages..."
 pip$PYTHON install nose Cython==$CYTHON
 
 cd pyslurm
-echo "Building PySlurm..."
+echo "---> Building PySlurm..."
 python$PYTHON setup.py build
 
-echo "Installing PySlurm..."
+echo "---> Installing PySlurm..."
 python$PYTHON setup.py install

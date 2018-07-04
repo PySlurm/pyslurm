@@ -6,9 +6,11 @@ set -e
 ######################################################
 
 # Add fake licenses for testing
-echo 'Licenses=fluent:30,ansys:100,matlab:50' >> /etc/slurm/slurm.conf
+echo "---> Adding licenses"
+echo "Licenses=fluent:30,ansys:100,matlab:50" >> /etc/slurm/slurm.conf
 
 # Add fake topology for testing
+echo "---> Adding topology"
 cat > /etc/slurm/topology.conf << EOF
 SwitchName=s0 Nodes=c[0-5]
 SwitchName=s1 Nodes=c[6-10]
@@ -16,6 +18,7 @@ SwitchName=s2 Switches=s[0-1]
 EOF
 
 # Configure topology plugin
+echo "---> Configuring topology plugin"
 echo 'TopologyPlugin=topology/tree' >> /etc/slurm/slurm.conf
 
 # Wait for database process to start
@@ -49,12 +52,15 @@ do
 done
 
 # Print the PySlurm version
+echo "---> PySlurm version"
 python$PYTHON -c "import pyslurm; print(pyslurm.version())"
 
 # Print the Slurm API version
+echo "---> Slurm API version"
 python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
 
 # Submit test job with jobstep via srun for testing
+echo "---> Submitting sleep job"
 sbatch --wrap="srun sleep 1000"
 
 # Wait for the job to transition from PENDING to RUNNING
@@ -65,6 +71,9 @@ do
     sleep 1
     MAX_WAIT_RUNNING=$((MAX_WAIT_RUNNING - 1))
 done
+
+# Show jobs
+squeue
 
 # Show cluster
 sacctmgr list cluster
