@@ -4,8 +4,8 @@ set -e
 # CMD - Command to run for up to 30 seconds
 # MSG - Message to print while waiting for command to run
 wait_for_cmd() {
-    CMD=$1
-    MSG=$2
+    CMD="$1"
+    MSG="$2"
     MAX_WAIT=30
     until ${CMD} || [ $MAX_WAIT -lt 1 ]
     do
