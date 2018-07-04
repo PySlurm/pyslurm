@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-#
-# Build the project.
-#
+###################################
+# Install Python and Build PySlurm
+###################################
 
 # Vars and functions for installing Python 3.5 and 3.6 via IUS repo.
 RELEASE_RPM=$(rpm -qf /etc/redhat-release)
@@ -21,7 +21,9 @@ centos_install_ius(){
 	import_ius_key
 }
 
-# Install Python
+# NOTE: Python is already pre-installed in the later containers
+
+# Install Python versions from YUM repositories
 if [ "$PYTHON" == "3.4" ]; then
     yum makecache fast && yum -y install python34{,-devel,-pip}
 fi
