@@ -46,6 +46,7 @@ wait_for_cmd "2>/dev/null > /dev/tcp/0.0.0.0/6819" "Waiting for Slurmdbd"
 
 if [ "$RESULT" = false ]
 then
+    supervisorctl restart mysqld
     supervisorctl restart slurmdbd
     supervisorctl status
 fi
