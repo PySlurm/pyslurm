@@ -83,14 +83,13 @@ services:
   - docker
 before_install:
   - docker pull giovtorres/docker-centos$CENTOS-slurm:$SLURM
+  - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos$CENTOS-slurm:$SLURM
 install: true
 before_script:
-  - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos$CENTOS-slurm:$SLURM
   - docker exec slurm-$SLURM git clone --branch=$TRAVIS_BRANCH https://github.com/PySlurm/pyslurm.git
   - docker exec -e PYTHON=$PYTHON -e CYTHON=$CYTHON slurm-$SLURM /pyslurm/scripts/build.sh
-  - docker exec slurm-$SLURM /pyslurm/scripts/config.sh
-  - docker exec -e PYTHON=$PYTHON slurm-$SLURM /pyslurm/scripts/debug.sh
+  - docker exec -e PYTHON=$PYTHON -e CYTHON=$CYTHON slurm-$SLURM /pyslurm/scripts/configure.sh
 script:
-  - docker exec -e PYTHON=$PYTHON slurm-$SLURM /pyslurm/scripts/run_tests.sh
+  - docker exec -e PYTHON=$PYTHON -e CYTHON=$CYTHON slurm-$SLURM /pyslurm/scripts/run_tests.sh
 after_success:
   - docker exec -e PYTHON=$PYTHON -e SLURM=$SLURM -e CYTHON=$CYTHON -e GITHUB_TOKEN=$GITHUB_TOKEN slurm-$SLURM /pyslurm/scripts/builddocs.sh
