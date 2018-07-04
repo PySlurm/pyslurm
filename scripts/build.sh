@@ -10,15 +10,15 @@ RELEASE_RPM=$(rpm -qf /etc/redhat-release)
 RELEASE=$(rpm -q --qf '%{VERSION}' ${RELEASE_RPM})
 
 import_ius_key(){
-	rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
+    rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
 }
 
 centos_install_ius(){
-	case ${RELEASE} in
-		6*) yum -y install https://centos6.iuscommunity.org/ius-release.rpm;;
-		7*) yum -y install https://centos7.iuscommunity.org/ius-release.rpm;;
-	esac
-	import_ius_key
+    case ${RELEASE} in
+        6*) yum -y install https://centos6.iuscommunity.org/ius-release.rpm;;
+        7*) yum -y install https://centos7.iuscommunity.org/ius-release.rpm;;
+    esac
+    import_ius_key
 }
 
 # NOTE: Python is already pre-installed in the later containers
