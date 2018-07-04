@@ -1,6 +1,20 @@
 #!/bin/bash
 set -e
 
+# CMD - Command to run for up to 30 seconds
+# MSG - Message to print while waiting for command to run
+wait_for_cmd() {
+    CMD=$1
+    MSG=$2
+    MAX_WAIT=30
+    until ${CMD} || [ $MAX_WAIT -lt 1 ]
+    do
+        echo "---> ${MSG} (retries left $MAX_WAIT)"
+        sleep 1
+        MAX_WAIT=$((MAX_WAIT - 1))
+    done
+}
+
 ######################################################
 # Configure Slurm for testing, after building PySlurm
 ######################################################
@@ -12,7 +26,7 @@ echo "Licenses=fluent:30,ansys:100,matlab:50" >> /etc/slurm/slurm.conf
 # Add fake topology for testing
 echo "---> Adding topology"
 cat > /etc/slurm/topology.conf << EOF
-SwitchName=s0 Nodes=c[0-5]
+SwitchName=s0 Nodes=c[1-5]
 SwitchName=s1 Nodes=c[6-10]
 SwitchName=s2 Switches=s[0-1]
 EOF
@@ -22,13 +36,7 @@ echo "---> Configuring topology plugin"
 echo 'TopologyPlugin=topology/tree' >> /etc/slurm/slurm.conf
 
 # Wait for database process to start
-MAX_WAIT_DB=30
-until 2>/dev/null > /dev/tcp/0.0.0.0/6819 || [ $MAX_WAIT_DB -lt 1 ]
-do
-    echo "---> Waiting for Slurmdbd (retries left $MAX_WAIT_DB)"
-    sleep 1
-    MAX_WAIT_DB=$((MAX_WAIT_DB - 1))
-done
+wait_for_cmd "2>/dev/null > /dev/tcp/0.0.0.0/6819" "Waiting for Slurmdbd"
 
 # Add the cluster to the slurm database
 sacctmgr --immediate add cluster name=linux
@@ -43,13 +51,7 @@ supervisorctl restart slurmd
 ####################################################
 
 # Wait for nodes to become IDLE
-MAX_WAIT_IDLE=30
-until sinfo | grep -q normal.*idle || [ $MAX_WAIT_IDLE -lt 1 ]
-do
-    echo "---> Waiting for nodes to transition to IDLE (retries left $MAX_WAIT_IDLE)"
-    sleep 1
-    MAX_WAIT_IDLE=$((MAX_WAIT_IDLE - 1))
-done
+wait_for_cmd "sinfo | grep -q normal.*idle" "Waiting for nodes to transition to IDLE"
 
 # Print the PySlurm version
 echo "---> PySlurm version"
@@ -64,19 +66,18 @@ echo "---> Submitting sleep job"
 sbatch --wrap="srun sleep 1000"
 
 # Wait for the job to transition from PENDING to RUNNING
-MAX_WAIT_RUNNING=30
-until scontrol show job | grep JobState=RUNNING || [ $MAX_WAIT_RUNNING -lt 1 ]
-do
-    echo "---> Waiting for job to transition to RUNNING (retries left $MAX_WAIT_RUNNING)"
-    sleep 1
-    MAX_WAIT_RUNNING=$((MAX_WAIT_RUNNING - 1))
-done
+wait_for_cmd "scontrol show job | grep -q JobState=RUNNING" "Waiting for job to transition to RUNNING"
 
 # Show jobs
 squeue
 
 # Show cluster
 sacctmgr list cluster
+
+# Debug for CentOS 6 only
+# CentOS 6 tends move a little slower
+wait_for_cmd "scontrol show license | grep -q LicenseName=matlab" "Waiting for licenses"
+wait_for_cmd "scontrol show topology | grep -q Switches" "Waiting for topology"
 
 # Get output from various scontrol show commands
 echo "---> scontrol -d show job"
