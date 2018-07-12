@@ -258,11 +258,17 @@ def build():
     if not os.path.exists("%s/slurm/slurm.h" % SLURM_INC):
         info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
         usage()
+    elif not os.path.exists("%s/slurm.h" % SLURM_INC):
+        info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
+        usage()
     else:
         info("Build - Found Slurm header in %s" % SLURM_INC)
 
     # Test for supported min and max Slurm versions 
-    SLURM_INC_VER = read_inc_version("%s/slurm/slurm.h" % SLURM_INC)
+    try:
+        SLURM_INC_VER = read_inc_version("%s/slurm/slurm.h" % SLURM_INC)
+    except IOError:
+        SLURM_INC_VER = read_inc_version("%s/slurm.h" % SLURM_INC)
 
     if (int(SLURM_INC_VER,16) < int(__min_slurm_hex_version__,16)) or \
         (int(SLURM_INC_VER,16) > int(__max_slurm_hex_version__,16)):
