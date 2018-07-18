@@ -48,16 +48,19 @@ def teardown():
     pass
 
 def test_cluster_get():
+    """Cluster: Test slurmdb_clusters().get() return type."""
     all_db_clusters = pyslurm.slurmdb_clusters().get()
     assert_true(isinstance(all_db_clusters, dict))
 
 
 def test_cluster_count():
+    """Cluster: Test slurmdb_clusters().get() count."""
     all_db_clusters = pyslurm.slurmdb_clusters().get()
     assert len(all_db_clusters) >= 1
 
 
 def test_cluster_name():
+    """Cluster: Test cluster name."""
     all_db_clusters = pyslurm.slurmdb_clusters().get()
     slurm_config = pyslurm.config().get()
     assert_true(slurm_config.has_key('cluster_name'))
@@ -69,6 +72,7 @@ def test_cluster_name():
 
 
 def test_cluster_sacctmgr():
+    """Cluster: Test sacctmgr values to Pyslurm values."""
     all_db_clusters = pyslurm.slurmdb_clusters().get()
     slurm_config = pyslurm.config().get()
     assert_true(slurm_config.has_key('cluster_name'))
@@ -120,6 +124,7 @@ def test_cluster_sacctmgr():
 
 
 def test_cluster_sreport():
+    """Cluster: Test sreport values to Pyslurm values."""
     end = time()
     start = end - (24*60*60)  # 1 Day before
     start_str = strftime('%Y-%m-%d', localtime(start))

@@ -108,11 +108,13 @@ def create_dbReservations():
     return dbReservations
 
 def test_reservation_get():
+    """Res: Test slurmdb_reservations().get() return type."""
     dbReservations = create_dbReservations()
     all_dbReservations = dbReservations.get()
     assert_true(isinstance(all_dbReservations, dict))
 
 def test_reservation_ids():
+    """Res: Test slurmdb_reservations().get().ids() return type."""
     dbReservations = create_dbReservations()
     all_dbReservations = dbReservations.get()
     all_dbReservation_ids = dbReservations.ids()
@@ -120,12 +122,14 @@ def test_reservation_ids():
 
 
 def test_reservation_count():
+    """Res: Test Reservation count."""
     dbReservations = create_dbReservations()
     all_dbReservations = dbReservations.get()
     all_dbReservation_ids = dbReservations.ids()
     assert_equals(len(all_dbReservations), len(all_dbReservation_ids))
 
 def test_event_sacctmgr():
+    """Res: Compare sacctmgr values to Pyslurm values."""
 #typedef struct {
 #        char *assocs; /* comma separated list of associations */
 #        char *cluster; /* cluster reservation is for */
