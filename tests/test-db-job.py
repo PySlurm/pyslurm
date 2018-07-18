@@ -20,22 +20,26 @@ def teardown():
 
 
 def test_job_get():
+    """Job: Test slurmdb_jobs().get() return type."""
     all_jobs = pyslurm.slurmdb_jobs().get()
     assert_true(isinstance(all_jobs, dict))
 
 
 def test_job_ids():
+    """Job: Test slurmdb_jobs().get().keys() return type."""
     all_job_ids = pyslurm.slurmdb_jobs().get().keys()
     assert type(all_job_ids) is ListType
     assert_true(isinstance(all_job_ids, list))
 
 
 def test_job_count():
+    """Job: Test slurmdb_jobs count."""
     all_jobs = pyslurm.slurmdb_jobs().get()
     all_job_ids = pyslurm.slurmdb_jobs().get().keys()
     assert_equals(len(all_jobs), len(all_job_ids))
 
 def test_job_sacct():
+    """Job: Compare sacct values to Pyslurm slurmdb_jobs values."""
     # see sacct/print.c as reference
     temp = 0
     all_job_ids = pyslurm.slurmdb_jobs().get().keys()

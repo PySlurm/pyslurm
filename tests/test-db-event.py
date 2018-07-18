@@ -24,12 +24,15 @@ def create_dbEvents():
     return dbEvents
 
 def test_event_get():
+    """Event: Test slurmdb_events.get() return type."""
     dbEvents = create_dbEvents()
     all_dbEvents = dbEvents.get()
     assert_true(isinstance(all_dbEvents, dict))
 
 
 def test_event_ids():
+    """Event: Test slurmdb_events.get().ids() return type."""
+    dbEvents = create_dbEvents()
     dbEvents = create_dbEvents()
     all_dbEvents = dbEvents.get()
     all_dbEvents_ids = dbEvents.ids()
@@ -37,6 +40,8 @@ def test_event_ids():
 
 
 def test_event_count():
+    """Event: Test slurmdb_events count."""
+    dbEvents = create_dbEvents()
     dbEvents = create_dbEvents()
     all_dbEvents = dbEvents.get()
     all_dbEvents_ids = dbEvents.ids()
@@ -44,6 +49,8 @@ def test_event_count():
 
 
 def test_event_sacctmgr():
+    """Event: Test sacctmgr values to Pyslurm values"""
+    dbEvents = create_dbEvents()
 #typedef struct {
 ##        char *cluster;          /* Name of associated cluster */
 ##        char *cluster_nodes;    /* node list in cluster during time
