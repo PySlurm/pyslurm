@@ -1066,7 +1066,7 @@ cdef extern from 'slurm/slurm.h' nogil:
 
     ctypedef slurm_ctl_conf slurm_ctl_conf_t
 
-cdef extern from "*":
+cdef extern from "job_resources.h" nogil:
     ctypedef struct job_resources:
         #pass
         bitstr_t *core_bitmap
