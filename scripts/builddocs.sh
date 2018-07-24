@@ -6,6 +6,7 @@ set -e
 ###########################################
 
 # Build docs for all jobs within build
+cd /
 yum -y install python-sphinx
 make BUILDDIR=/root/docs -C /pyslurm/doc/ html
 
@@ -13,7 +14,7 @@ make BUILDDIR=/root/docs -C /pyslurm/doc/ html
 if [[ "$PYTHON" == "2.7"     &&
       "$CYTHON" == "0.27.3"  &&
       "$SLURM"  == "17.11.8" &&
-      "$BRANCH"  == "master" ]]
+      "$BRANCH" == "master"  ]]
 then
     git clone https://github.com/pyslurm/pyslurm.github.io.git
     rsync -av --delete --exclude=.git /root/docs/html/ /pyslurm.github.io/
