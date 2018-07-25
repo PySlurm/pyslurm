@@ -1,13 +1,16 @@
 #!/bin/bash
-set -e
+#set -e
 
 ###########################################
 # Build the docs and push to GitHub Pages #
 ###########################################
 
 # Build docs for all jobs within build
-cd /
+cd ..
+echo $PWD
 yum -y install python-sphinx
+python$PYTHON -c 'import pyslurm'
+python$PYTHON -c 'from pyslurm import __version__'
 make BUILDDIR=/root/docs -C /pyslurm/doc/ html
 
 # Only push to GitHub Pages once per build
