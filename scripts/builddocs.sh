@@ -6,8 +6,7 @@
 ###########################################
 
 # Build docs for all jobs within build
-cd ..
-yum -y install python-sphinx
+pip$PYTHON install Sphinx>=1.1
 make BUILDDIR=/root/docs -C /pyslurm/doc/ html
 
 # Only push to GitHub Pages once per build
