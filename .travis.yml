@@ -103,4 +103,4 @@ before_script:
 script:
   - docker exec -e PYTHON=$PYTHON -e CYTHON=$CYTHON slurm-$SLURM /pyslurm/scripts/run_tests.sh
 after_success:
-  - docker exec -e PYTHON=$PYTHON -e SLURM=$SLURM -e CYTHON=$CYTHON -e GITHUB_TOKEN=$GITHUB_TOKEN slurm-$SLURM /pyslurm/scripts/builddocs.sh
+  - docker exec -e PYTHON=$PYTHON -e SLURM=$SLURM -e CYTHON=$CYTHON -e GITHUB_TOKEN=$GITHUB_TOKEN -e BRANCH=$TRAVIS_BRANCH slurm-$SLURM /pyslurm/scripts/builddocs.sh
