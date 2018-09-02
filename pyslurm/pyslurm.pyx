@@ -2,6 +2,7 @@
 # cython: profile=False
 
 import os
+import re
 import sys
 import time as p_time
 
@@ -3239,12 +3240,14 @@ cdef class node:
 
     cdef:
         slurm.node_info_msg_t *_Node_ptr
+        slurm.partition_info_msg_t *_Part_ptr
         uint16_t _ShowFlags
         dict _NodeDict
         slurm.time_t _lastUpdate
 
     def __cinit__(self):
         self._Node_ptr = NULL
+        self._Part_ptr = NULL
         self._ShowFlags = slurm.SHOW_ALL | slurm.SHOW_DETAIL
         self._lastUpdate = 0
 
@@ -3302,6 +3305,10 @@ cdef class node:
         """
         return self.get_node(None)
 
+    def parse_gres(self, gres_str):
+        if gres_str:
+            return re.split(r',(?![^(]*\))', gres_str)
+
     def get_node(self, nodeID):
         u"""Get single slurm node information.
 
@@ -3311,6 +3318,7 @@ cdef class node:
         """
         cdef:
             int rc
+            int rc_part
             int apiError
             int total_used
             char *cloud_str
@@ -3337,6 +3345,12 @@ cdef class node:
             self._lastUpdate = self._Node_ptr.last_update
             node_scaling = self._Node_ptr.node_scaling
             last_update = self._Node_ptr.last_update
+
+            rc_part = slurm.slurm_load_partitions(<time_t> NULL, &self._Part_ptr,
+                                                  slurm.SHOW_ALL)
+
+            if rc_part == slurm.SLURM_SUCCESS:
+                slurm.slurm_populate_node_partitions(self._Node_ptr, self._Part_ptr)
 
             for i in range(self._Node_ptr.record_count):
                 record = &self._Node_ptr.node_array[i]
@@ -3369,7 +3383,9 @@ cdef class node:
                 Host_dict[u'free_mem'] = slurm.int64orNone(record.free_mem)
                 Host_dict[u'gres'] = slurm.listOrNone(record.gres, ',')
                 Host_dict[u'gres_drain'] = slurm.listOrNone(record.gres_drain, '')
-                Host_dict[u'gres_used'] = slurm.listOrNone(record.gres_used, ',')
+                Host_dict[u'gres_used'] = self.parse_gres(
+                    slurm.stringOrNone(record.gres_used, '')
+                )
 
                 if record.mcs_label == NULL:
                     Host_dict[u'mcs_label'] = None
@@ -3488,7 +3504,9 @@ cdef class node:
                 self._NodeDict[b_name] = Host_dict
 
             slurm.slurm_free_node_info_msg(self._Node_ptr)
+            slurm.slurm_free_partition_info_msg(self._Part_ptr)
             self._Node_ptr = NULL
+            self._Part_ptr = NULL
             return self._NodeDict
         else:
             apiError = slurm.slurm_get_errno()
