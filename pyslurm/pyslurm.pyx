@@ -5386,6 +5386,8 @@ cdef class slurmdb_clusters:
                     CLUSTERS_info[u'flags'] = cluster.flags
                     CLUSTERS_info[u'dimensions'] = cluster.dimensions
                     CLUSTERS_info[u'classification'] = cluster.classification
+                    CLUSTERS_info[u'accounting'] = {}
+                    CLUSTERS_info[u'num_acct'] = 0
                     if cluster.accounting_list is not NULL:
                         num_acct = slurm.slurm_list_count(cluster.accounting_list)
                         acct_iters = slurm.slurm_list_iterator_create(cluster.accounting_list)
