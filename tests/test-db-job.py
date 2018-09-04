@@ -143,7 +143,7 @@ def test_job_sacct():
     cmd = "sacct -lp -j " + str(job_id) +" -o " + options
     sacct = subprocess.Popen(["sacct", "-l", "-p", "-j", str(job_id), "-o", options],
                              stdout=subprocess.PIPE).communicate()
-    sacct_stdout = sacct[0].split("|")
+    sacct_stdout = sacct[0].replace('\n', '').split("|")
     i = 0
     sacct_dict = {}
     lg = (len(sacct_stdout) - 1)
@@ -243,6 +243,8 @@ def test_job_sacct():
     # check 'ReqCPUFreqMax'
     # check 'ReqCPUFreqGov'
     assert_equals(job_info["req_cpus"], int(sacct_dict["ReqCPUS"]))
+    if (sacct_dict["ReqGRES"] = ''):
+        sacct_dict["ReqGRES"] = 0
     assert_equals(job_info["req_gres"], sacct_dict["ReqGRES"])
     # check 'ReqMem'
     assert_equals(convert_tres_str(job_info["tres_req_str"]), sacct_dict["ReqTRES"])

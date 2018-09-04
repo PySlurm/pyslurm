@@ -154,6 +154,9 @@ def test_event_sacctmgr():
     # select one event in the response
     print("  ---> all_dbReservation_ids / len(all_dbReservation): ", all_dbReservation_ids, " / ", len(all_dbReservation))
     print("  ")
+    if len(all_dbReservation_ids) == 0:
+        print("No reservation found, pls create atleast one for test")
+        return
     id = all_dbReservation_ids[randint(0, len(all_dbReservation_ids) - 1)] 
     dbReservationInfo = all_dbReservation[id]
     print("  ---> dbReservationInfo: ", dbReservationInfo)
