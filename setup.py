@@ -14,8 +14,8 @@ from distutils.version import LooseVersion
 CYTHON_VERSION_MIN = "0.15"
 
 # Slurm min/max supported (hex) versions
-__min_slurm_hex_version__ = "0x110b00"
-__max_slurm_hex_version__ = "0x110b09"
+__min_slurm_hex_version__ = "0x120800"
+__max_slurm_hex_version__ = "0x120800"
 
 here = os.path.abspath(os.path.dirname(__file__))
 
