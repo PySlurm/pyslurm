@@ -255,14 +255,14 @@ def build():
         usage()
 
     # Test for slurm.h maybe from derived paths 
-    if not os.path.exists("%s/slurm/slurm.h" % SLURM_INC):
-        info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
-        usage()
-    elif not os.path.exists("%s/slurm.h" % SLURM_INC):
-        info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
-        usage()
-    else:
+    if os.path.exists("%s/slurm/slurm.h" % SLURM_INC):
         info("Build - Found Slurm header in %s" % SLURM_INC)
+    elif os.path.exists("%s/slurm.h" % SLURM_INC):
+        info("Build - Found Slurm header in %s" % SLURM_INC)
+    else:
+        info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
+        usage()
+        sys.exit(-1)
 
     # Test for supported min and max Slurm versions 
     try:

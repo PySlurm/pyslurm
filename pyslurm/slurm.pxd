@@ -832,13 +832,6 @@ cdef extern from 'slurm/slurm.h' nogil:
         uint16_t pn_min_cpus
         uint64_t pn_min_memory
         uint32_t pn_min_tmp_disk
-        uint16_t geometry[HIGHEST_DIMENSIONS]
-        uint16_t conn_type[HIGHEST_DIMENSIONS]
-        uint16_t rotate
-        char *blrtsimage
-        char *linuximage
-        char *mloaderimage
-        char *ramdiskimage
         uint32_t req_switch
         dynamic_plugin_data_t *select_jobinfo
         char *std_err
