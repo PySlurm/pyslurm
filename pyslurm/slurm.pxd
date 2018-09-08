@@ -1,18 +1,14 @@
 # cython: embedsignature=True
 # cython: profile=False
 
+from libc.stddef cimport size_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int64_t, int32_t
-from libc.string cimport strlen, memset, memcpy
 from libc.stdlib cimport malloc, free
+from libc.string cimport strlen, memset, memcpy
 from libcpp cimport bool
 from posix.unistd cimport uid_t
-
 from cpython.version cimport PY_MAJOR_VERSION
-
-cdef extern from 'stdlib.h' nogil:
-    ctypedef long size_t
-    ctypedef long long size_t
 
 cdef extern from 'stdio.h' nogil:
     ctypedef struct FILE
@@ -194,7 +190,6 @@ cdef extern from 'slurm/slurm.h' nogil:
         WAIT_QOS_RESOURCE_LIMIT
         WAIT_QOS_TIME_LIMIT
         WAIT_POWER_NOT_AVAIL
-        WAIT_POWER_RESERVED
         WAIT_BLOCK_MAX_ERR
         WAIT_BLOCK_D_ACTION
         WAIT_CLEANING
@@ -238,7 +233,6 @@ cdef extern from 'slurm/slurm.h' nogil:
         WAIT_BURST_BUFFER_RESOURCE
         WAIT_BURST_BUFFER_STAGING
         FAIL_BURST_BUFFER_OP
-        WAIT_POWER_NOT_AVAIL
         WAIT_POWER_RESERVED
         WAIT_ASSOC_GRP_UNK
         WAIT_ASSOC_GRP_UNK_MIN
@@ -1763,14 +1757,6 @@ cdef extern from 'slurm/slurm.h' nogil:
         char *name
 
     ctypedef reservation_name_msg reservation_name_msg_t
-
-    ctypedef struct dynamic_plugin_data:
-        void *data
-        uint32_t plugin_id
-
-    ctypedef dynamic_plugin_data dynamic_plugin_data_t
-
-    ctypedef int64_t bitstr_t
     ctypedef bitstr_t bitoff_t
 
     ctypedef struct block_job_info_t:
@@ -2343,20 +2329,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     enum: CLUSTER_FLAG_CRAY_A
 
-    ctypedef struct slurmdb_cluster_cond:
-        uint16_t classification
-        List cluster_list
-        uint32_t flags
-        List plugin_id_select_list
-        List rpc_version_list
-        time_t usage_end
-        time_t usage_start
-        uint16_t with_deleted
-        uint16_t with_usage
-
-    ctypedef slurmdb_cluster_cond slurmdb_cluster_cond_t
-
-    ctypedef struct slurmdb_tres_rec:
+    ctypedef struct slurmdb_tres_rec_t:
         uint64_t alloc_secs
         uint32_t rec_count
         uint64_t count
@@ -2364,41 +2337,64 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         char *name
         char *type
 
-    ctypedef slurmdb_tres_rec slurmdb_tres_rec_t
+    # ctypedef struct slurmdb_assoc_cond_t
 
-    ctypedef struct slurmdb_cluster_accounting_rec:
-        uint64_t alloc_secs
-        uint64_t down_secs
-        uint64_t idle_secs
-        uint64_t over_secs
-        uint64_t pdown_secs
-        time_t period_start
-        uint64_t resv_secs
-        slurmdb_tres_rec_t tres_rec
+    ctypedef struct slurmdb_job_cond_t:
+        List acct_list
+        List associd_list
+        List cluster_list
+        uint32_t cpus_max
+        uint32_t cpus_min
+        int32_t exitcode
+        uint32_t flags
+        List format_list
+        List groupid_list
+        List jobname_list
+        uint32_t nodes_max
+        uint32_t nodes_min
+        List partition_list
+        List qos_list
+        List resv_list
+        List resvid_list
+        List state_list
+        List step_list
+        uint32_t timelimit_max
+        uint32_t timelimit_min
+        time_t usage_end
+        time_t usage_start
+        char *used_nodes
+        List userid_list
+        List wckey_list
 
-    ctypedef slurmdb_cluster_accounting_rec slurmdb_cluster_accounting_rec_t
+    ctypedef struct slurmdb_stats_t:
+        double act_cpufreq
+        uint64_t consumed_energy
+        char *tres_usage_in_ave
+        char *tres_usage_in_max
+        char *tres_usage_in_max_nodeid
+        char *tres_usage_in_max_taskid
+        char *tres_usage_in_min
+        char *tres_usage_in_min_nodeid
+        char *tres_usage_in_min_taskid
+        char *tres_usage_in_tot
+        char *tres_usage_out_ave
+        char *tres_usage_out_max
+        char *tres_usage_out_max_nodeid
+        char *tres_usage_out_max_taskid
+        char *tres_usage_out_min
+        char *tres_usage_out_min_nodeid
+        char *tres_usage_out_min_taskid
+        char *tres_usage_out_tot
 
-    ctypedef struct slurmdb_assoc_usage:
-        List children_list
-        uint64_t *grp_used_tres
-        uint64_t *grp_used_tres_run_secs
-        double grp_used_wall
-        double fs_factor
-        uint32_t level_shares
-        slurmdb_assoc_rec_t *parent_assoc_ptr
-        slurmdb_assoc_rec_t *fs_assoc_ptr
-        double shares_norm
-        uint32_t tres_cnt
-        long double usage_efctv
-        long double usage_norm
-        long double usage_raw
-        long double *usage_tres_raw
-        uint32_t used_jobs
-        uint32_t used_submit_jobs
-        long double level_fs
-        bitstr_t *valid_qos
+    # ctypedef struct slurmdb_account_cond_t
+    # ctypedef struct slurmdb_account_rec_t
+    # ctypedef struct slurmdb_accounting_rec_t
+    # ctypedef struct slurmdb_archive_cond_t
+    # ctypedef struct slurmdb_archive_rec_t
+    # ctypedef struct slurmdb_tres_cond_t
 
-    ctypedef slurmdb_assoc_usage slurmdb_assoc_usage_t
+    ctypedef struct slurmdb_assoc_usage_t:
+        pass
 
     ctypedef struct slurmdb_assoc_rec:
         List accounting_list
@@ -2442,84 +2438,113 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     ctypedef slurmdb_assoc_rec slurmdb_assoc_rec_t
 
-    ctypedef struct slurmdb_cluster_rec:
+    ctypedef struct slurmdb_assoc_usage_t:
+        uint32_t accrue_cnt
+        List children_list
+        uint64_t *grp_used_tres
+        uint64_t *grp_used_tres_run_secs
+        double grp_used_wall
+        double fs_factor
+        uint32_t level_shares
+        slurmdb_assoc_rec_t *parent_assoc_ptr
+        slurmdb_assoc_rec_t *fs_assoc_ptr
+        double shares_norm
+        uint32_t tres_cnt
+        long double usage_efctv
+        long double usage_norm
+        long double usage_raw
+        long double *usage_tres_raw
+        uint32_t used_jobs
+        uint32_t used_submit_jobs
+        long double level_fs
+        bitstr_t *valid_qos
+
+    ctypedef struct slurmdb_cluster_cond_t:
+        uint16_t classification
+        List cluster_list
+        uint32_t flags
+        List plugin_id_select_list
+        List rpc_version_list
+        time_t usage_end
+        time_t usage_start
+        uint16_t with_deleted
+        uint16_t with_usage
+
+    ctypedef struct slurmdb_cluster_fed_t:
+        List feature_list
+        uint32_t id
+        char *name
+        void *recv
+        void *send
+        uint32_t state
+        bool sync_recvd
+        bool sync_sent
+
+    ctypedef struct slurmdb_cluster_rec_t:
         List accounting_list
         uint16_t classification
+        time_t comm_fail_time
+        #slurm_addr_t control_addr
         char *control_host
         uint32_t control_port
         uint16_t dimensions
         int *dim_size
+        slurmdb_cluster_fed_t fed
         uint32_t flags
+        #pthread_mutex_t lock
         char *name
         char *nodes
         uint32_t plugin_id_select
         slurmdb_assoc_rec_t *root_assoc #It is not required to support now
         uint16_t rpc_version
+        List send_rpc
         char *tres_str
 
-    ctypedef slurmdb_cluster_rec slurmdb_cluster_rec_t
+    ctypedef struct slurmdb_cluster_rec_t:
+        pass
 
-    ctypedef struct slurmdb_job_cond:
-        List acct_list
-        List associd_list
+    ctypedef struct slurmdb_cluster_accounting_rec_t:
+        uint64_t alloc_secs
+        uint64_t down_secs
+        uint64_t idle_secs
+        uint64_t over_secs
+        uint64_t pdown_secs
+        time_t period_start
+        uint64_t resv_secs
+        slurmdb_tres_rec_t tres_rec
+
+    # ctypedef struct slurmdb_clus_res_rec_t
+    # ctypedef struct slurmdb_coord_rec_t
+
+    ctypedef struct slurmdb_event_cond_t:
         List cluster_list
         uint32_t cpus_max
         uint32_t cpus_min
-        uint16_t duplicates
-        int32_t exitcode
-        List groupid_list
-        List jobname_list
-        uint32_t nodes_max
-        uint32_t nodes_min
-        List partition_list
-        List qos_list
-        List resv_list
-        List resvid_list
+        uint16_t event_type
+        List node_list
+        time_t period_end
+        time_t period_start
+        List reason_list
+        List reason_uid_list
         List state_list
-        List step_list
-        uint32_t timelimit_max
-        uint32_t timelimit_min
-        time_t usage_end
-        time_t usage_start
-        char *used_nodes
-        List userid_list
-        List wckey_list
-        uint16_t without_steps
-        uint16_t without_usage_truncation
 
-    ctypedef slurmdb_job_cond slurmdb_job_cond_t
+    ctypedef struct slurmdb_event_rec_t:
+        char *cluster
+        char *cluster_nodes
+        uint16_t event_type
+        char *node_name
+        time_t period_end
+        time_t period_start
+        char *reason
+        uint32_t reason_uid
+        uint16_t state
+        char *tres_str
 
-    ctypedef struct slurmdb_stats:
-        double act_cpufreq
-        double cpu_ave
-        double consumed_energy
-        uint32_t cpu_min
-        uint32_t cpu_min_nodeid
-        uint32_t cpu_min_taskid
-        double disk_read_ave
-        double disk_read_max
-        uint32_t disk_read_max_nodeid
-        uint32_t disk_read_max_taskid
-        double disk_write_ave
-        double disk_write_max
-        uint32_t disk_write_max_nodeid
-        uint32_t disk_write_max_taskid
-        double pages_ave
-        uint64_t pages_max
-        uint32_t pages_max_nodeid
-        uint32_t pages_max_taskid
-        double rss_ave
-        uint64_t rss_max
-        uint32_t rss_max_nodeid
-        uint32_t rss_max_taskid
-        double vsize_ave
-        uint64_t vsize_max
-        uint32_t vsize_max_nodeid
-        uint32_t vsize_max_taskid
+    # ctypedef struct slurmdb_federation_cond_t
+    # ctypedef struct slurmdb_federation_rec_t
+    # ctypedef struct slurmdb_job_modify_cond_t
 
-    ctypedef slurmdb_stats slurmdb_stats_t
-
-    ctypedef struct slurmdb_job_rec:
+    ctypedef struct slurmdb_job_rec_t:
         char *account
         char *alloc_gres
         uint32_t alloc_nodes
@@ -2558,6 +2583,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         List steps
         time_t submit
         uint32_t suspended
+        char *system_comment
         uint32_t sys_cpu_sec
         uint32_t sys_cpu_usec
         uint32_t timelimit
@@ -2574,10 +2600,72 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         char *wckey
         uint32_t wckeyid
 
-    ctypedef slurmdb_job_rec slurmdb_job_rec_t
+    ctypedef struct slurmdb_qos_usage_t:
+        uint32_t accrue_cnt
+        List acct_limit_list
+        List job_list
+        uint32_t grp_used_jobs
+        uint32_t grp_used_submit_jobs
+        uint64_t *grp_used_tres
+        uint64_t *grp_used_tres_run_secs
+        double grp_used_wall
+        double norm_priority
+        uint32_t tres_cnt
+        long double usage_raw
+        long double *usage_tres_raw
+        List user_limit_list
 
-    # Reservations
-    ctypedef struct slurmdb_reservation_cond:
+    ctypedef struct slurmdb_qos_rec_t:
+        char *description
+        uint32_t id
+        uint32_t flags
+        uint32_t grace_time
+        uint32_t grp_jobs_accrue
+        uint32_t grp_jobs
+        uint32_t grp_submit_jobs
+        char *grp_tres
+        uint64_t *grp_tres_ctld
+        char *grp_tres_mins
+        uint64_t *grp_tres_mins_ctld
+        char *grp_tres_run_mins
+        uint64_t *grp_tres_run_mins_ctld
+        uint32_t grp_wall
+        uint32_t max_jobs_pu
+        uint32_t max_jobs_accrue_pa
+        uint32_t max_jobs_accrue_pu
+        uint32_t max_submit_jobs_pa
+        uint32_t max_submit_jobs_pu
+        char *max_tres_mins_pj
+        uint64_t *max_tres_mins_pj_ctld
+        char *max_tres_pj
+        uint64_t *max_tres_pj_ctld
+        char *max_tres_pn
+        uint64_t *max_tres_pn_ctld
+        char *max_tres_pu
+        uint64_t *max_tres_pu_ctld
+        char *max_tres_run_mins_pu
+        uint64_t *max_tres_run_mins_pu_ctld
+        uint32_t max_wall_pj
+        uint32_t min_prio_thresh
+        char *min_tres_pj
+        uint64_t *min_tres_pj_ctld
+        char *name
+        bitstr_t *preempt_bitstr
+        List preempt_list
+        uint16_t preempt_mode
+        uint32_t priority
+        slurmdb_qos_usage_t *usage
+        double usage_factor
+        double usage_thres
+
+    ctypedef struct slurmdb_qos_cond_t:
+        List description_list
+        List id_list
+        List name_list
+        uint16_t preempt_mode
+        uint16_t with_deleted
+
+    ctypedef struct slurmdb_reservation_cond_t:
         List cluster_list
         uint16_t flags
         List id_list
@@ -2587,9 +2675,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         time_t time_start
         uint16_t with_usage
 
-    ctypedef slurmdb_reservation_cond slurmdb_reservation_cond_t
-
-    ctypedef struct slurmdb_reservation_rec:
+    ctypedef struct slurmdb_reservation_rec_t:
         char *assocs
         char *cluster
         uint32_t flags
@@ -2603,173 +2689,28 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         char *tres_str
         List tres_list
 
-    ctypedef slurmdb_reservation_rec slurmdb_reservation_rec_t
-
-    # Qos
-    ctypedef struct slurmdb_qos_usage_t:
-        List job_list
-        uint32_t grp_used_jobs
-        uint32_t grp_used_submit_jobs
-        uint64_t *grp_used_tres
-        uint64_t *grp_used_tres_run_secs
-        double grp_used_wall
-        double norm_priority
-        uint32_t tres_cnt
-        long double usage_raw
-        long double *usage_tres_raw
-        List user_limit_list
-
-    ctypedef struct slurmdb_qos_rec:
-        char *description
-        uint32_t id
-        uint32_t flags
-        uint32_t grace_time
-        uint32_t grp_jobs
-        uint32_t grp_submit_jobs
-        char *grp_tres
-        uint64_t *grp_tres_ctld
-        char *grp_tres_mins
-        uint64_t *grp_tres_mins_ctld
-        char *grp_tres_run_mins
-        uint64_t *grp_tres_run_mins_ctld
-        uint32_t grp_wall
-        uint32_t max_jobs_pu
-        uint32_t max_submit_jobs_pu
-        char *max_tres_mins_pj
-        uint64_t *max_tres_mins_pj_ctld
-        char *max_tres_pj
-        uint64_t *max_tres_pj_ctld
-        char *max_tres_pn
-        uint64_t *max_tres_pn_ctld
-        char *max_tres_pu
-        uint64_t *max_tres_pu_ctld
-        char *max_tres_run_mins_pu
-        uint64_t *max_tres_run_mins_pu_ctld
-        uint32_t max_wall_pj
-        char *min_tres_pj
-        uint64_t *min_tres_pj_ctld
-        char *name
-        bitstr_t *preempt_bitstr
-        List preempt_list
-        uint16_t preempt_mode
-        uint32_t priority
-        slurmdb_qos_usage_t *usage
-        double usage_factor
-        double usage_thres
-
-    ctypedef slurmdb_qos_rec slurmdb_qos_rec_t
-
-    ctypedef struct slurmdb_qos_cond:
-        List description_list
-        List id_list
-        List name_list
-        uint16_t preempt_mode
-        uint16_t with_deleted
-
-    ctypedef slurmdb_qos_cond slurmdb_qos_cond_t
-
-    # Events
-    ctypedef struct slurmdb_event_cond:
-        List cluster_list
-        uint32_t cpus_max
-        uint32_t cpus_min
-        uint16_t event_type
-        List node_list
-        time_t period_end
-        time_t period_start
-        List reason_list
-        List reason_uid_list
-        List state_list
-
-    ctypedef slurmdb_event_cond slurmdb_event_cond_t
-
-    ctypedef struct slurmdb_event_rec:
-        char *cluster
-        char *cluster_nodes
-        uint16_t event_type
-        char *node_name
-        time_t period_end
-        time_t period_start
-        char *reason
-        uint32_t reason_uid
-        uint16_t state
-        char *tres_str
-
-    ctypedef slurmdb_event_rec slurmdb_event_rec_t
-
-    ctypedef struct slurmdb_selected_step:
+    ctypedef struct slurmdb_selected_step_t:
         uint32_t array_task_id
         uint32_t jobid
         uint32_t stepid
 
-    ctypedef slurmdb_selected_step slurmdb_selected_step_t
+    # ctypedef struct slurmdb_step_rec_t
+    # ctypedef struct slurmdb_res_cond_t
+    # ctypedef struct slurmdb_res_rec_t
+    # ctypedef struct slurmdb_txn_cond_t
+    # ctypedef struct slurmdb_txn_rec_t
+    # ctypedef struct slurmdb_used_limits_t
+    # ctypedef struct slurmdb_user_cond_t
+    # ctypedef struct slurmdb_user_rec_t
+    # ctypedef struct slurmdb_update_object_t
+    # ctypedef struct slurmdb_wckey_cond_t
+    # ctypedef struct slurmdb_wckey_rec_t
+    # ctypedef struct slurmdb_print_tree_t
+    # ctypedef struct slurmdb_hierarchical_rec_t
+    # ***** report specific structures *****
+
+
 #    ctypedef sockaddr_in slurm_addr_t
-
-    ctypedef struct slurmdb_cluster_fed_t:
-        uint32_t id
-        char *name
-        void *recv
-        void *send
-        uint32_t state
-        uint32_t weight
-
-    ctypedef struct slurmdb_assoc_rec_t:
-        List accounting_list
-        char *acct
-        slurmdb_assoc_rec_t *assoc_next
-        slurmdb_assoc_rec_t *assoc_next_id
-        char *cluster
-        uint32_t def_qos_id
-        uint32_t grp_jobs
-        uint32_t grp_submit_jobs
-        char *grp_tres
-        uint64_t *grp_tres_ctld
-        char *grp_tres_mins
-        uint64_t *grp_tres_mins_ctld
-        char *grp_tres_run_mins
-        uint64_t *grp_tres_run_mins_ctld
-        uint64_t grp_wall
-        uint32_t id
-        uint16_t is_def
-        uint32_t lft
-        uint32_t max_jobs
-        uint32_t max_submit_jobs
-        char *max_tres_mins_pj
-        uint64_t *max_tres_mins_ctld
-        char *max_tres_run_mins
-        uint64_t *max_tres_run_mins_ctld
-        char *max_tres_pj
-        uint64_t *max_tres_ctld
-        char *max_tres_pn
-        uint64_t *max_tres_pn_ctld
-        uint32_t max_wall_pj
-        char *parent_acct
-        uint32_t parent_id
-        char *partition
-        List qos_list
-        uint32_t rgt
-        uint32_t shares_raw
-        uint32_t uid
-        slurmdb_assoc_usage_t *usage
-        char *user
-
-    ctypedef struct slurmdb_cluster_rec_t:
-        List accounting_list
-        uint16_t classification
-#        slurm_addr_t control_addr
-        char *control_host
-        uint32_t control_port
-        uint16_t dimensions
-        int *dim_size
-        slurmdb_cluster_fed_t fed
-        uint32_t flags
-#        pthread_mutex_t lock
-        char *name
-        char *nodes
-        uint32_t plugin_id_select
-        slurmdb_assoc_rec_t *root_assoc
-        uint16_t rpc_version
-        char *tres_str
 
     cdef extern slurmdb_cluster_rec_t *working_cluster_rec
 
@@ -2777,9 +2718,10 @@ cdef extern from 'slurm/slurmdb.h' nogil:
     # Accounting Storage
     #
 
-    cdef extern void *slurmdb_connection_get ()
-    cdef extern int slurmdb_connection_close (void **db_conn)
-    cdef extern List slurmdb_config_get (void *db_conn)
+    cdef extern void *slurmdb_connection_get()
+    cdef extern void *slurmdb_connection_get2(uint16_t *persist_conn_flags)
+    cdef extern int slurmdb_connection_close(void **db_conn)
+    cdef extern List slurmdb_config_get(void *db_conn)
 
     #
     # QOS
