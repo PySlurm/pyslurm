@@ -2781,8 +2781,6 @@ cdef extern void slurm_accounting_enforce_string (uint16_t enforce,
                                                   char *, int)
 cdef extern void slurm_api_clear_config ()
 cdef extern void slurm_api_set_conf_file (char *)
-cdef extern char *slurm_bg_block_state_string (uint16_t)
-cdef extern char *slurm_conn_type_string (enum)
 cdef extern uint16_t slurm_get_preempt_mode ()
 cdef extern char *slurm_job_reason_string (int inx)
 cdef extern int   slurm_job_state_num (char *state_name)
