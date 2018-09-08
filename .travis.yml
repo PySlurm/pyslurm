@@ -2,16 +2,16 @@ sudo: required
 language: python
 env:
   matrix:
-    - SLURM=18.08.0 CYTHON=0.28.5 CENTOS=7 PYTHON=3.6
-    - SLURM=18.08.0 CYTHON=0.28.5 CENTOS=7 PYTHON=3.5
-    - SLURM=18.08.0 CYTHON=0.28.5 CENTOS=7 PYTHON=3.4
-    - SLURM=18.08.0 CYTHON=0.28.5 CENTOS=7 PYTHON=2.7
-    - SLURM=18.08.0 CYTHON=0.28.5 CENTOS=6 PYTHON=2.6
+    - SLURM=18.08.0 CYTHON=0.28.5 PYTHON=3.6
+    - SLURM=18.08.0 CYTHON=0.28.5 PYTHON=3.5
+    - SLURM=18.08.0 CYTHON=0.28.5 PYTHON=3.4
+    - SLURM=18.08.0 CYTHON=0.28.5 PYTHON=2.7
+    - SLURM=18.08.0 CYTHON=0.28.5 PYTHON=2.6
 services:
   - docker
 before_install:
-  - docker pull giovtorres/docker-centos$CENTOS-slurm:$SLURM
-  - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos$CENTOS-slurm:$SLURM
+  - docker pull giovtorres/docker-centos7-slurm:$SLURM
+  - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos7-slurm:$SLURM
 install: true
 before_script:
   - docker exec slurm-$SLURM git clone --branch=$TRAVIS_BRANCH https://github.com/PySlurm/pyslurm.git
