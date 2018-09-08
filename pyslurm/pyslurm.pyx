@@ -11,16 +11,14 @@ from collections import defaultdict
 from pwd import getpwnam, getpwuid
 
 from libc.errno cimport errno, EAGAIN
-from libc.string cimport strlen, strcpy, memset, memcpy
+from libc.stddef cimport size_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 from libc.stdint cimport int64_t, uint64_t
 from libc.stdlib cimport malloc, free
+from libc.string cimport strlen, strcpy, memset, memcpy
 from posix.unistd cimport getuid, getgid
 
 from cpython cimport bool
-
-cdef extern from 'stdlib.h':
-    ctypedef long long size_t
 
 cdef extern from 'stdio.h':
     ctypedef struct FILE
@@ -55,36 +53,11 @@ cdef extern from *:
 cdef extern from "alps_cray.h" nogil:
     cdef int ALPS_CRAY_SYSTEM
 
-cdef extern from "<sys/types.h>" nogil:
-    ctypedef long id_t
-
-cdef extern from "<sys/resource.h>" nogil:
-    enum: PRIO_PROCESS
-    int getpriority(int, id_t)
-
-cdef extern from *:
-    # deprecated backwards compatiblity declaration
-    ctypedef char*  const_char_ptr  "const char*"
-    ctypedef char** const_char_pptr "const char**"
-
-cdef extern from "alps_cray.h" nogil:
-    cdef int ALPS_CRAY_SYSTEM
-
 try:
     import __builtin__
 except ImportError:
     # Python 3
     import builtins as __builtin__
-
-# cdef object _unicode
-# try:
-#     _unicode = __builtin__.unicode
-# except AttributeError:
-#     Python 3
-#     _unicode = __builtin__.str
-#
-# from cpython cimport PyErr_SetString, PyBytes_Check
-# from cpython cimport PyUnicode_Check, PyBytes_FromStringAndSize
 
 cimport slurm
 include "bluegene.pxi"
@@ -5531,7 +5504,6 @@ cdef class slurmdb_jobs:
         query.cluster_list = NULL
         query.cpus_max = 0
         query.cpus_min = 0
-        query.duplicates = 0
         query.exitcode = 0
         query.groupid_list = NULL
         query.jobname_list = NULL
@@ -5550,8 +5522,6 @@ cdef class slurmdb_jobs:
         query.used_nodes = NULL
         query.userid_list = NULL
         query.wckey_list = NULL
-        query.without_steps = 0
-        query.without_usage_truncation = 1
 
         dbconn = slurm.slurmdb_connection_get()
         JOBSList = slurm.slurmdb_jobs_get(dbconn, <slurm.slurmdb_job_cond_t*>&query)
