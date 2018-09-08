@@ -45,7 +45,6 @@ def test_config_scontrol():
     assert_equals(config_info["authtype"], sctl_dict["AuthType"])
     assert_equals(config_info["checkpoint_type"], sctl_dict["CheckpointType"])
     assert_equals(config_info["cluster_name"], sctl_dict["ClusterName"])
-    assert_equals(config_info["control_machine"], sctl_dict["ControlMachine"])
     assert_equals(config_info["core_spec_plugin"], sctl_dict["CoreSpecPlugin"])
     assert_equals(config_info["crypto_type"], sctl_dict["CryptoType"])
     assert_equals(config_info["crypto_type"], sctl_dict["CryptoType"])
