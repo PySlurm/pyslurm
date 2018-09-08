@@ -10,11 +10,6 @@ def test_config_get():
     assert_true(isinstance(config_info, dict))
 
 
-#def test_config_display_all():
-#    """Job: Test config().display_all() function."""
-#    config_display_all = pyslurm.config().display_all()
-
-
 def test_config_key_pairs():
     """Job: Test config().key_pairs() function and return type."""
     config_key_pairs = pyslurm.config().key_pairs()
@@ -50,7 +45,6 @@ def test_config_scontrol():
     assert_equals(config_info["authtype"], sctl_dict["AuthType"])
     assert_equals(config_info["checkpoint_type"], sctl_dict["CheckpointType"])
     assert_equals(config_info["cluster_name"], sctl_dict["ClusterName"])
-    assert_equals(config_info["control_addr"], sctl_dict["ControlAddr"])
     assert_equals(config_info["control_machine"], sctl_dict["ControlMachine"])
     assert_equals(config_info["core_spec_plugin"], sctl_dict["CoreSpecPlugin"])
     assert_equals(config_info["crypto_type"], sctl_dict["CryptoType"])

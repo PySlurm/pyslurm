@@ -5,35 +5,17 @@ import subprocess
 from nose.tools import assert_equals, assert_true
 from socket import gethostname
 
-def test_slurm_ping():
-    """Misc: Test slurm_ping() return."""
-    slurm_ping = pyslurm.slurm_ping()
-    assert_equals(slurm_ping, 0)
-
-
 def test_slurm_reconfigure():
     """Misc: Test slurm_reconfigure() return."""
     slurm_reconfigure = pyslurm.slurm_reconfigure()
     assert_equals(slurm_reconfigure, 0)
 
 
-def test_slurm_get_controllers():
-    """Misc: Test slurm_get_controllers()."""
-    controllers = pyslurm.get_controllers()
-    assert_equals(controllers[0], gethostname())
-
-
-def test_slurm_is_controller():
-    """Misc: Test slurm_is_controller()."""
-    controller = pyslurm.is_controller()
-    assert_equals(controller, "primary")
-
-
 def test_slurm_api_version():
     """Misc: Test slurm_api_version()."""
     ver = pyslurm.slurm_api_version()
-    assert_equals(ver[0], 17)
-    assert_equals(ver[1], 11)
+    assert_equals(ver[0], 18)
+    assert_equals(ver[1], 8)
 
 
 def test_slurm_load_slurmd_status():

@@ -40,7 +40,6 @@ def test_node_scontrol():
     assert_equals(test_node_info["alloc_mem"], int(sctl_dict["AllocMem"]))
     assert_equals(test_node_info["boards"], int(sctl_dict["Boards"]))
     assert_equals(test_node_info["alloc_cpus"], int(sctl_dict["CPUAlloc"]))
-    assert_equals(test_node_info["err_cpus"], int(sctl_dict["CPUErr"]))
     assert_equals(test_node_info["cpus"], int(sctl_dict["CPUTot"]))
     assert_equals(test_node_info["energy"]["consumed_energy"], int(sctl_dict["ConsumedJoules"]))
     assert_equals(test_node_info["cores"], int(sctl_dict["CoresPerSocket"]))
