@@ -9,13 +9,16 @@ from posix.types cimport time_t
 cdef extern from "slurm/slurm.h" nogil:
     enum:
         INFINITE
+        INFINITE8
         INFINITE16
         INFINITE64
         NO_VAL
+        NO_VAL8
         NO_VAL16
         NO_VAL64
         MAX_TASKS_PER_NODE
         MAX_JOB_ID
+        MAX_FED_CLUSTERS
 
     enum:
         CR_CORE
@@ -61,10 +64,10 @@ cdef extern from "slurm/slurm.h" nogil:
         SELECT_VIRTUAL_NODE_MODE
         SELECT_NAV_MODE
 
-    ctypedef struct llist:
+    ctypedef struct xlist:
         pass
 
-    ctypedef llist *List
+    ctypedef xlist *List
 
     ctypedef struct listIterator:
         pass

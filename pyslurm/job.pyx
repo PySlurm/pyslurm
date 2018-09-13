@@ -46,7 +46,7 @@ from libc.signal cimport SIGKILL
 from libc.time cimport difftime
 from libc.time cimport time as c_time
 from posix.types cimport pid_t, time_t
-from posix.wait cimport WIFSIGNALED, WTERMSIG, WEXITSTATUS
+from posix.wait cimport WIFSIGNALED, WTERMSIG, WEXITSTATUS, WIFEXITED
 
 # PySlurm imports
 from .c_job cimport *
@@ -206,8 +206,8 @@ cdef class Job:
 
         if WIFSIGNALED(self.derived_exit_code):
             term_sig = WTERMSIG(self.derived_exit_code)
-
-        exit_status = WEXITSTATUS(self.derived_exit_code)
+        elif WIFEXITED(self.derived_exit_code):
+            exit_status = WEXITSTATUS(self.derived_exit_code)
         return "%s:%s" % (exit_status, term_sig)
 
     @property

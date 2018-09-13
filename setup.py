@@ -15,9 +15,9 @@ from os import path
 VENDOR = "PySlurm"
 CYTHON_VERSION_MIN = "0.15"
 
-if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[:2] < (3, 3):
+if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[:2] < (3, 4):
     raise RuntimeError(
-        "Python >= 2.6 or >= 3.3 is required to run %s." % VENDOR
+        "Python >= 2.6 or >= 3.4 is required to run %s." % VENDOR
     )
 
 try:
@@ -42,7 +42,7 @@ SLURM_LIBRARY_PATH = "/usr/local/slurm/lib"
 pyslurm_build_commands = [
     "--with-slurm",
     "--with-slurm-libdir",
-    "--with-slurm-includes"
+    "--with-slurm-include"
 ]
 
 def parse_setuppy_commands():
@@ -54,7 +54,7 @@ def parse_setuppy_commands():
             --with-slurm=PATH           Where to look for Slurm, PATH points to
                                         the installation root
             --with-slurm-libdir=PATH    Where to look for libslurm.so
-            --with-slurm-includes=PATH  Where to look for slurm.h, slurm_errno.h
+            --with-slurm-include=PATH  Where to look for slurm.h, slurm_errno.h
                                         and slurmdb.h
 
             For help with building or installing PySlurm, please ask on the PySlurm
@@ -81,7 +81,10 @@ def parse_setuppy_commands():
 extensions = [
     Extension(
         "pyslurm/*",
-        ["pyslurm/*.pyx"],
+        #["pyslurm/*.pyx"],
+        [
+            "pyslurm/statistics.pyx",
+        ],
         include_dirs=[SLURM_INCLUDE_PATH],
         libraries=["slurmdb", "slurm"],
         library_dirs=[SLURM_LIBRARY_PATH]
@@ -98,16 +101,21 @@ def setup_package():
 
     setup (
         name="pyslurm",
-        version="17.02",
+        version="18.08",
         description="Python Bindings for Slurm",
         long_description=long_description,
-        maintainer = "PySlurm Developers",
-        maintainer_email = "pyslurm@googlegroups.com",
-        license= "GPL",
+        license= "GPLv2",
+        author = "Mark Roberts, Giovanni Torres, et al",
+        author_email = "pyslurm@googlegroups.com",
         url = "http://github.com/PySlurm/pyslurm",
-        author = "Mark Roberts",
+        keywords = ["HPC", "Batch Scheduler", "Resource Manager", "Slurm", "Cython"],
+        packages = ["pyslurm"],
+        platforms = ["Linux"],
+        ext_modules = cythonize(extensions),
+        cmdclass = {"build_ext": build_ext },
+        install_requires=["Cython"],
         classifiers = [
-            "Development Status :: 4 - Beta",
+            "Development Status :: 5 - Production/Stable",
             "Environment :: Console",
             "Intended Audience :: Developers",
             "Intended Audience :: System Administrators",
@@ -116,20 +124,17 @@ def setup_package():
             "Operating System :: POSIX :: Linux",
             "Programming Language :: Cython",
             "Programming Language :: Python",
+            "Programming Language :: Python :: 2",
             "Programming Language :: Python :: 2.6",
             "Programming Language :: Python :: 2.7",
-            "Programming Language :: Python :: 3.3",
+            "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3.4",
             "Programming Language :: Python :: 3.5",
+            "Programming Language :: Python :: 3.6",
             "Topic :: Software Development :: Libraries",
             "Topic :: Software Development :: Libraries :: Python Modules",
             "Topic :: System :: Distributed Computing"
-        ],
-        keywords = ["HPC", "Batch Scheduler", "Resource Manager", "Slurm", "Cython"],
-        packages = ["pyslurm"],
-        platforms = ["Linux"],
-        ext_modules = cythonize(extensions),
-    #    cmdclass = {"build_ext": build_ext },
+        ]
     )
 #    Entry-points:
 #    [console_scripts]

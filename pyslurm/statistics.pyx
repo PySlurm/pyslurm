@@ -18,8 +18,8 @@ Slurm API Functions
 
 This module declares and wraps the following Slurm API functions:
 
-    - slurm_get_statistics
     - slurm_free_stats_response_msg
+    - slurm_get_statistics
     - slurm_reset_statistics
 
 
@@ -48,38 +48,53 @@ cdef class Stats:
         readonly time_t req_time_start
         readonly uint32_t server_thread_count
         readonly uint32_t agent_queue_size
+        readonly uint32_t agent_count
+        readonly uint32_t dbd_agent_queue_size
+        readonly uint32_t gettimeofday_latency
         readonly uint32_t schedule_cycle_max
         readonly uint32_t schedule_cycle_last
         readonly uint32_t schedule_cycle_sum
         readonly uint32_t schedule_cycle_counter
         readonly uint32_t schedule_cycle_depth
-        readonly uint32_t schedule_queue_len
+        readonly uint32_t mean_cycle_schedule
+        readonly uint32_t mean_depth_cycle_schedule
+        readonly uint32_t cycles_per_minute
+        readonly uint32_t last_queue_len
         readonly uint32_t jobs_submitted
         readonly uint32_t jobs_started
         readonly uint32_t jobs_completed
         readonly uint32_t jobs_canceled
         readonly uint32_t jobs_failed
-        readonly uint32_t bf_backfilled_jobs
-        readonly uint32_t bf_last_backfilled_jobs
-        readonly uint32_t bf_cycle_counter
+        readonly uint32_t jobs_pending
+        readonly uint32_t jobs_running
+        readonly time_t job_states_ts
+        readonly uint32_t total_backfilled_jobs_slurm_start
+        readonly uint32_t total_backfilled_jobs_stats_cycle_start
+        readonly uint32_t total_backfilled_heterogeneous_job_components
+        readonly uint32_t total_cycles
         readonly uint64_t bf_cycle_sum
-        readonly uint32_t bf_cycle_last
-        readonly uint32_t bf_cycle_max
-        readonly uint32_t bf_last_depth
-        readonly uint32_t bf_last_depth_try
+        readonly uint32_t last_cycle
+        readonly uint32_t max_cycle
+        readonly uint32_t mean_cycle_backfill
+        readonly uint32_t last_depth_cycle
+        readonly uint32_t last_depth_cycle_try_sched
+        readonly uint32_t depth_mean
+        readonly uint32_t depth_mean_try_depth
         readonly uint32_t bf_depth_sum
         readonly uint32_t bf_depth_try_sum
-        readonly uint32_t bf_queue_len
+        readonly uint32_t last_queue_length
+        readonly unit32_t queue_length_mean
         readonly uint32_t bf_queue_len_sum
-        readonly time_t bf_when_last_cycle
+        readonly time_t last_cycle_when
         readonly uint32_t bf_active
         readonly uint32_t rpc_type_size
         readonly uint32_t rpc_user_size
         readonly dict rpc_type_stats
         readonly dict rpc_user_stats
+        readonly dict rpc_pending_stats
 
 
-cpdef get_statistics():
+def get_statistics():
     """
     Return scheduling statistics.
 
@@ -93,8 +108,8 @@ cpdef get_statistics():
         Stats: Statistics object with all scheduler statistics.
     """
     cdef:
+        stats_info_response_msg_t *buf
         stats_info_request_msg_t req
-        stats_info_response_msg_t *buf = NULL
         int rc
         uint32_t i
 
@@ -104,18 +119,13 @@ cpdef get_statistics():
     if rc == SLURM_SUCCESS:
         stats = Stats()
 
-        stats.parts_packed = buf.parts_packed
         stats.req_time = buf.req_time
         stats.req_time_start = buf.req_time_start
+
         stats.server_thread_count = buf.server_thread_count
         stats.agent_queue_size = buf.agent_queue_size
-
-        stats.schedule_cycle_max = buf.schedule_cycle_max
-        stats.schedule_cycle_last = buf.schedule_cycle_last
-        stats.schedule_cycle_sum = buf.schedule_cycle_sum
-        stats.schedule_cycle_counter = buf.schedule_cycle_counter
-        stats.schedule_cycle_depth = buf.schedule_cycle_depth
-        stats.schedule_queue_len = buf.schedule_queue_len
+        stats.agent_count = buf.agent_count
+        stats.dbd_agent_queue_size = buf.dbd_agent_queue_size
 
         stats.jobs_submitted = buf.jobs_submitted
         stats.jobs_started = buf.jobs_started
@@ -123,20 +133,55 @@ cpdef get_statistics():
         stats.jobs_canceled = buf.jobs_canceled
         stats.jobs_failed = buf.jobs_failed
 
-        stats.bf_backfilled_jobs = buf.bf_backfilled_jobs
-        stats.bf_last_backfilled_jobs = buf.bf_last_backfilled_jobs
-        stats.bf_cycle_counter = buf.bf_cycle_counter
+        stats.job_states_ts = buf.jobs_states_ts
+        stats.job_pending = buf.jobs_pending
+        stats.job_running = buf.jobs_running
+
+        stats.schedule_cycle_last = buf.schedule_cycle_last
+        stats.schedule_cycle_max = buf.schedule_cycle_max
+        stats.schedule_cycle_counter = buf.schedule_cycle_counter
+        stats.schedule_cycle_sum = buf.schedule_cycle_sum
+        stats.schedule_cycle_depth = buf.schedule_cycle_depth
+
+        if buf.schedule_cycle_counter > 0:
+            stats.mean_cycle_schedule = buf.schedule_cycle_sum / buf.schedule_cycle_counter
+            stats.mean_depth_cycle_schedule = buf.schedule_cycle_depth / buf.schedule_cycle_counter
+
+        if (buf.req_time - buf.req_time_start) > 60:
+            stats.cycles_per_minute = <uint32_t>(buf.schedule_cycle_counter / ((buf.req_time - buf.req_time_start) / 60))
+
+        stats.last_queue_len = buf.schedule_queue_len
+
+        stats.bf_active = buf.bf_active
+        stats.total_backfilled_jobs_slurm_start = buf.bf_backfilled_jobs
+        stats.total_backfilled_jobs_stats_cycle_start = buf.bf_last_backfilled_jobs
+        stats.total_backfilled_heterogeneous_job_components = buf.bf_backfilled_pack_jobs
+        stats.total_cycles = buf.bf_cycle_counter
+        stats.last_cycle_when = buf.bf_when_last_cycle
+        stats.last_cycle = buf.bf_cycle_last
+        stats.max_cycle = buf.bf_cycle_max
         stats.bf_cycle_sum = buf.bf_cycle_sum
-        stats.bf_cycle_last = buf.bf_cycle_last
-        stats.bf_cycle_max = buf.bf_cycle_max
-        stats.bf_last_depth = buf.bf_last_depth
-        stats.bf_last_depth_try = buf.bf_last_depth_try
+
+        if buf.bf_cycle_counter > 0:
+            stats.mean_cycle_backfill = buf.bf_cycle_sum / buf.bf_cycle_counter
+
+        stats.last_depth_cycle = buf.bf_last_depth
+        stats.last_depth_cycle_try_sched = buf.bf_last_depth_try
         stats.bf_depth_sum = buf.bf_depth_sum
         stats.bf_depth_try_sum = buf.bf_depth_try_sum
-        stats.bf_queue_len = buf.bf_queue_len
+
+        if buf.bf_cycle_counter > 0:
+            stats.depth_mean = buf.bf_depth_sum / buf.bf_cycle_counter
+            stats.depth_mean_try_depth = buf.bf_depth_try_sum / buf.bf_cycle_counter
+
+        stats.last_queue_length = buf.bf_queue_len
         stats.bf_queue_len_sum = buf.bf_queue_len_sum
-        stats.bf_when_last_cycle = buf.bf_when_last_cycle
-        stats.bf_active = buf.bf_active
+
+        if buf.bf_cycle_counter > 0:
+            stats.queue_length_mean = buf.bf_queue_len_sum / buf.bf_cycle_counter
+
+        stats.latency_for_gettimeofday = buf.gettimeofday_latency
+
 
         rpc_type_stats = {}
 
@@ -170,6 +215,17 @@ cpdef get_statistics():
                                                            buf.rpc_user_cnt[i])
             rpc_user_stats[rpc_user]["total_time"] = int(buf.rpc_user_time[i])
         stats.rpc_user_stats = rpc_user_stats
+
+        rpc_pending_stats = {}
+
+        for i in range(buf.rpc_queue_type_count):
+            rpc_queue_type = rpc_num2string(buf.rpc_queue_type_id[i])
+            rpc_pending_stats[rpc_queue_type] = {}
+            rpc_pending_stats[rpc_queue_type]["id"] = buf.rpc_queue_type_id[i]
+            rpc_pending_stats[rpc_queue_type]["count"] = buf.rpc_queue_count[i]
+        stats.rpc_pending_stats = rpc_pending_stats
+
+        # TODO: rpc_dump_count
 
         slurm_free_stats_response_msg(buf)
         buf = NULL
@@ -210,6 +266,8 @@ cdef rpc_num2string(uint16_t opcode):
     Given a protocol opcode, this function returns its string description
     mapping of the ``slurm_msg_type_t`` to its name.
 
+    rpc_num2string - src/common/slurm_protocol_defs.h
+
     Args:
         opcode (int): Protocol opcode
     Returns:
@@ -240,6 +298,12 @@ cdef rpc_num2string(uint16_t opcode):
         1020: "RESPONSE_ACCT_GATHER_ENERGY",
         1021: "REQUEST_LICENSE_INFO",
         1022: "RESPONSE_LICENSE_INFO",
+        1023: "REQUEST_SET_FS_DAMPENING_FACTOR",
+        1024: "RESPONSE_NODE_REGISTRATION",
+
+        1400: "DBD_MESSAGES_START",
+        1433: "PERSIST_RC",
+        2000: "DBD_MESSAGES_END",
 
         2001: "REQUEST_BUILD_INFO",
         2002: "RESPONSE_BUILD_INFO",
@@ -255,8 +319,8 @@ cdef rpc_num2string(uint16_t opcode):
         2012: "RESPONSE_ACCOUNTING_INFO",
         2013: "REQUEST_JOB_ID",
         2014: "RESPONSE_JOB_ID",
-        2015: "REQUEST_BLOCK_INFO",
-        2016: "RESPONSE_BLOCK_INFO",
+        2015: "DEFUNCT_REQUEST_BLOCK_INFO",
+        2016: "DEFUNCT_RESPONSE_BLOCK_INFO",
         2017: "REQUEST_TRIGGER_SET",
         2018: "REQUEST_TRIGGER_GET",
         2019: "REQUEST_TRIGGER_CLEAR",
@@ -285,10 +349,18 @@ cdef rpc_num2string(uint16_t opcode):
         2042: "RESPONSE_POWERCAP_INFO",
         2043: "REQUEST_ASSOC_MGR_INFO",
         2044: "RESPONSE_ASSOC_MGR_INFO",
-        2045: "REQUEST_SICP_INFO_DEFUNCT",
-        2046: "RESPONSE_SICP_INFO_DEFUNCT",
+        2045: "REQUEST_EVENT_LOG",
+        2046: "DEFUNCT_RESPONSE_SICP_INFO_DEFUNCT",
         2047: "REQUEST_LAYOUT_INFO",
         2048: "RESPONSE_LAYOUT_INFO",
+        2049: "REQUEST_FED_INFO",
+        2050: "RESPONSE_FED_INFO",
+        2051: "REQUEST_BATCH_SCRIPT",
+        2052: "RESPONSE_BATCH_SCRIPT",
+        2052: "REQUEST_CONTROL_STATUS",
+        2053: "RESPONSE_CONTROL_STATUS",
+        2054: "REQUEST_BURST_BUFFER_STATUS",
+        2055: "RESPONSE_BURST_BUFFER_STATUS",
 
         3001: "REQUEST_UPDATE_JOB",
         3002: "REQUEST_UPDATE_NODE",
@@ -299,7 +371,7 @@ cdef rpc_num2string(uint16_t opcode):
         3007: "RESPONSE_CREATE_RESERVATION",
         3008: "REQUEST_DELETE_RESERVATION",
         3009: "REQUEST_UPDATE_RESERVATION",
-        3010: "REQUEST_UPDATE_BLOCK",
+        3010: "DEFUNCT_REQUEST_UPDATE_BLOCK",
         3011: "REQUEST_UPDATE_FRONT_END",
         3012: "REQUEST_UPDATE_LAYOUT",
         3013: "REQUEST_UPDATE_POWERCAP",
@@ -319,8 +391,8 @@ cdef rpc_num2string(uint16_t opcode):
         4013: "RESPONSE_JOB_WILL_RUN",
         4014: "REQUEST_JOB_ALLOCATION_INFO",
         4015: "RESPONSE_JOB_ALLOCATION_INFO",
-        4016: "REQUEST_JOB_ALLOCATION_INFO_LITE",
-        4017: "RESPONSE_JOB_ALLOCATION_INFO_LITE",
+        4016: "DEFUNCT_REQUEST_JOB_ALLOCATION_INFO_LITE",
+        4017: "DEFUNCT_RESPONSE_JOB_ALLOCATION_INFO_LITE",
         4018: "REQUEST_UPDATE_JOB_TIME",
         4019: "REQUEST_JOB_READY",
         4020: "RESPONSE_JOB_READY",
@@ -328,6 +400,16 @@ cdef rpc_num2string(uint16_t opcode):
         4022: "REQUEST_JOB_NOTIFY",
         4023: "REQUEST_JOB_SBCAST_CRED",
         4024: "RESPONSE_JOB_SBCAST_CRED",
+        4025: "REQUEST_JOB_PACK_ALLOCATION",
+        4026: "RESPONSE_JOB_PACK_ALLOCATION",
+        4027: "REQUEST_JOB_PACK_ALLOC_INFO",
+        4028: "REQUEST_SUBMIT_BATCH_JOB_PACK",
+
+        4500: "REQUEST_CTLD_MULT_MSG",
+        4501: "RESPONSE_CTLD_MULT_MSG",
+        4502: "REQUEST_SIB_MSG",
+        4503: "REQUEST_SIB_JOB_LOCK",
+        4504: "REQUEST_SIB_JOB_UNLOCK",
 
         5001: "REQUEST_JOB_STEP_CREATE",
         5002: "RESPONSE_JOB_STEP_CREATE",
@@ -377,7 +459,7 @@ cdef rpc_num2string(uint16_t opcode):
         6007: "REQUEST_REATTACH_TASKS",
         6008: "RESPONSE_REATTACH_TASKS",
         6009: "REQUEST_KILL_TIMELIMIT",
-        6010: "REQUEST_SIGNAL_JOB",
+        6010: "DEFUNCT_REQUEST_SIGNAL_JOB",
         6011: "REQUEST_TERMINATE_JOB",
         6012: "MESSAGE_EPILOG_COMPLETE",
         6013: "REQUEST_ABORT_JOB",
@@ -396,6 +478,7 @@ cdef rpc_num2string(uint16_t opcode):
         7006: "SRUN_EXEC",
         7007: "SRUN_STEP_MISSING",
         7008: "SRUN_REQUEST_SUSPEND",
+        7009: "SRUN_STEP_SIGNAL",
 
         7201: "PMI_KVS_PUT_REQ",
         7202: "PMI_KVS_PUT_RESP",
@@ -404,12 +487,15 @@ cdef rpc_num2string(uint16_t opcode):
 
         8001: "RESPONSE_SLURM_RC",
         8002: "RESPONSE_SLURM_RC_MSG",
+        8003: "RESPONSE_SLURM_REROUTE_MSG",
 
         9001: "RESPONSE_FORWARD_FAILED",
 
         10001: "ACCOUNTING_UPDATE_MSG",
         10002: "ACCOUNTING_FIRST_REG",
         10003: "ACCOUNTING_REGISTER_CTLD",
+        10004: "ACCOUNTING_TRES_CHANGE_DB",
+        10005: "ACCOUNTING_NODES_CHANGE_DB",
 
         11001: "MESSAGE_COMPOSITE",
         11002: "RESPONSE_MESSAGE_COMPOSITE"
