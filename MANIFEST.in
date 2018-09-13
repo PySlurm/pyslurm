@@ -1,0 +1,7 @@
+include pyslurm/alps_cray.h
+include pyslurm/slurm_defines.pxi
+include pyslurm/slurm.pxd
+include README.rst
+graft examples
+graft tests
+graft doc
