@@ -2,10 +2,11 @@
 *.pyc
 
 # Python 3 bytecode compiled folder
-pyslurm/__pycache__
+*/__pycache__
 
 # Distutils build folder
 build/
+dist/
 
 # Python egg metadata
 *.egg-info
