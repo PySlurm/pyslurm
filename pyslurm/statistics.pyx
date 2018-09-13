@@ -83,7 +83,7 @@ cdef class Stats:
         readonly uint32_t bf_depth_sum
         readonly uint32_t bf_depth_try_sum
         readonly uint32_t last_queue_length
-        readonly unit32_t queue_length_mean
+        readonly uint32_t queue_length_mean
         readonly uint32_t bf_queue_len_sum
         readonly time_t last_cycle_when
         readonly uint32_t bf_active
@@ -133,7 +133,7 @@ def get_statistics():
         stats.jobs_canceled = buf.jobs_canceled
         stats.jobs_failed = buf.jobs_failed
 
-        stats.job_states_ts = buf.jobs_states_ts
+        stats.job_states_ts = buf.job_states_ts
         stats.job_pending = buf.jobs_pending
         stats.job_running = buf.jobs_running
 
