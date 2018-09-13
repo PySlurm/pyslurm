@@ -8,7 +8,8 @@ from __future__ import print_function
 import sys
 import textwrap
 
-from distutils.core import setup, Extension
+from setuptools import setup
+from distutils.core import Extension
 from distutils.version import LooseVersion
 from os import path
 
@@ -22,6 +23,7 @@ if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[:2] < (3, 4):
 
 try:
     from Cython.Build import cythonize
+    from Cython.Distutils import build_ext
     from Cython.Compiler.Version import version as cython_version
 
     if LooseVersion(cython_version) < LooseVersion(CYTHON_VERSION_MIN):
