@@ -2,7 +2,7 @@
 PySlurm: Python Bindings for Slurm
 ==================================
 
-.. image:: https://travis-ci.org/PySlurm/pyslurm.svg?branch=dev-17.02-props
+.. image:: https://travis-ci.org/PySlurm/pyslurm.svg?branch=18.08.0-v2
    :target: https://travis-ci.org/PySlurm/pyslurm
    :alt: Build Status
 
@@ -38,21 +38,7 @@ Slurm Support
 +-----------------+-----------------+
 | Slurm Tag       | PySlurm Branch  |
 +=================+=================+
-| slurm-17-02-0-1 | dev-17.02-props |
-+-----------------+-----------------+
-| slurm-17-02-1-1 | dev-17.02-props |
-+-----------------+-----------------+
-| slurm-17-02-1-2 | dev-17.02-props |
-+-----------------+-----------------+
-| slurm-17-02-2-1 | dev-17.02-props |
-+-----------------+-----------------+
-| slurm-17-02-3-1 | dev-17.02-props |
-+-----------------+-----------------+
-| slurm-17-02-4-1 | dev-17.02-props |
-+-----------------+-----------------+
-| slurm-17-02-5-1 | dev-17.02-props |
-+-----------------+-----------------+
-| slurm-17-02-6-1 | dev-17.02-props |
+| slurm-18-08-0-1 | 18.08.0-v2      |
 +-----------------+-----------------+
 
 
@@ -155,10 +141,6 @@ directory or where the Slurm libraries and Slurm include files are :
     * python setup.py build
     * python setup.py install
 
-#. Indicate Blue Gene type (L/P/Q) on build line:
-
-    * --bgl or --bgp or --bgq
-
 #. Slurm root directory (Alternate installation directory):
 
     * python setup.py build --slurm=PATH_TO_SLURM_DIR
@@ -177,6 +159,19 @@ directory or where the Slurm libraries and Slurm include files are :
 Documentation 
 =============
 
+
+The API documentation is hosted at https://pyslurm.github.io.
+
+To build the docs locally, use `Sphinx <http://www.sphinx-doc.org>`_ to
+generate the documentation from the reStructuredText based docstrings found in
+the pyslurm module once it is built:
+
+.. code-block:: console
+
+    cd doc
+    make clean
+    make html
+
 ============
 Contributing
 ============
@@ -185,7 +180,8 @@ Contributing
 Authors
 =======
 
-Mark Roberts and Giovanni Torres
+* `Mark Roberts <https://github.com/gingergeeks>`_
+* `Giovanni Torres <https://github.com/giovtorres>`_
 
 ====
 Help
