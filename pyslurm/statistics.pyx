@@ -50,7 +50,7 @@ cdef class Stats:
         readonly uint32_t agent_queue_size
         readonly uint32_t agent_count
         readonly uint32_t dbd_agent_queue_size
-        readonly uint32_t gettimeofday_latency
+        readonly uint32_t latency_for_gettimeofday
         readonly uint32_t schedule_cycle_max
         readonly uint32_t schedule_cycle_last
         readonly uint32_t schedule_cycle_sum
@@ -134,8 +134,8 @@ def get_statistics():
         stats.jobs_failed = buf.jobs_failed
 
         stats.job_states_ts = buf.job_states_ts
-        stats.job_pending = buf.jobs_pending
-        stats.job_running = buf.jobs_running
+        stats.jobs_pending = buf.jobs_pending
+        stats.jobs_running = buf.jobs_running
 
         stats.schedule_cycle_last = buf.schedule_cycle_last
         stats.schedule_cycle_max = buf.schedule_cycle_max
