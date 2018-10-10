@@ -11,7 +11,7 @@ Overview
 Currently PySlurm is under development to move from it's thin layer on top of
 the Slurm C API to an object orientated interface.
 
-This release is based on Slurm 17.11.
+This release is based on Slurm 17.11. For Slurm 18.08, please see the `18.08.0 branch <https://github.com/PySlurm/pyslurm/tree/18.08.0>_`.
 
 Prerequisites
 *************
