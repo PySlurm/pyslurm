@@ -16,9 +16,9 @@ This release is based on Slurm 17.11. For Slurm 18.08, please see the `18.08.0 b
 Prerequisites
 *************
 
-* `Slurm <http://www.schedmd.com>`_
-* `Python <http://www.python.org>`_
-* `Cython <http://www.cython.org>`_
+* `Slurm <https://www.schedmd.com>`_
+* `Python <https://www.python.org>`_
+* `Cython <http://cython.org>`_
 
 This PySlurm branch has been tested with:
 
