@@ -15,7 +15,7 @@ CYTHON_VERSION_MIN = "0.15"
 
 # Slurm min/max supported (hex) versions
 __min_slurm_hex_version__ = "0x120800"
-__max_slurm_hex_version__ = "0x120801"
+__max_slurm_hex_version__ = "0x120802"
 
 here = os.path.abspath(os.path.dirname(__file__))
 
