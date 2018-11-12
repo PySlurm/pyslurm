@@ -2511,8 +2511,17 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def slurm_job_batch_script(uint32_t jobid):
-        return slurm.slurm_job_batch_script(slurm.stdout, jobid)
+    def slurm_job_batch_script(self, jobid):
+        """
+        Retrieve the batch script for a given jobid.
+        """
+        if isinstance(jobid, int) or isinstance(jobid, long):
+            jobid = str(jobid).encode("UTF-8")
+        else:
+            jobid = jobid.encode("UTF-8")
+
+        jobid_xlate = slurm.slurm_xlate_job_id(jobid)
+        return slurm.slurm_job_batch_script(slurm.stdout, jobid_xlate)
 
     cdef int fill_job_desc_from_opts(self, dict job_opts, slurm.job_desc_msg_t *desc):
         """
