@@ -1961,12 +1961,11 @@ cdef class job:
     def find_id(self, jobid):
         u"""Retrieve job ID data.
 
-        This method calls slurm_xlate_job_id() to convert a jobid string to a
-        jobid int.  For example, a subjob of 123_4 would translate to 124.
-        Then, slurm_load_job() gets all job_table records associated with that
-        specific job. This works for single jobs and job arrays.
+        This method accepts both string and integer formats of the jobid.  It
+        calls slurm_xlate_job_id() to convert the jobid appropriately.
+        This works for single jobs and job arrays.
 
-        :param str jobID: Job id key string to search
+        :param str jobid: Job id key string to search
         :returns: List of dictionary of values for given job id
         :rtype: `list`
         """
@@ -2514,6 +2513,10 @@ cdef class job:
     def slurm_job_batch_script(self, jobid):
         """
         Retrieve the batch script for a given jobid.
+
+        :param str jobid: Job id key string to search
+        :returns: String output of a jobid's batch script
+        :rtype: `str`
         """
         if isinstance(jobid, int) or isinstance(jobid, long):
             jobid = str(jobid).encode("UTF-8")
