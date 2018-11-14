@@ -2805,3 +2805,4 @@ cdef extern int slurm_env_array_overwrite_fmt(char ***array_ptr, const_char_ptr 
 
 cdef extern char *slurm_get_checkpoint_dir()
 cdef extern void slurm_sprint_cpu_bind_type(char *string, cpu_bind_type_t cpu_bind_type)
+cdef extern void slurm_destroy_char(void *object)

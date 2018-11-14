@@ -5256,6 +5256,18 @@ cdef class slurmdb_jobs:
         u"""Destructor method."""
         pass
 
+#    def get(self, jobids=[], starttime=0, endtime=0):
+#        u"""Get Slurmdb information about some jobs.
+#
+#        :param jobids: Ids of the jobs to search. [] for any id
+#        :param starttime: Select jobs eligible after this timestamp
+#        :param endtime: Select jobs eligible before this timestamp
+#        :returns: Dictionary whose key is the JOBS ID
+#        :rtype: `dict`
+#        """
+#        return self.__get(jobids, starttime, endtime)
+#
+#    cpdef __get(self, list jobids, time_t starttime, time_t endtime):
     def get(self, jobids=[], starttime=0, endtime=0):
         u"""Get Slurmdb information about some jobs.
 
@@ -5265,9 +5277,6 @@ cdef class slurmdb_jobs:
         :returns: Dictionary whose key is the JOBS ID
         :rtype: `dict`
         """
-        return self.__get(jobids, starttime, endtime)
-
-    cpdef __get(self, list jobids, time_t starttime, time_t endtime):
         cdef:
             slurm.ListIterator iters = NULL
             int i = 0
@@ -5279,6 +5288,7 @@ cdef class slurmdb_jobs:
             slurm.slurmdb_job_cond_t query
             slurm.List query_step_list = slurm.slurm_list_create(slurm.slurmdb_destroy_selected_step)
             slurm.slurmdb_selected_step_t* selstep
+
         for j in jobids:
             selstep = <slurm.slurmdb_selected_step_t*> slurm.xmalloc(sizeof(slurm.slurmdb_selected_step_t))
             selstep.array_task_id = slurm.NO_VAL
@@ -5311,6 +5321,7 @@ cdef class slurmdb_jobs:
         query.wckey_list = NULL
 
         dbconn = slurm.slurmdb_connection_get()
+        # NOTE: Fails here
         JOBSList = slurm.slurmdb_jobs_get(dbconn, <slurm.slurmdb_job_cond_t*>&query)
         slurm.slurm_list_destroy(query_step_list)
 
@@ -5545,36 +5556,26 @@ cdef class slurmdb_clusters:
     u"""Class to access Slurmdbd Clusters information."""
 
     cdef:
+        void *db_conn
         slurm.slurmdb_cluster_cond_t *cluster_cond
-        void *dbconn
-        dict _CLUSTERSDict
-        slurm.List _CLUSTERSList
 
     def __cinit__(self):
-        self.dbconn = <void *>NULL
-        self._CLUSTERSDict = {}
-        self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>NULL
+        self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
+        slurm.slurmdb_init_cluster_cond(self.cluster_cond, 0)
 
     def __dealloc__(self):
-        self.__destroy()
-
-    cpdef __destroy(self):
-        u"""Destructor method."""
-        self._CLUSTERSDict = {}
-        if self.cluster_cond != NULL:
-            slurm.slurmdb_destroy_cluster_cond(self.cluster_cond)
+        slurm.slurmdb_destroy_cluster_cond(self.cluster_cond)
 
     def set_cluster_condition(self, start_time, end_time):
-        u"""Limit the next get() call to clusters that existed after and before a certain time.
+        u"""Limit the next get() call to clusters that existed after and before
+        a certain time.
 
         :param start_time: Select clusters that existed after this timestamp
         :param end_time: Select clusters that existed before this timestamp
         """
-        self.__set_cluster_condition(start_time, end_time)
-
-    cpdef __set_cluster_condition(self, slurm.time_t start_time, slurm.time_t end_time):
         if self.cluster_cond == NULL:
             self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
+
         if self.cluster_cond != NULL:
             slurm.slurmdb_init_cluster_cond(self.cluster_cond, 0)
             self.cluster_cond.with_deleted = 1
@@ -5584,74 +5585,63 @@ cdef class slurmdb_clusters:
         else:
             raise MemoryError()
 
-    cpdef int __load(self) except? -1:
-        cdef:
-            int apiError = 0
-            void* dbconn = slurm.slurmdb_connection_get()
-            slurm.List CLUSTERSList = slurm.slurmdb_clusters_get(dbconn, self.cluster_cond)
-
-        if CLUSTERSList is NULL:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.slurm_strerror(apiError), apiError)
-        else:
-            self._CLUSTERSList = CLUSTERSList
-
-        slurm.slurmdb_connection_close(&dbconn)
-        return 0
-
     def get(self):
         u"""Get slurm clusters information.
 
         :returns: Dictionary whose keys are the clusters ids
         :rtype: `dict`
         """
-        self.__load()
-        self.__get()
-        return self._CLUSTERSDict
-
-    cpdef __get(self):
         cdef:
-            slurm.List clusters_list = NULL
+            slurm.List clusters_list
             slurm.ListIterator iters = NULL
+            slurm.slurmdb_cluster_rec_t *cluster = NULL
+            int rc = slurm.SLURM_SUCCESS
             int i = 0
-            int listNum = 0
-            dict C_dict = {}
+            int j = 0
+            int listNum
 
-        if self._CLUSTERSList is not NULL:
-            listNum = slurm.slurm_list_count(self._CLUSTERSList)
-            iters = slurm.slurm_list_iterator_create(self._CLUSTERSList)
+        Cluster_dict = {}
+        cluster_list = slurm.slurmdb_clusters_get(self.db_conn, self.cluster_cond)
+
+        if cluster_list is not NULL:
+            listNum = slurm.slurm_list_count(cluster_list)
+            iters = slurm.slurm_list_iterator_create(cluster_list)
+
             for i in range(listNum):
                 cluster = <slurm.slurmdb_cluster_rec_t *>slurm.slurm_list_next(iters)
+                Cluster_rec_dict = {}
 
-                # CLUSTERS infos
-                CLUSTERS_info = {}
                 if cluster is not NULL:
-                    cluster_name = cluster.name
-                    CLUSTERS_info[u'name'] = slurm.stringOrNone(cluster.name, '')
-                    CLUSTERS_info[u'nodes'] = slurm.stringOrNone(cluster.nodes, '')
-                    CLUSTERS_info[u'control_host'] = slurm.stringOrNone(cluster.control_host, '')
-                    CLUSTERS_info[u'tres'] = slurm.stringOrNone(cluster.tres_str, '')
-                    CLUSTERS_info[u'control_port'] = cluster.control_port
-                    CLUSTERS_info[u'rpc_version'] = cluster.rpc_version
-                    CLUSTERS_info[u'plugin_id_select'] = cluster.plugin_id_select
-                    CLUSTERS_info[u'flags'] = cluster.flags
-                    CLUSTERS_info[u'dimensions'] = cluster.dimensions
-                    CLUSTERS_info[u'classification'] = cluster.classification
+                    cluster_name = slurm.stringOrNone(cluster.name, '')
+                    Cluster_rec_dict[u'name'] = cluster_name
+                    Cluster_rec_dict[u'nodes'] = slurm.stringOrNone(cluster.nodes, '')
+                    Cluster_rec_dict[u'control_host'] = slurm.stringOrNone(cluster.control_host, '')
+                    Cluster_rec_dict[u'tres'] = slurm.stringOrNone(cluster.tres_str, '')
+                    Cluster_rec_dict[u'control_port'] = cluster.control_port
+                    Cluster_rec_dict[u'rpc_version'] = cluster.rpc_version
+                    Cluster_rec_dict[u'plugin_id_select'] = cluster.plugin_id_select
+                    Cluster_rec_dict[u'flags'] = cluster.flags
+                    Cluster_rec_dict[u'dimensions'] = cluster.dimensions
+                    Cluster_rec_dict[u'classification'] = cluster.classification
+
                     if cluster.accounting_list != NULL:
                         num_acct = slurm.slurm_list_count(cluster.accounting_list)
                         acct_iters = slurm.slurm_list_iterator_create(cluster.accounting_list)
                         acct_dict = {}
-                        CLUSTERS_info[u'num_acct'] = num_acct
+                        Cluster_rec_dict[u'num_acct'] = num_acct
+
                         for j in range(num_acct):
                             acct_tres = <slurm.slurmdb_cluster_accounting_rec_t *>slurm.slurm_list_next(acct_iters)
                             if acct_tres is not NULL:
                                 acct_tres_dict = {}
                                 acct_tres_rec = <slurm.slurmdb_tres_rec_t>acct_tres.tres_rec
                                 acct_tres_id = acct_tres_rec.id
+
                                 if (acct_tres_rec.name is not NULL):
                                     acct_tres_dict[u'name'] = slurm.stringOrNone(acct_tres_rec.name,'')
                                 if (acct_tres_rec.type is not NULL):
                                     acct_tres_dict[u'type'] = slurm.stringOrNone(acct_tres_rec.type,'')
+
                                 acct_tres_dict[u'rec_count'] = acct_tres_rec.rec_count
                                 acct_tres_dict[u'count'] = acct_tres_rec.count
                                 acct_tres_dict[u'alloc_secs'] = acct_tres.alloc_secs
@@ -5662,14 +5652,16 @@ cdef class slurmdb_clusters:
                                 acct_tres_dict[u'over_secs'] = acct_tres.over_secs
                                 acct_tres_dict[u'period_start'] = acct_tres.period_start
                                 acct_dict[acct_tres_id] = acct_tres_dict
-                        CLUSTERS_info[u'accounting'] = acct_dict
+
+                        Cluster_rec_dict[u'accounting'] = acct_dict
                         slurm.slurm_list_iterator_destroy(acct_iters)
-                    C_dict[cluster_name] = CLUSTERS_info
+
+                    Cluster_dict[cluster_name] = Cluster_rec_dict
 
             slurm.slurm_list_iterator_destroy(iters)
-            slurm.slurm_list_destroy(self._CLUSTERSList)
-        self._CLUSTERSDict = C_dict
+            slurm.slurm_list_destroy(cluster_list)
 
+        return Cluster_dict
 
 #
 # slurmdbd Events Class
