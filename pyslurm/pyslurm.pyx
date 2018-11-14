@@ -5534,16 +5534,13 @@ cdef class slurmdb_jobs:
     u"""Class to access Slurmdbd Jobs information."""
 
     cdef:
-        pass
+        void* db_conn
+        slurm.slurmdb_job_cond_t *job_cond
 
     def __cinit__(self):
-        pass
+        self.job_cond = <slurm.slurmdb_job_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_job_cond_t))
 
     def __dealloc__(self):
-        self.__destroy()
-
-    cpdef __destroy(self):
-        u"""Destructor method."""
         pass
 
     def get(self, jobids=[], starttime=0, endtime=0):
@@ -5559,60 +5556,18 @@ cdef class slurmdb_jobs:
 
     cpdef __get(self, list jobids, time_t starttime, time_t endtime):
         cdef:
-            slurm.ListIterator iters = NULL
             int i = 0
             int listNum = 0
             dict J_dict = {}
             int apiError = 0
             slurm.List JOBSList
-            void* dbconn
-            slurm.slurmdb_job_cond_t query
-            slurm.List query_step_list = slurm.slurm_list_create(slurm.slurmdb_destroy_selected_step)
-            slurm.slurmdb_selected_step_t* selstep
-        for j in jobids:
-            selstep = <slurm.slurmdb_selected_step_t*> slurm.xmalloc(sizeof(slurm.slurmdb_selected_step_t))
-            selstep.array_task_id = slurm.NO_VAL
-            selstep.stepid = slurm.NO_VAL
-            selstep.jobid = j
-            slurm.slurm_list_append(query_step_list, selstep);
+            slurm.ListIterator iters = NULL
 
-        query.acct_list = NULL
-        query.associd_list = NULL
-        query.cluster_list = NULL
-        query.cpus_max = 0
-        query.cpus_min = 0
-        query.duplicates = 0
-        query.exitcode = 0
-        query.groupid_list = NULL
-        query.jobname_list = NULL
-        query.nodes_max = 0
-        query.nodes_min = 0
-        query.partition_list = NULL
-        query.qos_list = NULL
-        query.resv_list = NULL
-        query.resvid_list = NULL
-        query.state_list = NULL
-        query.step_list = query_step_list
-        query.timelimit_max = 0
-        query.timelimit_min = 0
-        query.usage_end = endtime
-        query.usage_start = starttime
-        query.used_nodes = NULL
-        query.userid_list = NULL
-        query.wckey_list = NULL
-        query.without_steps = 0
-        query.without_usage_truncation = 1
-
-        dbconn = slurm.slurmdb_connection_get()
-        JOBSList = slurm.slurmdb_jobs_get(dbconn, <slurm.slurmdb_job_cond_t*>&query)
-        slurm.slurm_list_destroy(query_step_list)
+        JOBSList = slurm.slurmdb_jobs_get(self.db_conn, self.job_cond)
 
         if JOBSList is NULL:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.slurm_strerror(apiError), apiError)
-
-        slurm.slurmdb_connection_close(&dbconn)
-
 
         listNum = slurm.slurm_list_count(JOBSList)
         iters = slurm.slurm_list_iterator_create(JOBSList)
@@ -5656,33 +5611,9 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'show_full'] = job.show_full
                 JOBS_info[u'start'] = job.start
                 JOBS_info[u'state'] = job.state
-                job_statistics = <slurm.slurmdb_stats_t> job.stats
-                JOBS_info[u'stat_actual_cpufreq'] = job_statistics.act_cpufreq
-                JOBS_info[u'stat_cpu_ave'] = job_statistics.cpu_ave
-                JOBS_info[u'stat_consumed_energy'] = job_statistics.consumed_energy
-                JOBS_info[u'stat_cpu_min'] = job_statistics.cpu_min
-                JOBS_info[u'stat_cpu_min_nodeid'] = job_statistics.cpu_min_nodeid
-                JOBS_info[u'stat_cpu_min_taskid'] = job_statistics.cpu_min_taskid
-                JOBS_info[u'stat_disk_read_ave'] = job_statistics.disk_read_ave
-                JOBS_info[u'stat_disk_read_max'] = job_statistics.disk_read_max
-                JOBS_info[u'stat_disk_read_max_nodeid'] = job_statistics.disk_read_max_nodeid
-                JOBS_info[u'stat_disk_read_max_taskid'] = job_statistics.disk_read_max_taskid
-                JOBS_info[u'stat_disk_write_ave'] = job_statistics.disk_write_ave
-                JOBS_info[u'stat_disk_write_max'] = job_statistics.disk_write_max
-                JOBS_info[u'stat_disk_write_max_nodeid'] = job_statistics.disk_write_max_nodeid
-                JOBS_info[u'stat_disk_write_max_taskid'] = job_statistics.disk_write_max_taskid
-                JOBS_info[u'stat_pages_ave'] = job_statistics.pages_ave
-                JOBS_info[u'stat_pages_max'] = job_statistics.pages_max
-                JOBS_info[u'stat_pages_max_nodeid'] = job_statistics.pages_max_nodeid
-                JOBS_info[u'stat_pages_max_taskid'] = job_statistics.pages_max_taskid
-                JOBS_info[u'stat_rss_ave'] = job_statistics.rss_ave
-                JOBS_info[u'stat_rss_max'] = job_statistics.rss_max
-                JOBS_info[u'stat_rss_max_nodeid'] = job_statistics.rss_max_nodeid
-                JOBS_info[u'stat_rss_max_taskid'] = job_statistics.rss_max_taskid
-                JOBS_info[u'stat_vsize_ave'] = job_statistics.vsize_ave
-                JOBS_info[u'stat_vsize_max'] = job_statistics.vsize_max
-                JOBS_info[u'stat_vize_max_nodeid'] = job_statistics.vsize_max_nodeid
-                JOBS_info[u'stat_vsize_max_taskid'] = job_statistics.vsize_max_taskid
+
+                JOBS_info[u'stat_actual_cpufreq'] = job.stats.act_cpufreq
+
                 JOBS_info[u'steps'] = "Not filled, string should be handled"
                 JOBS_info[u'submit'] = job.submit
                 JOBS_info[u'suspended'] = job.suspended
