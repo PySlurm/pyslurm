@@ -5563,9 +5563,6 @@ cdef class slurmdb_jobs:
         :returns: Dictionary whose key is the JOBS ID
         :rtype: `dict`
         """
-        return self.__get(jobids, starttime, endtime)
-
-    cpdef __get(self, list jobids, time_t starttime, time_t endtime):
         cdef:
             int i = 0
             int listNum = 0
