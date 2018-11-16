@@ -112,6 +112,7 @@ cdef extern from 'slurm/slurm_errno.h' nogil:
     enum:
         ESLURM_ERROR_ON_DESC_TO_RECORD_COPY
         ESLURM_NODES_BUSY
+        ESLURM_INVALID_TIME_VALUE
 
     cdef extern char * slurm_strerror (int)
     cdef void slurm_seterrno (int)
@@ -2806,3 +2807,10 @@ cdef extern int slurm_env_array_overwrite_fmt(char ***array_ptr, const_char_ptr 
 cdef extern char *slurm_get_checkpoint_dir()
 cdef extern void slurm_sprint_cpu_bind_type(char *string, cpu_bind_type_t cpu_bind_type)
 cdef extern void slurm_destroy_char(void *object)
+cdef extern int slurm_addto_step_list(List step_list, char *names)
+cdef extern time_t slurm_parse_time(char *time_str, int past)
+cdef extern int slurm_time_str2mins(const_char_ptr string)
+cdef extern int slurm_time_str2secs(const_char_ptr string)
+cdef extern void slurm_secs2time_str(time_t time, char *string, int size)
+cdef extern void slurm_mins2time_str(uint32_t time, char *string, int size)
+cdef extern char *slurm_mon_abbr(int mon)
