@@ -5546,7 +5546,18 @@ cdef class slurmdb_jobs:
     def get(self, jobids=[], starttime=0, endtime=0):
         u"""Get Slurmdb information about some jobs.
 
-        :param jobids: Ids of the jobs to search. [] for any id
+        Input formats for start and end times:
+        *   today or tomorrow
+        *   midnight, noon, teatime (4PM)
+        *   HH:MM [AM|PM]
+        *   MMDDYY or MM/DD/YY or MM.DD.YY
+        *   YYYY-MM-DD[THH[:MM[:SS]]]
+        *   now + count [minutes | hours | days | weeks]
+        *
+        Invalid time input results in message to stderr and return value of
+        zero.
+
+        :param jobids: Ids of the jobs to search. Defaults to all jobs.
         :param starttime: Select jobs eligible after this timestamp
         :param endtime: Select jobs eligible before this timestamp
         :returns: Dictionary whose key is the JOBS ID
@@ -5558,10 +5569,31 @@ cdef class slurmdb_jobs:
         cdef:
             int i = 0
             int listNum = 0
-            dict J_dict = {}
             int apiError = 0
+            dict J_dict = {}
             slurm.List JOBSList
             slurm.ListIterator iters = NULL
+
+        if jobids:
+            self.job_cond.step_list = slurm.slurm_list_create(NULL)
+            for _jobid in jobids:
+                if isinstance(_jobid, int) or isinstance(_jobid, long):
+                    _jobid = str(_jobid).encode("UTF-8")
+                else:
+                    _jobid = _jobid.encode("UTF-8")
+                slurm.slurm_addto_step_list(self.job_cond.step_list, _jobid)
+
+        if starttime:
+            self.job_cond.usage_start = slurm.slurm_parse_time(starttime, 1)
+            errno = slurm.slurm_get_errno()
+            if errno == slurm.ESLURM_INVALID_TIME_VALUE:
+                raise ValueError(slurm.slurm_strerror(errno), errno)
+
+        if endtime:
+            self.job_cond.usage_end = slurm.slurm_parse_time(endtime, 1)
+            errno = slurm.slurm_get_errno()
+            if errno == slurm.ESLURM_INVALID_TIME_VALUE:
+                raise ValueError(slurm.slurm_strerror(errno), errno)
 
         JOBSList = slurm.slurmdb_jobs_get(self.db_conn, self.job_cond)
 
