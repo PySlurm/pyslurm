@@ -5599,24 +5599,14 @@ cdef class slurmdb_events:
     u"""Class to access Slurmdbd events information."""
 
     cdef:
-        slurm.slurmdb_event_cond_t *event_cond
         void *dbconn
-        dict _EVENTSDict
-        slurm.List _EVENTSList
+        slurm.slurmdb_event_cond_t *event_cond
 
     def __cinit__(self):
-        self.dbconn = <void *>NULL
-        self._EVENTSDict = {}
-        self.event_cond = <slurm.slurmdb_event_cond_t *>NULL
+        self.event_cond = <slurm.slurmdb_event_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_event_cond_t))
 
     def __dealloc__(self):
-        self.__destroy()
-
-    cpdef __destroy(self):
-        u"""Destructor method."""
-        self._EVENTSDict = {}
-        if self.event_cond != NULL:
-            slurm.slurmdb_destroy_event_cond(self.event_cond)
+        slurm.slurmdb_destroy_event_cond(self.event_cond)
 
     def set_event_condition(self, start_time, end_time):
         u"""Limit the next get() call to conditions that existed after and before a certain time.
@@ -5624,11 +5614,9 @@ cdef class slurmdb_events:
         :param start_time: Select conditions that existed after this timestamp
         :param end_time: Select conditions that existed before this timestamp
         """
-        self.__set_event_condition(start_time, end_time)
-
-    cpdef __set_event_condition(self, slurm.time_t start_time, slurm.time_t end_time):
         if self.event_cond == NULL:
             self.event_cond = <slurm.slurmdb_event_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_event_cond_t))
+
         if self.event_cond != NULL:
             ##self.event_cond.with_usage = 1
             self.event_cond.period_start = <slurm.time_t>start_time
@@ -5636,64 +5624,50 @@ cdef class slurmdb_events:
         else:
             raise MemoryError()
 
-    cpdef int __load(self) except? -1:
-        cdef:
-            int apiError = 0
-            void* dbconn = slurm.slurmdb_connection_get()
-            slurm.List EVENTSList = slurm.slurmdb_events_get(dbconn, self.event_cond)
-
-        if EVENTSList is NULL:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.slurm_strerror(apiError), apiError)
-        else:
-            self._EVENTSList = EVENTSList
-
-        slurm.slurmdb_connection_close(&dbconn)
-        return 0
-
     def get(self):
         u"""Get slurm events information.
 
         :returns: Dictionary whose keys are the events ids
         :rtype: `dict`
         """
-        self.__load()
-        self.__get()
-        return self._EVENTSDict
-
-    cpdef __get(self):
         cdef:
-            slurm.List events_list = NULL
+            slurm.List event_list
             slurm.ListIterator iters = NULL
+            slurm.slurmdb_event_rec_t *event = NULL
             int i = 0
             int listNum = 0
-            dict E_dict = {}
 
-        if self._EVENTSList is not NULL:
-            listNum = slurm.slurm_list_count(self._EVENTSList)
-            iters = slurm.slurm_list_iterator_create(self._EVENTSList)
+        Event_dict = {}
+        event_list = slurm.slurmdb_events_get(self.dbconn, self.event_cond)
+
+        if event_list is not NULL:
+            listNum = slurm.slurm_list_count(event_list)
+            iters = slurm.slurm_list_iterator_create(event_list)
+
             for i in range(listNum):
                 event = <slurm.slurmdb_event_rec_t *>slurm.slurm_list_next(iters)
+                event_rec_dict = {}
 
-                # EVENTS infos
-                EVENTS_info = {}
                 if event is not NULL:
                     event_id = event.period_start
-                    EVENTS_info[u'cluster'] = slurm.stringOrNone(event.cluster, '')
-                    EVENTS_info[u'cluster_nodes'] = slurm.stringOrNone(event.cluster_nodes, '')
-                    EVENTS_info[u'node_name'] = slurm.stringOrNone(event.node_name, '')
-                    EVENTS_info[u'reason'] = slurm.stringOrNone(event.reason, '')
-                    EVENTS_info[u'tres_str'] = slurm.stringOrNone(event.tres_str, '')
-                    EVENTS_info[u'event_type'] = event.event_type
-                    EVENTS_info[u'time_start'] = event.period_start
-                    EVENTS_info[u'time_end'] = event.period_end
-                    EVENTS_info[u'tres_str'] = event.tres_str
-                    EVENTS_info[u'state'] = event.state
-                    EVENTS_info[u'reason_uid'] = event.reason_uid
-                    E_dict[event_id] = EVENTS_info
+                    event_rec_dict[u'cluster'] = slurm.stringOrNone(event.cluster, '')
+                    event_rec_dict[u'cluster_nodes'] = slurm.stringOrNone(event.cluster_nodes, '')
+                    event_rec_dict[u'node_name'] = slurm.stringOrNone(event.node_name, '')
+                    event_rec_dict[u'reason'] = slurm.stringOrNone(event.reason, '')
+                    event_rec_dict[u'tres_str'] = slurm.stringOrNone(event.tres_str, '')
+                    event_rec_dict[u'event_type'] = event.event_type
+                    event_rec_dict[u'time_start'] = event.period_start
+                    event_rec_dict[u'time_end'] = event.period_end
+                    event_rec_dict[u'tres_str'] = event.tres_str
+                    event_rec_dict[u'state'] = event.state
+                    event_rec_dict[u'reason_uid'] = event.reason_uid
+
+                    Event_dict[event_id] = event_rec_dict
+
             slurm.slurm_list_iterator_destroy(iters)
-            slurm.slurm_list_destroy(self._EVENTSList)
-        self._EVENTSDict = E_dict
+            slurm.slurm_list_destroy(event_list)
+
+        return Event_dict
 
 #
 # Helper functions to convert numerical States
