@@ -5384,24 +5384,14 @@ cdef class slurmdb_reservations:
     u"""Class to access Slurmdbd reservations information."""
 
     cdef:
-        slurm.slurmdb_reservation_cond_t *reservation_cond
         void *dbconn
-        dict _RSVDict
-        slurm.List _resvList
+        slurm.slurmdb_reservation_cond_t *reservation_cond
 
     def __cinit__(self):
-        self.dbconn = <void *>NULL
-        self._RSVDict = {}
-        self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>NULL
+        self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_reservation_cond_t))
 
     def __dealloc__(self):
-        self.__destroy()
-
-    cpdef __destroy(self):
-        u"""Destructor method."""
-        self._RSVDict = {}
-        if self.reservation_cond != NULL:
-            slurm.slurmdb_destroy_reservation_cond(self.reservation_cond)
+        slurm.slurmdb_destroy_reservation_cond(self.reservation_cond)
 
     def set_reservation_condition(self, start_time, end_time):
         u"""Limit the next get() call to reservations that start after and before a certain time.
@@ -5409,11 +5399,9 @@ cdef class slurmdb_reservations:
         :param start_time: Select reservations that start after this timestamp
         :param end_time: Select reservations that end before this timestamp
         """
-        self.__set_reservation_condition(start_time, end_time)
-
-    cpdef __set_reservation_condition(self, slurm.time_t start_time, slurm.time_t end_time):
         if self.reservation_cond == NULL:
             self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_reservation_cond_t))
+
         if self.reservation_cond != NULL:
             self.reservation_cond.with_usage = 1
             self.reservation_cond.time_start = <slurm.time_t>start_time
@@ -5421,85 +5409,74 @@ cdef class slurmdb_reservations:
         else:
             raise MemoryError()
 
-    cpdef int __load(self) except? -1:
-        cdef:
-            int apiError = 0
-            void* dbconn = slurm.slurmdb_connection_get()
-            slurm.List resvList = slurm.slurmdb_reservations_get(dbconn, self.reservation_cond)
-
-        if resvList is NULL:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.slurm_strerror(apiError), apiError)
-        else:
-            self._resvList = resvList
-
-        slurm.slurmdb_connection_close(&dbconn)
-        return 0
-
     def get(self):
         u"""Get slurm reservations information.
 
         :returns: Dictionary whose keys are the reservations ids
         :rtype: `dict`
         """
-        self.__load()
-        self.__get()
-        return self._RSVDict
-
-    cpdef __get(self):
         cdef:
-            slurm.List reservations_list = NULL
+            slurm.List reservation_list
             slurm.ListIterator iters = NULL
+            slurm.slurmdb_reservation_rec_t *reservation
             int i = 0
-            int listNum = 0
-            dict R_dict = {}
+            int j = 0
+            int listNum
+            slurm.List _resvList
 
-        if self._resvList is not NULL:
-            listNum = slurm.slurm_list_count(self._resvList)
-            iters = slurm.slurm_list_iterator_create(self._resvList)
+        Reservation_dict = {}
+        reservation_list = slurm.slurmdb_reservations_get(self.dbconn, self.reservation_cond)
+
+        if reservation_list is not NULL:
+            listNum = slurm.slurm_list_count(reservation_list)
+            iters = slurm.slurm_list_iterator_create(reservation_list)
+
             for i in range(listNum):
                 reservation = <slurm.slurmdb_reservation_rec_t *>slurm.slurm_list_next(iters)
+                Reservation_rec_dict = {}
 
-                # RESERVATIONS infos
-                resv_info = {}
                 if reservation is not NULL:
                     reservation_id = reservation.id
-                    resv_info[u'name'] = slurm.stringOrNone(reservation.name, '')
-                    resv_info[u'nodes'] = slurm.stringOrNone(reservation.nodes, '')
-                    resv_info[u'node_index'] = slurm.stringOrNone(reservation.node_inx, '')
-                    resv_info[u'associations'] = slurm.stringOrNone(reservation.assocs, '')
-                    resv_info[u'cluster'] = slurm.stringOrNone(reservation.cluster, '')
-                    resv_info[u'tres_str'] = slurm.stringOrNone(reservation.tres_str, '')
-                    resv_info[u'reservation_id'] = reservation.id
-                    resv_info[u'time_start'] = reservation.time_start
-                    resv_info[u'time_start_prev'] = reservation.time_start_prev
-                    resv_info[u'time_end'] = reservation.time_end
-                    resv_info[u'flags'] = reservation.flags
+                    Reservation_rec_dict[u'name'] = slurm.stringOrNone(reservation.name, '')
+                    Reservation_rec_dict[u'nodes'] = slurm.stringOrNone(reservation.nodes, '')
+                    Reservation_rec_dict[u'node_index'] = slurm.stringOrNone(reservation.node_inx, '')
+                    Reservation_rec_dict[u'associations'] = slurm.stringOrNone(reservation.assocs, '')
+                    Reservation_rec_dict[u'cluster'] = slurm.stringOrNone(reservation.cluster, '')
+                    Reservation_rec_dict[u'tres_str'] = slurm.stringOrNone(reservation.tres_str, '')
+                    Reservation_rec_dict[u'reservation_id'] = reservation.id
+                    Reservation_rec_dict[u'time_start'] = reservation.time_start
+                    Reservation_rec_dict[u'time_start_prev'] = reservation.time_start_prev
+                    Reservation_rec_dict[u'time_end'] = reservation.time_end
+                    Reservation_rec_dict[u'flags'] = reservation.flags
+
                     if reservation.tres_list != NULL:
                         num_tres = slurm.slurm_list_count(reservation.tres_list)
                         tres_iters = slurm.slurm_list_iterator_create(reservation.tres_list)
                         tres_dict = {}
-                        resv_info[u'num_tres'] = num_tres
+                        Reservation_rec_dict[u'num_tres'] = num_tres
+
                         for j in range(num_tres):
                             tres = <slurm.slurmdb_tres_rec_t *>slurm.slurm_list_next(tres_iters)
                             if tres is not NULL:
                                 tmp_tres_dict = {}
                                 tres_id = tres.id
-                                if (tres.name is not NULL):
-                                    tmp_tres_dict[u'name'] = slurm.stringOrNone(tres.name,'')
-                                if (tres.type is not NULL):
-                                    tmp_tres_dict[u'type'] = slurm.stringOrNone(tres.type,'')
+                                tmp_tres_dict[u'name'] = slurm.stringOrNone(tres.name,'')
+                                tmp_tres_dict[u'type'] = slurm.stringOrNone(tres.type,'')
                                 tmp_tres_dict[u'rec_count'] = tres.rec_count
                                 tmp_tres_dict[u'count'] = tres.count
                                 tmp_tres_dict[u'tres_id'] = tres.id
                                 tmp_tres_dict[u'alloc_secs'] = tres.alloc_secs
                                 tres_dict[tres_id] = tmp_tres_dict
-                        resv_info[u'tres_list'] = tres_dict
+
+                        Reservation_rec_dict[u'tres_list'] = tres_dict
                         slurm.slurm_list_iterator_destroy(tres_iters)
-                    R_dict[reservation_id] = resv_info
+
+                    Reservation_dict[reservation_id] = Reservation_rec_dict
+
             slurm.slurm_list_iterator_destroy(iters)
-            slurm.slurm_list_destroy(self._resvList)
-        self._RSVDict = R_dict
+            slurm.slurm_list_destroy(reservation_list)
+
+        return Reservation_dict
 
 #
 # slurmdbd clusters Class
