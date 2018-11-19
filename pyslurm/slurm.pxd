@@ -2338,7 +2338,25 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         char *name
         char *type
 
-    # ctypedef struct slurmdb_assoc_cond_t
+    ctypedef struct slurmdb_assoc_cond_t:
+        List acct_list
+        List cluster_list
+        List def_qos_id_list
+        List format_list
+        List id_list
+        uint16_t only_defs
+        List parent_acct_list
+        List partition_list
+        List qos_list
+        time_t usage_end
+        time_t usage_start
+        List user_list
+        uint16_t with_usage
+        uint16_t with_deleted
+        uint16_t with_raw_qos
+        uint16_t with_sub_accts
+        uint16_t without_parent_info
+        uint16_t without_parent_limits
 
     ctypedef struct slurmdb_job_cond_t:
         List acct_list
@@ -2695,6 +2713,20 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         uint32_t jobid
         uint32_t stepid
 
+    ctypedef struct slurmdb_report_assoc_rec_t:
+        char *acct
+        char *cluster
+        char *parent_acct
+        List tres_list
+        char *user
+
+    ctypedef struct slurmdb_report_cluster_rec_t:
+        List accounting_list
+        List assoc_list
+        char *name
+        List tres_list
+        List user_list
+
     # ctypedef struct slurmdb_step_rec_t
     # ctypedef struct slurmdb_res_cond_t
     # ctypedef struct slurmdb_res_rec_t
@@ -2754,12 +2786,17 @@ cdef extern from 'slurm/slurmdb.h' nogil:
     #cdef extern void slurmdb_init_cluster_rec(slurmdb_cluster_rec_t *cluster, bool free_it)
     cdef extern void slurmdb_destroy_cluster_rec(void *object)
     #cdef extern void slurmdb_destroy_report_cluster_rec(void *object)
+    cdef extern void slurmdb_destroy_assoc_cond(void *object)
 
     # event accounting details
     cdef extern List slurmdb_events_get(void *db_conn,
                          slurmdb_event_cond_t *resv_cond)
     cdef extern void slurmdb_destroy_event_cond(void *object)
     cdef extern void slurmdb_destroy_event_rec(void *object)
+
+    cdef extern List slurmdb_report_cluster_account_by_user(
+        void *db_conn, slurmdb_assoc_cond_t *assoc_cond
+    )
 
     #
     # Extra get functions
@@ -2814,3 +2851,5 @@ cdef extern int slurm_time_str2secs(const_char_ptr string)
 cdef extern void slurm_secs2time_str(time_t time, char *string, int size)
 cdef extern void slurm_mins2time_str(uint32_t time, char *string, int size)
 cdef extern char *slurm_mon_abbr(int mon)
+cdef extern int slurmdb_report_set_start_end_time(time_t *start, time_t *end)
+cdef extern void *slurm_list_find_first(List l, ListFindF f, void *key)

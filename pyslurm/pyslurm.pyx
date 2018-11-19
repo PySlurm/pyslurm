@@ -5670,6 +5670,110 @@ cdef class slurmdb_events:
         return Event_dict
 
 #
+# SlurmDB Reports (sreport)
+#
+
+cdef class slurmdb_reports:
+    u"""Class to access Slurmdbd reports."""
+
+    cdef:
+        void *db_conn
+        slurm.slurmdb_assoc_cond_t *assoc_cond
+
+    def __cinit__(self):
+        self.assoc_cond = <slurm.slurmdb_assoc_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_assoc_cond_t))
+
+    def __dealloc__(self):
+        slurm.slurmdb_destroy_assoc_cond(self.assoc_cond)
+
+    def report_cluster_account_by_user(self, starttime=None, endtime=None):
+        """
+        sreport cluster AccountUtilizationByUser
+        """
+        cdef:
+            slurm.List slurmdb_report_cluster_list = NULL
+            slurm.ListIterator itr = NULL
+            slurm.ListIterator cluster_itr = NULL
+            slurm.ListIterator tres_itr = NULL
+            slurm.slurmdb_cluster_cond_t cluster_cond
+            slurm.slurmdb_report_assoc_rec_t *slurmdb_report_assoc = NULL
+            slurm.slurmdb_report_cluster_rec_t *slurmdb_report_cluster = NULL
+            slurm.slurmdb_tres_rec_t *tres
+            time_t start_time
+            time_t end_time
+            int i
+            int j
+
+        slurm.slurmdb_init_cluster_cond(&cluster_cond, 0)
+        self.assoc_cond.with_sub_accts = 1
+
+        if starttime:
+            self.assoc_cond.usage_start = slurm.slurm_parse_time(starttime, 1)
+
+        if endtime:
+            self.assoc_cond.usage_end = slurm.slurm_parse_time(endtime, 1)
+
+        start_time = self.assoc_cond.usage_start
+        end_time = self.assoc_cond.usage_end
+        slurm.slurmdb_report_set_start_end_time(&start_time, &end_time)
+        self.assoc_cond.usage_start = start_time
+        self.assoc_cond.usage_end = end_time
+
+        self.assoc_cond.with_usage = 1
+        self.assoc_cond.with_deleted = 1
+
+        slurmdb_report_cluster_list = slurm.slurmdb_report_cluster_account_by_user(
+            self.db_conn, self.assoc_cond
+        )
+
+        if slurmdb_report_cluster_list is NULL:
+            slurm.slurmdb_destroy_assoc_cond(self.assoc_cond)
+            slurm.slurm_list_destroy(slurmdb_report_cluster_list)
+            slurmdb_report_cluster_list = NULL
+            sys.exit(0)
+
+        cluster_itr = slurm.slurm_list_iterator_create(slurmdb_report_cluster_list)
+        Cluster_dict = {}
+
+        for i in range(slurm.slurm_list_count(slurmdb_report_cluster_list)):
+            slurmdb_report_cluster = <slurm.slurmdb_report_cluster_rec_t *>slurm.slurm_list_next(cluster_itr)
+            cluster_name = slurm.stringOrNone(slurmdb_report_cluster.name, '')
+            Cluster_dict[cluster_name] = {}
+            itr = slurm.slurm_list_iterator_create(slurmdb_report_cluster.assoc_list)
+
+            for j in range(slurm.slurm_list_count(slurmdb_report_cluster.assoc_list)):
+                slurmdb_report_assoc = <slurm.slurmdb_report_assoc_rec_t *>slurm.slurm_list_next(itr)
+                Assoc_dict = {}
+                Assoc_dict["account"] = slurm.stringOrNone(slurmdb_report_assoc.acct, '')
+                Assoc_dict["cluster"] = slurm.stringOrNone(slurmdb_report_assoc.cluster, '')
+                Assoc_dict["parent_account"] = slurm.stringOrNone(slurmdb_report_assoc.parent_acct, '')
+                Assoc_dict["user"] = slurm.stringOrNone(slurmdb_report_assoc.user, '')
+                Assoc_dict["tres_list"] = []
+                tres_itr = slurm.slurm_list_iterator_create(slurmdb_report_assoc.tres_list)
+
+                for k in range(slurm.slurm_list_count(slurmdb_report_assoc.tres_list)):
+                    tres = <slurm.slurmdb_tres_rec_t *>slurm.slurm_list_next(tres_itr)
+                    Tres_dict = {}
+                    Tres_dict["alloc_secs"] = <int>tres.alloc_secs
+                    Tres_dict["rec_count"] = tres.rec_count
+                    Tres_dict["count"] = <int>tres.count
+                    Tres_dict["id"] = tres.id
+                    Tres_dict["name"] = slurm.stringOrNone(tres.name, '')
+                    Tres_dict["type"] = slurm.stringOrNone(tres.type, '')
+                    Assoc_dict["tres_list"].append(Tres_dict)
+
+                Cluster_dict[cluster_name] = Assoc_dict
+                slurm.slurm_list_iterator_destroy(tres_itr)
+
+            slurm.slurm_list_iterator_destroy(itr)
+
+        slurm.slurm_list_iterator_destroy(cluster_itr)
+        slurm.slurm_list_destroy(slurmdb_report_cluster_list)
+        slurmdb_report_cluster_list = NULL
+
+        return Cluster_dict
+
+#
 # Helper functions to convert numerical States
 #
 
