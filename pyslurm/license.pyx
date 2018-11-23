@@ -48,9 +48,9 @@ cdef class License:
     def remote(self):
         """Non-zero if remote license (not defined in slurm.conf)"""
         if self.remote:
-            return "yes"
+            return True
         else:
-            return "no"
+            return False
 
 
 def get_licenses(ids=False):

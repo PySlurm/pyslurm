@@ -36,7 +36,7 @@ sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 #from . import job
 #from . import jobstep
 #from . import hostlist
-#from . import license
+from . import license
 #from . import misc
 #from . import node
 from . import partition
