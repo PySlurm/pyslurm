@@ -6,6 +6,9 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int32_t
 from posix.types cimport time_t
 
+cdef extern from * nogil:
+    ctypedef char* const_char_ptr "const char*"
+
 cdef extern from "slurm/slurm.h" nogil:
     enum:
         INFINITE
@@ -74,7 +77,12 @@ cdef extern from "slurm/slurm.h" nogil:
 
     ctypedef listIterator *ListIterator
 
+    ctypedef struct job_defaults_t:
+        uint16_t type
+        uint64_t value
+
     ListIterator slurm_list_iterator_create(List l)
+    ListIterator slurm_list_iterator_destroy(ListIterator i)
     void *slurm_list_next(ListIterator i)
     int slurm_list_count(List l)
     void *slurm_list_peek(List l)
@@ -100,6 +108,7 @@ cdef extern from "slurm/slurm_errno.h" nogil:
     int slurm_get_errno()
     int slurm_seterrno(int errnum)
     int slurm_perror(char *msg)
+
 
 
 #
@@ -131,6 +140,9 @@ cdef extern void slurm_convert_num_unit(
     int spec_type,
     uint32_t flags
 )
+
+cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
+cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
 
 #
 # Declarations outside of slurmdb.h

@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ================
 :mod:`partition`
@@ -11,14 +10,14 @@ in Slurm.
 Slurm API Functions
 -------------------
 
-- slurm_load_partitions
+- slurm_create_partition
+- slurm_delete_partition
 - slurm_free_partition_info_msg
+- slurm_init_part_desc_msg
+- slurm_load_partitions
 - slurm_print_partition_info_msg
 - slurm_print_partition_info
-- slurm_delete_partition
 - slurm_update_partition
-- slurm_create_partition
-- slurm_init_part_desc_msg
 
 
 Partition Objects
@@ -26,8 +25,7 @@ Partition Objects
 
 Functions in this module wrap the ``partition_info_t`` struct found in
 `slurm.h`.  The members of this struct are converted to a :class:`Partition`
-object, which implemnts Python properties to retrieve the value of each
-attribute.
+object.
 
 Each partition in a ``partition_info_msg_t`` struct is converted to a
 :class:`Partition` object when calling some of the functions in this module.
@@ -35,6 +33,7 @@ Each partition in a ``partition_info_msg_t`` struct is converted to a
 """
 from __future__ import absolute_import, print_function, unicode_literals
 
+from cpython cimport bool
 from libc.stdio cimport stdout
 from .c_partition cimport *
 from .c_node cimport *
@@ -50,53 +49,62 @@ include "node.pxi"
 cdef class Partition:
     """An object to wrap `partition_info_t` structs."""
     cdef:
-        unicode allow_accounts
         readonly unicode alloc_nodes
+        unicode allow_accounts
         unicode allow_groups
         unicode allow_qos
         readonly unicode alternate
+        readonly unicode billing_weights_str
+        readonly unicode cluster_name
         readonly uint16_t cr_type
-        #readonly unicode default # doesn't work
-        unicode default
+        uint32_t cpu_bind
         uint64_t def_mem_per_cpu
-        uint64_t def_mem_per_node
+        bool default
         uint32_t default_time
         uint32_t default_time_str
         readonly list deny_accounts
         readonly list deny_qos
-        readonly unicode disable_root_jobs
-        readonly unicode exclusive_user
+        readonly bool disable_root_jobs
+        readonly bool exclusive_user
+        readonly bool hidden
         readonly uint16_t flags
         readonly uint32_t grace_time
-        readonly unicode hidden
-        readonly unicode lln
+        readonly list job_defaults_list
+        readonly unicode job_defaults
+        readonly bool lln
         uint32_t max_cpus_per_node
         uint64_t max_mem_per_cpu
-        uint64_t max_mem_per_node
         uint32_t max_nodes
         readonly uint16_t max_share
         uint32_t max_time
         uint32_t max_time_str
-        readonly unicode midplanes
         readonly uint32_t min_nodes
+        int32_t node_inx
         readonly unicode nodes
         uint16_t over_time_limit
+        uint16_t over_subscribe
         readonly unicode partition_name
         readonly uint16_t preempt_mode
         readonly unicode preempt_mode_str
         readonly uint16_t priority_job_factor
         readonly uint16_t priority_tier
         readonly unicode qos
-        readonly unicode req_resv
-        readonly unicode root_only
-        unicode select_type_parameters
-        unicode over_subscribe
+        readonly bool req_resv
+        readonly bool root_only
         readonly unicode state
         readonly uint16_t state_up
         readonly uint32_t total_cpus
         readonly uint32_t total_nodes
         readonly unicode tres_billing_weights
         readonly unicode tres_fmt_str
+
+    @property
+    def allow_alloc_accounts(self):
+        """Comma delimited list of accounts"""
+        if not self.allow_accounts:
+            return "ALL"
+        else:
+            return self.allow_accounts.split(",")
 
     @property
     def allow_accounts(self):
@@ -123,9 +131,10 @@ cdef class Partition:
             return self.allow_qos.split(",")
 
     @property
-    def default(self):
-        """This is a default partition"""
-        return self.default
+    def cpu_bind(self):
+        """Default task binding"""
+        cpu_bind_list = slurm_sprint_cpu_bind_type(<cpu_bind_type_t>self.cpu_bind)
+        return cpu_bind_list
 
     @property
     def default_time(self):
@@ -133,21 +142,21 @@ cdef class Partition:
         if self.default_time == INFINITE:
             return "UNLIMITED"
         elif self.default_time == NO_VAL:
-            return "NONE"
+            return None
         else:
             return self.default_time * 60
 
     @property
     def default_time_str(self):
         """minutes, NO_VAL or INFINITE"""
-        cdef char time_limit[32]
+        cdef char time_line[32]
         if self.default_time == INFINITE:
             return "UNLIMITED"
         elif self.default_time == NO_VAL:
-            return "NONE"
+            return None
         else:
-            slurm_secs2time_str(self.default_time * 60, time_limit, sizeof(time_limit))
-            return time_limit
+            slurm_secs2time_str(self.default_time * 60, time_line, sizeof(time_line))
+            return time_line
 
     @property
     def def_mem_per_cpu(self):
@@ -204,21 +213,10 @@ cdef class Partition:
     @property
     def max_nodes(self):
         """per job or INFINITE"""
-        cdef:
-            char tmp[16]
-            uint32_t cluster_flags = slurmdb_setup_cluster_flags()
-
         if self.max_nodes == INFINITE:
             return "UNLIMITED"
         else:
-            if (cluster_flags & CLUSTER_FLAG_BG):
-#                convert_num_unit(<float>self.max_nodes, tmp,
-#                                 sizeof(tmp), UNIT_NONE, NO_VAL,
-#                                 CONVERT_NUM_UNIT_EXACT)
-#                return tmp
-                pass
-            else:
-                return self.max_nodes
+            return self.max_nodes
 
     @property
     def max_time(self):
@@ -244,7 +242,7 @@ cdef class Partition:
         cancellation"""
         if self.over_time_limit == NO_VAL16:
             return None
-        elif self.over_time_limit == <uint16_t>INFINITE:
+        elif self.over_time_limit == INFINITE16:
             return "UNLIMITED"
         else:
             return self.over_time_limit
@@ -255,7 +253,7 @@ cdef class Partition:
         if select_type_param_string(self.cr_type) is not None:
             return select_type_param_string(self.cr_type)
         else:
-            return "NONE"
+            return None
 
     @property
     def over_subscribe(self):
@@ -266,6 +264,7 @@ cdef class Partition:
 
         force = self.max_share & SHARED_FORCE
         val = self.max_share & (~SHARED_FORCE)
+
         if val == 0:
             return "EXCLUSIVE"
         elif force:
@@ -311,16 +310,19 @@ cdef get_partition_info_msg(partition, ids=False):
 
         for record in part_info_msg_ptr.partition_array[:part_info_msg_ptr.record_count]:
 
-            if partition:
-                if partition and (partition != <unicode>record.name):
-                    continue
+            if partition and (partition != tounicode(record.name)):
+                continue
 
-            if ids and partition is None:
+            if ids and (partition is None):
                 part_list.append(tounicode(record.name))
                 continue
 
             this_part = Partition()
+
+            # Line 1
             this_part.partition_name = tounicode(record.name)
+
+            # Line 2
             this_part.allow_groups = tounicode(record.allow_groups)
 
             if record.allow_accounts or not record.deny_accounts:
@@ -333,6 +335,7 @@ cdef get_partition_info_msg(partition, ids=False):
             else:
                 this_part.deny_qos = tounicode(record.allow_qos).split(",")
 
+            # Line 3
             if record.allow_alloc_nodes == NULL:
                 this_part.alloc_nodes = tounicode("ALL")
             else:
@@ -344,85 +347,72 @@ cdef get_partition_info_msg(partition, ids=False):
             this_part.flags = record.flags
 
             if record.flags & PART_FLAG_DEFAULT:
-                this_part.default = "YES"
+                this_part.default = True
             else:
-                this_part.default = "NO"
+                this_part.default = False
 
+            if record.cpu_bind:
+                this_part.cpu_bind = record.cpu_bind
+                
             if record.qos_char:
                 this_part.qos = tounicode(record.qos_char)
             else:
-                this_part.qos = "N/A"
+                this_part.qos = None
 
-            if cluster_flags & CLUSTER_FLAG_BG:
-                this_part.midplanes = tounicode(record.nodes)
-            else:
-                this_part.nodes = tounicode(record.nodes)
-
+            # Line 4
             this_part.default_time = record.default_time
             this_part.default_time_str = record.default_time
 
             if record.flags & PART_FLAG_NO_ROOT:
-                this_part.disable_root_jobs = "YES"
+                this_part.disable_root_jobs = True
             else:
-                this_part.disable_root_jobs = "NO"
+                this_part.disable_root_jobs = False
 
             if record.flags & PART_FLAG_EXCLUSIVE_USER:
-                this_part.exclusive_user = "YES"
+                this_part.exclusive_user = True
             else:
-                this_part.exclusive_user = "NO"
+                this_part.exclusive_user = False
 
             this_part.grace_time = record.grace_time
 
             if record.flags & PART_FLAG_HIDDEN:
-                this_part.hidden = "YES"
+                this_part.hidden = True
             else:
-                this_part.hidden = "NO"
+                this_part.hidden = False
 
+            # Line 5
             this_part.max_nodes = record.max_nodes
-#            if record.max_nodes == INFINITE:
-#                this_part.max_nodes = tounicode("UNLIMITED")
-#            else:
-##                if cluster_flags & CLUSTER_FLAG_BG:
-##                    convert_num_unit(<float>record.max_nodes, tmp,
-##                                     sizeof(tmp), UNIT_NONE, NO_VAL,
-##                                     CONVERT_NUM_UNIT_EXACT)
-##                    this_part.max_nodes = tounicode(tmp)
-##                else:
-##                    this_part.max_nodes = record.max_nodes
-#                this_part.max_nodes = record.max_nodes
-
             this_part.max_time = record.max_time
             this_part.max_time_str = record.max_time
-
-#            if cluster_flags & CLUSTER_FLAG_BG:
-#                convert_num_unit(<float>record.min_nodes, tmp,
-#                                 sizeof(tmp), UNIT_NONE, NO_VAL,
-#                                 CONVERT_NUM_UNIT_EXACT)
-#                this_part.min_nodes = tounicode(tmp)
-#            else:
-#                this_part.min_nodes = record.min_nodes
             this_part.min_nodes = record.min_nodes
 
             if record.flags & PART_FLAG_LLN:
-                this_part.lln = "YES"
+                this_part.lln = True
             else:
-                this_part.lln = "NO"
+                this_part.lln = False
 
             this_part.max_cpus_per_node = record.max_cpus_per_node
+
+            # Line 6
+            this_part.nodes = tounicode(record.nodes)
+
+            # Line 7
             this_part.priority_job_factor = record.priority_job_factor
             this_part.priority_tier = record.priority_tier
 
             if record.flags & PART_FLAG_ROOT_ONLY:
-                this_part.root_only = "YES"
+                this_part.root_only = True
             else:
-                this_part.root_only = "NO"
+                this_part.root_only = False
 
             if record.flags & PART_FLAG_REQ_RESV:
-                this_part.req_resv = "YES"
+                this_part.req_resv = True
             else:
-                this_part.req_resv = "NO"
+                this_part.req_resv = False
 
             this_part.max_share = record.max_share
+
+            # Line 8
             this_part.over_time_limit = record.over_time_limit
             this_part.preempt_mode = record.preempt_mode
             preempt_mode = record.preempt_mode
@@ -433,6 +423,7 @@ cdef get_partition_info_msg(partition, ids=False):
                 slurm_preempt_mode_string(preempt_mode)
             )
 
+            # Line 9
             this_part.state_up = record.state_up
 
             if record.state_up == PARTITION_UP:
@@ -446,28 +437,21 @@ cdef get_partition_info_msg(partition, ids=False):
             else:
                 this_part.state = "UNKNOWN"
 
-            # convert_num_unit is not in libslurm :(
-#            if cluster_flags & CLUSTER_FLAG_BG:
-#                convert_num_unit(<float>record.total_cpus, tmp,
-#                                 sizeof(tmp), UNIT_NONE, NO_VAL,
-#                                 CONVERT_NUM_UNIT_EXACT)
-#                this_part.total_cpus = tounicode(tmp)
-#            else:
-#                this_part.total_cpus = record.total_cpus
             this_part.total_cpus = record.total_cpus
-
-#            if cluster_flags & CLUSTER_FLAG_BG:
-#                convert_num_unit(<float>record.total_nodes, tmp,
-#                                 sizeof(tmp), UNIT_NONE, NO_VAL,
-#                                 CONVERT_NUM_UNIT_EXACT)
-#                this_part.total_nodes = tounicode(tmp)
-#            else:
-#                this_part.total_nodes = record.total_nodes
             this_part.total_nodes = record.total_nodes
-            this_part.cr_type = record.cr_type
+
+            # Line 10
+            value = job_defaults_str(record.job_defaults_list)
+            if value:
+                this_part.job_defaults = tounicode(value)
+            else:
+                this_part.job_defaults = None
+
+            # Line 11
             this_part.def_mem_per_cpu = record.def_mem_per_cpu
             this_part.max_mem_per_cpu = record.max_mem_per_cpu
 
+            # Line 12
             if record.billing_weights_str:
                 this_part.tres_billing_weights = tounicode(
                     record.billing_weights_str
@@ -488,7 +472,7 @@ cdef get_partition_info_msg(partition, ids=False):
             raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef print_partition_info_msg(int one_liner=False):
+def print_partition_info_msg(int one_liner=False):
     """
     Print information about all partitions to stdout.
 
@@ -518,7 +502,7 @@ cpdef print_partition_info_msg(int one_liner=False):
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
-cpdef print_partition_info(partition, int one_liner=False):
+def print_partition_info(partition, int one_liner=False):
     """
     Print information about a specific partition to stdout.
 
@@ -625,7 +609,7 @@ cdef update_part_msg(action, part_dict):
         return rc
 
 
-cpdef int create_partition(part_dict):
+def create_partition(part_dict):
     """
     Request creation of a new partition.
 
@@ -638,7 +622,7 @@ cpdef int create_partition(part_dict):
     update_part_msg("create", part_dict)
 
 
-cpdef int update_partition(part_dict):
+def update_partition(part_dict):
     """
     Request to update the configuration of a partition.
 
@@ -651,7 +635,7 @@ cpdef int update_partition(part_dict):
     update_part_msg("update", part_dict)
 
 
-cpdef int delete_partition(partition):
+def delete_partition(partition):
     """
     Delete a Slurm partition.
 
@@ -681,115 +665,3 @@ cpdef int delete_partition(partition):
 # if rc == -1:
 #     errno = slurm_get_errno(rc)
 #     print(slurm_strerror(errno), errno)
-
-
-def get_nodes_cpus_aiot():
-    """
-    """
-    cdef:
-        partition_info_msg_t *part_pptr
-        node_info_msg_t *node_pptr
-        uint16_t show_flags = SHOW_ALL
-        uint16_t alloc_cpus
-        uint16_t err_cpus
-        uint16_t idle_cpus
-        uint32_t cluster_flags = slurmdb_setup_cluster_flags()
-        int i
-        int rc
-        int errno
-        int g_node_scaling = 1
-        int single_node_cpus
-        hostlist_t hl
-
-    rc = slurm_load_node(<time_t> NULL, &node_pptr, show_flags)
-
-    if rc == SLURM_SUCCESS:
-        g_node_scaling = node_pptr.node_scaling
-        node_dict = {}
-
-        for nrecord in node_pptr.node_array[:node_pptr.record_count]:
-            if IS_NODE_ALLOCATED(nrecord):
-                node_dict[tounicode(nrecord.name)] = {
-                    "alloc": nrecord.cpus,
-                    "idle": 0,
-                    "other": 0,
-                    "total": nrecord.cpus
-                }
-            elif IS_NODE_IDLE(nrecord):
-                node_dict[tounicode(nrecord.name)] = {
-                    "alloc": 0,
-                    "idle": nrecord.cpus,
-                    "other": 0,
-                    "total": nrecord.cpus
-                }
-            elif IS_NODE_DRAIN(nrecord) or IS_NODE_DOWN(nrecord):
-                node_dict[tounicode(nrecord.name)] = {
-                    "alloc": 0,
-                    "idle": 0,
-                    "other": nrecord.cpus,
-                    "total": nrecord.cpus
-                }
-            else:
-                single_node_cpus = nrecord.cpus / g_node_scaling
-
-                slurm_get_select_nodeinfo(
-                    nrecord.select_nodeinfo,
-                    SELECT_NODEDATA_SUBCNT,
-                    NODE_STATE_ALLOCATED,
-                    &alloc_cpus
-                )
-
-                if (cluster_flags & CLUSTER_FLAG_BG):
-                    if (not alloc_cpus and
-                        (IS_NODE_ALLOCATED(nrecord) or
-                         IS_NODE_COMPLETING(nrecord))):
-                        alloc_cpus = nrecord.cpus
-                    else:
-                        alloc_cpus *= single_node_cpus
-
-                idle_cpus = nrecord.cpus - alloc_cpus
-
-                slurm_get_select_nodeinfo(
-                    nrecord.select_nodeinfo,
-                    SELECT_NODEDATA_SUBCNT,
-                    NODE_STATE_ERROR,
-                    &err_cpus
-                )
-
-                if (cluster_flags & CLUSTER_FLAG_BG):
-                    err_cpus *= single_node_cpus
-
-                idle_cpus -= err_cpus
-
-                node_dict[tounicode(nrecord.name)] = {
-                    "alloc": alloc_cpus,
-                    "idle": idle_cpus,
-                    "other": nrecord.cpus - alloc_cpus - idle_cpus,
-                    "total": nrecord.cpus
-                }
-
-        slurm_free_node_info_msg(node_pptr)
-        node_pptr = NULL
-        rc = slurm_load_partitions(<time_t> NULL, &part_pptr, show_flags)
-
-        if rc == SLURM_SUCCESS:
-            aiot_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-            for precord in part_pptr.partition_array[:part_pptr.record_count]:
-                hl = slurm_hostlist_create(precord.nodes)
-                partname = precord.name
-                for i in range(slurm_hostlist_count(hl)):
-                    node = slurm_hostlist_shift(hl)
-                    aiot_dict[tounicode(partname)]["cpus"]["alloc"] += node_dict[node]["alloc"]
-                    aiot_dict[tounicode(partname)]["cpus"]["idle"] += node_dict[node]["idle"]
-                    aiot_dict[tounicode(partname)]["cpus"]["other"] += node_dict[node]["other"]
-                    aiot_dict[tounicode(partname)]["cpus"]["total"] += node_dict[node]["total"]
-
-                slurm_hostlist_destroy(hl)
-                hl = NULL
-            slurm_free_partition_info_msg(part_pptr)
-            part_pptr = NULL
-            return node_dict, aiot_dict
-        else:
-            pass #PySlurmError
-    else:
-        pass #PySlurmError

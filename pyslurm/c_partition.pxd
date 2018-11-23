@@ -1,6 +1,15 @@
+# c_partition.pxd
+#
 from libc.stdint cimport int32_t, uint16_t, uint32_t, uint64_t
 from libc.stdio cimport FILE
 from posix.types cimport time_t
+
+from .slurm_common cimport List
+
+cdef extern from 'Python.h' nogil:
+    cdef int __LINE__
+    char *__FILE__
+    char *__FUNCTION__
 
 cdef extern from "slurm/slurm.h" nogil:
     ctypedef struct partition_info_t:
@@ -10,6 +19,8 @@ cdef extern from "slurm/slurm.h" nogil:
         char *allow_qos
         char *alternate
         char *billing_weights_str
+        char *cluster_name
+        uint32_t cpu_bind
         uint16_t cr_type
         uint64_t def_mem_per_cpu
         uint32_t default_time
@@ -17,6 +28,8 @@ cdef extern from "slurm/slurm.h" nogil:
         char *deny_qos
         uint16_t flags
         uint32_t grace_time
+        List job_defaults_list
+        char *job_defaults_str
         uint32_t max_cpus_per_node
         uint64_t max_mem_per_cpu
         uint32_t max_nodes
@@ -52,14 +65,20 @@ cdef extern from "slurm/slurm.h" nogil:
     void slurm_init_part_desc_msg(update_part_msg_t *update_part_msg)
     void slurm_free_partition_info_msg(partition_info_msg_t *part_info_ptr)
 
-    int slurm_load_partitions(time_t update_time,
-                              partition_info_msg_t **part_buffer_ptr,
-                              uint16_t show_flags)
+    int slurm_load_partitions(
+        time_t update_time,
+        partition_info_msg_t **part_buffer_ptr,
+        uint16_t show_flags
+    )
 
-    void slurm_print_partition_info_msg(FILE *out,
-                                        partition_info_msg_t *part_info_ptr,
-                                        int one_liner)
+    void slurm_print_partition_info_msg(
+        FILE *out,
+        partition_info_msg_t *part_info_ptr,
+        int one_liner
+    )
 
-    void slurm_print_partition_info(FILE *out,
-                                    partition_info_t *part_ptr,
-                                    int one_liner)
+    void slurm_print_partition_info(
+        FILE *out,
+        partition_info_t *part_ptr,
+        int one_liner
+    ) 

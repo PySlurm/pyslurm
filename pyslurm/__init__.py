@@ -39,7 +39,7 @@ sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 #from . import license
 #from . import misc
 #from . import node
-#from . import partition
+from . import partition
 #from . import powercap
 #from . import reservation
 from . import statistics

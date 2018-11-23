@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, unicode_literals
 from libc.stdint cimport uint32_t, uint64_t
 from posix.types cimport uid_t
 from cpython.version cimport PY_MAJOR_VERSION
-from .slurm_common cimport INFINITE, NO_VAL
+from .slurm_common cimport *
 from .c_config cimport *
 from .c_trigger cimport *
 
@@ -25,17 +25,6 @@ cdef unicode tounicode(char* s):
         return None
     else:
         return s.decode("UTF-8", "replace")
-
-# TODO: might be needed for Python3 compat
-#cdef unicode _ustring(s):
-#    if type(s) is unicode:
-#        return <unicode>s
-#    elif PY_MAJOR_VERSION < 3 and isinstance(s, bytes):
-#        return (<bytes>s).decode("UTF-8", "replace")
-#    elif isinstance(s, unicode):
-#        return unicode(s)
-#    else:
-#        return None
 
 #
 # Slurm functions not externalized
@@ -174,8 +163,8 @@ cdef debug_flags2str(uint64_t debug_flags):
         dflist.append("Gang")
     if (debug_flags & DEBUG_FLAG_GRES):
         dflist.append("Gres")
-    if (debug_flags & DEBUG_FLAG_INFINIBAND):
-        dflist.append("Infiniband")
+#    if (debug_flags & DEBUG_FLAG_INFINIBAND):   #FIXME
+#        dflist.append("Infiniband")
     if (debug_flags & DEBUG_FLAG_JOB_CONT):
         dflist.append("JobContainer")
 #    if (debug_flags & DEBUG_FLAG_NODE_FEATURES):
@@ -363,6 +352,7 @@ cdef log_num2string(uint16_t inx):
     return "unknown"
 
 
+# TODO: Review
 cdef slurm_sprint_cpu_bind_type(cpu_bind_type_t cpu_bind_type):
     cbtlist = []
 
@@ -461,8 +451,8 @@ cdef trigger_type(uint32_t trig_type):
         return "primary_database_failure"
     elif trig_type == TRIGGER_TYPE_PRI_DB_RES_OP:
         return "primary_database_resumed_operation"
-    elif trig_type == TRIGGER_TYPE_BLOCK_ERR:
-        return "block_err"
+#    elif trig_type == TRIGGER_TYPE_BLOCK_ERR:    # FIXME
+#        return "block_err"
 # NOTE: missing in slurm.h... bug?
 #    elif trig_type == TRIGGER_TYPE_BURST_BUFFER:
 #        return "burst_buffer"
@@ -479,3 +469,32 @@ cdef trig_flags(uint16_t flags):
     if (flags & TRIGGER_FLAG_PERM):
         return "PERM"
     return ""
+
+cdef _job_def_name(uint16_t job_type):
+    if job_type == JOB_DEF_CPU_PER_GPU:
+        return "DefCpuPerGPU"
+    if job_type == JOB_DEF_MEM_PER_GPU:
+        return "DefMemPerGPU"
+    return "Unknown(%s)" % job_type
+
+cdef job_defaults_str(List in_list):
+    cdef:
+        job_defaults_t *in_default
+        ListIterator itr
+        char *out_str = NULL
+        char *sep = ""
+        int i
+
+    if in_list is NULL:
+        return None
+
+    itr = slurm_list_iterator_create(in_list)
+
+    for i in range(slurm_list_count(in_list)):
+        in_default = <job_defaults_t *>slurm_list_next(itr)
+        out_str += "%s%s=%s" % (sep, _job_def_name(in_default.type), in_default.value)
+        sep = ","
+
+    slurm_list_iterator_destroy(itr)
+
+    return out_str
