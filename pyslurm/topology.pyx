@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ===============
 :mod:`topology`
@@ -34,6 +33,7 @@ from libc.stdio cimport stdout
 
 from .c_topology cimport *
 from .slurm_common cimport *
+from .utils cimport tounicode
 from .exceptions import PySlurmError
 
 cdef class Topology:
@@ -95,7 +95,7 @@ cdef get_topo_info_msg(topology, ids=False):
     if rc == SLURM_SUCCESS:
         for record in topo_info_msg_ptr.topo_array[:topo_info_msg_ptr.record_count]:
             if topology:
-                if topology and (topology != <unicode>record.name):
+                if topology and (topology != tounicode(record.name)):
                     continue
 
             if ids and topology is None:
@@ -105,14 +105,11 @@ cdef get_topo_info_msg(topology, ids=False):
 
             this_topo = Topology()
 
-            if record.name:
-                this_topo.switch_name = record.name
-
+            this_topo.switch_name = tounicode(record.name)
             this_topo.level = record.level
             this_topo.link_speed = record.link_speed
-
-            # TODO: nodes, switches
-            # Looks like it requires SLURM_TOPO_LEN env var and a little logic
+            this_topo.nodes = tounicode(record.nodes)
+            this_topo.switches = tounicode(record.switches)
 
             topo_list.append(this_topo)
 

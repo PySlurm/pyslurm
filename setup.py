@@ -8,8 +8,8 @@ from __future__ import print_function
 import sys
 import textwrap
 
-from setuptools import setup
-from distutils.core import Extension
+#from setuptools import setup
+from distutils.core import setup, Extension
 from distutils.version import LooseVersion
 from os import path
 
@@ -82,10 +82,9 @@ def parse_setuppy_commands():
 
 extensions = [
     Extension(
-        "pyslurm/*",
-        #["pyslurm/*.pyx"],
-        [
-            "pyslurm/statistics.pyx",
+        name = "pyslurm/*",
+        sources = [
+            "pyslurm/*.pyx",
         ],
         include_dirs=[SLURM_INCLUDE_PATH],
         libraries=["slurmdb", "slurm"],
@@ -115,7 +114,7 @@ def setup_package():
         platforms = ["Linux"],
         ext_modules = cythonize(extensions),
         cmdclass = {"build_ext": build_ext },
-        install_requires=["Cython"],
+        #install_requires=["Cython"],
         classifiers = [
             "Development Status :: 5 - Production/Stable",
             "Environment :: Console",
