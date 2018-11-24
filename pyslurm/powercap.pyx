@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ===============
 :mod:`powercap`
@@ -47,7 +46,7 @@ cdef class Powercap:
     def power_cap(self):
         """Power cap value in watts"""
         if self.power_cap == 0:
-            return "Powercapping disabled by configuration. See PowerParameters in `man slurm.conf`"
+            return False
         elif self.power_cap == INFINITE:
             return "INFINITE"
         else:
