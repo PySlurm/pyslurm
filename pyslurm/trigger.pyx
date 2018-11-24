@@ -45,13 +45,16 @@ from .exceptions import PySlurmError
 cdef class Trigger:
     """An object to wrap `trigger_info_t` structs."""
     cdef:
-        readonly unicode flags
-        readonly int offset
+        readonly uint16_t flags
+        readonly unicode flags_str
+        readonly uint16_t offset
         readonly unicode program
         readonly unicode res_id
-        readonly unicode res_type
+        readonly uint16_t res_type
+        readonly unicode res_type_str
         readonly uint32_t trig_id
-        readonly unicode trig_type
+        readonly uint32_t trig_type
+        readonly unicode trig_type_str
         readonly uint32_t user_id
 
 
@@ -94,8 +97,9 @@ def get_trigger(trigger):
 
 cdef get_triggers_msg(trigger, ids=False):
     cdef:
-        trigger_info_msg_t *trigger_msg_ptr = NULL
+        trigger_info_msg_t *trigger_msg_ptr
         int rc
+        uint16_t offset
 
     rc = slurm_get_triggers(&trigger_msg_ptr)
 
@@ -109,12 +113,18 @@ cdef get_triggers_msg(trigger, ids=False):
             this_trigger = Trigger()
 
             this_trigger.trig_id = record.trig_id
-            this_trigger.res_type = trigger_res_type(record.res_type)
+            this_trigger.res_type = record.res_type
+            this_trigger.res_type_str = trigger_res_type(record.res_type)
             this_trigger.res_id = tounicode(record.res_id)
-            this_trigger.trig_type = trigger_type(record.trig_type)
-            this_trigger.offset = trig_offset(record.offset)
+            this_trigger.trig_type = record.trig_type
+            this_trigger.trig_type_str = trigger_type(record.trig_type)
+            this_trigger.offset = record.offset - 0x8000
             this_trigger.user_id = record.user_id
-            this_trigger.flags = trig_flags(record.flags)
+            this_trigger.flags = record.flags
+
+            if record.flags & TRIGGER_FLAG_PERM:
+                this_trigger.flags_str = "PERM"
+
             this_trigger.program = tounicode(record.program)
 
             trigger_list.append(this_trigger)
@@ -177,6 +187,7 @@ def set_trigger(dict trigger_dict):
         ti.res_type = TRIGGER_RES_TYPE_JOB
         b_job_id = str(trigger_dict.get("job_id")).encode("UTF-8")
         ti.res_id = b_job_id
+
         if trigger_dict.get("job_fini"):
             ti.trig_type |= TRIGGER_TYPE_FINI
         if trigger_dict.get("time_limit"):
@@ -193,8 +204,6 @@ def set_trigger(dict trigger_dict):
         else:
             ti.res_id = "*"
 
-    if trigger_dict.get("block_err"):
-        ti.trig_type |= TRIGGER_TYPE_BLOCK_ERR;
     if trigger_dict.get("burst_buffer"):
         ti.trig_type |= TRIGGER_TYPE_BURST_BUFFER;
     if trigger_dict.get("node_down"):
@@ -261,3 +270,67 @@ def set_trigger(dict trigger_dict):
         time.sleep(5)
 
     return 0
+
+
+cdef trigger_res_type(uint16_t res_type):
+    if res_type == TRIGGER_RES_TYPE_JOB:
+        return "job"
+    elif res_type == TRIGGER_RES_TYPE_NODE:
+        return "node"
+    elif res_type == TRIGGER_RES_TYPE_SLURMCTLD:
+        return "slurmctld"
+    elif res_type == TRIGGER_RES_TYPE_SLURMDBD:
+        return "slurmdbd"
+    elif res_type == TRIGGER_RES_TYPE_DATABASE:
+        return "database"
+    elif res_type == TRIGGER_RES_TYPE_FRONT_END:
+        return "front_end"
+    elif res_type == TRIGGER_RES_TYPE_OTHER:
+        return "other"
+    else:
+        return "unknown"
+
+
+cdef trigger_type(uint32_t trig_type):
+    if trig_type == TRIGGER_TYPE_UP:
+        return "up"
+    elif trig_type == TRIGGER_TYPE_DOWN:
+        return "down"
+    elif trig_type == TRIGGER_TYPE_DRAINED:
+        return "drained"
+    elif trig_type == TRIGGER_TYPE_FAIL:
+        return "fail"
+    elif trig_type == TRIGGER_TYPE_IDLE:
+        return "idle"
+    elif trig_type == TRIGGER_TYPE_TIME:
+        return "time"
+    elif trig_type == TRIGGER_TYPE_FINI:
+        return "fini"
+    elif trig_type == TRIGGER_TYPE_RECONFIG:
+        return "reconfig"
+    elif trig_type == TRIGGER_TYPE_PRI_CTLD_FAIL:
+        return "primary_slurmctld_failure"
+    elif trig_type == TRIGGER_TYPE_PRI_CTLD_RES_OP:
+        return "primary_slurmctld_resumed_operation"
+    elif trig_type == TRIGGER_TYPE_PRI_CTLD_RES_CTRL:
+        return "primary_slurmctld_resumed_control"
+    elif trig_type == TRIGGER_TYPE_PRI_CTLD_ACCT_FULL:
+        return "primary_slurmctld_acct_buffer_full"
+    elif trig_type == TRIGGER_TYPE_BU_CTLD_FAIL:
+        return "backup_slurmctld_failure"
+    elif trig_type == TRIGGER_TYPE_BU_CTLD_RES_OP:
+        return "backup_slurmctld_resumed_operation"
+    elif trig_type == TRIGGER_TYPE_BU_CTLD_AS_CTRL:
+        return "backup_slurmctld_assumed_control"
+    elif trig_type == TRIGGER_TYPE_PRI_DBD_FAIL:
+        return "primary_slurmdbd_failure"
+    elif trig_type == TRIGGER_TYPE_PRI_DBD_RES_OP:
+        return "primary_slurmdbd_resumed_operation"
+    elif trig_type == TRIGGER_TYPE_PRI_DB_FAIL:
+        return "primary_database_failure"
+    elif trig_type == TRIGGER_TYPE_PRI_DB_RES_OP:
+        return "primary_database_resumed_operation"
+    elif trig_type == TRIGGER_TYPE_BURST_BUFFER:
+        return "burst_buffer"
+    else:
+        return "unknown"

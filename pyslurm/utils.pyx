@@ -14,7 +14,6 @@ from posix.types cimport uid_t
 from cpython.version cimport PY_MAJOR_VERSION
 from .slurm_common cimport *
 from .c_config cimport *
-from .c_trigger cimport *
 
 # 
 # PySlurm Helper Functions
@@ -393,82 +392,6 @@ cdef slurm_sprint_cpu_bind_type(cpu_bind_type_t cpu_bind_type):
     if (cpu_bind_type & CPU_AUTO_BIND_TO_SOCKETS):
         cbtlist.append("autobind=sockets")
     return cbtlist
-
-
-cdef trigger_res_type(uint16_t res_type):
-    if res_type == TRIGGER_RES_TYPE_JOB:
-        return "job"
-    elif res_type == TRIGGER_RES_TYPE_NODE:
-        return "node"
-    elif res_type == TRIGGER_RES_TYPE_SLURMCTLD:
-        return "slurmctld"
-    elif res_type == TRIGGER_RES_TYPE_SLURMDBD:
-        return "slurmdbd"
-    elif res_type == TRIGGER_RES_TYPE_DATABASE:
-        return "database"
-    elif res_type == TRIGGER_RES_TYPE_FRONT_END:
-        return "front_end"
-    else:
-        return "unknown"
-
-
-cdef trigger_type(uint32_t trig_type):
-    if trig_type == TRIGGER_TYPE_UP:
-        return "up"
-    elif trig_type == TRIGGER_TYPE_DOWN:
-        return "down"
-    elif trig_type == TRIGGER_TYPE_DRAINED:
-        return "drained"
-    elif trig_type == TRIGGER_TYPE_FAIL:
-        return "fail"
-    elif trig_type == TRIGGER_TYPE_IDLE:
-        return "idle"
-    elif trig_type == TRIGGER_TYPE_TIME:
-        return "time"
-    elif trig_type == TRIGGER_TYPE_FINI:
-        return "fini"
-    elif trig_type == TRIGGER_TYPE_RECONFIG:
-        return "reconfig"
-    elif trig_type == TRIGGER_TYPE_PRI_CTLD_FAIL:
-        return "primary_slurmctld_failure"
-    elif trig_type == TRIGGER_TYPE_PRI_CTLD_RES_OP:
-        return "primary_slurmctld_resumed_operation"
-    elif trig_type == TRIGGER_TYPE_PRI_CTLD_RES_CTRL:
-        return "primary_slurmctld_resumed_control"
-    elif trig_type == TRIGGER_TYPE_PRI_CTLD_ACCT_FULL:
-        return "primary_slurmctld_acct_buffer_full"
-    elif trig_type == TRIGGER_TYPE_BU_CTLD_FAIL:
-        return "backup_slurmctld_failure"
-    elif trig_type == TRIGGER_TYPE_BU_CTLD_RES_OP:
-        return "backup_slurmctld_resumed_operation"
-    elif trig_type == TRIGGER_TYPE_BU_CTLD_AS_CTRL:
-        return "backup_slurmctld_assumed_control"
-    elif trig_type == TRIGGER_TYPE_PRI_DBD_FAIL:
-        return "primary_slurmdbd_failure"
-    elif trig_type == TRIGGER_TYPE_PRI_DBD_RES_OP:
-        return "primary_slurmdbd_resumed_operation"
-    elif trig_type == TRIGGER_TYPE_PRI_DB_FAIL:
-        return "primary_database_failure"
-    elif trig_type == TRIGGER_TYPE_PRI_DB_RES_OP:
-        return "primary_database_resumed_operation"
-#    elif trig_type == TRIGGER_TYPE_BLOCK_ERR:    # FIXME
-#        return "block_err"
-# NOTE: missing in slurm.h... bug?
-#    elif trig_type == TRIGGER_TYPE_BURST_BUFFER:
-#        return "burst_buffer"
-    else:
-        return "unknown"
-
-cdef trig_offset(uint16_t offset):
-    cdef int rc
-    rc = offset
-    rc -= 0x8000
-    return rc
-
-cdef trig_flags(uint16_t flags):
-    if (flags & TRIGGER_FLAG_PERM):
-        return "PERM"
-    return ""
 
 cdef _job_def_name(uint16_t job_type):
     if job_type == JOB_DEF_CPU_PER_GPU:

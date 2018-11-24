@@ -21,7 +21,6 @@ cdef extern from "slurm/slurm.h" nogil:
         TRIGGER_TYPE_TIME
         TRIGGER_TYPE_FINI
         TRIGGER_TYPE_RECONFIG
-        TRIGGER_TYPE_BLOCK_ERR
         TRIGGER_TYPE_IDLE
         TRIGGER_TYPE_DRAINED
         TRIGGER_TYPE_PRI_CTLD_FAIL
@@ -42,6 +41,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t trig_id
         uint16_t res_type
         char *res_id
+        uint32_t control_inx
         uint32_t trig_type
         uint16_t offset
         uint32_t user_id
