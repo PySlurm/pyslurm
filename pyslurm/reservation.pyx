@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ==================
 :mod:`reservation`
@@ -37,6 +36,7 @@ from posix.types cimport time_t
 
 from .c_reservation cimport *
 from .slurm_common cimport *
+from .utils cimport tounicode
 from .exceptions import PySlurmError
 
 cdef class Reservation:
@@ -45,6 +45,8 @@ cdef class Reservation:
         readonly list accounts
         readonly unicode burst_buffer
         readonly uint32_t core_cnt
+        readonly uint32_t core_spec_cnt
+        readonly dict core_spec_dict
         readonly time_t duration
         readonly unicode duration_str
         readonly time_t end_time
@@ -56,7 +58,6 @@ cdef class Reservation:
         readonly uint32_t midplane_cnt
         readonly list nodes
         readonly uint32_t node_cnt
-        readonly unicode node_list
         readonly unicode partition_name
         readonly unicode reservation_name
         readonly time_t start_time
@@ -64,15 +65,22 @@ cdef class Reservation:
         readonly unicode state
         readonly unicode tres
         readonly unicode users
-        uint32_t watts
+        readonly uint32_t watts
+        uint32_t watts_str
 
     @property
-    def watts(self):
+    def watts_str(self):
         """Amount of power to reserve."""
-        if self.watts != <time_t>NO_VAL:
-            return self.watts
+        if self.watts == NO_VAL or self.watts == 0:
+            return None
+        elif self.watts == INFINITE:
+            return "INFINITE"
+        elif (self.watts % 1000000) == 0:
+            return "%sM" % (self.watts / 1000000)
+        elif (self.watts % 1000) == 0:
+            return "%sK" % (self.watts / 1000)
         else:
-            return "n/a"
+            return self.watts
 
 
 def get_reservations(ids=False):
@@ -120,10 +128,9 @@ cdef get_reservation_info_msg(reservation, ids=False):
         char tmp2[32]
         char tmp3[32]
         char *flag_str = NULL
+        int i
         int rc
-        uint32_t cluster_flags = slurmdb_setup_cluster_flags()
-        bool is_bluegene = cluster_flags & CLUSTER_FLAG_BG
-        time_t duration
+        uint32_t duration
         time_t now = time(NULL)
 
 
@@ -133,7 +140,7 @@ cdef get_reservation_info_msg(reservation, ids=False):
     if rc == SLURM_SUCCESS:
         for record in resv_info_msg_ptr.reservation_array[:resv_info_msg_ptr.record_count]:
             if reservation:
-                if reservation and (reservation != <unicode>record.name):
+                if reservation and (reservation != tounicode(record.name)):
                     continue
 
             if ids and reservation is None:
@@ -143,9 +150,9 @@ cdef get_reservation_info_msg(reservation, ids=False):
 
             this_resv = Reservation()
 
-            if record.name:
-                this_resv.reservation_name = record.name
+            this_resv.reservation_name = tounicode(record.name)
 
+            # Line 1
             slurm_make_time_str(&record.start_time, tmp1, sizeof(tmp1))
             slurm_make_time_str(&record.end_time, tmp2, sizeof(tmp2))
 
@@ -153,51 +160,57 @@ cdef get_reservation_info_msg(reservation, ids=False):
                 duration = <time_t>(difftime(record.end_time, record.start_time))
                 slurm_secs2time_str(duration, tmp3, sizeof(tmp3))
                 this_resv.duration = duration
-                this_resv.duration_str = tmp3
+                this_resv.duration_str = tounicode(tmp3)
             else:
-                this_resv.duration_str = "N/A"
+                this_resv.duration_str = None
 
             this_resv.start_time = record.start_time
-            this_resv.start_time_str = tmp1
+            this_resv.start_time_str = tounicode(tmp1)
 
             this_resv.end_time = record.end_time
-            this_resv.end_time_str = tmp2
+            this_resv.end_time_str = tounicode(tmp2)
 
+            # Line 2
             flag_str = slurm_reservation_flags_string(record.flags)
-            if is_bluegene:
-                this_resv.midplanes = record.node_list.split(",")
-                if record.node_cnt == NO_VAL:
-                    this_resv.midplane_cnt = 0
-                else:
-                    this_resv.midplane_cnt = record.node_cnt
-                this_resv.cnode_cnt = record.core_cnt
-            else:
+
+            if record.node_list:
                 this_resv.nodes = record.node_list.split(",")
-                if record.node_cnt == NO_VAL:
-                    this_resv.node_cnt = 0
-                else:
-                    this_resv.node_cnt = record.node_cnt
-                this_resv.core_cnt = record.core_cnt
+
+            if record.node_cnt == NO_VAL:
+                this_resv.node_cnt = 0
+            else:
+                this_resv.node_cnt = record.node_cnt
+
+            this_resv.core_cnt = record.core_cnt
 
             if record.features:
                 this_resv.features = record.features.split(",")
 
-            if record.partition:
-                this_resv.partition_name = record.partition
+            this_resv.partition_name = tounicode(record.partition)
 
             if flag_str:
                 this_resv.flags = flag_str.split(",")
 
-            this_resv.tres = record.tres_str
+            # Line 3
+            core_spec_dict = {}
+            for i in range(record.core_spec_cnt):
+                core_spec_dict[record.core_spec[i].node_name] = record.core_spec[i].core_id
+
+            this_resv.core_spec_dict = core_spec_dict
+
+            # Line 4
+            this_resv.tres = tounicode(record.tres_str)
+
+            # Line 5
             this_resv.watts = record.resv_watts
+            this_resv.watts_str = record.resv_watts
 
             if (record.start_time <= now) and (record.end_time >= now):
                 this_resv.state = "ACTIVE"
             else:
                 this_resv.state = "INACTIVE"
 
-            if record.users:
-                this_resv.users = record.users
+            this_resv.users = tounicode(record.users)
 
             if record.accounts:
                 this_resv.accounts = record.accounts.split(",")
@@ -205,10 +218,7 @@ cdef get_reservation_info_msg(reservation, ids=False):
             if record.licenses:
                 this_resv.licenses = record.licenses.split(",")
 
-            if record.burst_buffer:
-                this_resv.burst_buffer = record.burst_buffer
-
-
+            this_resv.burst_buffer = tounicode(record.burst_buffer)
 
             resv_list.append(this_resv)
 

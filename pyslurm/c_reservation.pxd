@@ -1,18 +1,24 @@
 # c_reservation.pxd
 #
-from libc.stdint cimport uint32_t
+from libc.stdint cimport uint32_t, uint64_t
 from libc.stdint cimport int32_t
 from libc.stdio cimport FILE
 from posix.types cimport time_t
 
 cdef extern from "slurm/slurm.h" nogil:
+    ctypedef struct resv_core_spec_t:
+        char *node_name
+        char *core_id
+
     ctypedef struct reserve_info_t:
         char *accounts
         char *burst_buffer
         uint32_t core_cnt
+        uint32_t core_spec_cnt
+        resv_core_spec_t *core_spec
         time_t end_time
         char *features
-        uint32_t flags
+        uint64_t flags
         char *licenses
         char *name
         uint32_t node_cnt
