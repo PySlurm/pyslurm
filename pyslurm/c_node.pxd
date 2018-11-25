@@ -75,7 +75,6 @@ cdef extern from "slurm/slurm.h" nogil:
 
     ctypedef struct node_info_msg_t:
         time_t last_update
-        uint32_t node_scaling
         uint32_t record_count
         node_info_t *node_array
 

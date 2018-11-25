@@ -70,7 +70,7 @@ cdef class Partition:
         readonly uint16_t flags
         readonly uint32_t grace_time
         readonly list job_defaults_list
-        readonly unicode job_defaults
+        readonly list job_defaults
         readonly bool lln
         uint32_t max_cpus_per_node
         uint64_t max_mem_per_cpu
@@ -443,7 +443,7 @@ cdef get_partition_info_msg(partition, ids=False):
             # Line 10
             value = job_defaults_str(record.job_defaults_list)
             if value:
-                this_part.job_defaults = tounicode(value)
+                this_part.job_defaults = tounicode(value).split(",")
             else:
                 this_part.job_defaults = None
 

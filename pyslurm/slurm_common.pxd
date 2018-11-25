@@ -118,7 +118,11 @@ cdef extern from "slurm/slurm_errno.h" nogil:
 cdef enum:
     CONVERT_NUM_UNIT_EXACT
     UNIT_NONE
+    UNIT_KILO
     UNIT_MEGA
+    UNIT_GIGA
+    UNIT_TERA
+    UNIT_PETA
 
 cdef extern void slurm_make_time_str(time_t *time, char *string, int size)
 cdef extern uint16_t slurm_get_preempt_mode()
@@ -138,6 +142,16 @@ cdef extern void slurm_convert_num_unit(
     int buf_size,
     int orig_type,
     int spec_type,
+    uint32_t flags
+)
+
+cdef extern void slurm_convert_num_unit2(
+    double num,
+    char *buf,
+    int buf_size,
+    int orig_type,
+    int spec_type,
+    int divisor,
     uint32_t flags
 )
 

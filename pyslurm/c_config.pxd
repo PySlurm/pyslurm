@@ -3,6 +3,7 @@
 from libc.stdint cimport uint16_t, uint32_t, uint64_t
 from libc.stdio cimport FILE
 from posix.types cimport time_t
+from .utils cimport List
 
 cdef extern from "slurm/slurm.h" nogil:
     long SLURM_VERSION_NUMBER
@@ -30,23 +31,23 @@ cdef extern from "slurm/slurm.h" nogil:
         void *acct_gather_conf
         char *acct_gather_energy_type
         char *acct_gather_profile_type
-        char *acct_gather_infiniband_type
+        char *acct_gather_interconnect_type
         char *acct_gather_filesystem_type
         uint16_t acct_gather_node_freq
         char *authinfo
         char *authtype
-        char *backup_addr
-        char *backup_controller
         uint16_t batch_start_timeout
         char *bb_type
         time_t boot_time
+        void *cgroup_conf
         char *checkpoint_type
-        char *chos_loc
         char *core_spec_plugin
         char *cluster_name
+        char *comm_params
         uint16_t complete_wait
-        char *control_addr
-        char *control_machine
+        char **control_addr
+        uint32_t control_cnt
+        char **control_machine
         uint32_t cpu_freq_def
         uint32_t cpu_freq_govs
         char *crypto_type
@@ -62,11 +63,13 @@ cdef extern from "slurm/slurm.h" nogil:
         uint16_t ext_sensors_freq
         void *ext_sensors_conf
         uint16_t fast_schedule
+        char *fed_params
         uint32_t first_job_id
         uint16_t fs_dampening_factor
         uint16_t get_env_timeout
         char *gres_plugins
-        uint16_t group_info
+        uint16_t group_time
+        uint16_t group_force
         uint32_t hash_val
         uint16_t health_check_interval
         uint16_t health_check_node_state
@@ -85,6 +88,7 @@ cdef extern from "slurm/slurm.h" nogil:
         char *job_container_plugin
         char *job_credential_private_key
         char *job_credential_public_certificate
+        List job_defaults_list
         uint16_t job_file_append
         uint16_t job_requeue
         char *job_submit_plugins
@@ -115,6 +119,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint16_t msg_timeout
         uint16_t tcp_timeout
         uint32_t next_job_id
+        void *node_features_conf
         char *node_features_plugins
         char *node_prefix
         uint16_t over_time_limit
@@ -151,6 +156,7 @@ cdef extern from "slurm/slurm.h" nogil:
         uint16_t reconfig_flags
         char *requeue_exit
         char *requeue_exit_hold
+        char *resume_fail_program
         char *resume_program
         uint16_t resume_rate
         uint16_t resume_timeout
@@ -174,19 +180,26 @@ cdef extern from "slurm/slurm.h" nogil:
         char *slurm_user_name
         uint32_t slurmd_user_id
         char *slurmd_user_name
+        char *slurmctld_addr
         uint16_t slurmctld_debug
         char *slurmctld_logfile
         char *slurmctld_pidfile
         char *slurmctld_plugstack
+        void *slurmctld_plugstack_conf
         uint32_t slurmctld_port
         uint16_t slurmctld_port_count
+        char *slurmctld_primary_off_prog
+        char *slurmctld_primary_on_prog
+        uint16_t slurmctld_syslog_debug
         uint16_t slurmctld_timeout
+        char *slurmctld_params
         uint16_t slurmd_debug
         char *slurmd_logfile
+        char *slurmd_params
         char *slurmd_pidfile
-        char *slurmd_plugstack
         uint32_t slurmd_port
         char *slurmd_spooldir
+        uint16_t slurmd_syslog_debug
         uint16_t slurmd_timeout
         char *srun_epilog
         uint16_t *srun_port_range
@@ -215,9 +228,7 @@ cdef extern from "slurm/slurm.h" nogil:
         char *version
         uint16_t vsize_factor
         uint16_t wait_time
-        uint16_t z_16
-        uint32_t z_32
-        char *z_char
+        char *x11_params
 
     enum:
         CPU_FREQ_RANGE_FLAG
@@ -255,7 +266,7 @@ cdef extern from "slurm/slurm.h" nogil:
         DEBUG_FLAG_EXT_SENSORS
         DEBUG_FLAG_LICENSE
         DEBUG_FLAG_PROFILE
-        DEBUG_FLAG_INFINIBAND
+        DEBUG_FLAG_INTERCONNECT
         DEBUG_FLAG_FILESYSTEM
         DEBUG_FLAG_JOB_CONT
         DEBUG_FLAG_TASK
@@ -281,7 +292,8 @@ cdef extern from "slurm/slurm.h" nogil:
         DEBUG_FLAG_DB_TRES
         DEBUG_FLAG_ESEARCH
         DEBUG_FLAG_NODE_FEATURES
-        DEBUG_FLAG_FLAG_FEDR
+        DEBUG_FLAG_FEDR
+        DEBUG_FLAG_HETERO_JOBS
 
     enum:
         HEALTH_CHECK_NODE_IDLE
@@ -313,6 +325,7 @@ cdef extern from "slurm/slurm.h" nogil:
         PROLOG_FLAG_NOHOLD
         PROLOG_FLAG_CONTAIN
         PROLOG_FLAG_SERIAL
+        PROLOG_FLAG_X11
 
     enum:
         RECONFIG_KEEP_PART_INFO
@@ -330,9 +343,23 @@ cdef extern from "slurm/slurm.h" nogil:
         CR_ONE_TASK_PER_CORE
         CR_PACK_NODES
         CR_NHC_ABSOLUTELY_NO
+        CR_OTHER_CONS_TRES
         CR_CORE_DEFAULT_DIST_BLOCK
         CR_LLN
 
+    enum:
+        PARTITION_ENFORCE_NONE
+        PARTITION_ENFORCE_ALL
+        PARTITION_ENFORCE_ANY
+
+    enum:
+        LOG_FMT_ISO8601_MS
+        LOG_FMT_ISO8601
+        LOG_FMT_RFC5424_MS
+        LOG_FMT_RFC5424
+        LOG_FMT_CLOCK
+        LOG_FMT_SHORT
+        LOG_FMT_THREAD_ID
 
     void slurm_free_ctl_conf(slurm_ctl_conf_t *slurm_ctl_conf_ptr)
 
