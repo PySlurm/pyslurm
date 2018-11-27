@@ -943,6 +943,11 @@ def print_ctl_conf():
         raise PySlurmError(slurm_strerror(rc), rc)
 
 
+def write_config():
+    #TODO
+    raise PySlurmError("Not yet implemented", 1)
+
+
 cdef cpu_freq_to_string(char *buf, int buf_size, uint32_t cpu_freq):
     """
     Convert a cpu_freq number to its equivalent string.
