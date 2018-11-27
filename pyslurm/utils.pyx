@@ -14,6 +14,7 @@ from posix.types cimport uid_t
 from cpython.version cimport PY_MAJOR_VERSION
 from .slurm_common cimport *
 from .c_config cimport *
+from .utils cimport *
 
 # 
 # PySlurm Helper Functions

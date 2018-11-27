@@ -4,7 +4,7 @@ from libc.stdint cimport uint16_t, uint32_t
 from libc.stdint cimport int32_t
 from libc.stdio cimport FILE
 from posix.types cimport time_t
-from .slurm_common cimport dynamic_plugin_data_t
+from .slurm_common cimport dynamic_plugin_data_t, List
 
 cdef extern from "slurm/slurm.h" nogil:
     ctypedef struct job_step_info_t:
@@ -12,19 +12,19 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t array_task_id
         char *ckpt_dir
         uint16_t ckpt_interval
-        char *gres
+        char *cluster
+        uint32_t cpu_freq_min
+        uint32_t cpu_freq_max
+        uint32_t cpu_freq_gov
+        char *cpus_per_tres
         uint32_t job_id
+        char *mem_per_tres
         char *name
         char *network
         char *nodes
         int32_t *node_inx
         uint32_t num_cpus
-        uint32_t cpu_freq_min
-        uint32_t cpu_freq_max
-        uint32_t cpu_freq_gov
         uint32_t num_tasks
-        uint32_t packjobid
-        uint32_t packstepid
         char *partition
         char *resv_ports
         time_t run_time
@@ -38,6 +38,12 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t task_dist
         uint32_t time_limit
         char *tres_alloc_str
+        char *tres_bind
+        char *tres_freq
+        char *tres_per_step
+        char *tres_per_node
+        char *tres_per_socket
+        char *tres_per_task
         uint32_t user_id
 
     ctypedef struct job_step_info_response_msg_t:
@@ -66,11 +72,6 @@ cdef extern from "slurm/slurm.h" nogil:
         uint32_t task_cnt
         uint32_t task_dist
         uint32_t **tids
-
-    ctypedef struct list:
-        pass
-
-    ctypedef list *List
 
     ctypedef struct job_step_stat_response_msg_t:
         uint32_t job_id

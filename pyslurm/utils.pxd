@@ -4,6 +4,9 @@ from libc.stdint cimport uint16_t, uint32_t, uint64_t
 from posix.types cimport uid_t, gid_t
 from .slurm_common cimport cpu_bind_type_t, List
 
+cdef extern from * nogil:
+    ctypedef char* const_char_ptr "const char*"
+
 cdef extern from "slurm/slurm.h" nogil:
     enum:
         JOB_DEF_CPU_PER_GPU
@@ -28,7 +31,6 @@ cdef extern from "slurm/slurm.h" nogil:
         CPU_AUTO_BIND_TO_THREADS
         CPU_AUTO_BIND_TO_CORES
         CPU_AUTO_BIND_TO_SOCKETS
-
 
 cdef unicode tounicode(char* s)
 cdef fuzzy_equal(v1, v2)

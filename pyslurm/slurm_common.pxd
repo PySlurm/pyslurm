@@ -87,7 +87,6 @@ cdef extern from "slurm/slurm.h" nogil:
     int slurm_list_count(List l)
     void *slurm_list_peek(List l)
 
-
 cdef extern from "slurm/slurmdb.h" nogil:
     enum:
         CLUSTER_FLAG_BG
@@ -110,19 +109,20 @@ cdef extern from "slurm/slurm_errno.h" nogil:
     int slurm_perror(char *msg)
 
 
-
 #
 # Declarations outside of slurm.h
 #
 
 cdef enum:
-    CONVERT_NUM_UNIT_EXACT
-    UNIT_NONE
-    UNIT_KILO
-    UNIT_MEGA
-    UNIT_GIGA
-    UNIT_TERA
-    UNIT_PETA
+        UNIT_NONE
+        UNIT_KILO
+        UNIT_MEGA
+        UNIT_GIGA
+        UNIT_TERA
+        UNIT_PETA
+
+cdef struct hostset
+ctypedef hostset *hostset_t
 
 cdef extern void slurm_make_time_str(time_t *time, char *string, int size)
 cdef extern uint16_t slurm_get_preempt_mode()
@@ -157,6 +157,9 @@ cdef extern void slurm_convert_num_unit2(
 
 cdef extern void slurm_xfree(void **, const_char_ptr, int, const_char_ptr)
 cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
+cdef extern hostset_t slurm_hostset_create(const_char_ptr hostlist)
+cdef extern int slurm_hostset_count(hostset_t set)
+cdef extern void slurm_hostset_destroy(hostset_t set)
 
 #
 # Declarations outside of slurmdb.h

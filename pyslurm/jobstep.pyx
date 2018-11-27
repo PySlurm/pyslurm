@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: cdivision=True
 """
 ==============
@@ -35,10 +34,12 @@ from libc.signal cimport SIGKILL
 from posix.types cimport time_t
 
 from .c_jobstep cimport *
-from .c_job cimport slurm_get_select_jobinfo, slurm_job_state_string
-from .c_job cimport SELECT_JOBDATA_IONODES
+from .c_job cimport *
 from .slurm_common cimport *
+from .utils cimport *
 from .exceptions import PySlurmError
+
+DEF CONVERT_NUM_UNIT_EXACT = 0x00000001
 
 cdef class Jobstep:
     """An object to wrap `jobstep_info_t` structs."""
@@ -49,10 +50,10 @@ cdef class Jobstep:
         readonly unicode checkpoint_dir
         readonly unicode cpu_freq_req
         readonly uint32_t cpus
+        readonly unicode cpus_per_tres
         readonly unicode dist
         readonly uint32_t job_id
-        readonly unicode gres
-        readonly unicode midplane_list
+        readonly unicode mem_per_tres
         readonly unicode name
         readonly unicode network
         readonly unicode node_list
@@ -68,6 +69,12 @@ cdef class Jobstep:
         uint32_t time_limit
         readonly unicode time_limit_str
         readonly unicode tres
+        readonly unicode tres_bind
+        readonly unicode tres_freq
+        readonly unicode tres_per_step
+        readonly unicode tres_per_node
+        readonly unicode tres_per_socket
+        readonly unicode tres_per_task
         readonly uint32_t user_id
         uint32_t step_id
 
@@ -138,6 +145,7 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
         job_step_info_response_msg_t *job_step_info_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
         char time_str[32]
+        char tmp_node_cnt[40]
         char limit_str[32]
         char *io_nodes = NULL
         uint32_t cluster_flags = slurmdb_setup_cluster_flags()
@@ -146,100 +154,97 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
     if jobid is None and stepid is None:
         rc = slurm_get_job_steps(<time_t>NULL, NO_VAL, NO_VAL,
                                  &job_step_info_ptr, show_flags)
+    elif jobid and stepid is None:
+        rc = slurm_get_job_steps(<time_t>NULL, jobid, NO_VAL,
+                                 &job_step_info_ptr, show_flags)
+    else:
+        rc = slurm_get_job_steps(<time_t>NULL, jobid, stepid,
+                                 &job_step_info_ptr, show_flags)
 
     jobstep_list = []
     if rc == SLURM_SUCCESS:
         for record in job_step_info_ptr.job_steps[:job_step_info_ptr.job_step_count]:
             this_jobstep = Jobstep()
 
-            this_jobstep.start_time = record.start_time
-
             # Line 1
-            slurm_make_time_str(<time_t *>&record.start_time,
-                                time_str, sizeof(time_str))
-            this_jobstep.start_time_str = time_str
-
-            this_jobstep.user_id = record.user_id
+            this_jobstep.start_time = record.start_time
+            slurm_make_time_str(<time_t *>&record.start_time, time_str, sizeof(time_str))
+            this_jobstep.start_time_str = tounicode(time_str)
 
             this_jobstep.time_limit = record.time_limit
             if record.time_limit == INFINITE:
                 this_jobstep.time_limit_str = "UNLIMITED"
             else:
-                slurm_secs2time_str(<time_t>record.time_limit * 60, limit_str, sizeof(limit_str))
-                this_jobstep.time_limit_str = limit_str
+                slurm_secs2time_str(
+                    <time_t>record.time_limit * 60, limit_str, sizeof(limit_str)
+                )
+                this_jobstep.time_limit_str = tounicode(limit_str)
 
             this_jobstep.array_job_id = record.array_job_id
             this_jobstep.array_task_id = record.array_task_id
             this_jobstep.step_id = record.step_id
             this_jobstep.job_id = record.job_id
+            this_jobstep.user_id = record.user_id
 
             # Line 2
-            if record.state:
-                this_jobstep.state = slurm_job_state_string(record.state)
-
-            if (cluster_flags & CLUSTER_FLAG_BG):
-                slurm_get_select_jobinfo(record.select_jobinfo,
-                                         SELECT_JOBDATA_IONODES,
-                                         &io_nodes)
-                if io_nodes:
-                    this_jobstep.midplane_list = (
-                        record.nodes + "[" + io_nodes + "]"
-                    )
-                else:
-                    this_jobstep.midplane_list = record.nodes
-
-            else:
-                this_jobstep.node_list = record.nodes
-
-            if record.partition:
-                this_jobstep.partition = record.partition
-
-            if record.gres:
-                this_jobstep.gres = record.gres
+            this_jobstep.state = tounicode(slurm_job_state_string(record.state))
+            this_jobstep.partition = tounicode(record.partition)
+            this_jobstep.node_list = tounicode(record.nodes)
 
             # Line 3
-            if (cluster_flags & CLUSTER_FLAG_BGQ):
-                # no access to convert_num_unit()
-                pass
-            else:
-                # no access to convert_num_unit()
-                #this_jobstep.nodes = 
-                pass
-
+            slurm_convert_num_unit(
+                <float>_nodes_in_list(record.nodes),
+                tmp_node_cnt, sizeof(tmp_node_cnt), UNIT_NONE, NO_VAL,
+                CONVERT_NUM_UNIT_EXACT
+            )
+            this_jobstep.nodes = tounicode(tmp_node_cnt)
             this_jobstep.cpus = record.num_cpus
             this_jobstep.tasks = record.num_tasks
-
-            if record.name:
-                this_jobstep.name = record.name
-
-            if record.network:
-                this_jobstep.network = record.network
+            this_jobstep.name = tounicode(record.name)
+            this_jobstep.network = tounicode(record.network)
 
             # Line 4
-            if record.tres_alloc_str:
-                this_jobstep.tres = record.tres_alloc_str
+            this_jobstep.tres = tounicode(record.tres_alloc_str)
 
             # Line 5
-            if record.resv_ports:
-                this_jobstep.resv_ports = record.resv_ports
-
+            this_jobstep.resv_ports = tounicode(record.resv_ports)
             this_jobstep.checkpoint = record.ckpt_interval
+            this_jobstep.checkpoint_dir = tounicode(record.ckpt_dir)
 
-            if record.ckpt_dir:
-                this_jobstep.checkpoint_dir = record.ckpt_dir
+            # Line 6:
+            #TODO: CPUFreqReq
 
-            # Line 6: cpu_freq_debug
-
-            if record.task_dist:
-                this_jobstep.dist = slurm_step_layout_type_name(
-                    <task_dist_states_t>record.task_dist
-                )
+            this_jobstep.dist = tounicode(
+                slurm_step_layout_type_name(<task_dist_states_t>record.task_dist)
+            )
 
             # Line 7
-            if record.srun_host:
-                this_jobstep.srun_host = record.srun_host
-
+            this_jobstep.srun_host = tounicode(record.srun_host)
             this_jobstep.srun_pid = record.srun_pid
+
+            if record.cpus_per_tres:
+                this_jobstep.cpus_per_tres = tounicode(record.cpus_per_tres)
+
+            if record.mem_per_tres:
+                this_jobstep.mem_per_tres = tounicode(record.mem_per_tres)
+
+            if record.tres_bind:
+                this_jobstep.tres_bind = tounicode(record.tres_bind)
+
+            if record.tres_freq:
+                this_jobstep.tres_freq = tounicode(record.tres_freq)
+
+            if record.tres_per_step:
+                this_jobstep.tres_per_step = tounicode(record.tres_per_step)
+
+            if record.tres_per_node:
+                this_jobstep.tres_per_node = tounicode(record.tres_per_node)
+
+            if record.tres_per_socket:
+                this_jobstep.tres_per_socket = tounicode(record.tres_per_socket)
+
+            if record.tres_per_task:
+                this_jobstep.tres_per_task = tounicode(record.tres_per_task)
 
             jobstep_list.append(this_jobstep)
 
@@ -275,3 +280,14 @@ def kill_job_step(uint32_t jobid, uint32_t job_step_id, uint16_t signal=SIGKILL)
     else:
         errno = slurm_get_errno()
         raise PySlurmError(slurm_strerror(errno), errno)
+
+
+cdef _nodes_in_list(char *node_list):
+    cdef:
+        hostset_t host_set
+        int count
+
+    host_set = slurm_hostset_create(node_list)
+    count = slurm_hostset_count(host_set)
+    slurm_hostset_destroy(host_set)
+    return count

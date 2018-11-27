@@ -33,7 +33,7 @@ sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
 from . import config
 #from . import job
-#from . import jobstep
+from . import jobstep
 from . import hostlist
 from . import license
 #from . import misc
