@@ -5,6 +5,9 @@ from libc.stdint cimport int32_t
 from posix.types cimport pid_t, time_t
 from .slurm_common cimport dynamic_plugin_data_t
 
+cdef extern from * nogil:
+    ctypedef char* const_char_ptr "const char*"
+
 #cdef extern from "bits/sockaddr.h" nogil:
 #    ctypedef unsigned short int sa_family_t
 #    short __SOCKADDR_COMMON_SIZE(sizeof (unsigned short int))
@@ -586,7 +589,7 @@ cdef extern from "slurm/slurm.h" nogil:
     int slurm_get_end_time(uint32_t jobid, time_t *end_time_ptr)
 
     int slurm_job_cpus_allocated_on_node(job_resources_t *job_resrcs_ptr,
-                                         const char *node_name)
+                                         const_char_ptr node_name)
 
     void slurm_init_job_desc_msg(job_desc_msg_t *job_desc_msg)
 
