@@ -156,7 +156,7 @@ cdef class Hostlist:
         Args:
             None
         Returns:
-            String representatio of the first host in the hostlist or NULL if
+            String representation of the first host in the hostlist or NULL if
             the hostlist is empty.
         """
         if self.hl is not NULL:

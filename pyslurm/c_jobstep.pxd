@@ -80,7 +80,7 @@ cdef extern from "slurm/slurm.h" nogil:
 
     ctypedef struct job_step_pids_response_msg_t:
         uint32_t job_id
-        List pids_list
+        List pid_list
         uint32_t step_id
 
     ctypedef struct job_step_pids_t:
@@ -169,8 +169,13 @@ cdef extern from "slurm/slurm.h" nogil:
     slurm_step_layout_t *slurm_job_step_layout_get(uint32_t job_id,
                                                    uint32_t step_id)
 
-    int slurm_job_step_stat(uint32_t job_id, uint32_t step_id, char *node_list,
-                            job_step_stat_response_msg_t **resp)
+    int slurm_job_step_stat(
+        uint32_t job_id,
+        uint32_t step_id,
+        char *node_list,
+        uint16_t use_protocol_ver,
+        job_step_stat_response_msg_t **resp
+    )
 
     int slurm_job_step_get_pids(uint32_t job_id, uint32_t step_id,
                                 char *node_list,

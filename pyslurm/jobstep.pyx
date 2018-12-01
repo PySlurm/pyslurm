@@ -30,16 +30,21 @@ Each job record in a ``job_step_`` struct is converted to a
 """
 from __future__ import absolute_import, division, unicode_literals
 
+from libc.errno cimport errno
 from libc.signal cimport SIGKILL
 from posix.types cimport time_t
 
+from .c_hostlist cimport *
 from .c_jobstep cimport *
 from .c_job cimport *
 from .slurm_common cimport *
 from .utils cimport *
 from .exceptions import PySlurmError
+from .hostlist import Hostlist
 
 DEF CONVERT_NUM_UNIT_EXACT = 0x00000001
+DEF SLURM_PROTOCOL_VERSION = ((33 << 8) | 0)
+
 
 cdef class Jobstep:
     """An object to wrap `jobstep_info_t` structs."""
@@ -101,6 +106,30 @@ cdef class Jobstep:
             return "UNLIMITED"
         else:
             return self.time_limit
+
+
+cdef class JobStepPids:
+    """
+    """
+    cdef:
+        readonly unicode node_name
+        readonly list pidlist
+
+
+cdef class JobStepLayout:
+    """
+    """
+    cdef:
+        readonly unicode front_end
+        readonly uint16_t node_cnt
+        readonly unicode node_list
+        readonly uint16_t plane_size
+        readonly uint16_t start_protocol_ver
+        readonly list tasks
+        readonly uint32_t task_cnt
+        readonly uint32_t task_dist
+        readonly unicode task_dist_str
+        readonly dict tids
 
 
 def get_jobsteps(ids=False):
@@ -253,6 +282,147 @@ cdef get_jobstep_info_msg(jobid, stepid, ids=False):
         return jobstep_list
     else:
         raise PySlurmError(slurm_strerror(rc), rc)
+
+
+cdef class JobStepStat:
+    """
+    """
+    cdef:
+        readonly uint32_t num_tasks
+        readonly uint32_t return_code
+        readonly list step_pids
+
+
+def get_step_stat(job_id, step_id):
+    """
+    """
+    cdef:
+        job_step_stat_response_msg_t *stat_resp_msg
+        uint16_t protocol_version = SLURM_PROTOCOL_VERSION
+        ListIterator itr
+        int rc
+        int i
+        int j
+
+    if not step_id:
+        step_id = <uint32_t>NO_VAL
+
+    rc = slurm_job_step_stat(job_id, step_id, NULL, protocol_version, &stat_resp_msg)
+
+    if rc != SLURM_SUCCESS:
+        raise PySlurmError(slurm_strerror(rc), rc)
+
+    itr = slurm_list_iterator_create(stat_resp_msg.stats_list)
+
+    stepstat_list = []
+
+    for i in range(slurm_list_count(stat_resp_msg.stats_list)):
+        step_stat_t = <job_step_stat_t *>slurm_list_next(itr)
+        this_stat = JobStepStat()
+        this_stat.num_tasks = step_stat_t.num_tasks
+        this_stat.return_code = step_stat_t.return_code
+        this_stat.step_pids = create_pidlist(step_stat_t.step_pids)
+        stepstat_list.append(this_stat)
+
+    slurm_list_iterator_destroy(itr)
+    slurm_job_step_stat_response_msg_free(stat_resp_msg)
+    return stepstat_list
+
+
+def get_step_layout(job_id, step_id):
+    """
+    """
+    cdef:
+        slurm_step_layout_t *layout
+        int i
+        int j
+        int k
+
+    layout = slurm_job_step_layout_get(job_id, step_id)
+
+    if layout == NULL:
+        raise PySlurmError("Could not get job step info", errno)
+
+    this_layout = JobStepLayout()
+    this_layout.front_end = tounicode(layout.front_end)
+    this_layout.node_cnt = layout.node_cnt
+    this_layout.node_list = tounicode(layout.node_list)
+    this_layout.plane_size = layout.plane_size
+    this_layout.start_protocol_ver = layout.start_protocol_ver
+
+    tasklist = []
+    for i in range(layout.node_cnt):
+        tasklist.append(layout.tasks[i])
+
+    this_layout.tasks = tasklist
+    this_layout.task_cnt = layout.task_cnt
+    this_layout.task_dist = layout.task_dist
+    this_layout.task_dist_str = tounicode(
+        slurm_step_layout_type_name(<task_dist_states_t>layout.task_dist)
+    )
+
+    hl = Hostlist()
+    hl.create(tounicode(layout.node_list))
+
+    nodes = []
+    for _ in range(hl.count()):
+        nodes.append(hl.shift())
+
+    hl.destroy()
+
+    tids = {}
+    for j in range(layout.node_cnt):
+        for k in range(layout.tasks[j]):
+            tids[nodes[j]] = layout.tids[j][k]
+
+    this_layout.tids = tids
+
+    slurm_job_step_layout_free(layout)
+    return this_layout
+
+
+def get_step_pids(job_id, step_id=None):
+    """
+    """
+    cdef:
+        job_step_pids_response_msg_t *pids_resp_msg
+        ListIterator itr
+        int rc
+        int i
+        int j
+
+    if not step_id:
+        step_id = <uint32_t>NO_VAL
+
+    rc = slurm_job_step_get_pids(job_id, step_id, NULL, &pids_resp_msg)
+
+    if rc != SLURM_SUCCESS:
+        raise PySlurmError(slurm_strerror(rc), rc)
+
+    itr = slurm_list_iterator_create(pids_resp_msg.pid_list)
+
+    steppids_list = []
+
+    for i in range(slurm_list_count(pids_resp_msg.pid_list)):
+        step_pids_t = <job_step_pids_t *>slurm_list_next(itr)
+        this_steppids = JobStepPids()
+        this_steppids.node_name = tounicode(step_pids_t.node_name)
+        this_steppids.pidlist = create_pidlist(step_pids_t)
+        steppids_list.append(this_steppids)
+
+    slurm_list_iterator_destroy(itr)
+    slurm_job_step_pids_response_msg_free(pids_resp_msg)
+    return steppids_list
+
+cdef list create_pidlist(job_step_pids_t *step_pids):
+    cdef:
+        int i
+
+    pidlist = []
+    for i in range(step_pids.pid_cnt):
+        pidlist.append(step_pids.pid[i])
+
+    return pidlist
 
 
 def kill_job_step(uint32_t jobid, uint32_t job_step_id, uint16_t signal=SIGKILL):
