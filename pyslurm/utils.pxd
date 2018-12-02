@@ -31,6 +31,7 @@ cdef extern from "slurm/slurm.h" nogil:
         CPU_AUTO_BIND_TO_THREADS
         CPU_AUTO_BIND_TO_CORES
         CPU_AUTO_BIND_TO_SOCKETS
+        CPU_BIND_OFF
 
 cdef unicode tounicode(char* s)
 cdef fuzzy_equal(v1, v2)

@@ -52,6 +52,8 @@ include "node.pxi"
 cdef class Node:
     """An object to wrap `node_info_t` structs."""
     cdef:
+        readonly list active_features
+        readonly list available_features
         readonly uint64_t alloc_mem
         readonly unicode alloc_tres
         readonly object arch
@@ -64,32 +66,34 @@ cdef class Node:
         readonly uint16_t cores_per_socket
         readonly uint16_t core_spec_cnt
         uint32_t cpu_load
+        readonly list cpu_bind
         readonly uint16_t cpu_alloc
-        readonly uint16_t cpu_err
         readonly uint16_t cpu_tot
         readonly unicode cpu_spec_list
         uint32_t current_watts
+        unicode features
         uint64_t ext_sensors_joules
         uint64_t ext_sensors_temp
         uint64_t ext_sensors_watts
-        readonly list available_features
-        readonly list active_features
         uint64_t free_mem
-        readonly list gres
+        list gres
         readonly list gres_drain
         readonly list gres_used
         uint32_t lowest_joules
+        readonly unicode mcs_label
         readonly uint64_t mem_spec_limit
-        readonly unicode node_name
-        readonly unicode node_addr
-        readonly unicode node_host_name
+        readonly unicode next_state
+        unicode node_name
+        unicode node_addr
+        unicode node_host_name
+        uint32_t node_state
         readonly unicode os
         uint32_t owner
         readonly unicode partitions
+        readonly uint16_t port
         readonly uint64_t real_memory
         readonly unicode rack_midplane
-        readonly unicode reason
-        readonly unicode reason_str
+        unicode reason
         readonly time_t reason_time
         readonly unicode reason_time_str
         readonly uint32_t reason_uid
@@ -101,13 +105,13 @@ cdef class Node:
         readonly uint16_t threads_per_core
         readonly uint32_t tmp_disk
         readonly unicode version
-        readonly uint32_t weight
+        uint32_t weight
 
     @property
     def cap_watts(self):
         """Power consumption limit of node (watts)"""
         if self.cap_watts == NO_VAL:
-            return "n/a"
+            return None
         else:
             return self.cap_watts
 
@@ -118,7 +122,7 @@ cdef class Node:
         n/s if not supported)
         """
         if self.consumed_joules == NO_VAL:
-            return "n/s"
+            return None
         else:
             return int(self.consumed_joules)
 
@@ -126,7 +130,7 @@ cdef class Node:
     def cpu_load(self):
         """CPU load"""
         if self.cpu_load == NO_VAL:
-            return "N/A"
+            return None
         else:
             return "%.2f" % (self.cpu_load / 100.0)
 
@@ -134,7 +138,7 @@ cdef class Node:
     def current_watts(self):
         """Instantaneous power consumption of node (watts)"""
         if self.current_watts == NO_VAL:
-            return "n/s"
+            return None
         else:
             return self.current_watts
 
@@ -144,8 +148,8 @@ cdef class Node:
         Energy consumed by node since time powered on (joules, n/s if not
         supported)
         """
-        if self.ext_sensors_joules == NO_VAL:
-            return "n/s"
+        if self.ext_sensors_joules == NO_VAL64:
+            return None
         else:
             return int(self.ext_sensors_joules)
 
@@ -153,7 +157,7 @@ cdef class Node:
     def ext_sensors_temp(self):
         """Temperature of node (joules, n/s if not supported)"""
         if self.ext_sensors_temp == NO_VAL:
-            return "n/s"
+            return None
         else:
             return int(self.ext_sensors_temp)
 
@@ -163,15 +167,24 @@ cdef class Node:
         Instantaneous power consumption of node (joules, n/s if not supported)
         """
         if self.ext_sensors_watts == NO_VAL:
-            return "n/s"
+            return None
         else:
             return int(self.ext_sensors_watts)
+
+    @property
+    def features(self):
+        """List of a node's available features"""
+        return self.features
+
+    @features.setter
+    def features(self, value):
+        self.features = value
 
     @property
     def free_mem(self):
         """Free memory in MiB"""
         if self.free_mem == NO_VAL64:
-            return "N/A"
+            return None
         else:
             return self.free_mem
 
@@ -182,17 +195,166 @@ cdef class Node:
         with slurmd (joules, n/s if not supported)
         """
         if self.lowest_joules == NO_VAL:
-            return "n/s"
+            return None
         else:
             return int(self.lowest_joules)
 
     @property
+    def node_name(self):
+        """Node name to Slurm"""
+        return self.node_name
+
+    @property
+    def node_addr(self):
+        """Communication name"""
+        return self.node_addr
+
+    @property
+    def node_host_name(self):
+        """Node's hostname"""
+        return self.node_host_name
+
+    @property
+    def node_state(self):
+        """See enum node_states"""
+        return self.node_state
+
+    @node_state.setter
+    def node_state(self, value):
+        self.node_state = value
+
+    @property
     def owner(self):
-        """User allowed to use this node or NO_VAL"""
+        """User allowed to use this node"""
         if self.owner == NO_VAL:
-            return "N/A"
+            return None
         else:
             return self.owner
+
+    @property
+    def reason(self):
+        """Reason for node being DOWN or DRAINING"""
+        return self.reason
+
+    @reason.setter
+    def reason(self, value):
+        self.reason = value
+
+    @property
+    def weight(self):
+        """Arbitrary priority of node for scheduling"""
+        return self.weight
+
+    @weight.setter
+    def weight(self, value):
+        self.weight = value
+
+    def update(self):
+        """
+        Request that the state of the current node object to be updated.
+
+        This function uses ``slurm_update_node`` to update the state of the
+        node.  The available node states are defined in `slurm.h`, although,
+        the values most likely to be used are:
+
+            - NODE_STATE_DRAIN
+            - NODE_STATE_FAIL
+            - NODE_RESUME
+
+        Valid attributes that are applicable to node updates:
+
+            - node_state `(mandatory)`
+            - gres
+            - reason
+            - features
+            - reason
+            - weight
+
+        Returns:
+            int: Slurm return code.
+
+        Raises:
+            PySlurmError: If ``slurm_update_node`` is unsuccessful.
+
+        Example:
+
+            >>> from pyslurm import node
+            >>> c1 = node.get_node("c1")
+            >>> c1.node_state = node.NODE_STATE_DRAIN
+
+            # Python 3
+            >>> c1.reason = "draining c1"
+
+            # Python 2
+            >>> c1.reason = u"draining c1"
+
+            >>> c1.update()
+            0
+            >>> c1.reason
+            u'draining c1'
+            >>> node.get_node("c1").reason
+            u'draining c1 [root@2018-12-02T03:56:18]'
+            >>> node.get_node("c1").state 
+            u'IDLE+DRAIN'
+
+
+        Notes:
+            #. This method requires **root** privileges.
+            #. Use :func:`get_errno` to translate return code if not 0.
+
+        """
+        cdef:
+            update_node_msg_t update_node_msg
+            int rc
+            int errno
+
+#        if not node_dict:
+#            raise PySlurmError("You must provide a node update dictionary.")
+
+        slurm_init_update_node_msg(&update_node_msg)
+
+        if self.features:
+            b_features = self.features.encode("UTF-8", "replace")
+            update_node_msg.features = b_features
+
+        if self.gres:
+            b_gres = self.gres.encode("UTF-8", "replace")
+            update_node_msg.gres = b_gres
+
+        # Optional
+        if self.node_addr:
+            b_node_addr = self.node_addr.encode("UTF-8", "replace")
+            update_node_msg.node_addr = b_node_addr
+
+        # Optional
+        if self.node_host_name:
+            b_node_hostname = self.node_host_name.encode("UTF-8", "replace")
+            update_node_msg.node_hostname = b_node_hostname
+
+        if self.node_name:
+            b_node_name = self.node_name.encode("UTF-8", "replace")
+            update_node_msg.node_names = b_node_name
+
+        # Use enum node_states
+        if self.node_state:
+            update_node_msg.node_state = self.node_state
+
+        if self.reason:
+            b_reason = self.reason.encode("UTF-8", "replace")
+            update_node_msg.reason = b_reason
+
+        update_node_msg.reason_uid = <uint32_t>_os.getuid()
+
+        if self.weight:
+            update_node_msg.weight = <uint32_t>self.weight
+
+        rc = slurm_update_node(&update_node_msg)
+
+        if rc != SLURM_SUCCESS:
+            errno = slurm_get_errno()
+            raise PySlurmError(slurm_strerror(errno), errno)
+        else:
+            return rc
 
 
 def get_nodes(ids=False):
@@ -262,7 +424,6 @@ cdef get_node_info_msg(node, ids=False):
         node_info_msg_t *node_info_msg_ptr = NULL
         partition_info_msg_t *part_info_msg_ptr = NULL
         uint16_t show_flags = SHOW_ALL | SHOW_DETAIL
-        int cpus_per_node = 1
         int error_code
         int idle_cpus
         int inx
@@ -276,22 +437,20 @@ cdef get_node_info_msg(node, ids=False):
         char* reason_str = NULL
         char* select_reason_str = NULL
         char time_str[32]
+        char tmp_str[128]
         char* save_ptr = NULL
         char* tok
         char* user_name
-        uint16_t err_cpus = 0
         uint16_t alloc_cpus = 0
         uint32_t i
         uint64_t alloc_memory
         uint32_t my_state
-        uint32_t cluster_flags = slurmdb_setup_cluster_flags()
 
     rc = slurm_load_node(<time_t>NULL, &node_info_msg_ptr, show_flags)
 
     node_list = []
 
     if rc == SLURM_SUCCESS:
-        # Populate node partition list
         error_code = slurm_load_partitions(<time_t>NULL, &part_info_msg_ptr, show_flags)
         if error_code != SLURM_SUCCESS:
             part_info_msg_ptr = NULL
@@ -312,9 +471,6 @@ cdef get_node_info_msg(node, ids=False):
                 continue
 
             my_state = record.node_state
-
-            if node_info_msg_ptr.node_scaling:
-                cpus_per_node = record.cpus / node_info_msg_ptr.node_scaling
 
             if (my_state & NODE_STATE_CLOUD):
                 my_state &= (~NODE_STATE_CLOUD)
@@ -341,75 +497,64 @@ cdef get_node_info_msg(node, ids=False):
                                       NODE_STATE_ALLOCATED,
                                       &alloc_cpus)
 
-            if (cluster_flags & CLUSTER_FLAG_BG):
-                if (not alloc_cpus and
-                    (IS_NODE_ALLOCATED(record) or
-                     IS_NODE_COMPLETING(record))):
-                    alloc_cpus = record.cpus
-                else:
-                    alloc_cpus *= cpus_per_node
-
             idle_cpus = record.cpus - alloc_cpus
 
-            slurm_get_select_nodeinfo(record.select_nodeinfo,
-                                      SELECT_NODEDATA_SUBCNT,
-                                      NODE_STATE_ERROR,
-                                      &err_cpus)
-
-            if (cluster_flags & CLUSTER_FLAG_BG):
-                err_cpus *= cpus_per_node
-
-            idle_cpus -= err_cpus
-
-            if (alloc_cpus and err_cpus) or (idle_cpus and
-                   (idle_cpus != record.cpus)):
+            if (idle_cpus and (idle_cpus != record.cpus)):
                     my_state &= NODE_STATE_FLAGS
                     my_state |= NODE_STATE_MIXED
 
-            # Instantiate empty Node class instance for storing attributes
             this_node = Node()
 
+            # Line 1
             this_node.node_name = tounicode(record.name)
-
-            if (cluster_flags & CLUSTER_FLAG_BG):
-                slurm_get_select_nodeinfo(record.select_nodeinfo,
-                                          SELECT_NODEDATA_RACK_MP,
-                                          <node_states>0, &select_reason_str)
-                if select_reason_str:
-                    this_node.rack_midplane = tounicode(select_reason_str)
 
             if record.arch:
                 this_node.arch = tounicode(record.arch)
 
+            if record.cpu_bind:
+                this_node.cpu_bind = slurm_sprint_cpu_bind_type(
+                    <cpu_bind_type_t>record.cpu_bind
+                )
+
             this_node.cores_per_socket = record.cores
+
+            # Line 2
             this_node.cpu_alloc = alloc_cpus
-            this_node.cpu_err = err_cpus
             this_node.cpu_tot = record.cpus
             this_node.cpu_load = record.cpu_load
+
+            # Line 3
+            this_node.features = tounicode(record.features)
 
             if record.features:
                 this_node.available_features = tounicode(record.features).split(",")
 
+            # Line 4
             if record.features_act:
                 this_node.active_features = tounicode(record.features_act).split(",")
 
+            # Line 5
             if record.gres:
                 this_node.gres = tounicode(record.gres).split(",")
 
+            # Line 6
             if record.gres_drain:
                 this_node.gres_drain = tounicode(record.gres_drain).split(",")
 
+            # Line (optional)
             if record.gres_used:
                 this_node.gres_used = tounicode(record.gres_used).split(",")
 
-            if record.node_hostname or record.node_addr:
-                this_node.node_addr = tounicode(record.node_addr)
-                this_node.node_host_name = tounicode(record.node_hostname)
-                this_node.version = tounicode(record.version)
+            # Line 7
+            this_node.node_addr = tounicode(record.node_addr)
+            this_node.node_host_name = tounicode(record.node_hostname)
+            this_node.port = record.port
+            this_node.version = tounicode(record.version)
 
-            if record.os:
-                this_node.os = tounicode(record.os)
+            # Line 8
+            this_node.os = tounicode(record.os)
 
+            # Line 9
             slurm_get_select_nodeinfo(record.select_nodeinfo,
                                       SELECT_NODEDATA_MEM_ALLOC,
                                       NODE_STATE_ALLOCATED,
@@ -421,19 +566,19 @@ cdef get_node_info_msg(node, ids=False):
             this_node.sockets = record.sockets
             this_node.boards = record.boards
 
-            # Core and Memory Specialization
+            # Line (optional) - Core and Memory Specialization
             if (record.core_spec_cnt or record.cpu_spec_list or
                 record.mem_spec_limit):
                 if record.core_spec_cnt:
                     this_node.core_spec_count = record.core_spec_cnt
                 if record.cpu_spec_list:
-                    this_node.cpu_spec_list = tounicode(
-                        record.cpu_spec_list
-                    ).split(",")
+                    this_node.cpu_spec_list = tounicode(record.cpu_spec_list).split(",")
                 if record.mem_spec_limit:
                     this_node.mem_spec_limit = record.mem_spec_limit
 
-            # Line
+            # Line 10
+            this_node.node_state = record.node_state
+
             this_node.state = (tounicode(slurm_node_state_string(my_state)) +
                                tounicode(cloud_str) +
                                tounicode(comp_str) +
@@ -444,88 +589,75 @@ cdef get_node_info_msg(node, ids=False):
             this_node.tmp_disk = record.tmp_disk
             this_node.weight = record.weight
             this_node.owner = record.owner
+            this_node.mcs_label = tounicode(record.mcs_label)
 
-            # Line
+            # Line (optional)
+            if record.next_state:
+                this_node.next_state = tounicode(slurm_node_state_string(record.next_state))
+
+            # Line 11
             if record.partitions:
                 this_node.partitions = tounicode(record.partitions)
 
-            # Line
+            # Line 12
             if record.boot_time:
                 this_node.boot_time = record.boot_time
-                slurm_make_time_str(<time_t *>&record.boot_time,
-                                    time_str, sizeof(time_str))
-                b_time_str = time_str
-                this_node.boot_time_str = tounicode(b_time_str)
+                slurm_make_time_str(<time_t *>&record.boot_time, time_str, sizeof(time_str))
+                this_node.boot_time_str = tounicode(time_str)
 
             if record.slurmd_start_time:
                 this_node.slurmd_start_time = record.slurmd_start_time
                 slurm_make_time_str(<time_t *>&record.slurmd_start_time,
                                     time_str, sizeof(time_str))
-                b_time_str = time_str
-                this_node.slurmd_start_time_str = tounicode(b_time_str)
+                this_node.slurmd_start_time_str = tounicode(time_str)
 
-            # TRES line
+            # Line 13 - TRES Line
             slurm_get_select_nodeinfo(record.select_nodeinfo,
                                       SELECT_NODEDATA_TRES_ALLOC_FMT_STR,
                                       NODE_STATE_ALLOCATED, &node_alloc_tres)
-            if record.tres_fmt_str:
-                this_node.cfg_tres = tounicode(record.tres_fmt_str)
-            if node_alloc_tres != NULL:
-                this_node.alloc_tres = tounicode(node_alloc_tres)
-                # TODO:
-                # xfree(node_alloc_tres)
-            else:
-                this_node.alloc_tres = tounicode("")
 
-            # Power Management Line
-            if (not record.power or (record.power.cap_watts == NO_VAL)):
-                this_node.cap_watts = NO_VAL
-            else:
+            this_node.cfg_tres = tounicode(record.tres_fmt_str)
+
+            # Line 14 - TRES Line
+            this_node.alloc_tres = tounicode(node_alloc_tres)
+            #FIXME slurm_xfree(node_alloc_tres)
+
+            # Line 15 - Power Management Line
+            if record.power:
                 this_node.cap_watts = record.power.cap_watts
 
-            # Power Consumption Line
-            if (not record.energy or (record.energy.current_watts == NO_VAL)):
-                this_node.current_watts = NO_VAL
-                this_node.lowest_joules = NO_VAL
-                this_node.consumed_joules = NO_VAL
-            else:
+            # Line 16 - Power Consumption Line
+            if record.energy:
                 this_node.current_watts = record.energy.current_watts
                 this_node.lowest_joules = record.energy.base_consumed_energy
                 this_node.consumed_joules = record.energy.consumed_energy
 
-            # External Sensors
-            if (not record.ext_sensors or (
-                    record.ext_sensors.consumed_energy == NO_VAL)):
-                this_node.ext_sensors_joules = NO_VAL
-            else:
+            # Line 17 - External Sensors Line
+            if record.ext_sensors:
                 this_node.ext_sensors_joules = record.ext_sensors.consumed_energy
 
-            if (not record.ext_sensors or (
-                    record.ext_sensors.current_watts == NO_VAL)):
-                this_node.ext_sensors_watts = NO_VAL
-            else:
+            if record.ext_sensors:
                 this_node.ext_sensors_watts = record.ext_sensors.current_watts
 
-            if (not record.ext_sensors or (
-                    record.ext_sensors.temperature == NO_VAL)):
-                this_node.ext_sensors_temp = NO_VAL
-            else:
+            if record.ext_sensors:
                 this_node.ext_sensors_temp = record.ext_sensors.temperature
 
+            # Line
             if record.reason and record.reason[0]:
                 this_node.reason = tounicode(record.reason)
                 reason_str = record.reason
-                u_reason_str = tounicode(reason_str)
 
             slurm_get_select_nodeinfo(record.select_nodeinfo,
                                       SELECT_NODEDATA_EXTRA_INFO,
                                       <node_states>0, &select_reason_str)
 
             if select_reason_str and select_reason_str[0]:
-                u_select_reason_str = tounicode(select_reason_str)
-                if u_reason_str:
-                    u_reason_str += "\n"
-                u_reason_str += u_select_reason_str
+                if reason_str:
+                    reason_str += "\n".encode("UTF-8")
+
+                reason_str += select_reason_str.encode("UTF-8", "replace")
+
+            # FIXME: slurm_xfree(select_reason_str)
 
             if reason_str and record.reason_time:
                 slurm_make_time_str(<time_t *>&record.reason_time,
@@ -533,20 +665,23 @@ cdef get_node_info_msg(node, ids=False):
 
                 try:
                     # getpwuid returns str, not bytes; we want unicode
-                    u_reason_user = unicode(getpwuid(record.reason_uid)[0])
+                    reason_user = getpwuid(record.reason_uid)[0].encode("UTF-8", "replace")
                 except KeyError:
-                    b_reason_user = <bytes>record.reason_uid
-                    u_reason_user = tounicode(b_reason_user)
+                    reason_user = str(record.reason_uid).encode("UTF-8", "replace")
 
-                this_node.reason_user = u_reason_user
+                this_node.reason_user = tounicode(reason_user)
+                this_node.reason_time_str = tounicode(time_str)
 
-                b_time_str = time_str
-                this_node.reason_time_str = tounicode(b_time_str)
+                u_reason_str = tounicode(reason_str)
+                u_reason_str += (
+                    tounicode(" [") +
+                    tounicode(reason_user) +
+                    tounicode("@") +
+                    tounicode(time_str) +
+                    tounicode("]")
+                )
 
-                u_reason_str += (" [" + u_reason_user +
-                                 "@" + tounicode(b_time_str) + "]")
-
-                this_node.reason_str = u_reason_str
+                this_node.reason = u_reason_str
                 this_node.reason_uid = record.reason_uid
                 this_node.reason_time = record.reason_time
 
@@ -618,8 +753,7 @@ def print_node_info_table(node, int one_liner=False):
     rc = slurm_load_node_single(&node_info_msg_ptr, node.encode("UTF-8"), show_flags)
 
     if rc == SLURM_SUCCESS:
-        slurm_print_node_table(stdout, &node_info_msg_ptr.node_array[0],
-                               node_info_msg_ptr.node_scaling, one_liner)
+        slurm_print_node_table(stdout, &node_info_msg_ptr.node_array[0], one_liner)
         slurm_free_node_info_msg(node_info_msg_ptr)
         node_info_msg_ptr = NULL
     else:
@@ -654,8 +788,7 @@ def find_nodes(nodeattr, pattern, ids=False):
 
             >>> from pyslurm import node
             >>> node.find_nodes("state", "MIXED")
-            >>> [<pyslurm.node.Node object at 0xe0af60>, <pyslurm.node.Node
-            object at 0xdc17b0>, <pyslurm.node.Node object at 0xdc1900>]
+            >>> [<pyslurm.node.Node object at 0xe0af60>, <pyslurm.node.Node object at 0xdc17b0>, <pyslurm.node.Node object at 0xdc1900>]
 
     Note:
         The pattern string is case sensitive.  For example, **MIXED** is not
@@ -681,7 +814,7 @@ def find_nodes(nodeattr, pattern, ids=False):
     return matched_nodes
 
 
-def update_node(dict node_dict):
+def update_node(self, dict node_dict):
     """
     Request that the state of one or more nodes be updated.
 

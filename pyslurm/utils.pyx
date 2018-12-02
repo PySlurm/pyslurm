@@ -11,7 +11,6 @@ from __future__ import absolute_import, division, unicode_literals
 
 from libc.stdint cimport uint32_t, uint64_t
 from posix.types cimport uid_t
-from cpython.version cimport PY_MAJOR_VERSION
 from .slurm_common cimport *
 from .c_config cimport *
 from .utils cimport *
@@ -26,11 +25,13 @@ cdef unicode tounicode(char* s):
     else:
         return s.decode("UTF-8", "replace")
 
+
 #
 # Slurm functions not externalized
 #
 
 DEF FUZZY_EPSILON = 0.00001
+
 cdef fuzzy_equal(v1, v2):
     return (((v1 - v2) > -FUZZY_EPSILON) and ((v1 - v2) < FUZZY_EPSILON))
 
@@ -77,7 +78,6 @@ cdef select_type_param_string(uint16_t select_type_param):
     return stplist
 
 
-# TODO: Review
 cdef slurm_sprint_cpu_bind_type(cpu_bind_type_t cpu_bind_type):
     cbtlist = []
 
@@ -117,7 +117,10 @@ cdef slurm_sprint_cpu_bind_type(cpu_bind_type_t cpu_bind_type):
         cbtlist.append("autobind=cores")
     if (cpu_bind_type & CPU_AUTO_BIND_TO_SOCKETS):
         cbtlist.append("autobind=sockets")
+    if (cpu_bind_type & CPU_BIND_OFF):
+        cbtlist.append("off")
     return cbtlist
+
 
 cdef _job_def_name(uint16_t job_type):
     if job_type == JOB_DEF_CPU_PER_GPU:

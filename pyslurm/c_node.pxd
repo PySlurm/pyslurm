@@ -38,6 +38,7 @@ cdef extern from "slurm/slurm.h" nogil:
         time_t boot_time
         uint16_t cores
         uint16_t core_spec_cnt
+        uint32_t cpu_bind
         uint32_t cpu_load
         uint64_t free_mem
         uint16_t cpus
@@ -53,6 +54,7 @@ cdef extern from "slurm/slurm.h" nogil:
         char *mcs_label
         uint64_t mem_spec_limit
         char *name
+        uint32_t next_state
         char *node_addr
         char *node_hostname
         uint32_t node_state
@@ -102,6 +104,7 @@ cdef extern from "slurm/slurm.h" nogil:
         SELECT_NODEDATA_TRES_ALLOC_WEIGHTED
 
     ctypedef struct update_node_msg_t:
+        uint32_t cpu_bind
         char *features
         char *features_act
         char *gres
@@ -130,14 +133,15 @@ cdef extern from "slurm/slurm.h" nogil:
                                    node_info_msg_t *node_info_msg_ptr,
                                    int one_liner)
 
-    void slurm_print_node_table(FILE *out, node_info_t *node_ptr,
-                                int node_scaling, int one_liner)
-
+    void slurm_print_node_table(FILE *out, node_info_t *node_ptr, int one_liner)
     int slurm_update_node(update_node_msg_t *node_msg)
     void slurm_init_update_node_msg(update_node_msg_t *update_node_msg)
     void slurm_free_node_info_msg(node_info_msg_t *node_buffer_ptr)
-    void slurm_populate_node_partitions(node_info_msg_t *node_buffer_ptr,
-                                    partition_info_msg_t *part_buffer_ptr)
+
+    void slurm_populate_node_partitions(
+        node_info_msg_t *node_buffer_ptr,
+        partition_info_msg_t *part_buffer_ptr
+    )
 
 
 
@@ -151,28 +155,37 @@ cdef extern char *slurm_node_state_string(uint32_t inx)
 # Defined node states
 #
 
-cdef inline IS_NODE_ALLOCATED(node_info_t _X):
-    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ALLOCATED
+cdef inline IS_NODE_UNKNOWN(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_UNKNOWN
 
 cdef inline IS_NODE_DOWN(node_info_t _X):
     return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_DOWN
 
-cdef inline IS_NODE_ERROR(node_info_t _X):
-    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ERROR
+cdef inline IS_NODE_IDLE(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_IDLE
+
+cdef inline IS_NODE_ALLOCATED(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ALLOCATED
 
 cdef inline IS_NODE_MIXED(node_info_t _X):
     return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_MIXED
 
-cdef inline IS_NODE_IDLE(node_info_t _X):
-    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_IDLE
+cdef inline IS_NODE_FUTURE(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_FUTURE
 
-cdef inline IS_NODE_COMPLETING(node_info_t _X):
-    return (_X.node_state & NODE_STATE_COMPLETING)
+#
+# Derived node states
+#
 
 cdef inline IS_NODE_DRAIN(node_info_t _X):
     return (_X.node_state & NODE_STATE_DRAIN)
 
 cdef inline IS_NODE_DRAINING(node_info_t _X):
     return (_X.node_state & NODE_STATE_DRAIN) and (IS_NODE_ALLOCATED(_X) or
-                                                   IS_NODE_ERROR(_X) or
                                                    IS_NODE_MIXED(_X))
+
+cdef inline IS_NODE_COMPLETING(node_info_t _X):
+    return (_X.node_state & NODE_STATE_COMPLETING)
+
+cdef inline IS_NODE_ERROR(node_info_t _X):
+    return (_X.node_state & NODE_STATE_BASE) == NODE_STATE_ERROR
