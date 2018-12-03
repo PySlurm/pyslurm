@@ -2,43 +2,43 @@
 #
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport int32_t
+from libc.stdio cimport FILE
 from posix.types cimport pid_t, time_t
-from .slurm_common cimport dynamic_plugin_data_t
+from .slurm_common cimport dynamic_plugin_data_t, bitstr_t, bitoff_t
 
 cdef extern from * nogil:
     ctypedef char* const_char_ptr "const char*"
 
-#cdef extern from "bits/sockaddr.h" nogil:
-#    ctypedef unsigned short int sa_family_t
-#    short __SOCKADDR_COMMON_SIZE(sizeof (unsigned short int))
-#    short __SOCKADDR_COMMON(sa_prefix) safamily_t sa_prefix##family
+cdef extern from "netinet/in.h" nogil:
+    ctypedef struct sockaddr_in
 
-#cdef extern from "netinet/in.h" nogil:
-#    ctypedef uint16_t in_port_t:
-#        pass
-#
-#    ctypedef uint32_t in_addr_t:
-#        pass
-#
-#    ctypedef struct in_addr:
-#        in_addr_t s_addr
-#
-#    ctypedef struct sockaddr_in:
-#        __SOCKADDR_COMMON(sin_)
-#        in_port_t sin_port
-#        in_addr sin_addr
-#        unsigned char sin_zero[sizeof (struct sockaddr) -
-#                               __SOCKADDR_COMMON_SIZE -
-#                               sizeof (in_port_t) -
-#                               sizeof (struct in_addr)]
+cdef extern from "job_resources.h" nogil:
+    cdef struct job_resources:
+        bitstr_t *core_bitmap
+        bitstr_t *core_bitmap_used
+        uint32_t  cpu_array_cnt
+        uint16_t *cpu_array_value
+        uint32_t *cpu_array_reps
+        uint16_t *cpus
+        uint16_t *cpus_used
+        uint16_t *cores_per_socket
+        uint64_t *memory_allocated
+        uint64_t *memory_used
+        uint32_t  nhosts
+        bitstr_t *node_bitmap
+        uint32_t  node_req
+        char     *nodes
+        uint32_t  ncpus
+        uint32_t *sock_core_rep_count
+        uint16_t *sockets_per_node
+        uint8_t   whole_node
+
+    ctypedef job_resources job_resources_t
 
 cdef extern from "slurm/slurm.h" nogil:
     enum:
         NICE_OFFSET
         HIGHEST_DIMENSIONS
-
-    ctypedef struct job_resources_t:
-        pass
 
     ctypedef struct slurm_job_info_t:
         char *account
@@ -354,32 +354,34 @@ cdef extern from "slurm/slurm.h" nogil:
         WAIT_ACCOUNT_POLICY
         WAIT_FED_JOB_LOCK
         FAIL_OOM
+        WAIT_PN_MEM_LIMIT
+        WAIT_ASSOC_GRP_BILLING
+        WAIT_ASSOC_GRP_BILLING_MIN
+        WAIT_ASSOC_GRP_BILLING_RUN_MIN
+        WAIT_ASSOC_GRP_BILLING_PER_JOB
+        WAIT_ASSOC_GRP_BILLING_PER_NODE
+        WAIT_ASSOC_GRP_BILLING_MINS_PER_JOB
+        WAIT_QOS_GRP_BILLING
+        WAIT_QOS_GRP_BILLING_MIN
+        WAIT_QOS_GRP_BILLING_RUN_MIN
+        WAIT_QOS_MAX_BILLING_PER_JOB
+        WAIT_QOS_MAX_BILLING_PER_NODE
+        WAIT_QOS_MAX_BILLING_PER_USER
+        WAIT_QOS_MAX_BILLING_MINS_PER_JOB
+        WAIT_QOS_MAX_BILLING_PER_ACCT
+        WAIT_QOS_MIN_BILLING
+        WAIT_RESV_DELETED
 
     enum select_jobdata_type:
-        SELECT_JOBDATA_GEOMETRY
-        SELECT_JOBDATA_ROTATE
-        SELECT_JOBDATA_CONN_TYPE
-        SELECT_JOBDATA_BLOCK_ID
-        SELECT_JOBDATA_NODES
-        SELECT_JOBDATA_IONODES
-        SELECT_JOBDATA_NODE_CNT
-        SELECT_JOBDATA_ALTERED
-        SELECT_JOBDATA_BLRTS_IMAGE
-        SELECT_JOBDATA_LINUX_IMAGE
-        SELECT_JOBDATA_MLOADER_IMAGE
-        SELECT_JOBDATA_RAMDISK_IMAGE
-        SELECT_JOBDATA_REBOOT
         SELECT_JOBDATA_RESV_ID
         SELECT_JOBDATA_PAGG_ID
         SELECT_JOBDATA_PTR
         SELECT_JOBDATA_BLOCK_PTR
         SELECT_JOBDATA_DIM_CNT
-        SELECT_JOBDATA_BLOCK_NODE_CNT
-        SELECT_JOBDATA_START_LOC
-        SELECT_JOBDATA_USER_NAME
         SELECT_JOBDATA_CONFIRMED
         SELECT_JOBDATA_CLEANING
         SELECT_JOBDATA_NETWORK
+        SELECT_JOBDATA_RELEASED
 
     enum: CORE_SPEC_THREAD
 
@@ -387,6 +389,7 @@ cdef extern from "slurm/slurm.h" nogil:
         KILL_INV_DEP
         NO_KILL_INV_DEP
         GRES_ENFORCE_BIND
+        GRES_DISABLE_BIND
         SPREAD_JOB
 
     enum job_states:
@@ -406,9 +409,23 @@ cdef extern from "slurm/slurm.h" nogil:
 
     enum:
         JOB_STATE_BASE
+        JOB_STATE_FLAGS
+        JOB_LAUNCH_FAILED
+        JOB_UPDATE_DB
+        JOB_REQUEUE
+        JOB_REQUEUE_HOLD
+        JOB_SPECIAL_EXIT
+        JOB_RESIZING
+        JOB_CONFIGURING
+        JOB_COMPLETING
+        JOB_STOPPED
         JOB_RECONFIG_FAIL
+        JOB_POWER_UP_NODE
         JOB_REVOKED
         JOB_REQUEUE_FED
+        JOB_RESV_DEL_HOLD
+        JOB_SIGNALING
+        JOB_STAGE_OUT
 
     ctypedef struct job_desc_msg_t:
         char *account
@@ -532,6 +549,8 @@ cdef extern from "slurm/slurm.h" nogil:
         char *x11_magic_cookie
         uint16_t x11_target_port
 
+    ctypedef sockaddr_in slurm_addr_t
+
     ctypedef struct resource_allocation_response_msg_t:
         char *account
         uint32_t job_id
@@ -545,7 +564,7 @@ cdef extern from "slurm/slurm.h" nogil:
         char **environment
         uint32_t error_code
         char *job_submit_user_msg
-#        slurm_addr_t *node_addr
+        slurm_addr_t *node_addr
         uint32_t node_cnt
         char *node_list
         uint16_t ntasks_per_board
@@ -557,15 +576,13 @@ cdef extern from "slurm/slurm.h" nogil:
         char *qos
         char *resv_name
         dynamic_plugin_data_t *select_jobinfo
+        void *working_cluster_rec
 
     ctypedef struct submit_response_msg_t:
         uint32_t job_id
         uint32_t step_id
         uint32_t error_code
         char *job_submit_user_msg
-
-#    ctypedef sockaddr_in slurm_addr_t:
-#        pass
 
     int slurm_load_job(job_info_msg_t **resp, uint32_t job_id,
                        uint16_t show_flags)
@@ -612,6 +629,7 @@ cdef extern from "slurm/slurm.h" nogil:
 
     void slurm_free_submit_response_response_msg(submit_response_msg_t *msg)
     int slurm_update_job(job_desc_msg_t *job_msg)
+    int slurm_job_batch_script(FILE *out, uint32_t jobid)
 
 #
 # Job declarations outside of slurm.h
@@ -625,10 +643,18 @@ cdef extern char *slurm_job_state_string(uint32_t inx)
 # src/common/slurm_protocol_defs.c
 cdef extern char *slurm_job_share_string(uint16_t shared)
 
+# slurm/bitstring.h
+cdef extern bitoff_t slurm_bit_fls(bitstr_t *b)
+
 #cdef extern int select_g_select_jobinfo_get(dynamic_plugin_data_t *jobinfo,
 #                                            select_jobdata_type data_type,
 #                                            void *data)
 
+#cdef extern int slurm_get_select_jobinfo(
+#    select_jobinfo_t jobinfo,
+#    select_data_type data_type,
+#    void *data
+#)
 
 #
 # Defined job states

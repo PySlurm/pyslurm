@@ -3,11 +3,19 @@
 # Slurm declarations common to all other extension files.
 #
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
-from libc.stdint cimport int32_t
+from libc.stdint cimport int32_t, int64_t
 from posix.types cimport time_t
 
 cdef extern from * nogil:
     ctypedef char* const_char_ptr "const char*"
+    ctypedef int64_t bitstr_t
+    ctypedef bitstr_t bitoff_t
+
+
+cdef extern from 'Python.h' nogil:
+    int __LINE__
+    char * __FILE__
+    char *__FUNCTION__
 
 cdef extern from "slurm/slurm.h" nogil:
     enum:
@@ -113,13 +121,13 @@ cdef extern from "slurm/slurm_errno.h" nogil:
 # Declarations outside of slurm.h
 #
 
-cdef enum:
-        UNIT_NONE
-        UNIT_KILO
-        UNIT_MEGA
-        UNIT_GIGA
-        UNIT_TERA
-        UNIT_PETA
+ctypedef enum:
+    UNIT_NONE
+    UNIT_KILO
+    UNIT_MEGA
+    UNIT_GIGA
+    UNIT_TERA
+    UNIT_PETA
 
 cdef struct hostset
 ctypedef hostset *hostset_t
@@ -160,6 +168,15 @@ cdef extern void *slurm_xmalloc(size_t, const_char_ptr, int, const_char_ptr)
 cdef extern hostset_t slurm_hostset_create(const_char_ptr hostlist)
 cdef extern int slurm_hostset_count(hostset_t set)
 cdef extern void slurm_hostset_destroy(hostset_t set)
+cdef extern bitstr_t *slurm_bit_alloc(bitoff_t nbits)
+cdef extern char *slurm_bit_fmt(char *string, int length, bitstr_t *b)
+cdef extern int slurm_bit_test(bitstr_t *b, bitoff_t bit)
+cdef extern void slurm_bit_set(bitstr_t *b, bitoff_t bit)
+cdef extern void slurm_bit_free(bitstr_t *b)
+
+cdef inline xfree(void *__p):
+    slurm_xfree(&__p, __FILE__, __LINE__, __FUNCTION__)
+
 
 #
 # Declarations outside of slurmdb.h

@@ -32,12 +32,12 @@ __version__ = "18.08.0-v2"
 sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
 from . import config
-#from . import job
+from . import job
 from . import jobstep
 from . import hostlist
 from . import license
 #from . import misc
-#from . import node
+from . import node
 from . import partition
 from . import powercap
 from . import reservation

@@ -18,3 +18,4 @@ cdef extern from "slurm/slurm.h" nogil:
     char *slurm_hostlist_shift(hostlist_t hl)
     void slurm_hostlist_uniq(hostlist_t hl)
     char *slurm_hostlist_ranged_string_malloc(hostlist_t hl)
+    char *slurm_hostlist_ranged_string_xmalloc(hostlist_t hl)
