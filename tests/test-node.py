@@ -26,7 +26,7 @@ def test_node_count():
 def test_node_scontrol():
     """Node: Compare scontrol values to PySlurm values."""
     all_node_ids = pyslurm.node().ids()
-    test_node = all_node_ids[0]
+    test_node = all_node_ids[-1]
 
     test_node_info = pyslurm.node().find_id(test_node)
     assert_equals(test_node, test_node_info["name"])
@@ -48,6 +48,9 @@ def test_node_scontrol():
     assert_equals(test_node_info["name"], sctl_dict["NodeName"])
     assert_equals(test_node_info["node_addr"], sctl_dict["NodeAddr"])
     assert_equals(test_node_info["node_hostname"], sctl_dict["NodeHostName"])
+
+    assert_equals(test_node_info["partitions"], sctl_dict["Partitions"].split(","))
+
     assert_equals(test_node_info["real_memory"], int(sctl_dict["RealMemory"]))
     assert_equals(test_node_info["sockets"], int(sctl_dict["Sockets"]))
     assert_equals(test_node_info["state"], sctl_dict["State"])
