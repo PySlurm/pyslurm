@@ -34,13 +34,12 @@ from libc.errno cimport errno
 from libc.signal cimport SIGKILL
 from posix.types cimport time_t
 
-from .c_hostlist cimport *
 from .c_jobstep cimport *
 from .c_job cimport *
+from .c_hostlist cimport *
 from .slurm_common cimport *
 from .utils cimport *
 from .exceptions import PySlurmError
-from .hostlist import Hostlist
 
 DEF CONVERT_NUM_UNIT_EXACT = 0x00000001
 DEF SLURM_PROTOCOL_VERSION = ((33 << 8) | 0)
@@ -361,14 +360,13 @@ def get_step_layout(job_id, step_id):
         slurm_step_layout_type_name(<task_dist_states_t>layout.task_dist)
     )
 
-    hl = Hostlist()
-    hl.create(tounicode(layout.node_list))
+    hl = slurm_hostlist_create(layout.node_list)
 
     nodes = []
-    for _ in range(hl.count()):
-        nodes.append(hl.shift())
+    for _ in range(slurm_hostlist_count(hl)):
+        nodes.append(slurm_hostlist_shift(hl))
 
-    hl.destroy()
+    slurm_hostlist_destroy(hl)
 
     tids = {}
     for j in range(layout.node_cnt):
