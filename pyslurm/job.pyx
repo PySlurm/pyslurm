@@ -1553,7 +1553,7 @@ def print_job_batch_script(jobid):
 cdef void _load_node_info():
     global job_node_ptr
     if job_node_ptr is NULL:
-        slurm_load_node(<time_t> NULL, &job_node_ptr, 0)
+        <void>slurm_load_node(<time_t> NULL, &job_node_ptr, 0)
         
 
 cdef _free_node_info():
