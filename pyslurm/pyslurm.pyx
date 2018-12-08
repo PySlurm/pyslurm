@@ -2368,13 +2368,16 @@ cdef class job:
                 last = slurm.slurm_bit_fls(job_resources.core_bitmap)
                 if last != -1:
                     hl = slurm.slurm_hostlist_create(job_resources.nodes)
+
                     if hl is NULL:
                         slurm.slurm_perror(
-                            "slurm_sprint_job_info: hostlist_create: %s" %
+                            "slurm_sprint_job_info: hostlist_create: %s".encode("UTF-8") %
                             job_resources.nodes
                         )
                         return None
+
                     hl_last = slurm.slurm_hostlist_create(NULL)
+
                     if hl_last is NULL:
                         slurm.slurm_perror("slurm_sprint_job_info: hostlist_create: NULL")
                         slurm.slurm_hostlist_destroy(hl)
@@ -2387,19 +2390,22 @@ cdef class job:
                     abs_node_inx = self._record.node_inx[i]
 
                     gres_last = ""
-                    tmp2[0] = '\0'
-                    for rel_node_inx in range(job_resources.nhosts):
+                    #tmp2[0] = '\0'
 
-                        if sock_reps <= job_resources.sock_core_rep_count[sock_inx]:
+                    for rel_node_inx in range(job_resources.nhosts):
+                        if sock_reps >= job_resources.sock_core_rep_count[sock_inx]:
                             sock_inx += 1
                             sock_reps = 0
 
                         sock_reps +=1
 
-                        bit_reps = job_resources.sockets_per_node[sock_inx] * job_resources.cores_per_socket[sock_inx]
+                        bit_reps = (job_resources.sockets_per_node[sock_inx] *
+                                    job_resources.cores_per_socket[sock_inx])
+
                         host = slurm.slurm_hostlist_shift(hl)
                         threads = self._threads_per_core(host)
                         cpu_bitmap = slurm.slurm_bit_alloc(bit_reps * threads)
+
                         for j in range(bit_reps):
                             if (slurm.slurm_bit_test(job_resources.core_bitmap, bit_inx)):
                                 for k in range(threads):
@@ -2409,11 +2415,13 @@ cdef class job:
                         slurm.slurm_bit_fmt(tmp1, sizeof(tmp1), cpu_bitmap)
                         FREE_NULL_BITMAP(cpu_bitmap)
 
-                        if ((tmp1 == tmp2) or ((rel_node_inx < self._record.gres_detail_cnt) and
+                        if ((tmp1 == tmp2) or
+                            ((rel_node_inx < self._record.gres_detail_cnt) and
                             (self._record.gres_detail_str[rel_node_inx] == gres_last)) or
                             (last_mem_alloc_ptr != job_resources.memory_allocated) or
                             (job_resources.memory_allocated and (last_mem_alloc != 
-                             job_resources.memory_allocated[rel_node_inx]))):
+                             job_resources.memory_allocated[rel_node_inx]))
+                            ):
                             if slurm.slurm_hostlist_count(hl_last):
                                 last_hosts = slurm.slurm_hostlist_ranged_string_xmalloc(hl_last)
                                 Job_dict[u'nodes'] = slurm.stringOrNone(last_hosts, '')
@@ -2423,21 +2431,28 @@ cdef class job:
                                     Job_dict[u'mem'] = last_mem_alloc
                                 else:
                                     Job_dict[u'mem'] = 0
+
                                 Job_dict[u'gres_idx'] = slurm.stringOrNone(gres_last, '')
                                 slurm.xfree(last_hosts)
-
                                 slurm.slurm_hostlist_destroy(hl_last)
                                 hl_last = slurm.slurm_hostlist_create(NULL)
+
                             tmp2 = tmp1
+
                             if rel_node_inx < self._record.gres_detail_cnt:
-                                Job_dict[u'gres_idx'] = slurm.stringOrNone(self._record.gres_detail_str[rel_node_inx], '')
+                                gres_last = self._record.gres_detail_str[rel_node_inx]
                             else:
-                                Job_dict[u'gres_idx'] = ''
+                                gres_last = ''
+
                             last_mem_alloc_ptr = job_resources.memory_allocated
+
                             if last_mem_alloc_ptr:
-                                last_mem_alloc = job_resources.memory_allocated[rel_node_inx]
+                                last_mem_alloc = (
+                                    job_resources.memory_allocated[rel_node_inx]
+                                )
                             else:
                                 last_mem_alloc = slurm.NO_VAL64
+
                         slurm.slurm_hostlist_push_host(hl_last, host)
                         free(host)
 
@@ -2454,11 +2469,13 @@ cdef class job:
                         last_hosts = slurm.slurm_hostlist_ranged_string_xmalloc(hl_last)
                         Job_dict[u'nodes'] = slurm.stringOrNone(last_hosts, '')
                         Job_dict[u'cpu_ids'] = slurm.stringOrNone(tmp2, '')
+
                         if last_mem_alloc_ptr:
                             Job_dict[u'mem'] = last_mem_alloc
                         else:
                             Job_dict[u'mem'] = 0
                         Job_dict[u'gres_idx'] = slurm.stringOrNone(gres_last, '')
+
                         slurm.xfree(last_hosts)
 
                     slurm.slurm_hostlist_destroy(hl)
