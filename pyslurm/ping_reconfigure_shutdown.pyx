@@ -4,7 +4,8 @@
 :mod:`ping_reconfigure_shutdown`
 ===========
 
-The ping_reconfigure_shutdown extension module is used to wrap uncategorized slurm functions.
+The ping_reconfigure_shutdown extension module is used to wrap Slurm ping,
+reconfigure and shutdown functions.
 
 """
 from __future__ import print_function, division, unicode_literals
