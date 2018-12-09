@@ -31,6 +31,7 @@ __version__ = "18.08.0-v2"
 
 sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
+from . import checkpoint
 from . import config
 from . import job
 from . import jobstep
