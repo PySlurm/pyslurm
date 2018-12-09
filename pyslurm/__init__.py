@@ -36,7 +36,7 @@ from . import job
 from . import jobstep
 from . import hostlist
 from . import license
-#from . import misc
+from . import ping_reconfigure_shutdown
 from . import node
 from . import partition
 from . import powercap
