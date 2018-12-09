@@ -795,8 +795,8 @@ cdef get_job_info_msg(jobid, ids=False):
                         FREE_NULL_BITMAP(cpu_bitmap)
                         
                         if ((tmp1 == tmp2) or
-                            (rel_node_inx < record.gres_detail_cnt) and
-                            (record.gres_detail_str[rel_node_inx] == gres_last) or
+                            ((rel_node_inx < record.gres_detail_cnt) and
+                            (record.gres_detail_str[rel_node_inx] == gres_last)) or
                             (last_mem_alloc_ptr != job_resources.memory_allocated) or
                             (job_resources.memory_allocated and
                             (last_mem_alloc != job_resources.memory_allocated[rel_node_inx])
