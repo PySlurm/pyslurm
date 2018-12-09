@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-# cython: c_string_type=unicode, c_string_encoding=utf8
 """
 ================
 :mod:`front end`
@@ -34,10 +33,12 @@ Each front end record in a ``front_end_info_msg_t`` struct is converted to a
 from __future__ import absolute_import, unicode_literals
 
 from libc.stdio cimport stdout
+from pwd import getpwuid
 
 from .c_frontend cimport *
 from .c_node cimport slurm_node_state_string
 from .slurm_common cimport *
+from .utils cimport tounicode
 from .exceptions import PySlurmError
 
 include "node.pxi"
@@ -49,6 +50,7 @@ cdef class FrontEnd:
         readonly unicode boot_time_str
         readonly unicode frontend_name
         readonly unicode reason
+        readonly time_t reason_time
         readonly time_t slurmd_start_time
         readonly unicode slurmd_start_time_str
         readonly unicode state
@@ -102,74 +104,85 @@ cdef get_front_end_info_msg(front_end, ids=False):
 
     rc = slurm_load_front_end(<time_t> NULL, &front_end_info_msg_ptr)
 
-    front_end_list = []
-    if rc == SLURM_SUCCESS:
-        for record in front_end_info_msg_ptr.front_end_array[:front_end_info_msg_ptr.record_count]:
-            if front_end:
-                if front_end and (front_end != <unicode>record.name):
-                    continue
-
-            if ids and front_end is None:
-                if record.name:
-                    front_end.append(record.name)
-                continue
-
-            this_front_end = FrontEnd()
-
-            my_state = record.node_state
-            if (my_state & NODE_STATE_DRAIN):
-                my_state &= (~NODE_STATE_DRAIN)
-                drain_str = "+DRAIN"
-
-            # Line 1
-            this_front_end.frontend_name = record.name
-            this_front_end.state = slurm_node_state_string(my_state) + drain_str
-            this_front_end.version = record.version
-
-            if record.reason_time:
-                #TODO
-                pass
-            else:
-                this_front_end.reason = record.reason
-
-            # Line 2
-            this_front_end.boot_time = record.boot_time
-            slurm_make_time_str(<time_t *>&record.boot_time,
-                                time_str, sizeof(time_str))
-            this_front_end.boot_time_str = time_str
-
-            this_front_end.slurmd_start_time = record.slurmd_start_time
-            slurm_make_time_str(<time_t *>&record.slurmd_start_time,
-                                time_str, sizeof(time_str))
-            this_front_end.slurmd_start_time_str = time_str
-
-            # Line 3
-            if record.allow_groups:
-                this_front_end.allow_groups = record.allow_groups
-
-            if record.allow_users:
-                this_front_end.allow_users = record.allow_users
-
-            if record.deny_groups:
-                this_front_end.deny_groups = record.deny_groups
-
-            if record.deny_users:
-                this_front_end.deny_users = record.deny_users
-
-            front_end_list.append(this_front_end)
-
-        slurm_free_front_end_info_msg(front_end_info_msg_ptr)
-        front_end_info_msg_ptr = NULL
-
-        if front_end and front_end_list:
-            return front_end_list[0]
-        else:
-            return front_end_list
-    else:
+    if rc != SLURM_SUCCESS:
         raise PySlurmError(slurm_strerror(rc), rc)
 
+    front_end_list = []
+    for record in front_end_info_msg_ptr.front_end_array[:front_end_info_msg_ptr.record_count]:
+        if front_end and (front_end != tounicode(record.name)):
+            continue
 
-cpdef print_front_end_info_msg(int one_liner=False):
+        if ids and front_end is None:
+            if record.name:
+                front_end.append(tounicode(record.name))
+            continue
+
+        this_front_end = FrontEnd()
+
+        my_state = record.node_state
+
+        if (my_state & NODE_STATE_DRAIN):
+            my_state &= (~NODE_STATE_DRAIN)
+            drain_str = "+DRAIN"
+
+        # Line 1
+        this_front_end.frontend_name = tounicode(record.name)
+        this_front_end.state = tounicode(slurm_node_state_string(my_state) + drain_str)
+        this_front_end.version = tounicode(record.version)
+        this_front_end.reason_time = record.reason_time
+
+        if record.reason_time:
+            try:
+                reason_user = getpwuid(record.reason_uid)[0].encode("UTF-8", "replace")
+            except KeyError:
+                reason_user = str(record.reason_uid).encode("UTF-8", "replace")
+
+            slurm_make_time_str(<time_t *>&record.reason_time, time_str, sizeof(time_str))
+
+            this_front_end.reason = (
+                tounicode(record.reason) +
+                tounicode("[") +
+                tounicode(reason_user) +
+                tounicode("@") +
+                tounicode(time_str)
+            )
+        else:
+            this_front_end.reason = tounicode(record.reason)
+
+        # Line 2
+        this_front_end.boot_time = record.boot_time
+        slurm_make_time_str(<time_t *>&record.boot_time, time_str, sizeof(time_str))
+        this_front_end.boot_time_str = tounicode(time_str)
+
+        this_front_end.slurmd_start_time = record.slurmd_start_time
+        slurm_make_time_str(<time_t *>&record.slurmd_start_time, time_str, sizeof(time_str))
+        this_front_end.slurmd_start_time_str = tounicode(time_str)
+
+        # Line 3
+        if record.allow_groups:
+            this_front_end.allow_groups = tounicode(record.allow_groups)
+
+        if record.allow_users:
+            this_front_end.allow_users = tounicode(record.allow_users)
+
+        if record.deny_groups:
+            this_front_end.deny_groups = tounicode(record.deny_groups)
+
+        if record.deny_users:
+            this_front_end.deny_users = tounicode(record.deny_users)
+
+        front_end_list.append(this_front_end)
+
+    slurm_free_front_end_info_msg(front_end_info_msg_ptr)
+    front_end_info_msg_ptr = NULL
+
+    if front_end and front_end_list:
+        return front_end_list[0]
+    else:
+        return front_end_list
+
+
+def print_front_end_info_msg(one_liner=False):
     """
     Print information about all front ends to stdout.
 
@@ -179,8 +192,7 @@ cpdef print_front_end_info_msg(int one_liner=False):
     equivalent to *scontrol show frontend*.
 
     Args:
-        one_liner (Optional[bool]): print front ends on one line if True
-            (default False)
+        one_liner (Optional[bool]): print front ends on one line if True (default False)
     Raises:
         PySlurmError: If ``slurm_load_front_end`` is not successful.
     """

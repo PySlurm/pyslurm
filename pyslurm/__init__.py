@@ -33,6 +33,7 @@ sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
 from . import checkpoint
 from . import config
+from . import frontend
 from . import job
 from . import jobstep
 from . import hostlist

@@ -30,14 +30,8 @@ cdef extern from "slurm/slurm.h" nogil:
         char *reason
         uint32_t reason_uid
 
-    void slurm_free_front_end_info_msg(
-        front_end_info_msg_t *front_end_buffer_ptr
-    )
-
-    int slurm_load_front_end(
-        time_t update_time,
-        front_end_info_msg_t **resp
-    )
+    void slurm_free_front_end_info_msg(front_end_info_msg_t *front_end_buffer_ptr)
+    int slurm_load_front_end(time_t update_time, front_end_info_msg_t **resp)
 
     void slurm_print_front_end_info_msg(
         FILE *out,
@@ -51,14 +45,6 @@ cdef extern from "slurm/slurm.h" nogil:
         int one_liner
     )
 
-    char *slurm_sprint_front_end_table(
-        front_end_info_t *front_end_ptr
-    )
-
-    void slurm_init_update_front_end_msg(
-        update_front_end_msg_t *update_front_end_msg
-    )
-
-    int slurm_update_front_end(
-        update_front_end_msg_t *front_end_msg
-    )
+    char *slurm_sprint_front_end_table(front_end_info_t *front_end_ptr, int one_liner)
+    void slurm_init_update_front_end_msg(update_front_end_msg_t *update_front_end_msg)
+    int slurm_update_front_end(update_front_end_msg_t *front_end_msg)
