@@ -8,8 +8,9 @@ from __future__ import print_function
 import sys
 import textwrap
 
-#from setuptools import setup
-from distutils.core import setup, Extension
+from setuptools import setup, find_packages, Extension
+#from distutils.core import setup
+#from distutils.extension import Extension
 from distutils.version import LooseVersion
 from os import path
 
@@ -22,8 +23,8 @@ if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[:2] < (3, 4):
     )
 
 try:
-    from Cython.Build import cythonize
-    from Cython.Distutils import build_ext
+    from Cython.Build import cythonize, build_ext
+    #from Cython.Distutils import build_ext
     from Cython.Compiler.Version import version as cython_version
 
     if LooseVersion(cython_version) < LooseVersion(CYTHON_VERSION_MIN):
@@ -82,9 +83,18 @@ def parse_setuppy_commands():
 
 extensions = [
     Extension(
-        name = "pyslurm/*",
+        name = "*",
         sources = [
             "pyslurm/*.pyx",
+        ],
+        include_dirs=[SLURM_INCLUDE_PATH],
+        libraries=["slurmdb", "slurm"],
+        library_dirs=[SLURM_LIBRARY_PATH]
+    ),
+    Extension(
+        name = "*",
+        sources = [
+            "pyslurm/slurmdb/*.pyx",
         ],
         include_dirs=[SLURM_INCLUDE_PATH],
         libraries=["slurmdb", "slurm"],
@@ -110,10 +120,10 @@ def setup_package():
         author_email = "pyslurm@googlegroups.com",
         url = "http://github.com/PySlurm/pyslurm",
         keywords = ["HPC", "Batch Scheduler", "Resource Manager", "Slurm", "Cython"],
-        packages = ["pyslurm"],
+        packages=find_packages(),
         platforms = ["Linux"],
         ext_modules = cythonize(extensions),
-        cmdclass = {"build_ext": build_ext },
+        #cmdclass = {"build_ext": build_ext },
         #install_requires=["Cython"],
         classifiers = [
             "Development Status :: 5 - Production/Stable",

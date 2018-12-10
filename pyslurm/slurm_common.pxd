@@ -177,6 +177,9 @@ cdef extern void slurm_bit_free(bitstr_t *b)
 cdef inline xfree(void *__p):
     slurm_xfree(&__p, __FILE__, __LINE__, __FUNCTION__)
 
+cdef inline void *xmalloc(__sz):
+    return slurm_xmalloc(__sz, __FILE__, __LINE__, __FUNCTION__)
+
 
 #
 # Declarations outside of slurmdb.h

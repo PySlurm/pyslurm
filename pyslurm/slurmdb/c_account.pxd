@@ -1,19 +1,16 @@
 # c_account.pxd
-# Slurm DB API
 #
 from libc.stdint cimport uint16_t
 from posix.types cimport time_t
 
+from ..slurm_common cimport List
+
 cdef extern from "slurm/slurmdb.h" nogil:
-    ctypedef struct list:
-        pass
-
-    ctypedef list *List
-
     ctypedef struct slurmdb_assoc_cond_t:
         List acct_list
         List cluster_list
         List def_qos_id_list
+        List format_list
         List id_list
         uint16_t only_defs
         List parent_acct_list
@@ -37,7 +34,25 @@ cdef extern from "slurm/slurmdb.h" nogil:
         uint16_t with_coords
         uint16_t with_deleted
 
-    void *slurmdb_connection_get()
-    int slurmdb_connection_close(void **db_conn)
-    List slurmdb_accounts_get(void *db_conn,
-                              slurmdb_account_cond_t *acct_cond)
+    ctypedef struct slurmdb_account_rec_t:
+        List assoc_list
+        List coordinators
+        char *description
+        char *name
+        char *organization
+
+    ctypedef struct slurmdb_coord_rec_t:
+        char *name
+        uint16_t direct
+
+    int slurmdb_accounts_add(void *db_conn, List acct_list)
+    List slurmdb_accounts_get(void *db_conn, slurmdb_account_cond_t *acct_cond)
+
+    List slurmdb_accounts_modify(
+        void *db_conn,
+        slurmdb_account_cond_t *acct_cond,
+        slurmdb_account_rec_t *acct
+    )
+
+    List slurmdb_accounts_remove(void *db_conn, slurmdb_account_cond_t *acct_cond)
+    void slurmdb_destroy_account_cond(void *object)
