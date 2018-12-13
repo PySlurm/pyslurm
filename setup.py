@@ -38,8 +38,8 @@ except ImportError:
 
 # FIXME: change default paths
 # Default Slurm Paths
-SLURM_INCLUDE_PATH = "/usr/local/slurm/include"
-SLURM_LIBRARY_PATH = "/usr/local/slurm/lib"
+SLURM_INCLUDE_PATH = "/usr/include"
+SLURM_LIBRARY_PATH = "/usr/lib64"
 
 # PySlurm path options to setup.py
 pyslurm_build_commands = [
@@ -88,8 +88,8 @@ extensions = [
             "pyslurm/*.pyx",
         ],
         include_dirs=[SLURM_INCLUDE_PATH],
-        libraries=["slurmdb", "slurm"],
-        library_dirs=[SLURM_LIBRARY_PATH]
+        libraries=["slurmdb", "slurmfull"],
+        library_dirs=[SLURM_LIBRARY_PATH, SLURM_LIBRARY_PATH + "/slurm"]
     ),
     Extension(
         name = "*",
@@ -97,8 +97,8 @@ extensions = [
             "pyslurm/slurmdb/*.pyx",
         ],
         include_dirs=[SLURM_INCLUDE_PATH],
-        libraries=["slurmdb", "slurm"],
-        library_dirs=[SLURM_LIBRARY_PATH]
+        libraries=["slurmdb", "slurmfull"],
+        library_dirs=[SLURM_LIBRARY_PATH, SLURM_LIBRARY_PATH + "/slurm"]
     )
 ]
 
