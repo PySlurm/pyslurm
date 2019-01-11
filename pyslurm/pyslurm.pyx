@@ -1211,10 +1211,10 @@ def slurm_delete_partition(PartID):
 #
 
 
-cpdef int slurm_ping(int Controller=1) except? -1:
+cpdef int slurm_ping(int Controller=0) except? -1:
     u"""Issue RPC to check if slurmctld is responsive.
 
-    :param int Controller: 1 for primary (Default=1), 2 for backup
+    :param int Controller: 0 for primary (Default=0), 1 for backup, 2 for backup2, ...
     :returns: 0 for success or slurm error code
     :rtype: `integer`
     """
