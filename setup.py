@@ -110,7 +110,7 @@ def makeExtension(extName):
         [extPath],
         include_dirs = ['%s' % SLURM_INC, '.'],
         library_dirs = ['%s' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
-        libraries = ['slurmdb', 'slurm'],
+        libraries = ['slurmdb', 'slurmfull'],
         runtime_library_dirs = ['%s/' % SLURM_LIB, '%s/slurm' % SLURM_LIB],
         extra_objects = [],
         extra_compile_args = [],
@@ -147,6 +147,14 @@ def check_libPath(slurm_path):
 
     slurm_path = os.path.normpath(slurm_path)
 
+    # if base dir given then search lib64 and then lib
+    for libpath in ['lib64', 'lib']:
+        slurmlibPath = os.path.join(slurm_path, libpath)
+
+        if os.path.exists("%s/libslurm.so" % slurmlibPath):
+            info("Build - Found Slurm shared library in %s" % slurmlibPath)
+            return slurmlibPath
+
     # if base dir given then check this
     if os.path.exists("%s/libslurm.so" % slurm_path):
         info("Build - Found Slurm shared library in %s" % slurm_path)
@@ -154,14 +162,6 @@ def check_libPath(slurm_path):
     else:
         info("Build - Cannot locate Slurm shared library in %s" % slurm_path)
         return ''
-
-    # if base dir given then search lib64 and then lib
-    for libpath in ['lib64', 'lib']:
-        slurmlibPath = "%s/%s" % (slurm_path, libpath)
-
-        if os.path.exists("%s/libslurm.so" % slurmlibPath):
-            info("Build - Found Slurm shared library in %s" % slurmlibPath)
-            return slurmlibPath
 
     info("Build - Could not locate Slurm shared library in %s" % slurm_path)
     return ''
