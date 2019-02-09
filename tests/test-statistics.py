@@ -1,8 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import pyslurm
-import subprocess
-from nose.tools import assert_equals, assert_true
+from nose.tools import assert_true
 
 def test_get_statistics():
     """Statistics: Test get_statistics() return type"""
