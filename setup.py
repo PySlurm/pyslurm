@@ -12,10 +12,7 @@ from distutils.version import LooseVersion
 
 
 CYTHON_VERSION_MIN = "0.15"
-
-# Slurm min/max supported (hex) versions
-__min_slurm_hex_version__ = "0x120800"
-__max_slurm_hex_version__ = "0x120804"
+SLURM_VERSION = "18.08"
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -122,14 +119,14 @@ def read_inc_version(fname):
     """Read the supplied include file and extract slurm version number
     in the line #define SLURM_VERSION_NUMBER 0x020600 """
     hex = ''
-    f = open(fname, "r")
-    for line in f:
-        if line.find("#define SLURM_VERSION_NUMBER") == 0:
-            hex = line.split(" ")[2].strip()
-            info("Build - Detected Slurm version - %s (%s)" % (
-                hex, inc_vers2str(hex)
-            ))
-    f.close()
+
+    with open(fname, "r") as f:
+        for line in f:
+            if line.find("#define SLURM_VERSION_NUMBER") == 0:
+                hex = line.split(" ")[2].strip()
+                info("Build - Detected Slurm version - %s (%s)" % (
+                    hex, inc_vers2str(hex)
+                ))
     return hex
 
 
@@ -263,19 +260,17 @@ def build():
         usage()
         sys.exit(-1)
 
-    # Test for supported min and max Slurm versions 
+    # Test for Slurm MAJOR.MINOR version match (ignoring .MICRO)
     try:
         SLURM_INC_VER = read_inc_version("%s/slurm/slurm.h" % SLURM_INC)
     except IOError:
         SLURM_INC_VER = read_inc_version("%s/slurm.h" % SLURM_INC)
 
-    if (int(SLURM_INC_VER,16) < int(__min_slurm_hex_version__,16)) or \
-        (int(SLURM_INC_VER,16) > int(__max_slurm_hex_version__,16)):
+    MAJOR = (int(SLURM_INC_VER, 16) >> 16) & 0xff
+    MINOR = (int(SLURM_INC_VER, 16) >>  8) & 0xff
 
-        fatal("Build - Incorrect slurm version detected, require Slurm-%s to slurm-%s" % (
-            inc_vers2str(__min_slurm_hex_version__), inc_vers2str(__max_slurm_hex_version__)
-        ))
-        sys.exit(-1)
+    if LooseVersion(str(MAJOR) + "." + str(MINOR)) != LooseVersion(SLURM_VERSION):
+        fatal("Build - Incorrect slurm version detected, requires Slurm %s" % (SLURM_VERSION))
 
     # Test for libslurm in lib64 and then lib
     SLURM_LIB = check_libPath(SLURM_LIB)
