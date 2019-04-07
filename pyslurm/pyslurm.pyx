@@ -5363,6 +5363,7 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'show_full'] = job.show_full
                 JOBS_info[u'start'] = job.start
                 JOBS_info[u'state'] = job.state
+                JOBS_info[u'state_str'] = slurm.slurm_job_state_string(job.state)
 
                 JOBS_info[u'stat_actual_cpufreq'] = job.stats.act_cpufreq
 
