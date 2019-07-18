@@ -2746,6 +2746,10 @@ cdef class job:
 #            desc.min_cpus = job_opts.get("ntasks")
 
         # TODO: ntasks_set, cpus_set
+
+        if job_opts.get("ntasks"):
+            desc.min_cpus = job_opts.get("ntasks") * job_opts.get("cpus_per_task")
+
         if job_opts.get("ntasks_per_socket"):
             desc.ntasks_per_socket = job_opts.get("ntasks_per_socket")
 
@@ -2833,8 +2837,13 @@ cdef class job:
 
         # FIXME: should this be python's getcwd or C's getcwd?
         # also, allow option to specify work_dir, if not, set default
-        cwd = os.getcwd().encode("UTF-8", "replace")
-        desc.work_dir = cwd
+
+        if job_opts.get("work_dir"):
+            work_dir = job_opts.get("work_dir").encode("UTF-8", "replace")
+            desc.work_dir = work_dir
+        else:
+            cwd = os.getcwd().encode("UTF-8", "replace")
+            desc.work_dir = cwd
 
         if job_opts.get("requeue"):
             desc.requeue = job_opts.get("requeue")
@@ -5592,6 +5601,7 @@ cdef class slurmdb_jobs:
             dict J_dict = {}
             slurm.List JOBSList
             slurm.ListIterator iters = NULL
+            void* db_conn = slurm.slurmdb_connection_get()
 
         if jobids:
             self.job_cond.step_list = slurm.slurm_list_create(NULL)
@@ -5615,6 +5625,8 @@ cdef class slurmdb_jobs:
                 raise ValueError(slurm.slurm_strerror(errno), errno)
 
         JOBSList = slurm.slurmdb_jobs_get(self.db_conn, self.job_cond)
+
+        slurm.slurmdb_connection_close(&db_conn)
 
         if JOBSList is NULL:
             apiError = slurm.slurm_get_errno()
