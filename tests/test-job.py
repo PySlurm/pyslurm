@@ -1,9 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 
 import pyslurm
-import subprocess
 import time
 from nose.tools import assert_equals, assert_true, assert_false
+
+from common import scontrol_show
 
 def test_job_submit():
     """Job: Test job().submit_batch_job()."""
@@ -42,11 +43,7 @@ def test_job_scontrol():
     test_job_info = pyslurm.job().find_id(test_job)[0]
     assert_equals(test_job, test_job_info["job_id"])
 
-    sctl = subprocess.Popen(["scontrol", "-d", "show", "job", str(test_job)],
-                            stdout=subprocess.PIPE).communicate()
-    sctl_stdout = sctl[0].strip().decode("UTF-8", "replace").split()
-    sctl_dict = dict((value.split("=")[0], value.split("=")[1])
-                     for value in sctl_stdout)
+    sctl_dict = scontrol_show("job", str(test_job))
 
     assert_equals(test_job_info["batch_flag"], int(sctl_dict["BatchFlag"]))
     assert_equals(test_job_info["cpus_per_task"], int(sctl_dict["CPUs/Task"]))

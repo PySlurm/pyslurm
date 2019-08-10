@@ -5,6 +5,7 @@ import subprocess
 from nose.tools import assert_equals, assert_true
 from socket import gethostname
 
+
 def test_slurm_reconfigure():
     """Misc: Test slurm_reconfigure() return."""
     slurm_reconfigure = pyslurm.slurm_reconfigure()
@@ -14,18 +15,22 @@ def test_slurm_reconfigure():
 def test_slurm_api_version():
     """Misc: Test slurm_api_version()."""
     ver = pyslurm.slurm_api_version()
-    assert_equals(ver[0], 18)
-    assert_equals(ver[1], 8)
+    assert_equals(ver[0], 19)
+    assert_equals(ver[1], 5)
 
 
 def test_slurm_load_slurmd_status():
     """Misc: Test slurm_load_slurmd_status()."""
     status_info = pyslurm.slurm_load_slurmd_status()["localhost"]
+
     sctl = subprocess.Popen(["scontrol", "-d", "show", "slurmd"],
                             stdout=subprocess.PIPE).communicate()
     sctl_stdout = sctl[0].strip().decode("UTF-8").split("\n")
-    sctl_dict = dict((value.split("=")[0].strip(), value.split("=")[1].strip())
-                     for value in sctl_stdout)
+    sctl_dict = dict(
+        (item.split("=", 1)[0].strip(), item.split("=", 1)[1].strip())
+        for item in sctl_stdout
+        if "=" in item
+    )
 
     assert_equals(status_info["step_list"], sctl_dict["Active Steps"])
     assert_equals(status_info["actual_boards"], int(sctl_dict["Actual Boards"]))

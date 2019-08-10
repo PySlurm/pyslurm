@@ -1,6 +1,5 @@
 # cython: embedsignature=True
 # cython: profile=False
-
 import os
 import re
 import sys
@@ -17,7 +16,6 @@ from libc.stdint cimport int64_t, uint64_t
 from libc.stdlib cimport malloc, free
 from libc.string cimport strlen, strcpy, memset, memcpy
 from posix.unistd cimport getuid, getgid
-
 from cpython cimport bool
 
 cdef extern from 'stdio.h':
@@ -52,6 +50,9 @@ cdef extern from *:
 
 cdef extern from "alps_cray.h" nogil:
     cdef int ALPS_CRAY_SYSTEM
+
+cdef extern from "xmalloc.h" nogil:
+    cdef void *xmalloc(size_t size)
 
 try:
     import __builtin__
@@ -492,6 +493,7 @@ cdef class config:
             void *ret_list = NULL
             slurm.List config_list = NULL
             slurm.ListIterator iters = NULL
+            char tmp_str[128]
 
             config_key_pair_t *keyPairs
             int i = 0
@@ -518,6 +520,7 @@ cdef class config:
             Ctl_dict[u'acct_gather_interconnect_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_interconnect_type, '')
             Ctl_dict[u'acct_gather_filesystem_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_filesystem_type, '')
             Ctl_dict[u'acct_gather_node_freq'] = self.__Config_ptr.acct_gather_node_freq
+            Ctl_dict[u'auth_alt_types'] = slurm.stringOrNone(self.__Config_ptr.authalttypes, '')
             Ctl_dict[u'authinfo'] = slurm.stringOrNone(self.__Config_ptr.authinfo, '')
             Ctl_dict[u'authtype'] = slurm.stringOrNone(self.__Config_ptr.authtype, '')
             Ctl_dict[u'batch_start_timeout'] = self.__Config_ptr.batch_start_timeout
@@ -525,12 +528,13 @@ cdef class config:
             Ctl_dict[u'boot_time'] = self.__Config_ptr.boot_time
             Ctl_dict[u'checkpoint_type'] = slurm.stringOrNone(self.__Config_ptr.checkpoint_type, '')
             Ctl_dict[u'core_spec_plugin'] = slurm.stringOrNone(self.__Config_ptr.core_spec_plugin, '')
+            Ctl_dict[u'cli_filter_plugins'] = slurm.stringOrNone(self.__Config_ptr.cli_filter_plugins, '')
             Ctl_dict[u'cluster_name'] = slurm.stringOrNone(self.__Config_ptr.cluster_name, '')
             Ctl_dict[u'comm_params'] = slurm.stringOrNone(self.__Config_ptr.comm_params, '')
             Ctl_dict[u'complete_wait'] = self.__Config_ptr.complete_wait
             Ctl_dict[u'cpu_freq_def'] = slurm.int32orNone(self.__Config_ptr.cpu_freq_def)
             Ctl_dict[u'cpu_freq_govs'] = self.__Config_ptr.cpu_freq_govs
-            Ctl_dict[u'crypto_type'] = slurm.stringOrNone(self.__Config_ptr.crypto_type, '')
+            Ctl_dict[u'cred_type'] = slurm.stringOrNone(self.__Config_ptr.cred_type, '')
             Ctl_dict[u'debug_flags'] = self.__Config_ptr.debug_flags
             Ctl_dict[u'def_mem_per_cpu'] = self.__Config_ptr.def_mem_per_cpu
             Ctl_dict[u'disable_root_jobs'] = bool(self.__Config_ptr.disable_root_jobs)
@@ -545,6 +549,7 @@ cdef class config:
             Ctl_dict[u'first_job_id'] = self.__Config_ptr.first_job_id
             Ctl_dict[u'fs_dampening_factor'] = self.__Config_ptr.fs_dampening_factor
             Ctl_dict[u'get_env_timeout'] = self.__Config_ptr.get_env_timeout
+            Ctl_dict[u'gpu_freq_def'] = slurm.stringOrNone(self.__Config_ptr.gpu_freq_def, '')
             Ctl_dict[u'gres_plugins'] = slurm.listOrNone(self.__Config_ptr.gres_plugins, ',')
             Ctl_dict[u'group_time'] = self.__Config_ptr.group_time
             Ctl_dict[u'group_update_force'] = self.__Config_ptr.group_force
@@ -572,6 +577,7 @@ cdef class config:
             )
             # TODO: wrap with job_defaults_str()
             #Ctl_dict[u'job_defaults_list'] = slurm.stringOrNone(self.__Config_ptr.job_defaults_list, ',')
+
             Ctl_dict[u'job_file_append'] = bool(self.__Config_ptr.job_file_append)
             Ctl_dict[u'job_requeue'] = bool(self.__Config_ptr.job_requeue)
             Ctl_dict[u'job_submit_plugins'] = slurm.stringOrNone(self.__Config_ptr.job_submit_plugins, '')
@@ -591,7 +597,6 @@ cdef class config:
             Ctl_dict[u'max_mem_per_cpu'] = self.__Config_ptr.max_mem_per_cpu
             Ctl_dict[u'max_step_cnt'] = self.__Config_ptr.max_step_cnt
             Ctl_dict[u'max_tasks_per_node'] = self.__Config_ptr.max_tasks_per_node
-            Ctl_dict[u'mem_limit_enforce'] = self.__Config_ptr.mem_limit_enforce
             Ctl_dict[u'min_job_age'] = self.__Config_ptr.min_job_age
             Ctl_dict[u'mpi_default'] = slurm.stringOrNone(self.__Config_ptr.mpi_default, '')
             Ctl_dict[u'mpi_params'] = slurm.stringOrNone(self.__Config_ptr.mpi_params, '')
@@ -609,15 +614,25 @@ cdef class config:
             Ctl_dict[u'preempt_mode'] = slurm.stringOrNone(config_get_preempt_mode, '')
 
             Ctl_dict[u'preempt_type'] = slurm.stringOrNone(self.__Config_ptr.preempt_type, '')
+
+            if self.__Config_ptr.preempt_exempt_time == slurm.INFINITE:
+                Ctl_dict[u'preempt_exempt_time'] = "NONE"
+            else:
+                secs2time_str(self.__Config_ptr.preempt_exempt_time)
+                Ctl_dict[u'preempt_exempt_time'] = slurm.stringOrNone(tmp_str, '')
+
             Ctl_dict[u'priority_decay_hl'] = self.__Config_ptr.priority_decay_hl
             Ctl_dict[u'priority_calc_period'] = self.__Config_ptr.priority_calc_period
             Ctl_dict[u'priority_favor_small'] = self.__Config_ptr.priority_favor_small
             Ctl_dict[u'priority_flags'] = self.__Config_ptr.priority_flags
             Ctl_dict[u'priority_max_age'] = self.__Config_ptr.priority_max_age
             Ctl_dict[u'priority_params'] = slurm.stringOrNone(self.__Config_ptr.priority_params, '')
+            Ctl_dict[u'priority_site_factor_params'] = slurm.stringOrNone(self.__Config_ptr.site_factor_params, '')
+            Ctl_dict[u'priority_site_factor_plugin'] = slurm.stringOrNone(self.__Config_ptr.site_factor_plugin, '')
             Ctl_dict[u'priority_reset_period'] = self.__Config_ptr.priority_reset_period
             Ctl_dict[u'priority_type'] = slurm.stringOrNone(self.__Config_ptr.priority_type, '')
             Ctl_dict[u'priority_weight_age'] = self.__Config_ptr.priority_weight_age
+            Ctl_dict[u'priority_weight_assoc'] = self.__Config_ptr.priority_weight_assoc
             Ctl_dict[u'priority_weight_fs'] = self.__Config_ptr.priority_weight_fs
             Ctl_dict[u'priority_weight_js'] = self.__Config_ptr.priority_weight_js
             Ctl_dict[u'priority_weight_part'] = self.__Config_ptr.priority_weight_part
@@ -1881,7 +1896,7 @@ cdef class job:
     def __cinit__(self):
         self._job_ptr = NULL
         self._lastUpdate = 0
-        self._ShowFlags = slurm.SHOW_DETAIL | slurm.SHOW_DETAIL2
+        self._ShowFlags = slurm.SHOW_DETAIL | slurm.SHOW_DETAIL
 
     def __dealloc__(self):
         pass
@@ -2065,11 +2080,14 @@ cdef class job:
                     Job_dict[u'array_job_id'] = self._record.array_job_id
                     Job_dict[u'array_task_id'] = None
                     Job_dict[u'array_task_str'] = slurm.stringOrNone(
-                        self._record.array_task_str, '')
+                        self._record.array_task_str, ''
+                    )
                 else:
                     Job_dict[u'array_job_id'] = self._record.array_job_id
                     Job_dict[u'array_task_id'] = self._record.array_task_id
                     Job_dict[u'array_task_str'] = None
+                if self._record.array_max_tasks:
+                    Job_dict[u'array_task_throttle'] = self._record.array_max_tasks
             else:
                 Job_dict[u'array_job_id'] = None
                 Job_dict[u'array_task_id'] = None
@@ -2107,7 +2125,12 @@ cdef class job:
             Job_dict[u'contiguous'] = bool(self._record.contiguous)
             Job_dict[u'core_spec'] = slurm.int16orNone(self._record.core_spec)
             Job_dict[u'cores_per_socket'] = slurm.int16orNone(self._record.cores_per_socket)
-            Job_dict[u'cpus_per_task'] = self._record.cpus_per_task
+
+            if self._record.cpus_per_task == slurm.NO_VAL16:
+                Job_dict[u'cpus_per_task'] = "N/A"
+            else:
+                Job_dict[u'cpus_per_task'] = self._record.cpus_per_task
+
             Job_dict[u'cpus_per_tres'] = slurm.stringOrNone(self._record.cpus_per_tres, '')
             Job_dict[u'cpu_freq_gov'] = slurm.int32orNone(self._record.cpu_freq_gov)
             Job_dict[u'cpu_freq_max'] = slurm.int32orNone(self._record.cpu_freq_max)
@@ -2216,10 +2239,17 @@ cdef class job:
             Job_dict[u'pn_min_tmp_disk'] = self._record.pn_min_tmp_disk
             Job_dict[u'power_flags'] = self._record.power_flags
 
-            if self._record.preempt_time == 0:
-                Job_dict[u'preempt_time'] = None
-            else:
-                Job_dict[u'preempt_time'] = self._record.preempt_time
+            if self._record.preemptable_time:
+                slurm.slurm_make_time_str(
+                    &self._record.preemptable_time, time_str, sizeof(time_str)
+                )
+                Job_dict[u'preempt_eligible_time'] = slurm.stringOrNone(time_str, '')
+
+                if self._record.preempt_time == 0:
+                    Job_dict[u'preempt_time'] = "None"
+                else:
+                    slurm.slurm_make_time_str(&self._record.preempt_time, time_str, sizeof(time_str))
+                    Job_dict[u'preempt_time'] = slurm.stringOrNone(time_str, '')
 
             Job_dict[u'priority'] = self._record.priority
             Job_dict[u'profile'] = self._record.profile
@@ -3240,12 +3270,16 @@ cdef class node:
             char time_str[32]
             char tmp_str[128]
             int last_inx = 0
+            slurm.slurm_ctl_conf_t *slurm_ctl_conf_ptr = NULL
 
         rc = slurm.slurm_load_node(<time_t>NULL, &self._Node_ptr, self._ShowFlags)
 
         if rc != slurm.SLURM_SUCCESS:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+
+        if slurm.slurm_load_ctl_conf(<time_t>NULL, &slurm_ctl_conf_ptr) != slurm.SLURM_SUCCESS:
+            raise ValueError("Cannot load slurmctld conf file")
 
         rc_part = slurm.slurm_load_partitions(<time_t>NULL, &self._Part_ptr, slurm.SHOW_ALL)
 
@@ -3359,14 +3393,11 @@ cdef class node:
             Host_dict[u'energy'] = {}
             if (not record.energy or record.energy.current_watts == slurm.NO_VAL):
                 Host_dict[u'energy'][u'current_watts'] = 0
-                Host_dict[u'energy'][u'base_consumed_energy'] = 0
-                Host_dict[u'energy'][u'consumed_energy'] = 0
+                Host_dict[u'energy'][u'ave_watts'] = 0
             else:
                 Host_dict[u'energy'][u'current_watts'] = record.energy.current_watts
-                Host_dict[u'energy'][u'base_consumed_energy'] = int(record.energy.base_consumed_energy)
-                Host_dict[u'energy'][u'consumed_energy'] = int(record.energy.consumed_energy)
+                Host_dict[u'energy'][u'ave_watts'] = int(record.energy.ave_watts)
 
-            Host_dict[u'energy'][u'base_watts'] = record.energy.base_watts
             Host_dict[u'energy'][u'previous_consumed_energy'] = int(record.energy.previous_consumed_energy)
 
             node_state = record.node_state
@@ -3389,6 +3420,10 @@ cdef class node:
             if (node_state & NODE_STATE_POWER_SAVE):
                 node_state &= (~NODE_STATE_POWER_SAVE)
                 power_str = "+POWER"
+
+            if (node_state & NODE_STATE_POWERING_DOWN):
+                node_state &= (~NODE_STATE_POWERING_DOWN)
+                power_str = "+POWERING_DOWN"
 
             slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
                                             SELECT_NODEDATA_SUBCNT,
@@ -3433,6 +3468,7 @@ cdef class node:
 
         slurm.slurm_free_node_info_msg(self._Node_ptr)
         slurm.slurm_free_partition_info_msg(self._Part_ptr)
+        slurm.slurm_free_ctl_conf(slurm_ctl_conf_ptr)
         self._Node_ptr = NULL
         self._Part_ptr = NULL
         return self._NodeDict
@@ -3634,9 +3670,9 @@ cdef class jobstep:
             dict StepDict = {}
             uint16_t ShowFlags = self._ShowFlags ^ slurm.SHOW_ALL
             int i = 0
-            int errCode = slurm.slurm_get_job_steps(last_time, self.JobID,
-                                                    self.StepID, &job_step_info_ptr,
-                                                    ShowFlags)
+            int errCode = slurm.slurm_get_job_steps(
+                last_time, self.JobID, self.StepID, &job_step_info_ptr, ShowFlags
+            )
 
         if errCode != 0:
             self._JobStepDict = {}
@@ -3655,9 +3691,20 @@ cdef class jobstep:
                 if job_step_info_ptr.job_steps[i].array_job_id:
                     Step_dict[u'array_job_id'] = job_step_info_ptr.job_steps[i].array_job_id
                     Step_dict[u'array_task_id'] = job_step_info_ptr.job_steps[i].array_task_id
+
+                    if job_step_info_ptr.job_steps[i].step_id == SLURM_PENDING_STEP:
+                       Step_dict[u'step_id_str'] = "{}_{}.TBD".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'])
+                    elif job_step_info_ptr.job_steps[i].step_id == SLURM_EXTERN_CONT:
+                       Step_dict[u'step_id_str'] = "{}_{}.extern".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'])
+                    else:
+                       Step_dict[u'step_id_str'] = "{}_{}.{}".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'], step_id)
                 else:
-                    Step_dict[u'array_job_id'] = None
-                    Step_dict[u'array_task_id'] = None
+                    if job_step_info_ptr.job_steps[i].step_id == SLURM_PENDING_STEP:
+                       Step_dict[u'step_id_str'] =  "{}.TBD".format(job_step_info_ptr.job_steps[i].job_id)
+                    elif job_step_info_ptr.job_steps[i].step_id == SLURM_EXTERN_CONT:
+                       Step_dict[u'step_id_str'] =  "{}.extern".format(job_step_info_ptr.job_steps[i].job_id)
+                    else:
+                       Step_dict[u'step_id_str'] =  "{}.{}".format(job_step_info_ptr.job_steps[i].job_id, step_id)
 
                 Step_dict[u'ckpt_dir'] = slurm.stringOrNone(
                     job_step_info_ptr.job_steps[i].ckpt_dir, ''
@@ -4266,13 +4313,13 @@ def slurm_create_reservation(dict reservation_dict={}):
 
     if reservation_dict.get('node_cnt'):
         int_value = reservation_dict[u'node_cnt']
-        resv_msg.node_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * 2)
+        resv_msg.node_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * 2)
         resv_msg.node_cnt[0] = int_value
         resv_msg.node_cnt[1] = 0
 
     if reservation_dict.get('core_cnt') and not reservation_dict.get('node_list'):
         uint32_value = reservation_dict[u'core_cnt'][0]
-        resv_msg.core_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t))
+        resv_msg.core_cnt = <uint32_t*>xmalloc(sizeof(uint32_t))
         resv_msg.core_cnt[0] = uint32_value
 
     if reservation_dict.get('node_list'):
@@ -4283,7 +4330,7 @@ def slurm_create_reservation(dict reservation_dict={}):
             hl.create(b_node_list)
             if len(reservation_dict[u'core_cnt']) != hl.count():
                 raise ValueError("core_cnt list must have the same # elements as the expanded hostlist")
-            resv_msg.core_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * hl.count())
+            resv_msg.core_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * hl.count())
             int_value = 0
             for cores in reservation_dict[u'core_cnt']:
                 uint32_value = cores
@@ -4361,13 +4408,13 @@ def slurm_update_reservation(dict reservation_dict={}):
 
     if reservation_dict.get('node_cnt'):
         int_value = reservation_dict[u'node_cnt']
-        resv_msg.node_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * 2)
+        resv_msg.node_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * 2)
         resv_msg.node_cnt[0] = int_value
         resv_msg.node_cnt[1] = 0
 
     if reservation_dict.get('core_cnt') and not reservation_dict.get('node_list'):
         uint32_value = reservation_dict[u'core_cnt'][0]
-        resv_msg.core_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t))
+        resv_msg.core_cnt = <uint32_t*>xmalloc(sizeof(uint32_t))
         resv_msg.core_cnt[0] = uint32_value
 
     if reservation_dict.get('node_list'):
@@ -4378,7 +4425,7 @@ def slurm_update_reservation(dict reservation_dict={}):
             hl.create(b_node_list)
             if len(reservation_dict[u'core_cnt']) != hl.count():
                 raise ValueError("core_cnt list must have the same # elements as the expanded hostlist")
-            resv_msg.core_cnt = <uint32_t*>slurm.xmalloc(sizeof(uint32_t) * hl.count())
+            resv_msg.core_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * hl.count())
             int_value = 0
             for cores in reservation_dict[u'core_cnt']:
                 uint32_value = cores
@@ -5261,7 +5308,7 @@ cdef class slurmdb_jobs:
         slurm.slurmdb_job_cond_t *job_cond
 
     def __cinit__(self):
-        self.job_cond = <slurm.slurmdb_job_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_job_cond_t))
+        self.job_cond = <slurm.slurmdb_job_cond_t *>xmalloc(sizeof(slurm.slurmdb_job_cond_t))
 
     def __dealloc__(self):
         pass
@@ -5402,7 +5449,7 @@ cdef class slurmdb_reservations:
         slurm.slurmdb_reservation_cond_t *reservation_cond
 
     def __cinit__(self):
-        self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_reservation_cond_t))
+        self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>xmalloc(sizeof(slurm.slurmdb_reservation_cond_t))
 
     def __dealloc__(self):
         slurm.slurmdb_destroy_reservation_cond(self.reservation_cond)
@@ -5414,7 +5461,7 @@ cdef class slurmdb_reservations:
         :param end_time: Select reservations that end before this timestamp
         """
         if self.reservation_cond == NULL:
-            self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_reservation_cond_t))
+            self.reservation_cond = <slurm.slurmdb_reservation_cond_t *>xmalloc(sizeof(slurm.slurmdb_reservation_cond_t))
 
         if self.reservation_cond != NULL:
             self.reservation_cond.with_usage = 1
@@ -5503,7 +5550,7 @@ cdef class slurmdb_clusters:
         slurm.slurmdb_cluster_cond_t *cluster_cond
 
     def __cinit__(self):
-        self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
+        self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
         slurm.slurmdb_init_cluster_cond(self.cluster_cond, 0)
 
     def __dealloc__(self):
@@ -5517,7 +5564,7 @@ cdef class slurmdb_clusters:
         :param end_time: Select clusters that existed before this timestamp
         """
         if self.cluster_cond == NULL:
-            self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
+            self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
 
         if self.cluster_cond != NULL:
             slurm.slurmdb_init_cluster_cond(self.cluster_cond, 0)
@@ -5617,7 +5664,7 @@ cdef class slurmdb_events:
         slurm.slurmdb_event_cond_t *event_cond
 
     def __cinit__(self):
-        self.event_cond = <slurm.slurmdb_event_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_event_cond_t))
+        self.event_cond = <slurm.slurmdb_event_cond_t *>xmalloc(sizeof(slurm.slurmdb_event_cond_t))
 
     def __dealloc__(self):
         slurm.slurmdb_destroy_event_cond(self.event_cond)
@@ -5629,7 +5676,7 @@ cdef class slurmdb_events:
         :param end_time: Select conditions that existed before this timestamp
         """
         if self.event_cond == NULL:
-            self.event_cond = <slurm.slurmdb_event_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_event_cond_t))
+            self.event_cond = <slurm.slurmdb_event_cond_t *>xmalloc(sizeof(slurm.slurmdb_event_cond_t))
 
         if self.event_cond != NULL:
             ##self.event_cond.with_usage = 1
@@ -5695,7 +5742,7 @@ cdef class slurmdb_reports:
         slurm.slurmdb_assoc_cond_t *assoc_cond
 
     def __cinit__(self):
-        self.assoc_cond = <slurm.slurmdb_assoc_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_assoc_cond_t))
+        self.assoc_cond = <slurm.slurmdb_assoc_cond_t *>xmalloc(sizeof(slurm.slurmdb_assoc_cond_t))
 
     def __dealloc__(self):
         slurm.slurmdb_destroy_assoc_cond(self.assoc_cond)
@@ -5839,9 +5886,6 @@ def get_node_use(inx):
     u"""Returns a string that represents the block node mode.
 
     :param int ResType: Slurm block node usage
-        - SELECT_COPROCESSOR_MODE   1
-        - SELECT_VIRTUAL_NODE_MODE  2
-        - SELECT_NAV_MODE           3
     :returns: Block node usage string
     :rtype: `string`
     """
@@ -5992,107 +6036,154 @@ def get_debug_flags(uint64_t inx):
     u""" Returns a string that represents the slurm debug flags.
 
     :param int flags: Slurm debug flags
-        - DEBUG_FLAG_SELECT_TYPE   0x0000000000000001
-        - DEBUG_FLAG_STEPS         0x0000000000000002
-        - DEBUG_FLAG_TRIGGERS      0x0000000000000004
-        - DEBUG_FLAG_CPU_BIND      0x0000000000000008
-        - DEBUG_FLAG_WIKI          0x0000000000000010
-        - DEBUG_FLAG_NO_CONF_HASH  0x0000000000000020
-        - DEBUG_FLAG_GRES          0x0000000000000040
-        - DEBUG_FLAG_BG_PICK       0x0000000000000080
-        - DEBUG_FLAG_BG_WIRES      0x0000000000000100
-        - DEBUG_FLAG_BG_ALGO       0x0000000000000200
-        - DEBUG_FLAG_BG_ALGO_DEEP  0x0000000000000400
-        - DEBUG_FLAG_PRIO          0x0000000000000800
-        - DEBUG_FLAG_BACKFILL      0x0000000000001000
-        - DEBUG_FLAG_GANG          0x0000000000002000
-        - DEBUG_FLAG_RESERVATION   0x0000000000004000
-        - DEBUG_FLAG_FRONT_END     0x0000000000008000
-        - DEBUG_FLAG_NO_REALTIME   0x0000000000010000
-        - DEBUG_FLAG_SWITCH        0x0000000000020000
-        - DEBUG_FLAG_ENERGY        0x0000000000040000
-        - DEBUG_FLAG_EXT_SENSORS   0x0000000000080000
-        - DEBUG_FLAG_LICENSE       0x0000000000100000
-        - DEBUG_FLAG_PROFILE       0x0000000000200000
-        - DEBUG_FLAG_INFINIBAND    0x0000000000400000
-        - DEBUG_FLAG_FILESYSTEM    0x0000000000800000
-        - DEBUG_FLAG_JOB_CONT      0x0000000001000000
-        - DEBUG_FLAG_TASK          0x0000000002000000
-        - DEBUG_FLAG_PROTOCOL      0x0000000004000000
-        - DEBUG_FLAG_BACKFILL_MAP  0x0000000008000000
-        - DEBUG_FLAG_TRACE_JOBS    0x0000000010000000
-        - DEBUG_FLAG_ROUTE         0x0000000020000000
-        - DEBUG_FLAG_DB_ASSOC      0x0000000040000000
-        - DEBUG_FLAG_DB_EVENT      0x0000000080000000
-        - DEBUG_FLAG_DB_JOB        0x0000000100000000
-        - DEBUG_FLAG_DB_QOS        0x0000000200000000
-        - DEBUG_FLAG_DB_QUERY      0x0000000400000000
-        - DEBUG_FLAG_DB_RESV       0x0000000800000000
-        - DEBUG_FLAG_DB_RES        0x0000001000000000
-        - DEBUG_FLAG_DB_STEP       0x0000002000000000
-        - DEBUG_FLAG_DB_USAGE      0x0000004000000000
-        - DEBUG_FLAG_DB_WCKEY      0x0000008000000000
-        - DEBUG_FLAG_BURST_BUF     0x0000010000000000
-        - DEBUG_FLAG_CPU_FREQ      0x0000020000000000
-        - DEBUG_FLAG_POWER         0x0000040000000000
-        - DEBUG_FLAG_SICP          0x0000080000000000
-        - DEBUG_FLAG_DB_ARCHIVE    0x0000100000000000
-        - DEBUG_FLAG_DB_TRES       0x0000200000000000
     :returns: Debug flag string
     :rtype: `string`
     """
-    return __get_debug_flags(inx)
+    return debug_flags2str(inx)
 
-cdef inline list __get_debug_flags(uint64_t flags):
+cdef inline list debug_flags2str(uint64_t debug_flags):
     cdef list debugFlags = []
 
-    if (flags & DEBUG_FLAG_BG_ALGO):
-        debugFlags.append(u'BGBlockAlgo')
+    if (debug_flags & DEBUG_FLAG_ACCRUE):
+        debugFlags.append(u'Accrue')
 
-    if (flags & DEBUG_FLAG_BG_ALGO_DEEP):
-        debugFlags.append(u'BGBlockAlgoDeep')
+    if (debug_flags & DEBUG_FLAG_AGENT):
+        debugFlags.append(u'Agent')
 
-    if (flags & DEBUG_FLAG_BACKFILL):
+    if (debug_flags & DEBUG_FLAG_BACKFILL):
         debugFlags.append(u'Backfill')
 
-    if (flags & DEBUG_FLAG_BG_PICK):
-        debugFlags.append(u'BGBlockPick')
+    if (debug_flags & DEBUG_FLAG_BACKFILL_MAP):
+        debugFlags.append(u'BackfillMap')
 
-    if (flags & DEBUG_FLAG_BG_WIRES):
-        debugFlags.append(u'BGBlockWires')
+    if (debug_flags & DEBUG_FLAG_BURST_BUF):
+        debugFlags.append(u'BurstBuffer')
 
-    if (flags & DEBUG_FLAG_CPU_BIND):
+    if (debug_flags & DEBUG_FLAG_CPU_FREQ):
+        debugFlags.append(u'CpuFrequency')
+
+    if (debug_flags & DEBUG_FLAG_CPU_BIND):
         debugFlags.append(u'CPU_Bind')
 
-    if (flags & DEBUG_FLAG_GANG):
+    if (debug_flags & DEBUG_FLAG_DB_ARCHIVE):
+        debugFlags.append(u'DB_Archive')
+
+    if (debug_flags & DEBUG_FLAG_DB_ASSOC):
+        debugFlags.append(u'DB_Assoc')
+
+    if (debug_flags & DEBUG_FLAG_DB_TRES):
+        debugFlags.append(u'DB_TRES')
+
+    if (debug_flags & DEBUG_FLAG_DB_JOB):
+        debugFlags.append(u'DB_Job')
+
+    if (debug_flags & DEBUG_FLAG_DB_QOS):
+        debugFlags.append(u'DB_QOS')
+
+    if (debug_flags & DEBUG_FLAG_DB_QUERY):
+        debugFlags.append(u'DB_Query')
+
+    if (debug_flags & DEBUG_FLAG_DB_RESV):
+        debugFlags.append(u'DB_Reservation')
+
+    if (debug_flags & DEBUG_FLAG_DB_RES):
+        debugFlags.append(u'DB_Resource')
+
+    if (debug_flags & DEBUG_FLAG_DB_STEP):
+        debugFlags.append(u'DB_Step')
+
+    if (debug_flags & DEBUG_FLAG_DB_USAGE):
+        debugFlags.append(u'DB_Usage')
+
+    if (debug_flags & DEBUG_FLAG_DB_WCKEY):
+        debugFlags.append(u'DB_WCKey')
+
+    if (debug_flags & DEBUG_FLAG_ESEARCH):
+        debugFlags.append(u'Elasticsearch')
+
+    if (debug_flags & DEBUG_FLAG_ENERGY):
+        debugFlags.append(u'Energy')
+
+    if (debug_flags & DEBUG_FLAG_EXT_SENSORS):
+        debugFlags.append(u'ExtSensors')
+
+    if (debug_flags & DEBUG_FLAG_FILESYSTEM):
+        debugFlags.append(u'Filesystem')
+
+    if (debug_flags & DEBUG_FLAG_FEDR):
+        debugFlags.append(u'Federation')
+
+    if (debug_flags & DEBUG_FLAG_FRONT_END):
+        debugFlags.append(u'FrontEnd')
+
+    if (debug_flags & DEBUG_FLAG_GANG):
         debugFlags.append(u'Gang')
 
-    if (flags & DEBUG_FLAG_GRES):
+    if (debug_flags & DEBUG_FLAG_GRES):
         debugFlags.append(u'Gres')
 
-    if (flags & DEBUG_FLAG_NO_CONF_HASH):
+    if (debug_flags & DEBUG_FLAG_HETERO_JOBS):
+        debugFlags.append(u'HeteroJobs')
+
+    if (debug_flags & DEBUG_FLAG_INTERCONNECT):
+        debugFlags.append(u'Interconnect')
+
+    if (debug_flags & DEBUG_FLAG_JOB_CONT):
+        debugFlags.append(u'JobContainer')
+
+    if (debug_flags & DEBUG_FLAG_NODE_FEATURES):
+        debugFlags.append(u'NodeFeatures')
+
+    if (debug_flags & DEBUG_FLAG_LICENSE):
+        debugFlags.append(u'License')
+
+    if (debug_flags & DEBUG_FLAG_NO_CONF_HASH):
         debugFlags.append(u'NO_CONF_HASH')
 
-    if (flags & DEBUG_FLAG_PRIO):
+    if (debug_flags & DEBUG_FLAG_NO_REALTIME):
+        debugFlags.append(u'NoRealTime')
+
+    if (debug_flags & DEBUG_FLAG_POWER):
+        debugFlags.append(u'Power')
+
+    if (debug_flags & DEBUG_FLAG_POWER_SAVE):
+        debugFlags.append(u'PowerSave')
+
+    if (debug_flags & DEBUG_FLAG_PRIO):
         debugFlags.append(u'Priority')
 
-    if (flags & DEBUG_FLAG_RESERVATION):
+    if (debug_flags & DEBUG_FLAG_PROTOCOL):
+        debugFlags.append(u'Protocol')
+
+    if (debug_flags & DEBUG_FLAG_RESERVATION):
         debugFlags.append(u'Reservation')
 
-    if (flags & DEBUG_FLAG_SELECT_TYPE):
+    if (debug_flags & DEBUG_FLAG_ROUTE):
+        debugFlags.append(u'Route')
+
+    if (debug_flags & DEBUG_FLAG_SELECT_TYPE):
         debugFlags.append(u'SelectType')
 
-    if (flags & DEBUG_FLAG_STEPS):
+    if (debug_flags & DEBUG_FLAG_STEPS):
         debugFlags.append(u'Steps')
 
-    if (flags & DEBUG_FLAG_TRIGGERS):
+    if (debug_flags & DEBUG_FLAG_SWITCH):
+        debugFlags.append(u'Switch')
+
+    if (debug_flags & DEBUG_FLAG_TASK):
+        debugFlags.append(u'Task')
+
+    if (debug_flags & DEBUG_FLAG_TIME_CRAY):
+        debugFlags.append(u'TimeCray')
+
+    if (debug_flags & DEBUG_FLAG_TRES_NODE):
+        debugFlags.append(u'TRESNode')
+
+    if (debug_flags & DEBUG_FLAG_TRACE_JOBS):
+        debugFlags.append(u'TraceJobs')
+
+    if (debug_flags & DEBUG_FLAG_TRIGGERS):
         debugFlags.append(u'Triggers')
-
-    if (flags & DEBUG_FLAG_WIKI):
-        debugFlags.append(u'Wiki')
-
-    if (flags & DEBUG_FLAG_FRONT_END):
-        debugFlags.append(u'Front_End')
 
     return debugFlags
 

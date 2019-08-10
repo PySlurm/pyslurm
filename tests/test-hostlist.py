@@ -1,7 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
 import pyslurm
-import subprocess
 from nose.tools import assert_equals, assert_true
 
 def test_hostlist_create_new():
