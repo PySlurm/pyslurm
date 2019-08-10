@@ -228,15 +228,16 @@ class Pyslurm:
             self.slurm_inc = "{}/include".format(self.slurm_dir)
         elif not self.slurm_dir and not self.slurm_lib and not self.slurm_inc:
             self.slurm_lib = self.default_slurm_dir
-            self.slurm_inc = "%s/include" %  self.default_slurm_dir
+            self.slurm_inc = "{}/include".format(self.default_slurm_dir)
         elif not self.slurm_dir and (not self.slurm_lib or not self.slurm_inc):
             self.usage()
 
         # Test for slurm.h maybe from derived paths
-        if os.path.exists("{}/slurm/slurm.h".format(self.slurm_inc)):
-            info("Build - Found Slurm header in %s" % self.slurm_inc)
-        elif os.path.exists("{}/slurm.h".format(self.slurm_inc)):
-            info("Build - Found Slurm header in %s" % self.slurm_inc)
+        if self.slurm_inc:
+            if os.path.exists("{}/slurm/slurm.h".format(self.slurm_inc)):
+                info("Build - Found Slurm header in %s" % self.slurm_inc)
+            elif os.path.exists("{}/slurm.h".format(self.slurm_inc)):
+                info("Build - Found Slurm header in %s" % self.slurm_inc)
         else:
             info("Build - Cannot locate the Slurm include in %s" % self.slurm_inc)
             self.usage()
