@@ -3693,18 +3693,18 @@ cdef class jobstep:
                     Step_dict[u'array_task_id'] = job_step_info_ptr.job_steps[i].array_task_id
 
                     if job_step_info_ptr.job_steps[i].step_id == SLURM_PENDING_STEP:
-                       Step_dict[u'step_id_str'] = "{}_{}.TBD".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'])
+                       Step_dict[u'step_id_str'] = "{0}_{1}.TBD".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'])
                     elif job_step_info_ptr.job_steps[i].step_id == SLURM_EXTERN_CONT:
-                       Step_dict[u'step_id_str'] = "{}_{}.extern".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'])
+                       Step_dict[u'step_id_str'] = "{0}_{1}.extern".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'])
                     else:
-                       Step_dict[u'step_id_str'] = "{}_{}.{}".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'], step_id)
+                       Step_dict[u'step_id_str'] = "{0}_{1}.{2}".format(Step_dict[u'array_job_id'], Step_dict[u'array_task_id'], step_id)
                 else:
                     if job_step_info_ptr.job_steps[i].step_id == SLURM_PENDING_STEP:
-                       Step_dict[u'step_id_str'] =  "{}.TBD".format(job_step_info_ptr.job_steps[i].job_id)
+                       Step_dict[u'step_id_str'] =  "{0}.TBD".format(job_step_info_ptr.job_steps[i].job_id)
                     elif job_step_info_ptr.job_steps[i].step_id == SLURM_EXTERN_CONT:
-                       Step_dict[u'step_id_str'] =  "{}.extern".format(job_step_info_ptr.job_steps[i].job_id)
+                       Step_dict[u'step_id_str'] =  "{0}.extern".format(job_step_info_ptr.job_steps[i].job_id)
                     else:
-                       Step_dict[u'step_id_str'] =  "{}.{}".format(job_step_info_ptr.job_steps[i].job_id, step_id)
+                       Step_dict[u'step_id_str'] =  "{0}.{1}".format(job_step_info_ptr.job_steps[i].job_id, step_id)
 
                 Step_dict[u'ckpt_dir'] = slurm.stringOrNone(
                     job_step_info_ptr.job_steps[i].ckpt_dir, ''

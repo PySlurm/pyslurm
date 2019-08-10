@@ -96,7 +96,7 @@ class Pyslurm:
     def makeExtension(self, extName):
         """Generate an Extension object from its dotted name"""
         extPath = extName.replace(".", os.path.sep) + ".pyx"
-        runtime_library_dirs = [self.slurm_lib, '{}/slurm'.format(self.slurm_lib)]
+        runtime_library_dirs = [self.slurm_lib, '{0}/slurm'.format(self.slurm_lib)]
         return Extension(
             extName,
             [extPath],
@@ -141,12 +141,12 @@ class Pyslurm:
         for libpath in ['lib64', 'lib']:
             slurmlibPath = os.path.join(slurm_path, libpath)
 
-            if os.path.exists("{}/libslurm.so".format(slurmlibPath)):
+            if os.path.exists("{0}/libslurm.so".format(slurmlibPath)):
                 info("Build - Found Slurm shared library in %s" % slurmlibPath)
                 return slurmlibPath
 
         # if base dir given then check this
-        if os.path.exists("{}/libslurm.so".format(slurm_path)):
+        if os.path.exists("{0}/libslurm.so".format(slurm_path)):
             info("Build - Found Slurm shared library in %s" % slurm_path)
             return slurm_path
         else:
@@ -162,7 +162,7 @@ class Pyslurm:
         try:
             with open("pyslurm/bluegene.pxi", "w") as f:
                 f.write("DEF BG=1\n")
-                f.write("DEF BGQ={}\n".format(self.bgq))
+                f.write("DEF BGQ={0}\n".format(self.bgq))
         except:
             fatal("Build - Unable to write Blue Gene type to pyslurm/bluegene.pxi")
 
@@ -244,9 +244,9 @@ class Pyslurm:
 
         # Test for Slurm MAJOR.MINOR version match (ignoring .MICRO)
         try:
-            SLURM_INC_VER = self.read_inc_version("{}/slurm/slurm.h".format(self.slurm_inc))
+            SLURM_INC_VER = self.read_inc_version("{0}/slurm/slurm.h".format(self.slurm_inc))
         except IOError:
-            SLURM_INC_VER = self.read_inc_version("{}/slurm.h".format(self.slurm_inc))
+            SLURM_INC_VER = self.read_inc_version("{0}/slurm.h".format(self.slurm_inc))
 
         MAJOR = (int(SLURM_INC_VER, 16) >> 16) & 0xff
         MINOR = (int(SLURM_INC_VER, 16) >>  8) & 0xff
