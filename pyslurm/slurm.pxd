@@ -588,7 +588,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         uint32_t jobs_failed
         uint32_t jobs_pending
         uint32_t jobs_running
-        time_t jobs_states_ts
+        time_t job_states_ts
         uint32_t bf_backfilled_jobs
         uint32_t bf_last_backfilled_jobs
         uint32_t bf_backfilled_pack_jobs
