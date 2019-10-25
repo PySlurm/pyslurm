@@ -2580,6 +2580,7 @@ cdef class job:
             wckey = job_opts.get("wckey").encode("UTF-8", "replace")
             desc.wckey = wckey
 
+        # TODO when nodelist is set, min_nodes needs to be adjusted accordingly
         if job_opts.get("nodelist"):
             req_nodes = job_opts.get("nodelist").encode("UTF-8", "replace")
             desc.req_nodes = req_nodes
@@ -2601,7 +2602,12 @@ cdef class job:
             licenses = job_opts.get("licenses").encode("UTF-8", "replace")
             desc.licenses = licenses
 
-        # TODO: nodes_set
+        if job_opts.get("min_nodes"):
+            desc.min_nodes = job_opts.get("min_nodes")
+            if job_opts.get("max_nodes"):
+                desc.max_nodes = job_opts.get("max_nodes")
+        elif "ntasks" in job_opts and job_opts.get("min_nodes") == 0:
+            desc.min_nodes = 0
 
         if job_opts.get("ntasks_per_node"):
             ntasks_per_node = job_opts.get("ntasks_per_node")
@@ -2732,23 +2738,21 @@ cdef class job:
         if job_opts.get("tmpdisk"):
             desc.pn_min_tmp_disk = job_opts.get("tmpdisk")
 
-        # TODO: declare and use MAX macro or use python max()?
-#        if job_opts.get("overcommit"):
-#            desc.min_cpus = max(job_opts.get("min_nodes", 1)
-#            desc.overcommit = job_opts.get("overcommit")
-#        elif job_opts.get("cpus_set"):
-#            # TODO: cpus_set
-#            #       check for ntasks and cpus_per_task before multiplying
-#            desc.min_cpus = job_opts.get("ntasks") * job_opts.get("cpus_per_task")
-#        elif job_opts.get("nodes_set") and job_opts.get("min_nodes") == 0:
-#            desc.min_cpus = 0
-#        else:
-#            desc.min_cpus = job_opts.get("ntasks")
+        if job_opts.get("overcommit"):
+            desc.min_cpus = max(job_opts.get("min_nodes", 1), 1)
+            desc.overcommit = job_opts.get("overcommit")
+        elif job_opts.get("cpus_per_task"):
+            desc.min_cpus = job_opts.get("ntasks", 1) * job_opts.get("cpus_per_task")
+        elif job_opts.get("nodelist") and job_opts.get("min_nodes") == 0:
+            desc.min_cpus = 0
+        else:
+            desc.min_cpus = job_opts.get("ntasks", 1)
 
-        # TODO: ntasks_set, cpus_set
+        if job_opts.get("cpus_per_task"):
+            desc.cpus_per_task = job_opts.get("cpus_per_task")
 
         if job_opts.get("ntasks"):
-            desc.min_cpus = job_opts.get("ntasks") * job_opts.get("cpus_per_task")
+            desc.num_tasks = job_opts.get("ntasks")
 
         if job_opts.get("ntasks_per_socket"):
             desc.ntasks_per_socket = job_opts.get("ntasks_per_socket")
