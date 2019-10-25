@@ -5574,9 +5574,14 @@ cdef class slurmdb_jobs:
 
     def __cinit__(self):
         self.job_cond = <slurm.slurmdb_job_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_job_cond_t))
+        self.db_conn = slurm.slurmdb_connection_get()
 
     def __dealloc__(self):
-        pass
+        self.__free()
+
+    cpdef __free(self):
+        slurm.xfree(self.job_cond)
+        slurm.slurmdb_connection_close(&self.db_conn)
 
     def get(self, jobids=[], starttime=0, endtime=0):
         u"""Get Slurmdb information about some jobs.
@@ -5605,7 +5610,6 @@ cdef class slurmdb_jobs:
             dict J_dict = {}
             slurm.List JOBSList
             slurm.ListIterator iters = NULL
-            void* db_conn = slurm.slurmdb_connection_get()
 
         if jobids:
             self.job_cond.step_list = slurm.slurm_list_create(NULL)
@@ -5629,8 +5633,6 @@ cdef class slurmdb_jobs:
                 raise ValueError(slurm.slurm_strerror(errno), errno)
 
         JOBSList = slurm.slurmdb_jobs_get(self.db_conn, self.job_cond)
-
-        slurm.slurmdb_connection_close(&db_conn)
 
         if JOBSList is NULL:
             apiError = slurm.slurm_get_errno()
