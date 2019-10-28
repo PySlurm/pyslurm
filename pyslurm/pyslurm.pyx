@@ -5577,9 +5577,6 @@ cdef class slurmdb_jobs:
         self.db_conn = slurm.slurmdb_connection_get()
 
     def __dealloc__(self):
-        self.__free()
-
-    cpdef __free(self):
         slurm.xfree(self.job_cond)
         slurm.slurmdb_connection_close(&self.db_conn)
 
