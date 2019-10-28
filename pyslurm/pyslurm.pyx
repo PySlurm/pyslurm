@@ -2182,6 +2182,7 @@ cdef class job:
             Job_dict[u'ntasks_per_board'] = self._record.ntasks_per_board
             Job_dict[u'num_cpus'] = self._record.num_cpus
             Job_dict[u'num_nodes'] = self._record.num_nodes
+            Job_dict[u'num_tasks'] = self._record.num_tasks
 
             if self._record.pack_job_id:
                 Job_dict[u'pack_job_id'] = self._record.pack_job_id
