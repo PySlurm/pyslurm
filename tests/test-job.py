@@ -7,10 +7,17 @@ from nose.tools import assert_equals, assert_true, assert_false
 
 def test_job_submit():
     """Job: Test job().submit_batch_job()."""
-    test_job = {"wrap": "sleep 3600", "job_name": "pyslurm_test_job"}
+    test_job = {
+        "wrap": "sleep 3600",
+        "job_name": "pyslurm_test_job",
+        "ntasks": 2,
+        "cpus_per_task": 3,
+    }
     test_job_id = pyslurm.job().submit_batch_job(test_job)
     test_job_search = pyslurm.job().find(name="name", val="pyslurm_test_job")
     assert_true(test_job_id in test_job_search)
+    assert_equals(test_job_search["cpus_per_task"], 3)
+    assert_equals(test_job_search["num_tasks"], 2)
 
 
 def test_job_get():
