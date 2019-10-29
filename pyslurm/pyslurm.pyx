@@ -2182,6 +2182,7 @@ cdef class job:
             Job_dict[u'ntasks_per_board'] = self._record.ntasks_per_board
             Job_dict[u'num_cpus'] = self._record.num_cpus
             Job_dict[u'num_nodes'] = self._record.num_nodes
+            Job_dict[u'num_tasks'] = self._record.num_tasks
 
             if self._record.pack_job_id:
                 Job_dict[u'pack_job_id'] = self._record.pack_job_id
@@ -2580,6 +2581,7 @@ cdef class job:
             wckey = job_opts.get("wckey").encode("UTF-8", "replace")
             desc.wckey = wckey
 
+        # TODO when nodelist is set, min_nodes needs to be adjusted accordingly
         if job_opts.get("nodelist"):
             req_nodes = job_opts.get("nodelist").encode("UTF-8", "replace")
             desc.req_nodes = req_nodes
@@ -2601,7 +2603,12 @@ cdef class job:
             licenses = job_opts.get("licenses").encode("UTF-8", "replace")
             desc.licenses = licenses
 
-        # TODO: nodes_set
+        if job_opts.get("min_nodes"):
+            desc.min_nodes = job_opts.get("min_nodes")
+            if job_opts.get("max_nodes"):
+                desc.max_nodes = job_opts.get("max_nodes")
+        elif "ntasks" in job_opts and job_opts.get("min_nodes") == 0:
+            desc.min_nodes = 0
 
         if job_opts.get("ntasks_per_node"):
             ntasks_per_node = job_opts.get("ntasks_per_node")
@@ -2732,20 +2739,22 @@ cdef class job:
         if job_opts.get("tmpdisk"):
             desc.pn_min_tmp_disk = job_opts.get("tmpdisk")
 
-        # TODO: declare and use MAX macro or use python max()?
-#        if job_opts.get("overcommit"):
-#            desc.min_cpus = max(job_opts.get("min_nodes", 1)
-#            desc.overcommit = job_opts.get("overcommit")
-#        elif job_opts.get("cpus_set"):
-#            # TODO: cpus_set
-#            #       check for ntasks and cpus_per_task before multiplying
-#            desc.min_cpus = job_opts.get("ntasks") * job_opts.get("cpus_per_task")
-#        elif job_opts.get("nodes_set") and job_opts.get("min_nodes") == 0:
-#            desc.min_cpus = 0
-#        else:
-#            desc.min_cpus = job_opts.get("ntasks")
+        if job_opts.get("overcommit"):
+            desc.min_cpus = max(job_opts.get("min_nodes", 1), 1)
+            desc.overcommit = job_opts.get("overcommit")
+        elif job_opts.get("cpus_per_task"):
+            desc.min_cpus = job_opts.get("ntasks", 1) * job_opts.get("cpus_per_task")
+        elif job_opts.get("nodelist") and job_opts.get("min_nodes") == 0:
+            desc.min_cpus = 0
+        else:
+            desc.min_cpus = job_opts.get("ntasks", 1)
 
-        # TODO: ntasks_set, cpus_set
+        if job_opts.get("cpus_per_task"):
+            desc.cpus_per_task = job_opts.get("cpus_per_task")
+
+        if job_opts.get("ntasks"):
+            desc.num_tasks = job_opts.get("ntasks")
+
         if job_opts.get("ntasks_per_socket"):
             desc.ntasks_per_socket = job_opts.get("ntasks_per_socket")
 
@@ -2833,8 +2842,13 @@ cdef class job:
 
         # FIXME: should this be python's getcwd or C's getcwd?
         # also, allow option to specify work_dir, if not, set default
-        cwd = os.getcwd().encode("UTF-8", "replace")
-        desc.work_dir = cwd
+
+        if job_opts.get("work_dir"):
+            work_dir = job_opts.get("work_dir").encode("UTF-8", "replace")
+            desc.work_dir = work_dir
+        else:
+            cwd = os.getcwd().encode("UTF-8", "replace")
+            desc.work_dir = cwd
 
         if job_opts.get("requeue"):
             desc.requeue = job_opts.get("requeue")
@@ -5561,9 +5575,11 @@ cdef class slurmdb_jobs:
 
     def __cinit__(self):
         self.job_cond = <slurm.slurmdb_job_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_job_cond_t))
+        self.db_conn = slurm.slurmdb_connection_get()
 
     def __dealloc__(self):
-        pass
+        slurm.xfree(self.job_cond)
+        slurm.slurmdb_connection_close(&self.db_conn)
 
     def get(self, jobids=[], starttime=0, endtime=0):
         u"""Get Slurmdb information about some jobs.
