@@ -15,10 +15,13 @@ def test_job_submit():
         "cpus_per_task": 3,
     }
     test_job_id = pyslurm.job().submit_batch_job(test_job)
-    test_job_search = pyslurm.job().find(name="name", val="pyslurm_test_job")
+    test_job_search = pyslurm.job().find(name="name", val=test_job["job_name"])
+    test_job_info = pyslurm.job().find_id(test_job_id)
+
     assert_true(test_job_id in test_job_search)
-    assert_equals(test_job_search["cpus_per_task"], 3)
-    assert_equals(test_job_search["num_tasks"], 2)
+    assert_equals(len(test_job_info), 1)
+    assert_equals(test_job_info[0]["cpus_per_task"], test_job["cpus_per_task"])
+    assert_equals(test_job_info[0]["num_tasks"], test_job["ntasks"])
 
 
 def test_job_get():
