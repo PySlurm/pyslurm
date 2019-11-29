@@ -38,11 +38,11 @@ try:
         info("Cython version %s installed" % cython_version)
         fatal("Please use Cython version >= %s" % CYTHON_VERSION_MIN)
 except:
-    fatal("Cython (http://cython.org) is required to build PySlurm")
+    fatal("Cython (https://cython.org) is required to build PySlurm")
     fatal("Please use Cython version >= %s" % CYTHON_VERSION_MIN)
 
-if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[:2] < (3, 4):
-    fatal("Python >= 2.6 or >= 3.4 is required to run PySlurm.")
+if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[:2] < (3, 4):
+    fatal("Python == 2.7 or >= 3.4 is required to run PySlurm.")
 
 
 class Pyslurm:
@@ -328,7 +328,6 @@ class Pyslurm:
                 'Programming Language :: Cython',
                 'Programming Language :: Python',
                 'Programming Language :: Python :: 2',
-                'Programming Language :: Python :: 2.6',
                 'Programming Language :: Python :: 2.7',
                 'Programming Language :: Python :: 3',
                 'Programming Language :: Python :: 3.4',

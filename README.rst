@@ -18,12 +18,12 @@ Prerequisites
 
 * `Slurm <https://www.schedmd.com>`_
 * `Python <https://www.python.org>`_
-* `Cython <http://cython.org>`_
+* `Cython <https://cython.org>`_
 
 This PySlurm branch has been tested with:
 
 * Cython 0.15.1*, 0.19.2, and the latest stable
-* Python 2.6, 2.7, and 3.4
+* Python 2.7, 3.4, 3.5 and 3.6
 * Slurm 19.05.0
 
     Note: Cython 0.15.1 is only tested on Python 2.7.
@@ -31,8 +31,8 @@ This PySlurm branch has been tested with:
 Installation
 ************
 
-You will need to instruct the setup.py script where either the Slurm install root
-directory or where the Slurm libraries and Slurm include files are :
+You will need to instruct the setup.py script where either the Slurm install
+root directory or where the Slurm libraries and Slurm include files are:
 
 #. Slurm default directory (/usr):
 
