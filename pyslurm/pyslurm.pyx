@@ -5339,7 +5339,7 @@ cdef class slurmdb_jobs:
         slurm.slurmdb_job_cond_t *job_cond
 
     def __cinit__(self):
-        self.job_cond = <slurm.slurmdb_job_cond_t *>slurm.xmalloc(sizeof(slurm.slurmdb_job_cond_t))
+        self.job_cond = <slurm.slurmdb_job_cond_t *>xmalloc(sizeof(slurm.slurmdb_job_cond_t))
         self.db_conn = slurm.slurmdb_connection_get()
 
     def __dealloc__(self):
