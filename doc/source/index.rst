@@ -19,12 +19,6 @@ Contents
    :maxdepth: 2
    :numbered:
 
-Block Class
-***********
-
-.. autoclass:: pyslurm.block
-   :members:
-
 Config Class
 ************
 

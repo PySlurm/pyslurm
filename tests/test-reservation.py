@@ -1,9 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 
 import pyslurm
-import subprocess
 import time
 from nose.tools import assert_equals, assert_true
+
+from common import scontrol_show
 
 def test_reservation_create():
     """Reservation: Test reservation().create()."""
@@ -52,11 +53,7 @@ def test_reservation_count():
 def test_reservation_scontrol():
     """Reservation: Compare scontrol values to PySlurm values."""
     test_resv_info = pyslurm.reservation().get()["resv_test"]
-    sctl = subprocess.Popen(["scontrol", "-d", "show", "reservation", "resv_test"],
-                            stdout=subprocess.PIPE).communicate()
-    sctl_stdout = sctl[0].strip().decode("UTF-8", "replace").split()
-    sctl_dict = dict((value.split("=")[0], value.split("=")[1])
-                     for value in sctl_stdout)
+    sctl_dict = scontrol_show('reservation', 'resv_test')
 
     assert_equals(test_resv_info["node_list"], sctl_dict["Nodes"])
     assert_equals(test_resv_info["node_cnt"], int(sctl_dict["NodeCnt"]))

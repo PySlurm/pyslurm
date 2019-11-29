@@ -1,8 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
 import pyslurm
-import subprocess
 from nose.tools import assert_equals, assert_true
+
+from common import scontrol_show
 
 def test_partition_get():
     """Partition: Test partition().get() return type."""
@@ -31,11 +32,7 @@ def test_partition_scontrol():
     test_partition_info = pyslurm.partition().find_id(test_partition)
     assert_equals(test_partition, test_partition_info["name"])
 
-    sctl = subprocess.Popen(["scontrol", "-d", "show", "partition", str(test_partition)],
-                            stdout=subprocess.PIPE).communicate()
-    sctl_stdout = sctl[0].strip().decode("UTF-8").split()
-    sctl_dict = dict((value.split("=")[0], value.split("=")[1])
-                     for value in sctl_stdout)
+    sctl_dict = scontrol_show('partition', str(test_partition))
 
     assert_equals(test_partition_info["allow_alloc_nodes"], sctl_dict["AllocNodes"])
     assert_equals(test_partition_info["allow_accounts"], sctl_dict["AllowAccounts"])
