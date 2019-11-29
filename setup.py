@@ -15,7 +15,7 @@ CYTHON_VERSION_MIN = "0.15"
 
 # Slurm min/max supported (hex) versions
 __min_slurm_hex_version__ = "0x110b00"
-__max_slurm_hex_version__ = "0x110b09"
+__max_slurm_hex_version__ = "0x110b0d"
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -154,7 +154,7 @@ def check_libPath(slurm_path):
             return slurm_path
         else:
             info("Build - Cannot locate Slurm shared library in %s" % slurm_path)
-            return ''
+            return None
 
     # if base dir given then search lib64 and then lib
     for libpath in ['lib64', 'lib']:
@@ -164,8 +164,12 @@ def check_libPath(slurm_path):
             info("Build - Found Slurm shared library in %s" % slurmlibPath)
             return slurmlibPath
 
+    if os.path.exists('%s/libslurm.so' % SLURM_LIB):
+        info('Build - Found Slurm shared library in %s' % SLURM_LIB)
+        return SLURM_LIB
+
     info("Build - Could not locate Slurm shared library in %s" % slurm_path)
-    return ''
+    return None
 
 
 def create_bluegene_include():
@@ -255,14 +259,12 @@ def build():
         usage()
 
     # Test for slurm.h maybe from derived paths 
-    if not os.path.exists("%s/slurm/slurm.h" % SLURM_INC):
-        info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
-        usage()
-    elif not os.path.exists("%s/slurm.h" % SLURM_INC):
-        info("Build - Cannot locate the Slurm include in %s" % SLURM_INC)
-        usage()
+    if os.path.exists("%s/slurm/slurm.h" % SLURM_INC):
+        info("Build - Found the Slurm header in %s" % SLURM_INC)
+    elif os.path.exists("%s/slurm.h" % SLURM_INC):
+        info("Build - Found the Slurm header in %s" % SLURM_INC)
     else:
-        info("Build - Found Slurm header in %s" % SLURM_INC)
+        fatal("Build - Cannot locate the Slurm header in %s" % SLURM_INC)
 
     # Test for supported min and max Slurm versions 
     try:
@@ -290,7 +292,7 @@ def build():
 def parse_setuppy_commands():
     args = sys.argv[1:]
 
-    if len(args) == 0:
+    if not args:
         usage()
     else:
         # Set BGQ if --bgq argument provided
