@@ -4766,7 +4766,6 @@ cdef class statistics:
             self._StatsDict[u'jobs_completed'] = self._buf.jobs_completed
             self._StatsDict[u'jobs_canceled'] = self._buf.jobs_canceled
             self._StatsDict[u'jobs_failed'] = self._buf.jobs_failed
-            self._StatsDict[u'jobs_running'] = self._buf.jobs_running
 
             self._StatsDict[u'jobs_pending'] = self._buf.jobs_pending
             self._StatsDict[u'jobs_running'] = self._buf.jobs_running
