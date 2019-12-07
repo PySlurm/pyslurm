@@ -1,7 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
 import pyslurm
+import sys
 import time
+
 from nose.tools import assert_equals, assert_true, assert_false
 
 from common import scontrol_show
@@ -77,6 +79,24 @@ def test_job_scontrol():
     assert_equals(test_job_info["std_out"], sctl_dict["StdOut"])
     assert_equals(test_job_info["time_limit_str"], sctl_dict["TimeLimit"])
     assert_equals(test_job_info["work_dir"], sctl_dict["WorkDir"])
+
+
+def test_job_find_user_string():
+    """Job: Test job().find_user() (String)."""
+    user = "root"
+
+    if sys.version_info < (3,0):
+        user = user.encode("UTF-8")
+
+    test_job_output = pyslurm.job().find_user(user)
+    assert_true(isinstance(test_job_output, dict))
+
+
+def test_job_find_user_int():
+    """Job: Test job().find_user() (Integer)."""
+    user = 0
+    test_job_output = pyslurm.job().find_user(user)
+    assert_true(isinstance(test_job_output, dict))
 
 
 def test_job_kill():
