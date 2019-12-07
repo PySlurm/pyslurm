@@ -1985,7 +1985,7 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    cpdef find_user(self, user):
+    def find_user(self, user):
         u"""Retrieve a user's job data.
 
         This method calls slurm_load_job_user to get all job_table records
@@ -1999,14 +1999,12 @@ cdef class job:
             int apiError
             int rc
             uint32_t uid
-            char *username
 
         if isinstance(user, str):
             try:
-                username = user
-                uid = getpwnam(username)[2]
+                uid = getpwnam(user).pw_uid
             except KeyError:
-                raise KeyError("user " + user + " not found")
+                raise KeyError("user %s not found on this system." % user)
         else:
             uid = user
 
