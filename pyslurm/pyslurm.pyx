@@ -5343,7 +5343,7 @@ cdef class slurmdb_jobs:
         slurm.xfree(self.job_cond)
         slurm.slurmdb_connection_close(&self.db_conn)
 
-    def get(self, jobids=[], starttime=0, endtime=0):
+    def get(self, jobids=[], userids=[], starttime=0, endtime=0, flags = None, db_flags = None, clusters = []):
         u"""Get Slurmdb information about some jobs.
 
         Input formats for start and end times:
@@ -5371,6 +5371,23 @@ cdef class slurmdb_jobs:
             slurm.List JOBSList
             slurm.ListIterator iters = NULL
 
+       
+        if clusters:
+            self.job_cond.cluster_list = slurm.slurm_list_create(NULL)
+            for _cluster in clusters:
+                _cluster = _cluster.encode("UTF-8")
+                slurm.slurm_addto_char_list_with_case(self.job_cond.cluster_list, _cluster, False)
+
+        if db_flags:
+            if isinstance(db_flags, int):
+                self.job_cond.db_flags = db_flags
+        else:
+            self.job_cond.db_flags = slurm.SLURMDB_JOB_FLAG_NOTSET
+
+        if flags:
+            if isinstance(flags, int):
+                self.job_cond.flags = flags
+
         if jobids:
             self.job_cond.step_list = slurm.slurm_list_create(NULL)
             for _jobid in jobids:
@@ -5379,6 +5396,15 @@ cdef class slurmdb_jobs:
                 else:
                     _jobid = _jobid.encode("UTF-8")
                 slurm.slurm_addto_step_list(self.job_cond.step_list, _jobid)
+
+        if userids:
+            self.job_cond.userid_list = slurm.slurm_list_create(NULL)
+            for _userid in userids:
+                if isinstance(_userid, int) or isinstance(_userid, long):
+                    _userid = str(_userid).encode("UTF-8")
+                else:
+                    _userid = _userid.encode("UTF-8")
+                slurm.slurm_addto_char_list_with_case(self.job_cond.userid_list, _userid, False)
 
         if starttime:
             self.job_cond.usage_start = slurm.slurm_parse_time(starttime, 1)
@@ -5466,6 +5492,10 @@ cdef class slurmdb_jobs:
 
         slurm.slurm_list_iterator_destroy(iters)
         slurm.slurm_list_destroy(JOBSList)
+        if clusters:
+            slurm.slurm_list_destroy(self.job_cond.cluster_list)
+        if userids:
+            slurm.slurm_list_destroy(self.job_cond.userid_list)
         return J_dict
 
 #
