@@ -46,7 +46,7 @@ if __name__ == "__main__":
         a = pyslurm.job()
         jobs = a.get()
 
-        if len(jobs) > 0:
+        if jobs:
 
             display(jobs)
 
@@ -66,7 +66,6 @@ if __name__ == "__main__":
             print("JobIDs in Pending state - {0}".format(pending))
             print()
         else:
-
             print("No jobs found !")
     except ValueError as e:
         print("Job query failed - {0}".format(e.args[0]))
