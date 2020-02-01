@@ -2,8 +2,8 @@
 
 from __future__ import print_function
 
-def display(stats_dict):
 
+def display(stats_dict):
     if stats_dict:
         print('{0:*^80}'.format(' Slurm Controller Statistics '))
         for key, value in stats_dict.items():
@@ -42,4 +42,3 @@ if __name__ == "__main__":
         display(s)
     except ValueError as e:
         print("Error - {0}".format(e.args[0]))
-

@@ -5,7 +5,7 @@ import pyslurm
 if __name__ == "__main__":
     try:
         qos_dict = pyslurm.qos().get()
-        if len(qos_dict):
+        if qos_dict:
             for key, value in qos_dict.items():
                 print("{")
                 if type(value) is dict:

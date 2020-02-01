@@ -14,7 +14,7 @@ if __name__ == "__main__":
         print("start={}, end={}".format(start,end))
         jobs = pyslurm.slurmdb_jobs()
         jobs_dict = jobs.get(starttime=start, endtime=end)
-        if len(jobs_dict):
+        if jobs_dict:
             for key, value in jobs_dict.items():
                 print("{} Job: {}".format('{',key))
                 job_display(value)

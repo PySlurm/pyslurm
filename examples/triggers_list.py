@@ -10,7 +10,7 @@ try:
 except ValueError as e:
         print("Trigger error - {0}".format(e.args[0]))
 else:
-    if len(trig_dict) > 0:
+    if trig_dict:
 
         print('{0:*^80}'.format(''))
         for key, value in trig_dict.items():

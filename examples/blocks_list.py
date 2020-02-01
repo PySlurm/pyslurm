@@ -36,7 +36,6 @@ def display(block_dict):
 
             print('{0:*^80}'.format(''))
 
-
 if __name__ == "__main__":
 
     a = pyslurm.block()
@@ -46,12 +45,10 @@ if __name__ == "__main__":
     except ValueError as e:
         print("Block query failed - {0}".format(e.args[0]))
     else:
-        if len(block_dict) > 0:
-
+        if block_dict:
             display(block_dict)
             print()
             print("Block IDs - {0}".format(a.ids()))
             print()
-
         else:
             print("No Blocks found !")

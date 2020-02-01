@@ -17,8 +17,8 @@ import os.path
 re_meminfo_parser = re.compile(r'^(?P<key>\S*):\s*(?P<value>\d*)\s*kB')
 stdout_orig = sys.stdout
 
-def loadavg(host, rrd=""):
 
+def loadavg(host, rrd=""):
     loadavg = "/proc/loadavg"
     load_rrd = '{0}/{1}_loadavg.rrd'.format(rrd, host)
 
@@ -47,21 +47,21 @@ def loadavg(host, rrd=""):
 
     return avg1min, avg5min, avg15min, running, total
 
-def uptime(host, rrd=""):
 
+def uptime(host, rrd=""):
     uptime = "/proc/uptime"
 
     try:
         f = open(uptime, 'r').readline().strip()
     except IOError:
-        return (-1,-1)
+        return (-1, -1)
 
     data = f.split()
 
     return data
 
-def meminfo(host, rrd=""):
 
+def meminfo(host, rrd=""):
     result = {}
     meminfo = "/proc/meminfo"
     try:
@@ -78,19 +78,20 @@ def meminfo(host, rrd=""):
 
     return result
 
+
 if __name__ == '__main__':
 
     usage = "Usage: %prog [options] arg"
     parser = OptionParser(usage)
 
     parser.add_option("-o", "--stdout", dest="output",
-                        action="store_true", default=False,
-                        help="Write to standard output")
+                      action="store_true", default=False,
+                      help="Write to standard output")
     parser.add_option("-d", "--dir", dest="directory",
-                        action="store", default=os.getcwd(),
-                        help="Directory to write data to")
+                      action="store", default=os.getcwd(),
+                      help="Directory to write data to")
     parser.add_option("-r", "--rrd", dest="rrd", default=False,
-                        action="store_true", help="Write rrd data")
+                      action="store_true", help="Write rrd data")
 
     (options, args) = parser.parse_args()
 
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         print("Previous lock file ({0}) exists !".format(lock_file))
         sys.exit()
     else:
-        open(lock_file,'w').close()
+        open(lock_file, 'w').close()
 
     rrd = ""
     if options.rrd:
@@ -136,7 +137,7 @@ if __name__ == '__main__':
         for host, data in a.items():
             sys.stdout.write("\t<slurmd>\n")
             for key, value in data.items():
-                sys.stdout.write("\t\t<{0}>{1}</{0}>\n".format(key,value,key))
+                sys.stdout.write("\t\t<{0}>{1}</{0}>\n".format(key, value, key))
                 sys.stdout.write("\t</slurmd>\n")
 
     a = pyslurm.job()
@@ -158,7 +159,7 @@ if __name__ == '__main__':
             for lines in a:
                 line = lines.split()
                 command = " ".join(line[6:])
-                newline = [ line[0], line[1], line[2], line[3], line[4], line[5], command ]
+                newline = [line[0], line[1], line[2], line[3], line[4], line[5], command]
                 pid = int(line[0])
                 rc, slurm_jobid = pyslurm.slurm_pid2jobid(pid)
                 if rc == 0:
@@ -166,8 +167,7 @@ if __name__ == '__main__':
                         PiDs[slurm_jobid].append(newline)
             a.close()
 
-    if len(PiDs) > 0:
-
+    if PiDs:
         sys.stdout.write("\t<jobs>\n")
         for job, value in PiDs.items():
             sys.stdout.write("\t\t<job>\n")
@@ -192,6 +192,6 @@ if __name__ == '__main__':
     if not options.output:
         sys.stdout.close()
         sys.stdout = stdout_orig
-        os.chmod(node_file, 0644)
+        os.chmod(node_file, 0o644)
 
     os.remove(lock_file)

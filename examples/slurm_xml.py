@@ -12,21 +12,21 @@ import sys
 import os
 import os.path
 
-#hosts = socket.gethostbyaddr(socket.gethostname())[1]
+# hosts = socket.gethostbyaddr(socket.gethostname())[1]
 my_host = socket.gethostname()
 
 if "ernie" not in my_host:
     sys.exit()
 
 now = int(time.time())
-#lock_file = "/var/tmp/slurm_xml.lck"
-#if os.path.exists(lock_file):
+# lock_file = "/var/tmp/slurm_xml.lck"
+# if os.path.exists(lock_file):
 #  sys.exit()
-#else:
+# else:
 #  open(lock_file, 'w').close()
 
 slurm_file = "/tmp/slurm.xml"
-xml_file = open(slurm_file,'w')
+xml_file = open(slurm_file, 'w')
 
 #
 # Get the controllers
@@ -76,7 +76,7 @@ xml_file.write("\t</jobs>\n")
 a = pyslurm.node()
 node_dict = a.get()
 
-xml_file.write( "\t<nodes>\n")
+xml_file.write("\t<nodes>\n")
 for key, value in node_dict.items():
 
     xml_file.write('\t\t<node>\n')
@@ -92,7 +92,7 @@ for key, value in node_dict.items():
         xml_file.write("\t\t\t<controller></controller>\n")
 
     xml_file.write('\t\t</node>\n')
-xml_file.write( "\t</nodes>\n")
+xml_file.write("\t</nodes>\n")
 
 #
 # XML output of Partttions
@@ -115,5 +115,3 @@ xml_file.write("\t</partitions>\n")
 xml_file.write("</slurm>\n")
 xml_file.flush()
 xml_file.close()
-
-#os.remove(lock_file)

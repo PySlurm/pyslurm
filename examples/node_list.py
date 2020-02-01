@@ -36,13 +36,10 @@ if __name__ == "__main__":
         Nodes = pyslurm.node()
         node_dict = Nodes.get()
 
-        if len(node_dict) > 0:
-
+        if node_dict:
             display(node_dict)
-
             print()
             print("Node IDs - {0}".format(Nodes.ids()))
-
         else:
             print("No Nodes found !")
 

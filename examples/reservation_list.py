@@ -6,9 +6,9 @@ import pyslurm
 import datetime
 import time
 
-def display(res_dict):
 
-    if len(res_dict) > 0:
+def display(res_dict):
+    if res_dict:
 
         date_fields = ['end_time', 'start_time']
 
@@ -25,17 +25,18 @@ def display(res_dict):
                         ddate = pyslurm.epoch2date(value[res_key])
                         print("\t{0:<20} : {1}".format(res_key, ddate))
                 else:
-                        print("\t{0:<20} : {1}".format(res_key, value[res_key]))
+                    print("\t{0:<20} : {1}".format(res_key, value[res_key]))
 
         print('{0:*^80}'.format(''))
 
         now = int(time.time())
         resvState = "INACTIVE"
 
-        if value['start_time'] <= now and value['end_time'] >= now:
+        if value['start_time'] <= now <= value['end_time']:
             resvState = "ACTIVE"
 
         print("\t%-20s : %s\n" % ("state", resvState))
+
 
 if __name__ == "__main__":
 

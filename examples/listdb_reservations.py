@@ -16,7 +16,7 @@ if __name__ == "__main__":
         reservations = pyslurm.slurmdb_reservations()
         reservations.set_reservation_condition(start, end)
         reservations_dict = reservations.get()
-        if len(reservations_dict):
+        if reservations_dict:
             for key, value in reservations_dict.items():
                 print("{} Reservation: {}".format('{', key))
                 reservation_display(value)
