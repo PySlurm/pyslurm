@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-
+"""
+List Slurm partitions
+"""
 from __future__ import print_function
 
-def display(part_dict):
 
+def display(part_dict):
+    """Format output"""
     if part_dict:
 
         for key, value in part_dict.items():
@@ -14,26 +17,26 @@ def display(part_dict):
 
                 valStr = value[part_key]
 
-                if 'default_time' in part_key:
+                if "default_time" in part_key:
 
                     if isinstance(value[part_key], int):
-                        valStr = "{0} minutes".format(value[part_key]/60)
+                        valStr = "{0} minutes".format(value[part_key] / 60)
                     else:
                         valStr = value[part_key]
 
-                elif part_key in [ 'max_nodes', 'max_time', 'max_cpus_per_node']:
+                elif part_key in ["max_nodes", "max_time", "max_cpus_per_node"]:
 
                     if value[part_key] == "UNLIMITED":
                         valStr = "Unlimited"
 
                 print("\t{0:<20} : {1}".format(part_key, valStr))
 
-            print('{0:*^80}'.format(''))
+            print("{0:*^80}".format(""))
+
 
 if __name__ == "__main__":
 
     import pyslurm
-    import time
 
     try:
         a = pyslurm.partition()

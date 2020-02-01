@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 """
+Set a trigger
+
 Trigger ID                : 3
 offset                    : 0
 program                   : /tmp/test.sh
@@ -51,17 +53,17 @@ from __future__ import print_function
 import pyslurm
 
 trigDict = {
-        'res_type':  'node' ,
-        'res_id':    'makalu',
-        'offset':    0,
-        'event': 'down',
-        'program':   '/tmp/test.sh'
-    }
+    "res_type": "node",
+    "res_id": "makalu",
+    "offset": 0,
+    "event": "down",
+    "program": "/tmp/test.sh",
+}
 
 try:
     a = pyslurm.trigger()
     a.set(trigDict)
-except ValueError as e:
-        print("Trigger set failed - {0}".format(e.args[0]))
+except ValueError as value_error:
+    print("Trigger set failed - {0}".format(value_error.args[0]))
 else:
     print("Trigger set !")
