@@ -1,39 +1,44 @@
 #!/usr/bin/env python
-
+"""
+List Slurm jobs from certain users
+"""
 from __future__ import print_function
 
-import pyslurm
 import sys
 from pwd import getpwnam, getpwuid
-from time import gmtime, strftime, sleep
+
+import pyslurm
+
 
 def list_users(job_dict):
-
+    """List Slurm users"""
     users = []
     if job_dict:
 
-        for jobid, value in sorted(job_dict.items()):
+        for _, value in sorted(job_dict.items()):
 
             if value["account"] not in users:
-
                 users.append(value["account"])
 
     return users
+
 
 if __name__ == "__main__":
 
     try:
         pyslurmjob = pyslurm.job()
         jobs = pyslurmjob.get()
-    except ValueError as e:
-        print("Job query failed - {0}".format(e.args[0]))
+    except ValueError as value_error:
+        print("Job query failed - {0}".format(value_error.args[0]))
         sys.exit(1)
 
     users = list_users(jobs)
 
-    delim =  "+-------------------------------------------+-----------+------------+---------------+-----------------+--------------+--------------+"
+    delim = "+-------------------------------------------+-----------+------------+---------------+-----------------+--------------+--------------+"
     print(delim)
-    print("|                USER (NAME)                | CPUS USED | NODES USED | CPU REQUESTED | NODES REQUESTED | JOBS RUNNING | JOBS PENDING |")
+    print(
+        "|                USER (NAME)                | CPUS USED | NODES USED | CPU REQUESTED | NODES REQUESTED | JOBS RUNNING | JOBS PENDING |"
+    )
     print(delim)
 
     total_procs_request = 0
@@ -45,11 +50,12 @@ if __name__ == "__main__":
 
     for user in users:
 
-        user_jobs = pyslurmjob.find('account', user)
+        user_jobs = pyslurmjob.find("account", user)
         try:
             gecos = getpwnam(user)[4].split(",")[0]
-        except:
-            pass
+        except Exception as split_error:
+            print("Couldn't split\n {}".format(gecos))
+            sys.exit(1)
 
         procs_request = 0
         nodes_request = 0
@@ -82,8 +88,28 @@ if __name__ == "__main__":
         total_job_running = total_job_running + running
         total_job_pending = total_job_pending + pending
 
-        print("|{0:>9} ({1:30}) | {2:>9d} | {3:>10d} | {4:>13d} | {5:>15d} | {6:>12d} | {7:>12d} |".format(user.upper(), gecos, procs_used, nodes_used, procs_request, nodes_request, running, pending))
+        print(
+            "|{0:>9} ({1:30}) | {2:>9d} | {3:>10d} | {4:>13d} | {5:>15d} | {6:>12d} | {7:>12d} |".format(
+                user.upper(),
+                gecos,
+                procs_used,
+                nodes_used,
+                procs_request,
+                nodes_request,
+                running,
+                pending,
+            )
+        )
 
     print(delim)
-    print("|                   TOTAL                   | {0:>9d} | {1:>10d} | {2:>13d} | {3:>15d} | {4:>12d} | {5:>12d} |".format(total_procs_used, total_nodes_used, total_procs_request, total_nodes_request, total_job_running, total_job_pending))
+    print(
+        "|                   TOTAL                   | {0:>9d} | {1:>10d} | {2:>13d} | {3:>15d} | {4:>12d} | {5:>12d} |".format(
+            total_procs_used,
+            total_nodes_used,
+            total_procs_request,
+            total_nodes_request,
+            total_job_running,
+            total_job_pending,
+        )
+    )
     print(delim)

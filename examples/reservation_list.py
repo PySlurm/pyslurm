@@ -1,16 +1,19 @@
 #!/usr/bin/env python
-
+"""
+List Slurm reservations
+"""
 from __future__ import print_function
 
-import pyslurm
-import datetime
 import time
 
+import pyslurm
+
+
 def display(res_dict):
+    """Format output"""
+    if res_dict:
 
-    if len(res_dict) > 0:
-
-        date_fields = ['end_time', 'start_time']
+        date_fields = ["end_time", "start_time"]
 
         for key, value in res_dict.items():
 
@@ -25,17 +28,18 @@ def display(res_dict):
                         ddate = pyslurm.epoch2date(value[res_key])
                         print("\t{0:<20} : {1}".format(res_key, ddate))
                 else:
-                        print("\t{0:<20} : {1}".format(res_key, value[res_key]))
+                    print("\t{0:<20} : {1}".format(res_key, value[res_key]))
 
-        print('{0:*^80}'.format(''))
+        print("{0:*^80}".format(""))
 
         now = int(time.time())
         resvState = "INACTIVE"
 
-        if value['start_time'] <= now and value['end_time'] >= now:
+        if value["start_time"] <= now <= value["end_time"]:
             resvState = "ACTIVE"
 
         print("\t%-20s : %s\n" % ("state", resvState))
+
 
 if __name__ == "__main__":
 
@@ -48,5 +52,5 @@ if __name__ == "__main__":
             print("Res IDs - {0}".format(a.ids()))
         else:
             print("No reservations found !")
-    except ValueError as e:
-        print("Error - {0}".format(e.args[0]))
+    except ValueError as value_error:
+        print("Error - {0}".format(value_error.args[0]))
