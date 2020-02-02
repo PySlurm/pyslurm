@@ -1,5 +1,8 @@
 sudo: required
 language: python
+branches:
+  only:
+    - master
 env:
   matrix:
     - SLURM=19.05.0 CYTHON=0.29.14 PYTHON=3.6
