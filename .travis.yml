@@ -1,5 +1,8 @@
 sudo: required
 language: python
+branches:
+  only:
+    - master
 env:
   matrix:
     - SLURM=19.05.0 CYTHON=0.29.14 PYTHON=3.6
@@ -14,11 +17,9 @@ services:
   - docker
 before_install:
   - docker pull giovtorres/docker-centos7-slurm:$SLURM
-  - docker run -d -it -h ernie --name slurm-$SLURM giovtorres/docker-centos7-slurm:$SLURM
+  - docker run -d -it -h ernie --name slurm-$SLURM -v $PWD:/pyslurm giovtorres/docker-centos7-slurm:$SLURM
 install: true
 before_script:
-  - docker exec slurm-$SLURM git clone https://github.com/PySlurm/pyslurm.git
-  - docker exec -e COMMIT=${TRAVIS_PULL_REQUEST_SHA:-$TRAVIS_BRANCH} slurm-$SLURM bash -c "cd /pyslurm && git checkout -qf $COMMIT"
   - docker exec -e PYTHON=$PYTHON -e CYTHON=$CYTHON slurm-$SLURM /pyslurm/scripts/build.sh
   - docker exec -e PYTHON=$PYTHON -e CYTHON=$CYTHON slurm-$SLURM /pyslurm/scripts/configure.sh
 script:
