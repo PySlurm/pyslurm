@@ -1,5 +1,6 @@
 # cython: embedsignature=True
 # cython: profile=False
+# cython: language_level=2
 import os
 import re
 import sys
