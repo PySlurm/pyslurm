@@ -2781,7 +2781,34 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         List tres_list
         List user_list
 
-    # ctypedef struct slurmdb_step_rec_t
+    ctypedef struct slurmdb_step_rec_t:
+        uint32_t elapsed
+        time_t end
+        int32_t exitcode
+        slurmdb_job_rec_t *job_ptr # job's record
+        uint32_t nnodes
+        char *nodes
+        uint32_t ntasks
+        char *pid_str
+        uint32_t req_cpufreq_min
+        uint32_t req_cpufreq_max
+        uint32_t req_cpufreq_gov
+        uint32_t requid
+        time_t start
+        uint32_t state
+        slurmdb_stats_t stats
+        uint32_t stepid	# job's step number
+        char *stepname
+        uint32_t suspended
+        uint32_t sys_cpu_sec
+        uint32_t sys_cpu_usec
+        uint32_t task_dist
+        uint32_t tot_cpu_sec
+        uint32_t tot_cpu_usec
+        char *tres_alloc_str
+        uint32_t user_cpu_sec
+        uint32_t user_cpu_usec
+
     # ctypedef struct slurmdb_res_cond_t
     # ctypedef struct slurmdb_res_rec_t
     # ctypedef struct slurmdb_txn_cond_t

@@ -5435,8 +5435,8 @@ cdef class slurmdb_jobs:
             if job is not NULL:
                 jobid = job.jobid
                 JOBS_info[u'account'] = slurm.stringOrNone(job.account, '')
-                JOBS_info[u'allocated_gres'] = slurm.stringOrNone(job.alloc_gres, '')
-                JOBS_info[u'allocated_nodes'] = job.alloc_nodes
+                JOBS_info[u'alloc_gres'] = slurm.stringOrNone(job.alloc_gres, '')
+                JOBS_info[u'alloc_nodes'] = job.alloc_nodes
                 JOBS_info[u'array_job_id'] = job.array_job_id
                 JOBS_info[u'array_max_tasks'] = job.array_max_tasks
                 JOBS_info[u'array_task_id'] = job.array_task_id
@@ -5449,7 +5449,7 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'elapsed'] = job.elapsed
                 JOBS_info[u'eligible'] = job.eligible
                 JOBS_info[u'end'] = job.end
-                JOBS_info[u'exit_code'] = job.exitcode
+                JOBS_info[u'exitcode'] = job.exitcode
                 JOBS_info[u'gid'] = job.gid
                 JOBS_info[u'jobid'] = job.jobid
                 JOBS_info[u'jobname'] = slurm.stringOrNone(job.jobname, '')
@@ -5468,10 +5468,100 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'start'] = job.start
                 JOBS_info[u'state'] = job.state
                 JOBS_info[u'state_str'] = slurm.slurm_job_state_string(job.state)
+                
+                # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
+                # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
+                # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
+                JOBS_info[u'stats'] = {}
+                stats = JOBS_info[u'stats']
+                stats[u'act_cpufreq']               = job.stats.act_cpufreq
+                stats[u'consumed_energy']           = job.stats.consumed_energy
+                stats[u'tres_usage_in_max']         = slurm.stringOrNone(job.stats.tres_usage_in_max, '')
+                stats[u'tres_usage_in_max_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_nodeid, '')
+                stats[u'tres_usage_in_max_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_taskid, '')
+                stats[u'tres_usage_in_min']         = slurm.stringOrNone(job.stats.tres_usage_in_min, '')
+                stats[u'tres_usage_in_min_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_nodeid, '')
+                stats[u'tres_usage_in_min_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_taskid, '')
+                stats[u'tres_usage_in_tot']         = slurm.stringOrNone(job.stats.tres_usage_in_tot, '')
+                stats[u'tres_usage_out_ave']        = slurm.stringOrNone(job.stats.tres_usage_out_ave, '')
+                stats[u'tres_usage_out_max']        = slurm.stringOrNone(job.stats.tres_usage_out_max, '')
+                stats[u'tres_usage_out_max_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_nodeid, '')
+                stats[u'tres_usage_out_max_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_taskid, '')
+                stats[u'tres_usage_out_min']        = slurm.stringOrNone(job.stats.tres_usage_out_min, '')
+                stats[u'tres_usage_out_min_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_nodeid, '')
+                stats[u'tres_usage_out_min_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_taskid, '')
+                stats[u'tres_usage_out_tot']        = slurm.stringOrNone(job.stats.tres_usage_out_tot, '')                       
 
-                JOBS_info[u'stat_actual_cpufreq'] = job.stats.act_cpufreq
+                # add job steps
+                JOBS_info[u'steps'] = {}
+                step_dict = JOBS_info[u'steps']
 
-                JOBS_info[u'steps'] = "Not filled, string should be handled"
+                stepsNum = slurm.slurm_list_count(job.steps)
+                stepsIter = slurm.slurm_list_iterator_create(job.steps)
+                for i in range(stepsNum):
+                    step = <slurm.slurmdb_step_rec_t *>slurm.slurm_list_next(stepsIter)
+                    step_info = {}
+                    if step is not NULL:
+                        step_id = step.stepid
+
+                        step_info[u'elapsed'] = step.elapsed
+                        step_info[u'end'] = step.end
+                        step_info[u'exitcode'] = step.exitcode
+                        
+                        # Don't add this unless you want to create an endless recursive structure 
+                        # step_info[u'job_ptr'] = JOBS_Info # job's record
+                        
+                        step_info[u'nnodes'] = step.nnodes
+                        step_info[u'nodes'] = slurm.stringOrNone(step.nodes, '')
+                        step_info[u'ntasks'] = step.ntasks
+                        step_info[u'pid_str'] = slurm.stringOrNone(step.pid_str, '')
+                        step_info[u'req_cpufreq_min'] = step.req_cpufreq_min
+                        step_info[u'req_cpufreq_max'] = step.req_cpufreq_max
+                        step_info[u'req_cpufreq_gov'] = step.req_cpufreq_gov
+                        step_info[u'requid'] = step.requid
+                        step_info[u'start'] = step.start
+                        step_info[u'state'] = step.state
+                        step_info[u'state_str'] = slurm.slurm_job_state_string(step.state)
+                        
+                        # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
+                        # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
+                        # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
+                        step_info[u'stats'] = {}
+                        stats = step_info[u'stats']
+                        stats[u'act_cpufreq']               = step.stats.act_cpufreq
+                        stats[u'consumed_energy']           = step.stats.consumed_energy
+                        stats[u'tres_usage_in_max']         = slurm.stringOrNone(step.stats.tres_usage_in_max, '')
+                        stats[u'tres_usage_in_max_nodeid']  = slurm.stringOrNone(step.stats.tres_usage_in_max_nodeid, '')
+                        stats[u'tres_usage_in_max_taskid']  = slurm.stringOrNone(step.stats.tres_usage_in_max_taskid, '')
+                        stats[u'tres_usage_in_min']         = slurm.stringOrNone(step.stats.tres_usage_in_min, '')
+                        stats[u'tres_usage_in_min_nodeid']  = slurm.stringOrNone(step.stats.tres_usage_in_min_nodeid, '')
+                        stats[u'tres_usage_in_min_taskid']  = slurm.stringOrNone(step.stats.tres_usage_in_min_taskid, '')
+                        stats[u'tres_usage_in_tot']         = slurm.stringOrNone(step.stats.tres_usage_in_tot, '')
+                        stats[u'tres_usage_out_ave']        = slurm.stringOrNone(step.stats.tres_usage_out_ave, '')
+                        stats[u'tres_usage_out_max']        = slurm.stringOrNone(step.stats.tres_usage_out_max, '')
+                        stats[u'tres_usage_out_max_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_out_max_nodeid, '')
+                        stats[u'tres_usage_out_max_taskid'] = slurm.stringOrNone(step.stats.tres_usage_out_max_taskid, '')
+                        stats[u'tres_usage_out_min']        = slurm.stringOrNone(step.stats.tres_usage_out_min, '')
+                        stats[u'tres_usage_out_min_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_out_min_nodeid, '')
+                        stats[u'tres_usage_out_min_taskid'] = slurm.stringOrNone(step.stats.tres_usage_out_min_taskid, '')
+                        stats[u'tres_usage_out_tot']        = slurm.stringOrNone(step.stats.tres_usage_out_tot, '')                       
+                        
+                        step_info[u'stepid'] = step_id
+                        step_info[u'stepname'] = slurm.stringOrNone(step.stepname, '')
+                        step_info[u'suspended'] = step.suspended
+                        step_info[u'sys_cpu_sec'] = step.sys_cpu_sec
+                        step_info[u'sys_cpu_usec'] = step.sys_cpu_usec
+                        step_info[u'task_dist'] = step.task_dist
+                        step_info[u'tot_cpu_sec'] = step.tot_cpu_sec
+                        step_info[u'tot_cpu_usec'] = step.tot_cpu_usec
+                        step_info[u'tres_alloc_str'] = slurm.stringOrNone(step.tres_alloc_str, '')
+                        step_info[u'user_cpu_sec'] = step.user_cpu_sec
+                        step_info[u'user_cpu_usec'] = step.user_cpu_usec
+
+                        step_dict[step_id] = step_info
+
+                slurm.slurm_list_iterator_destroy(stepsIter)
+
                 JOBS_info[u'submit'] = job.submit
                 JOBS_info[u'suspended'] = job.suspended
                 JOBS_info[u'sys_cpu_sec'] = job.sys_cpu_sec
@@ -5489,6 +5579,7 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'user_cpu_sec'] = job.user_cpu_usec
                 JOBS_info[u'wckey'] = slurm.stringOrNone(job.wckey, '')
                 JOBS_info[u'wckeyid'] = job.wckeyid
+                JOBS_info[u'work_dir'] = slurm.stringOrNone(job.work_dir, '')
                 J_dict[jobid] = JOBS_info
 
         slurm.slurm_list_iterator_destroy(iters)

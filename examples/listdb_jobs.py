@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import time
+import datetime
+
 import pyslurm
 
 def job_display( job ):
@@ -9,11 +11,11 @@ def job_display( job ):
 
 if __name__ == "__main__":
     try:
-        end = time.time()
-        start = end - (30*24*60*60)
-        print("start={}, end={}".format(start,end))
+        start = (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime("%Y-%m-%dT00:00:00")
+        end = (datetime.datetime.utcnow() + datetime.timedelta(days=1)).strftime("%Y-%m-%dT00:00:00")
+
         jobs = pyslurm.slurmdb_jobs()
-        jobs_dict = jobs.get(starttime=start, endtime=end)
+        jobs_dict = jobs.get(starttime=start.encode('utf-8'), endtime=end.encode('utf-8'))
         if len(jobs_dict):
             for key, value in jobs_dict.items():
                 print("{} Job: {}".format('{',key))
