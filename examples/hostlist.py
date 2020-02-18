@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-
+"""
+Retrieve Slurm hosts
+"""
 from __future__ import print_function
 
 import pyslurm
@@ -9,7 +11,6 @@ b = pyslurm.hostlist()
 hosts = "dummy0,dummy1,dummy1,dummy3,dummy4"
 print("Creating hostlist ...... with {0}".format(hosts))
 if b.create(hosts):
-
     print()
     print("\tHost list count is {0}".format(b.count()))
     node = "dummy3"

@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-
+"""
+Retrieve list of blocked items
+"""
 from __future__ import print_function
 
-import pyslurm
-import sys
 from time import sleep
 
-class DictDiffer(object):
+import pyslurm
 
+
+class DictDiffer:
     """
     http://stackoverflow.com/questions/1165352/fast-comparison-between-two-python-dictionary
 
@@ -16,20 +18,37 @@ class DictDiffer(object):
     (2) items removed
     (3) keys same in both but changed values
     (4) keys same in both and unchanged values
-        """
+    """
 
     def __init__(self, current_dict, past_dict):
+        """set class attr"""
         self.current_dict, self.past_dict = current_dict, past_dict
-        self.set_current, self.set_past = set(current_dict.keys()), set(past_dict.keys())
+        self.set_current, self.set_past = (
+            set(current_dict.keys()),
+            set(past_dict.keys()),
+        )
         self.intersect = self.set_current.intersection(self.set_past)
+
     def added(self):
+        """Check if added"""
         return self.set_current - self.intersect
+
     def removed(self):
+        """Check if removed"""
         return self.set_past - self.intersect
+
     def changed(self):
-        return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
+        """Check if changed"""
+        return set(
+            o for o in self.intersect if self.past_dict[o] != self.current_dict[o]
+        )
+
     def unchanged(self):
-        return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
+        """Check for no change"""
+        return set(
+            o for o in self.intersect if self.past_dict[o] == self.current_dict[o]
+        )
+
 
 if __name__ == "__main__":
 
@@ -45,14 +64,17 @@ if __name__ == "__main__":
 
     sleep(0.5)
 
-    while 1:
-
+    while True:
         new_dict = a.get()
         newUpdate = a.lastUpdate()
         if newUpdate > lastUpdate:
 
             lastUpdate = a.lastUpdate()
-            print("Block data update time changed - {0}".format(pyslurm.epoch2date(lastUpdate)))
+            print(
+                "Block data update time changed - {0}".format(
+                    pyslurm.epoch2date(lastUpdate)
+                )
+            )
 
             b = DictDiffer(block_dict, new_dict)
             if b.changed():
@@ -64,13 +86,9 @@ if __name__ == "__main__":
             if b.removed():
                 print("\tRemoved block {0}".format(b.removed()))
                 change = 1
-
             if change == 0:
                 print("\tBut no data was changed !")
             change = 0
-
             block_dict = new_dict
 
         sleep(interval)
-
-    sys.exit()
