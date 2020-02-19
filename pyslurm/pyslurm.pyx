@@ -5467,30 +5467,30 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'show_full'] = job.show_full
                 JOBS_info[u'start'] = job.start
                 JOBS_info[u'state'] = job.state
-                JOBS_info[u'state_str'] = slurm.slurm_job_state_string(job.state)
+                JOBS_info[u'state_str'] = slurm.stringOrNone(slurm.slurm_job_state_string(job.state), '')
                 
                 # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
                 # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
                 # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
                 JOBS_info[u'stats'] = {}
                 stats = JOBS_info[u'stats']
-                stats[u'act_cpufreq']               = job.stats.act_cpufreq
-                stats[u'consumed_energy']           = job.stats.consumed_energy
-                stats[u'tres_usage_in_max']         = slurm.stringOrNone(job.stats.tres_usage_in_max, '')
+                stats[u'act_cpufreq'] = job.stats.act_cpufreq
+                stats[u'consumed_energy'] = job.stats.consumed_energy
+                stats[u'tres_usage_in_max'] = slurm.stringOrNone(job.stats.tres_usage_in_max, '')
                 stats[u'tres_usage_in_max_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_nodeid, '')
                 stats[u'tres_usage_in_max_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_taskid, '')
-                stats[u'tres_usage_in_min']         = slurm.stringOrNone(job.stats.tres_usage_in_min, '')
+                stats[u'tres_usage_in_min'] = slurm.stringOrNone(job.stats.tres_usage_in_min, '')
                 stats[u'tres_usage_in_min_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_nodeid, '')
                 stats[u'tres_usage_in_min_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_taskid, '')
-                stats[u'tres_usage_in_tot']         = slurm.stringOrNone(job.stats.tres_usage_in_tot, '')
-                stats[u'tres_usage_out_ave']        = slurm.stringOrNone(job.stats.tres_usage_out_ave, '')
-                stats[u'tres_usage_out_max']        = slurm.stringOrNone(job.stats.tres_usage_out_max, '')
+                stats[u'tres_usage_in_tot'] = slurm.stringOrNone(job.stats.tres_usage_in_tot, '')
+                stats[u'tres_usage_out_ave'] = slurm.stringOrNone(job.stats.tres_usage_out_ave, '')
+                stats[u'tres_usage_out_max'] = slurm.stringOrNone(job.stats.tres_usage_out_max, '')
                 stats[u'tres_usage_out_max_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_nodeid, '')
                 stats[u'tres_usage_out_max_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_taskid, '')
-                stats[u'tres_usage_out_min']        = slurm.stringOrNone(job.stats.tres_usage_out_min, '')
+                stats[u'tres_usage_out_min'] = slurm.stringOrNone(job.stats.tres_usage_out_min, '')
                 stats[u'tres_usage_out_min_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_nodeid, '')
                 stats[u'tres_usage_out_min_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_taskid, '')
-                stats[u'tres_usage_out_tot']        = slurm.stringOrNone(job.stats.tres_usage_out_tot, '')                       
+                stats[u'tres_usage_out_tot'] = slurm.stringOrNone(job.stats.tres_usage_out_tot, '')                       
 
                 # add job steps
                 JOBS_info[u'steps'] = {}
@@ -5521,30 +5521,30 @@ cdef class slurmdb_jobs:
                         step_info[u'requid'] = step.requid
                         step_info[u'start'] = step.start
                         step_info[u'state'] = step.state
-                        step_info[u'state_str'] = slurm.slurm_job_state_string(step.state)
+                        step_info[u'state_str'] = slurm.stringOrNone(slurm.slurm_job_state_string(step.state), '')
                         
                         # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
                         # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
                         # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
                         step_info[u'stats'] = {}
                         stats = step_info[u'stats']
-                        stats[u'act_cpufreq']               = step.stats.act_cpufreq
-                        stats[u'consumed_energy']           = step.stats.consumed_energy
-                        stats[u'tres_usage_in_max']         = slurm.stringOrNone(step.stats.tres_usage_in_max, '')
-                        stats[u'tres_usage_in_max_nodeid']  = slurm.stringOrNone(step.stats.tres_usage_in_max_nodeid, '')
-                        stats[u'tres_usage_in_max_taskid']  = slurm.stringOrNone(step.stats.tres_usage_in_max_taskid, '')
-                        stats[u'tres_usage_in_min']         = slurm.stringOrNone(step.stats.tres_usage_in_min, '')
-                        stats[u'tres_usage_in_min_nodeid']  = slurm.stringOrNone(step.stats.tres_usage_in_min_nodeid, '')
-                        stats[u'tres_usage_in_min_taskid']  = slurm.stringOrNone(step.stats.tres_usage_in_min_taskid, '')
-                        stats[u'tres_usage_in_tot']         = slurm.stringOrNone(step.stats.tres_usage_in_tot, '')
-                        stats[u'tres_usage_out_ave']        = slurm.stringOrNone(step.stats.tres_usage_out_ave, '')
-                        stats[u'tres_usage_out_max']        = slurm.stringOrNone(step.stats.tres_usage_out_max, '')
+                        stats[u'act_cpufreq'] = step.stats.act_cpufreq
+                        stats[u'consumed_energy'] = step.stats.consumed_energy
+                        stats[u'tres_usage_in_max'] = slurm.stringOrNone(step.stats.tres_usage_in_max, '')
+                        stats[u'tres_usage_in_max_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_in_max_nodeid, '')
+                        stats[u'tres_usage_in_max_taskid'] = slurm.stringOrNone(step.stats.tres_usage_in_max_taskid, '')
+                        stats[u'tres_usage_in_min'] = slurm.stringOrNone(step.stats.tres_usage_in_min, '')
+                        stats[u'tres_usage_in_min_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_in_min_nodeid, '')
+                        stats[u'tres_usage_in_min_taskid'] = slurm.stringOrNone(step.stats.tres_usage_in_min_taskid, '')
+                        stats[u'tres_usage_in_tot'] = slurm.stringOrNone(step.stats.tres_usage_in_tot, '')
+                        stats[u'tres_usage_out_ave'] = slurm.stringOrNone(step.stats.tres_usage_out_ave, '')
+                        stats[u'tres_usage_out_max'] = slurm.stringOrNone(step.stats.tres_usage_out_max, '')
                         stats[u'tres_usage_out_max_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_out_max_nodeid, '')
                         stats[u'tres_usage_out_max_taskid'] = slurm.stringOrNone(step.stats.tres_usage_out_max_taskid, '')
-                        stats[u'tres_usage_out_min']        = slurm.stringOrNone(step.stats.tres_usage_out_min, '')
+                        stats[u'tres_usage_out_min'] = slurm.stringOrNone(step.stats.tres_usage_out_min, '')
                         stats[u'tres_usage_out_min_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_out_min_nodeid, '')
                         stats[u'tres_usage_out_min_taskid'] = slurm.stringOrNone(step.stats.tres_usage_out_min_taskid, '')
-                        stats[u'tres_usage_out_tot']        = slurm.stringOrNone(step.stats.tres_usage_out_tot, '')                       
+                        stats[u'tres_usage_out_tot'] = slurm.stringOrNone(step.stats.tres_usage_out_tot, '')                       
                         
                         step_info[u'stepid'] = step_id
                         step_info[u'stepname'] = slurm.stringOrNone(step.stepname, '')
