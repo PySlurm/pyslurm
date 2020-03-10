@@ -7,6 +7,8 @@ env:
   matrix:
     - SLURM=19.05.0 CYTHON=0.29.6 PYTHON=3.6
     - SLURM=19.05.0 CYTHON=0.29.6 PYTHON=2.7
+    - SLURM=19.05.0 CYTHON=0.19.2 PYTHON=3.6
+    - SLURM=19.05.0 CYTHON=0.19.2 PYTHON=2.7
 services:
   - docker
 before_install:
