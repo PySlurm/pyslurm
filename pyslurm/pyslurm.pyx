@@ -1,5 +1,6 @@
 # cython: embedsignature=True
 # cython: profile=False
+# cython: language_level=2
 import os
 import re
 import sys
@@ -1959,12 +1960,11 @@ cdef class job:
     def find_id(self, jobid):
         u"""Retrieve job ID data.
 
-        This method calls slurm_xlate_job_id() to convert a jobid string to a
-        jobid int.  For example, a subjob of 123_4 would translate to 124.
-        Then, slurm_load_job() gets all job_table records associated with that
-        specific job. This works for single jobs and job arrays.
+        This method accepts both string and integer formats of the jobid.  It
+        calls slurm_xlate_job_id() to convert the jobid appropriately.
+        This works for single jobs and job arrays.
 
-        :param str jobID: Job id key string to search
+        :param str jobid: Job id key string to search
         :returns: List of dictionary of values for given job id
         :rtype: `list`
         """
@@ -1986,7 +1986,7 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    cpdef find_user(self, user):
+    def find_user(self, user):
         u"""Retrieve a user's job data.
 
         This method calls slurm_load_job_user to get all job_table records
@@ -2000,14 +2000,12 @@ cdef class job:
             int apiError
             int rc
             uint32_t uid
-            char *username
 
         if isinstance(user, str):
             try:
-                username = user
-                uid = getpwnam(username)[2]
+                uid = getpwnam(user).pw_uid
             except KeyError:
-                raise KeyError("user " + user + " not found")
+                raise KeyError("user %s not found on this system." % user)
         else:
             uid = user
 
@@ -2212,6 +2210,7 @@ cdef class job:
             Job_dict[u'ntasks_per_board'] = self._record.ntasks_per_board
             Job_dict[u'num_cpus'] = self._record.num_cpus
             Job_dict[u'num_nodes'] = self._record.num_nodes
+            Job_dict[u'num_tasks'] = self._record.num_tasks
 
             if self._record.pack_job_id:
                 Job_dict[u'pack_job_id'] = self._record.pack_job_id
@@ -2469,8 +2468,21 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def slurm_job_batch_script(uint32_t jobid):
-        return slurm.slurm_job_batch_script(slurm.stdout, jobid)
+    def slurm_job_batch_script(self, jobid):
+        """
+        Retrieve the batch script for a given jobid.
+
+        :param str jobid: Job id key string to search
+        :returns: String output of a jobid's batch script
+        :rtype: `str`
+        """
+        if isinstance(jobid, int) or isinstance(jobid, long):
+            jobid = str(jobid).encode("UTF-8")
+        else:
+            jobid = jobid.encode("UTF-8")
+
+        jobid_xlate = slurm.slurm_xlate_job_id(jobid)
+        return slurm.slurm_job_batch_script(slurm.stdout, jobid_xlate)
 
     cdef int fill_job_desc_from_opts(self, dict job_opts, slurm.job_desc_msg_t *desc):
         """
@@ -2522,6 +2534,7 @@ cdef class job:
             wckey = job_opts.get("wckey").encode("UTF-8", "replace")
             desc.wckey = wckey
 
+        # TODO when nodelist is set, min_nodes needs to be adjusted accordingly
         if job_opts.get("nodelist"):
             req_nodes = job_opts.get("nodelist").encode("UTF-8", "replace")
             desc.req_nodes = req_nodes
@@ -2543,7 +2556,12 @@ cdef class job:
             licenses = job_opts.get("licenses").encode("UTF-8", "replace")
             desc.licenses = licenses
 
-        # TODO: nodes_set
+        if job_opts.get("min_nodes"):
+            desc.min_nodes = job_opts.get("min_nodes")
+            if job_opts.get("max_nodes"):
+                desc.max_nodes = job_opts.get("max_nodes")
+        elif "ntasks" in job_opts and job_opts.get("min_nodes") == 0:
+            desc.min_nodes = 0
 
         if job_opts.get("ntasks_per_node"):
             ntasks_per_node = job_opts.get("ntasks_per_node")
@@ -2655,20 +2673,22 @@ cdef class job:
         if job_opts.get("tmpdisk"):
             desc.pn_min_tmp_disk = job_opts.get("tmpdisk")
 
-        # TODO: declare and use MAX macro or use python max()?
-#        if job_opts.get("overcommit"):
-#            desc.min_cpus = max(job_opts.get("min_nodes", 1)
-#            desc.overcommit = job_opts.get("overcommit")
-#        elif job_opts.get("cpus_set"):
-#            # TODO: cpus_set
-#            #       check for ntasks and cpus_per_task before multiplying
-#            desc.min_cpus = job_opts.get("ntasks") * job_opts.get("cpus_per_task")
-#        elif job_opts.get("nodes_set") and job_opts.get("min_nodes") == 0:
-#            desc.min_cpus = 0
-#        else:
-#            desc.min_cpus = job_opts.get("ntasks")
+        if job_opts.get("overcommit"):
+            desc.min_cpus = max(job_opts.get("min_nodes", 1), 1)
+            desc.overcommit = job_opts.get("overcommit")
+        elif job_opts.get("cpus_per_task"):
+            desc.min_cpus = job_opts.get("ntasks", 1) * job_opts.get("cpus_per_task")
+        elif job_opts.get("nodelist") and job_opts.get("min_nodes") == 0:
+            desc.min_cpus = 0
+        else:
+            desc.min_cpus = job_opts.get("ntasks", 1)
 
-        # TODO: ntasks_set, cpus_set
+        if job_opts.get("cpus_per_task"):
+            desc.cpus_per_task = job_opts.get("cpus_per_task")
+
+        if job_opts.get("ntasks"):
+            desc.num_tasks = job_opts.get("ntasks")
+
         if job_opts.get("ntasks_per_socket"):
             desc.ntasks_per_socket = job_opts.get("ntasks_per_socket")
 
@@ -2756,8 +2776,13 @@ cdef class job:
 
         # FIXME: should this be python's getcwd or C's getcwd?
         # also, allow option to specify work_dir, if not, set default
-        cwd = os.getcwd().encode("UTF-8", "replace")
-        desc.work_dir = cwd
+
+        if job_opts.get("work_dir"):
+            work_dir = job_opts.get("work_dir").encode("UTF-8", "replace")
+            desc.work_dir = work_dir
+        else:
+            cwd = os.getcwd().encode("UTF-8", "replace")
+            desc.work_dir = cwd
 
         if job_opts.get("requeue"):
             desc.requeue = job_opts.get("requeue")
@@ -4741,6 +4766,10 @@ cdef class statistics:
             self._StatsDict[u'jobs_canceled'] = self._buf.jobs_canceled
             self._StatsDict[u'jobs_failed'] = self._buf.jobs_failed
 
+            self._StatsDict[u'jobs_pending'] = self._buf.jobs_pending
+            self._StatsDict[u'jobs_running'] = self._buf.jobs_running
+            self._StatsDict[u'job_states_ts'] = self._buf.job_states_ts
+
             self._StatsDict[u'bf_backfilled_jobs'] = self._buf.bf_backfilled_jobs
             self._StatsDict[u'bf_last_backfilled_jobs'] = self._buf.bf_last_backfilled_jobs
             self._StatsDict[u'bf_cycle_counter'] = self._buf.bf_cycle_counter
@@ -5309,11 +5338,13 @@ cdef class slurmdb_jobs:
 
     def __cinit__(self):
         self.job_cond = <slurm.slurmdb_job_cond_t *>xmalloc(sizeof(slurm.slurmdb_job_cond_t))
+        self.db_conn = slurm.slurmdb_connection_get()
 
     def __dealloc__(self):
-        pass
+        slurm.xfree(self.job_cond)
+        slurm.slurmdb_connection_close(&self.db_conn)
 
-    def get(self, jobids=[], starttime=0, endtime=0):
+    def get(self, jobids=[], userids=[], starttime=0, endtime=0, flags = None, db_flags = None, clusters = []):
         u"""Get Slurmdb information about some jobs.
 
         Input formats for start and end times:
@@ -5341,6 +5372,23 @@ cdef class slurmdb_jobs:
             slurm.List JOBSList
             slurm.ListIterator iters = NULL
 
+       
+        if clusters:
+            self.job_cond.cluster_list = slurm.slurm_list_create(NULL)
+            for _cluster in clusters:
+                _cluster = _cluster.encode("UTF-8")
+                slurm.slurm_addto_char_list_with_case(self.job_cond.cluster_list, _cluster, False)
+
+        if db_flags:
+            if isinstance(db_flags, int):
+                self.job_cond.db_flags = db_flags
+        else:
+            self.job_cond.db_flags = slurm.SLURMDB_JOB_FLAG_NOTSET
+
+        if flags:
+            if isinstance(flags, int):
+                self.job_cond.flags = flags
+
         if jobids:
             self.job_cond.step_list = slurm.slurm_list_create(NULL)
             for _jobid in jobids:
@@ -5349,6 +5397,15 @@ cdef class slurmdb_jobs:
                 else:
                     _jobid = _jobid.encode("UTF-8")
                 slurm.slurm_addto_step_list(self.job_cond.step_list, _jobid)
+
+        if userids:
+            self.job_cond.userid_list = slurm.slurm_list_create(NULL)
+            for _userid in userids:
+                if isinstance(_userid, int) or isinstance(_userid, long):
+                    _userid = str(_userid).encode("UTF-8")
+                else:
+                    _userid = _userid.encode("UTF-8")
+                slurm.slurm_addto_char_list_with_case(self.job_cond.userid_list, _userid, False)
 
         if starttime:
             self.job_cond.usage_start = slurm.slurm_parse_time(starttime, 1)
@@ -5378,8 +5435,8 @@ cdef class slurmdb_jobs:
             if job is not NULL:
                 jobid = job.jobid
                 JOBS_info[u'account'] = slurm.stringOrNone(job.account, '')
-                JOBS_info[u'allocated_gres'] = slurm.stringOrNone(job.alloc_gres, '')
-                JOBS_info[u'allocated_nodes'] = job.alloc_nodes
+                JOBS_info[u'alloc_gres'] = slurm.stringOrNone(job.alloc_gres, '')
+                JOBS_info[u'alloc_nodes'] = job.alloc_nodes
                 JOBS_info[u'array_job_id'] = job.array_job_id
                 JOBS_info[u'array_max_tasks'] = job.array_max_tasks
                 JOBS_info[u'array_task_id'] = job.array_task_id
@@ -5392,7 +5449,7 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'elapsed'] = job.elapsed
                 JOBS_info[u'eligible'] = job.eligible
                 JOBS_info[u'end'] = job.end
-                JOBS_info[u'exit_code'] = job.exitcode
+                JOBS_info[u'exitcode'] = job.exitcode
                 JOBS_info[u'gid'] = job.gid
                 JOBS_info[u'jobid'] = job.jobid
                 JOBS_info[u'jobname'] = slurm.stringOrNone(job.jobname, '')
@@ -5410,11 +5467,101 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'show_full'] = job.show_full
                 JOBS_info[u'start'] = job.start
                 JOBS_info[u'state'] = job.state
-                JOBS_info[u'state_str'] = slurm.slurm_job_state_string(job.state)
+                JOBS_info[u'state_str'] = slurm.stringOrNone(slurm.slurm_job_state_string(job.state), '')
+                
+                # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
+                # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
+                # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
+                JOBS_info[u'stats'] = {}
+                stats = JOBS_info[u'stats']
+                stats[u'act_cpufreq'] = job.stats.act_cpufreq
+                stats[u'consumed_energy'] = job.stats.consumed_energy
+                stats[u'tres_usage_in_max'] = slurm.stringOrNone(job.stats.tres_usage_in_max, '')
+                stats[u'tres_usage_in_max_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_nodeid, '')
+                stats[u'tres_usage_in_max_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_taskid, '')
+                stats[u'tres_usage_in_min'] = slurm.stringOrNone(job.stats.tres_usage_in_min, '')
+                stats[u'tres_usage_in_min_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_nodeid, '')
+                stats[u'tres_usage_in_min_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_taskid, '')
+                stats[u'tres_usage_in_tot'] = slurm.stringOrNone(job.stats.tres_usage_in_tot, '')
+                stats[u'tres_usage_out_ave'] = slurm.stringOrNone(job.stats.tres_usage_out_ave, '')
+                stats[u'tres_usage_out_max'] = slurm.stringOrNone(job.stats.tres_usage_out_max, '')
+                stats[u'tres_usage_out_max_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_nodeid, '')
+                stats[u'tres_usage_out_max_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_taskid, '')
+                stats[u'tres_usage_out_min'] = slurm.stringOrNone(job.stats.tres_usage_out_min, '')
+                stats[u'tres_usage_out_min_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_nodeid, '')
+                stats[u'tres_usage_out_min_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_taskid, '')
+                stats[u'tres_usage_out_tot'] = slurm.stringOrNone(job.stats.tres_usage_out_tot, '')                       
 
-                JOBS_info[u'stat_actual_cpufreq'] = job.stats.act_cpufreq
+                # add job steps
+                JOBS_info[u'steps'] = {}
+                step_dict = JOBS_info[u'steps']
 
-                JOBS_info[u'steps'] = "Not filled, string should be handled"
+                stepsNum = slurm.slurm_list_count(job.steps)
+                stepsIter = slurm.slurm_list_iterator_create(job.steps)
+                for i in range(stepsNum):
+                    step = <slurm.slurmdb_step_rec_t *>slurm.slurm_list_next(stepsIter)
+                    step_info = {}
+                    if step is not NULL:
+                        step_id = step.stepid
+
+                        step_info[u'elapsed'] = step.elapsed
+                        step_info[u'end'] = step.end
+                        step_info[u'exitcode'] = step.exitcode
+                        
+                        # Don't add this unless you want to create an endless recursive structure 
+                        # step_info[u'job_ptr'] = JOBS_Info # job's record
+                        
+                        step_info[u'nnodes'] = step.nnodes
+                        step_info[u'nodes'] = slurm.stringOrNone(step.nodes, '')
+                        step_info[u'ntasks'] = step.ntasks
+                        step_info[u'pid_str'] = slurm.stringOrNone(step.pid_str, '')
+                        step_info[u'req_cpufreq_min'] = step.req_cpufreq_min
+                        step_info[u'req_cpufreq_max'] = step.req_cpufreq_max
+                        step_info[u'req_cpufreq_gov'] = step.req_cpufreq_gov
+                        step_info[u'requid'] = step.requid
+                        step_info[u'start'] = step.start
+                        step_info[u'state'] = step.state
+                        step_info[u'state_str'] = slurm.stringOrNone(slurm.slurm_job_state_string(step.state), '')
+                        
+                        # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
+                        # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
+                        # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
+                        step_info[u'stats'] = {}
+                        stats = step_info[u'stats']
+                        stats[u'act_cpufreq'] = step.stats.act_cpufreq
+                        stats[u'consumed_energy'] = step.stats.consumed_energy
+                        stats[u'tres_usage_in_max'] = slurm.stringOrNone(step.stats.tres_usage_in_max, '')
+                        stats[u'tres_usage_in_max_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_in_max_nodeid, '')
+                        stats[u'tres_usage_in_max_taskid'] = slurm.stringOrNone(step.stats.tres_usage_in_max_taskid, '')
+                        stats[u'tres_usage_in_min'] = slurm.stringOrNone(step.stats.tres_usage_in_min, '')
+                        stats[u'tres_usage_in_min_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_in_min_nodeid, '')
+                        stats[u'tres_usage_in_min_taskid'] = slurm.stringOrNone(step.stats.tres_usage_in_min_taskid, '')
+                        stats[u'tres_usage_in_tot'] = slurm.stringOrNone(step.stats.tres_usage_in_tot, '')
+                        stats[u'tres_usage_out_ave'] = slurm.stringOrNone(step.stats.tres_usage_out_ave, '')
+                        stats[u'tres_usage_out_max'] = slurm.stringOrNone(step.stats.tres_usage_out_max, '')
+                        stats[u'tres_usage_out_max_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_out_max_nodeid, '')
+                        stats[u'tres_usage_out_max_taskid'] = slurm.stringOrNone(step.stats.tres_usage_out_max_taskid, '')
+                        stats[u'tres_usage_out_min'] = slurm.stringOrNone(step.stats.tres_usage_out_min, '')
+                        stats[u'tres_usage_out_min_nodeid'] = slurm.stringOrNone(step.stats.tres_usage_out_min_nodeid, '')
+                        stats[u'tres_usage_out_min_taskid'] = slurm.stringOrNone(step.stats.tres_usage_out_min_taskid, '')
+                        stats[u'tres_usage_out_tot'] = slurm.stringOrNone(step.stats.tres_usage_out_tot, '')                       
+                        
+                        step_info[u'stepid'] = step_id
+                        step_info[u'stepname'] = slurm.stringOrNone(step.stepname, '')
+                        step_info[u'suspended'] = step.suspended
+                        step_info[u'sys_cpu_sec'] = step.sys_cpu_sec
+                        step_info[u'sys_cpu_usec'] = step.sys_cpu_usec
+                        step_info[u'task_dist'] = step.task_dist
+                        step_info[u'tot_cpu_sec'] = step.tot_cpu_sec
+                        step_info[u'tot_cpu_usec'] = step.tot_cpu_usec
+                        step_info[u'tres_alloc_str'] = slurm.stringOrNone(step.tres_alloc_str, '')
+                        step_info[u'user_cpu_sec'] = step.user_cpu_sec
+                        step_info[u'user_cpu_usec'] = step.user_cpu_usec
+
+                        step_dict[step_id] = step_info
+
+                slurm.slurm_list_iterator_destroy(stepsIter)
+
                 JOBS_info[u'submit'] = job.submit
                 JOBS_info[u'suspended'] = job.suspended
                 JOBS_info[u'sys_cpu_sec'] = job.sys_cpu_sec
@@ -5432,10 +5579,15 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'user_cpu_sec'] = job.user_cpu_usec
                 JOBS_info[u'wckey'] = slurm.stringOrNone(job.wckey, '')
                 JOBS_info[u'wckeyid'] = job.wckeyid
+                JOBS_info[u'work_dir'] = slurm.stringOrNone(job.work_dir, '')
                 J_dict[jobid] = JOBS_info
 
         slurm.slurm_list_iterator_destroy(iters)
         slurm.slurm_list_destroy(JOBSList)
+        if clusters:
+            slurm.slurm_list_destroy(self.job_cond.cluster_list)
+        if userids:
+            slurm.slurm_list_destroy(self.job_cond.userid_list)
         return J_dict
 
 #

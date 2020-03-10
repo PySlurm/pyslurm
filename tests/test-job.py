@@ -1,17 +1,29 @@
 from __future__ import absolute_import, unicode_literals
 
 import pyslurm
+import sys
 import time
+
 from nose.tools import assert_equals, assert_true, assert_false
 
 from common import scontrol_show
 
 def test_job_submit():
     """Job: Test job().submit_batch_job()."""
-    test_job = {"wrap": "sleep 3600", "job_name": "pyslurm_test_job"}
+    test_job = {
+        "wrap": "sleep 3600",
+        "job_name": "pyslurm_test_job",
+        "ntasks": 2,
+        "cpus_per_task": 3,
+    }
     test_job_id = pyslurm.job().submit_batch_job(test_job)
-    test_job_search = pyslurm.job().find(name="name", val="pyslurm_test_job")
+    test_job_search = pyslurm.job().find(name="name", val=test_job["job_name"])
+    test_job_info = pyslurm.job().find_id(test_job_id)
+
     assert_true(test_job_id in test_job_search)
+    assert_equals(len(test_job_info), 1)
+    assert_equals(test_job_info[0]["cpus_per_task"], test_job["cpus_per_task"])
+    assert_equals(test_job_info[0]["num_tasks"], test_job["ntasks"])
 
 
 def test_job_get():
@@ -55,6 +67,7 @@ def test_job_scontrol():
     assert_equals(test_job_info["nice"], int(sctl_dict["Nice"]))
     assert_equals(test_job_info["num_cpus"], int(sctl_dict["NumCPUs"]))
     assert_equals(test_job_info["num_nodes"], int(sctl_dict["NumNodes"]))
+    assert_equals(test_job_info["num_tasks"], int(sctl_dict["NumTasks"]))
     assert_equals(test_job_info["partition"], sctl_dict["Partition"])
     assert_equals(test_job_info["priority"], int(sctl_dict["Priority"]))
     assert_equals(test_job_info["state_reason"], sctl_dict["Reason"])
@@ -66,6 +79,24 @@ def test_job_scontrol():
     assert_equals(test_job_info["std_out"], sctl_dict["StdOut"])
     assert_equals(test_job_info["time_limit_str"], sctl_dict["TimeLimit"])
     assert_equals(test_job_info["work_dir"], sctl_dict["WorkDir"])
+
+
+def test_job_find_user_string():
+    """Job: Test job().find_user() (String)."""
+    user = "root"
+
+    if sys.version_info < (3,0):
+        user = user.encode("UTF-8")
+
+    test_job_output = pyslurm.job().find_user(user)
+    assert_true(isinstance(test_job_output, dict))
+
+
+def test_job_find_user_int():
+    """Job: Test job().find_user() (Integer)."""
+    user = 0
+    test_job_output = pyslurm.job().find_user(user)
+    assert_true(isinstance(test_job_output, dict))
 
 
 def test_job_kill():

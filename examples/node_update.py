@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
-"""Modify the state of a Node or BG Base Partition
+"""
+Modify the state of a Node or BG Base Partition
 
    Valid States :
 
@@ -20,10 +20,10 @@ from __future__ import print_function
 import pyslurm
 
 Node_dict = {
-    'node_names': 'c10',
-    'node_state': pyslurm.NODE_STATE_DRAIN,
-    'reason': 'API test'
-    }
+    "node_names": "c10",
+    "node_state": pyslurm.NODE_STATE_DRAIN,
+    "reason": "API test",
+}
 
 try:
     a = pyslurm.node()
