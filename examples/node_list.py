@@ -1,14 +1,17 @@
 #!/usr/bin/env python
-
+"""
+List Slurm nodes
+"""
 from __future__ import print_function
 
-def display(node_dict):
 
+def display(node_dict):
+    """Format output"""
     if node_dict:
 
-        date_fields = [ 'boot_time', 'slurmd_start_time', 'last_update', 'reason_time' ]
+        date_fields = ["boot_time", "slurmd_start_time", "last_update", "reason_time"]
 
-        print('{0:*^80}'.format(''))
+        print("{0:*^80}".format(""))
         for key, value in node_dict.items():
 
             print("{0} :".format(key))
@@ -21,12 +24,13 @@ def display(node_dict):
                     else:
                         ddate = pyslurm.epoch2date(ddate)
                         print("\t{0:<17} : {1}".format(part_key, ddate))
-                elif ('reason_uid' in part_key and value['reason'] is None):
+                elif "reason_uid" in part_key and value["reason"] is None:
                     print("\t{0:<17} : ".format(part_key[0]))
                 else:
                     print("\t{0:<17} : {1}".format(part_key[0], part_key[1]))
 
-            print('{0:*^80}'.format(''))
+            print("{0:*^80}".format(""))
+
 
 if __name__ == "__main__":
 
@@ -36,13 +40,10 @@ if __name__ == "__main__":
         Nodes = pyslurm.node()
         node_dict = Nodes.get()
 
-        if len(node_dict) > 0:
-
+        if node_dict:
             display(node_dict)
-
             print()
             print("Node IDs - {0}".format(Nodes.ids()))
-
         else:
             print("No Nodes found !")
 

@@ -1,23 +1,25 @@
 #!/usr/bin/env python
-
+"""
+List Slurm jobs
+"""
 from __future__ import print_function
 
 import pyslurm
-import sys
 
-from time import gmtime, strftime, sleep
 
 def display(job_dict):
-
+    """Format output"""
     if job_dict:
 
-        time_fields = ['time_limit']
+        time_fields = ["time_limit"]
 
-        date_fields = ['start_time',
-                'submit_time',
-                'end_time',
-                'eligible_time',
-                'resize_time']
+        date_fields = [
+            "start_time",
+            "submit_time",
+            "end_time",
+            "eligible_time",
+            "resize_time",
+        ]
 
         for key, value in sorted(job_dict.items()):
 
@@ -40,13 +42,14 @@ def display(job_dict):
 
             print("-" * 80)
 
+
 if __name__ == "__main__":
 
     try:
         a = pyslurm.job()
         jobs = a.get()
 
-        if len(jobs) > 0:
+        if jobs:
 
             display(jobs)
 
@@ -54,9 +57,9 @@ if __name__ == "__main__":
             print("Number of Jobs - {0}".format(len(jobs)))
             print()
 
-            pending = a.find('job_state', 'PENDING')
-            running = a.find('job_state', 'RUNNING')
-            held = a.find('job_state', 'RUNNING')
+            pending = a.find("job_state", "PENDING")
+            running = a.find("job_state", "RUNNING")
+            held = a.find("job_state", "RUNNING")
 
             print("Number of pending jobs - {0}".format(len(pending)))
             print("Number of running jobs - {0}".format(len(running)))
@@ -66,7 +69,6 @@ if __name__ == "__main__":
             print("JobIDs in Pending state - {0}".format(pending))
             print()
         else:
-
             print("No jobs found !")
-    except ValueError as e:
-        print("Job query failed - {0}".format(e.args[0]))
+    except ValueError as value_error:
+        print("Job query failed - {0}".format(value_error.args[0]))

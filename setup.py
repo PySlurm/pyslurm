@@ -17,7 +17,7 @@ logging.basicConfig(
     level=logging.DEBUG
 )
 
-CYTHON_VERSION_MIN = "0.15"
+CYTHON_VERSION_MIN = "0.19.2"
 SLURM_VERSION = "19.05"
 
 def fatal(logstring, code=1):
@@ -38,11 +38,11 @@ try:
         info("Cython version %s installed" % cython_version)
         fatal("Please use Cython version >= %s" % CYTHON_VERSION_MIN)
 except:
-    fatal("Cython (http://cython.org) is required to build PySlurm")
+    fatal("Cython (https://cython.org) is required to build PySlurm")
     fatal("Please use Cython version >= %s" % CYTHON_VERSION_MIN)
 
-if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[:2] < (3, 4):
-    fatal("Python >= 2.6 or >= 3.4 is required to run PySlurm.")
+if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[:2] < (3, 4):
+    fatal("Python == 2.7 or >= 3.4 is required to run PySlurm.")
 
 
 class Pyslurm:
@@ -58,7 +58,7 @@ class Pyslurm:
         with open(os.path.join(self.here, "pyslurm", "__version__.py"), "r") as f:
             exec(f.read(), self.about)
 
-    def usage():
+    def usage(self):
         print(textwrap.dedent("""
             PySlurm Help
             ------------
@@ -151,7 +151,7 @@ class Pyslurm:
             return slurm_path
         else:
             info("Build - Cannot locate Slurm shared library in %s" % slurm_path)
-            return ''
+            return None
 
         info("Build - Could not locate Slurm shared library in %s" % slurm_path)
         return ''
@@ -238,9 +238,7 @@ class Pyslurm:
         elif os.path.exists("{0}/slurm.h".format(self.slurm_inc)):
             info("Build - Found Slurm header in %s" % self.slurm_inc)
         else:
-            info("Build - Cannot locate the Slurm include in %s" % self.slurm_inc)
-            self.usage()
-            sys.exit(-1)
+            fatal("Build - Cannot locate the Slurm include in %s" % self.slurm_inc)
 
         # Test for Slurm MAJOR.MINOR version match (ignoring .MICRO)
         try:
@@ -330,7 +328,6 @@ class Pyslurm:
                 'Programming Language :: Cython',
                 'Programming Language :: Python',
                 'Programming Language :: Python :: 2',
-                'Programming Language :: Python :: 2.6',
                 'Programming Language :: Python :: 2.7',
                 'Programming Language :: Python :: 3',
                 'Programming Language :: Python :: 3.4',

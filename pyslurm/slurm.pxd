@@ -588,7 +588,7 @@ cdef extern from 'slurm/slurm.h' nogil:
         uint32_t jobs_failed
         uint32_t jobs_pending
         uint32_t jobs_running
-        time_t jobs_states_ts
+        time_t job_states_ts
         uint32_t bf_backfilled_jobs
         uint32_t bf_last_backfilled_jobs
         uint32_t bf_backfilled_pack_jobs
@@ -2608,6 +2608,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
 
     ctypedef struct slurmdb_job_rec_t:
         char *account
+        char *admin_comment
         char *alloc_gres
         uint32_t alloc_nodes
         uint32_t array_job_id
@@ -2630,8 +2631,11 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         uint32_t jobid
         char *jobname
         uint32_t lft
-        char *partition
+        char *mcs_label
         char *nodes
+        char *partition
+        uint32_t pack_job_id
+        uint32_t pack_job_offset
         uint32_t priority
         uint32_t qosid
         uint32_t req_cpus
@@ -2664,6 +2668,7 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         uint32_t user_cpu_usec
         char *wckey
         uint32_t wckeyid
+        char *work_dir
 
     ctypedef struct slurmdb_qos_usage_t:
         uint32_t accrue_cnt
@@ -2776,7 +2781,34 @@ cdef extern from 'slurm/slurmdb.h' nogil:
         List tres_list
         List user_list
 
-    # ctypedef struct slurmdb_step_rec_t
+    ctypedef struct slurmdb_step_rec_t:
+        uint32_t elapsed
+        time_t end
+        int32_t exitcode
+        slurmdb_job_rec_t *job_ptr # job's record
+        uint32_t nnodes
+        char *nodes
+        uint32_t ntasks
+        char *pid_str
+        uint32_t req_cpufreq_min
+        uint32_t req_cpufreq_max
+        uint32_t req_cpufreq_gov
+        uint32_t requid
+        time_t start
+        uint32_t state
+        slurmdb_stats_t stats
+        uint32_t stepid	# job's step number
+        char *stepname
+        uint32_t suspended
+        uint32_t sys_cpu_sec
+        uint32_t sys_cpu_usec
+        uint32_t task_dist
+        uint32_t tot_cpu_sec
+        uint32_t tot_cpu_usec
+        char *tres_alloc_str
+        uint32_t user_cpu_sec
+        uint32_t user_cpu_usec
+
     # ctypedef struct slurmdb_res_cond_t
     # ctypedef struct slurmdb_res_rec_t
     # ctypedef struct slurmdb_txn_cond_t
@@ -2904,6 +2936,7 @@ cdef extern char *slurm_get_checkpoint_dir()
 cdef extern void slurm_sprint_cpu_bind_type(char *string, cpu_bind_type_t cpu_bind_type)
 cdef extern void slurm_destroy_char(void *object)
 cdef extern int slurm_addto_step_list(List step_list, char *names)
+cdef extern int slurm_addto_char_list_with_case(List char_list, char *names, bool lower_case_noralization)
 cdef extern time_t slurm_parse_time(char *time_str, int past)
 cdef extern int slurm_time_str2mins(const_char_ptr string)
 cdef extern int slurm_time_str2secs(const_char_ptr string)

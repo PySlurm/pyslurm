@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-
+"""
+List Slurm QOS
+"""
 import pyslurm
 
 if __name__ == "__main__":
     try:
-        qos_dict = pyslurm.qos().get()
-        if len(qos_dict):
-            for key, value in qos_dict.items():
+        qosDict = pyslurm.qos().get()
+        if qosDict:
+            for key, value in qosDict.items():
                 print("{")
-                if type(value) is dict:
+                if isinstance(value, dict):
                     print("\t{}=".format(key))
                     for k, v in value.items():
                         print("\t\t{}={}".format(k, v))
@@ -17,6 +19,5 @@ if __name__ == "__main__":
                 print("}")
         else:
             print("No QOS found")
-    except ValueError as e:
-        print("Error:{}".format(e.args[0]))
-
+    except ValueError as qos_exception:
+        print("Error:{}".format(qos_exception.args[0]))

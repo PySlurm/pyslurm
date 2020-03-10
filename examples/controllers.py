@@ -1,19 +1,23 @@
 #!/usr/bin/env python
-
+"""
+Retrieve list up Slurm controllers
+"""
 from __future__ import print_function
 
-import pyslurm
 import socket
-import sys
+
+import pyslurm
+
 
 def controller_up(controller=1):
-
+    """Check if controller up via ping"""
     try:
         pyslurm.slurm_ping(controller)
-    except valueError as e:
-        print("Failed - {0}".format(e.args[0]))
+    except ValueError as value_error:
+        print("Failed - {0}".format(value_error.args[0]))
     else:
         print("Success")
+
 
 if __name__ == "__main__":
 
@@ -37,11 +41,11 @@ if __name__ == "__main__":
         print("\nPinging SLURM controllers")
 
         if primary:
-            print("\tPrimary .....", end=' ')
+            print("\tPrimary .....", end=" ")
             controller_up()
 
         if backup:
-            print("\tBackup .....", end=' ')
+            print("\tBackup .....", end=" ")
             controller_up(2)
-    except ValueError as e:
-        print("Error - {0}".format(e.args[0]))
+    except ValueError as value_error:
+        print("Error - {0}".format(value_error.args[0]))
