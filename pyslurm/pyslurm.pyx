@@ -44,10 +44,10 @@ cdef extern from "<sys/resource.h>" nogil:
     enum: PRIO_PROCESS
     int getpriority(int, id_t)
 
-cdef extern from *:
-    # deprecated backwards compatiblity declaration
-    ctypedef char*  const_char_ptr  "const char*"
-    ctypedef char** const_char_pptr "const char**"
+#cdef extern from *:
+#    # deprecated backwards compatiblity declaration
+#    ctypedef char*  const_char_ptr  "const char*"
+#    ctypedef char** const_char_pptr "const char**"
 
 cdef extern from "alps_cray.h" nogil:
     cdef int ALPS_CRAY_SYSTEM
@@ -509,13 +509,13 @@ cdef class config:
             Ctl_dict[u'accounting_storage_tres'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_tres, '')
             Ctl_dict[u'accounting_storage_enforce'] = self.__Config_ptr.accounting_storage_enforce
             Ctl_dict[u'accounting_storage_backup_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_backup_host, '')
+            Ctl_dict[u'accounting_storage_ext_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_ext_host, '')
             Ctl_dict[u'accounting_storage_host'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_host, '')
             Ctl_dict[u'accounting_storage_loc'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_loc, '')
             Ctl_dict[u'accounting_storage_pass'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_pass, '')
             Ctl_dict[u'accounting_storage_port'] = self.__Config_ptr.accounting_storage_port
             Ctl_dict[u'accounting_storage_type'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_type, '')
             Ctl_dict[u'accounting_storage_user'] = slurm.stringOrNone(self.__Config_ptr.accounting_storage_user, '')
-            Ctl_dict[u'acctng_store_job_comment'] = self.__Config_ptr.acctng_store_job_comment
             Ctl_dict[u'acct_gather_energy_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_energy_type, '')
             Ctl_dict[u'acct_gather_profile_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_profile_type, '')
             Ctl_dict[u'acct_gather_interconnect_type'] = slurm.stringOrNone(self.__Config_ptr.acct_gather_interconnect_type, '')
@@ -527,25 +527,24 @@ cdef class config:
             Ctl_dict[u'batch_start_timeout'] = self.__Config_ptr.batch_start_timeout
             Ctl_dict[u'bb_type'] = slurm.stringOrNone(self.__Config_ptr.bb_type, '')
             Ctl_dict[u'boot_time'] = self.__Config_ptr.boot_time
-            Ctl_dict[u'checkpoint_type'] = slurm.stringOrNone(self.__Config_ptr.checkpoint_type, '')
             Ctl_dict[u'core_spec_plugin'] = slurm.stringOrNone(self.__Config_ptr.core_spec_plugin, '')
             Ctl_dict[u'cli_filter_plugins'] = slurm.stringOrNone(self.__Config_ptr.cli_filter_plugins, '')
             Ctl_dict[u'cluster_name'] = slurm.stringOrNone(self.__Config_ptr.cluster_name, '')
             Ctl_dict[u'comm_params'] = slurm.stringOrNone(self.__Config_ptr.comm_params, '')
             Ctl_dict[u'complete_wait'] = self.__Config_ptr.complete_wait
+            Ctl_dict[u'conf_flags'] = self.__Config_ptr.conf_flags
             Ctl_dict[u'cpu_freq_def'] = slurm.int32orNone(self.__Config_ptr.cpu_freq_def)
             Ctl_dict[u'cpu_freq_govs'] = self.__Config_ptr.cpu_freq_govs
             Ctl_dict[u'cred_type'] = slurm.stringOrNone(self.__Config_ptr.cred_type, '')
             Ctl_dict[u'debug_flags'] = self.__Config_ptr.debug_flags
             Ctl_dict[u'def_mem_per_cpu'] = self.__Config_ptr.def_mem_per_cpu
-            Ctl_dict[u'disable_root_jobs'] = bool(self.__Config_ptr.disable_root_jobs)
+            Ctl_dict[u'dependency_params'] = slurm.stringOrNone(self.__Config_ptr.dependency_params, '')
             Ctl_dict[u'eio_timeout'] = self.__Config_ptr.eio_timeout
             Ctl_dict[u'enforce_part_limits'] = bool(self.__Config_ptr.enforce_part_limits)
             Ctl_dict[u'epilog'] = slurm.stringOrNone(self.__Config_ptr.epilog, '')
             Ctl_dict[u'epilog_msg_time'] = self.__Config_ptr.epilog_msg_time
             Ctl_dict[u'epilog_slurmctld'] = slurm.stringOrNone(self.__Config_ptr.epilog_slurmctld, '')
             Ctl_dict[u'ext_sensors_type'] = slurm.stringOrNone(self.__Config_ptr.ext_sensors_type, '')
-            Ctl_dict[u'fast_schedule'] = bool(self.__Config_ptr.fast_schedule)
             Ctl_dict[u'federation_parameters'] = slurm.stringOrNone(self.__Config_ptr.fed_params, '')
             Ctl_dict[u'first_job_id'] = self.__Config_ptr.first_job_id
             Ctl_dict[u'fs_dampening_factor'] = self.__Config_ptr.fs_dampening_factor
@@ -562,9 +561,9 @@ cdef class config:
             Ctl_dict[u'job_acct_gather_freq'] = slurm.stringOrNone(self.__Config_ptr.job_acct_gather_freq, '')
             Ctl_dict[u'job_acct_gather_type'] = slurm.stringOrNone(self.__Config_ptr.job_acct_gather_type, '')
             Ctl_dict[u'job_acct_gather_params'] = slurm.stringOrNone(self.__Config_ptr.job_acct_gather_params, '')
-            Ctl_dict[u'job_ckpt_dir'] = slurm.stringOrNone(self.__Config_ptr.job_ckpt_dir, '')
             Ctl_dict[u'job_comp_host'] = slurm.stringOrNone(self.__Config_ptr.job_comp_host, '')
             Ctl_dict[u'job_comp_loc'] = slurm.stringOrNone(self.__Config_ptr.job_comp_loc, '')
+            Ctl_dict[u'job_comp_params'] = slurm.stringOrNone(self.__Config_ptr.job_comp_params, '')
             Ctl_dict[u'job_comp_pass'] = slurm.stringOrNone(self.__Config_ptr.job_comp_pass, '')
             Ctl_dict[u'job_comp_port'] = self.__Config_ptr.job_comp_port
             Ctl_dict[u'job_comp_type'] = slurm.stringOrNone(self.__Config_ptr.job_comp_type, '')
@@ -588,11 +587,11 @@ cdef class config:
             Ctl_dict[u'launch_params'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
             Ctl_dict[u'launch_type'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
             Ctl_dict[u'licenses'] = __get_licenses(self.__Config_ptr.licenses)
-            Ctl_dict[u'licenses_used'] = __get_licenses(self.__Config_ptr.licenses_used)
             Ctl_dict[u'log_fmt'] = self.__Config_ptr.log_fmt
             Ctl_dict[u'mail_domain'] = slurm.stringOrNone(self.__Config_ptr.mail_domain, '')
             Ctl_dict[u'mail_prog'] = slurm.stringOrNone(self.__Config_ptr.mail_prog, '')
             Ctl_dict[u'max_array_sz'] = self.__Config_ptr.max_array_sz
+            Ctl_dict[u'max_dbd_msgs'] = self.__Config_ptr.max_dbd_msgs
             Ctl_dict[u'max_job_cnt'] = self.__Config_ptr.max_job_cnt
             Ctl_dict[u'max_job_id'] = self.__Config_ptr.max_job_id
             Ctl_dict[u'max_mem_per_cpu'] = self.__Config_ptr.max_mem_per_cpu
@@ -610,6 +609,8 @@ cdef class config:
             Ctl_dict[u'plugstack'] = slurm.stringOrNone(self.__Config_ptr.plugstack, '')
             Ctl_dict[u'power_parameters'] = slurm.stringOrNone(self.__Config_ptr.power_parameters, '')
             Ctl_dict[u'power_plugin'] = slurm.stringOrNone(self.__Config_ptr.power_plugin, '')
+            Ctl_dict[u'prep_params'] = slurm.stringOrNone(self.__Config_ptr.prep_params, '')
+            Ctl_dict[u'prep_plugins'] = slurm.stringOrNone(self.__Config_ptr.prep_plugins, '')
 
             config_get_preempt_mode = get_preempt_mode(self.__Config_ptr.preempt_mode)
             Ctl_dict[u'preempt_mode'] = slurm.stringOrNone(config_get_preempt_mode, '')
@@ -713,12 +714,9 @@ cdef class config:
             Ctl_dict[u'tmp_fs'] = slurm.stringOrNone(self.__Config_ptr.tmp_fs, '')
             Ctl_dict[u'topology_param'] = slurm.stringOrNone(self.__Config_ptr.topology_param, '')
             Ctl_dict[u'topology_plugin'] = slurm.stringOrNone(self.__Config_ptr.topology_plugin, '')
-            Ctl_dict[u'track_wckey'] = self.__Config_ptr.track_wckey
             Ctl_dict[u'tree_width'] = self.__Config_ptr.tree_width
             Ctl_dict[u'unkillable_program'] = slurm.stringOrNone(self.__Config_ptr.unkillable_program, '')
             Ctl_dict[u'unkillable_timeout'] = self.__Config_ptr.unkillable_timeout
-            Ctl_dict[u'use_pam'] = bool(self.__Config_ptr.use_pam)
-            Ctl_dict[u'use_spec_resources'] = self.__Config_ptr.use_spec_resources
             Ctl_dict[u'version'] = slurm.stringOrNone(self.__Config_ptr.version, '')
             Ctl_dict[u'vsize_factor'] = self.__Config_ptr.vsize_factor
             Ctl_dict[u'wait_time'] = self.__Config_ptr.wait_time
@@ -1612,273 +1610,6 @@ cpdef int slurm_terminate_job_step(uint32_t JobID=0, uint32_t JobStep=0) except?
 
     return errCode
 
-
-#
-# Slurm Checkpoint functions
-#
-
-
-cpdef time_t slurm_checkpoint_able(uint32_t JobID=0, uint32_t JobStep=0) except? -1:
-    u"""Report if checkpoint operations can be issued for the job step.
-
-    If yes, returns SLURM_SUCCESS and sets start_time if checkpoint operation
-    is presently active. Returns ESLURM_DISABLED if checkpoint operation is
-    disabled.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :param int StartTime: Checkpoint start time
-    :returns: Time of checkpoint
-    :rtype: `integer`
-    """
-    cdef time_t Time = 0
-    cdef int apiError = 0
-    cdef int errCode = slurm.slurm_checkpoint_able(JobID, JobStep, &Time)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return Time
-
-
-cpdef int slurm_checkpoint_enable(uint32_t JobID=0, uint32_t JobStep=0) except? -1:
-    u"""Enable checkpoint requests for a given slurm job step.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    """
-    cdef int apiError = 0
-    cdef int errCode = slurm.slurm_checkpoint_enable(JobID, JobStep)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
-cpdef int slurm_checkpoint_disable(uint32_t JobID=0, uint32_t JobStep=0) except? -1:
-    u"""Disable checkpoint requests for a given slurm job step.
-
-    This can be issued as needed to prevent checkpointing while a job step is
-    in a critical section or for other reasons.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    """
-    cdef int apiError = 0
-    cdef int errCode = slurm.slurm_checkpoint_disable(JobID, JobStep)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
-cpdef int slurm_checkpoint_create(uint32_t JobID=0, uint32_t JobStep=0,
-                                  uint16_t MaxWait=60, char* ImageDir='') except? -1:
-    u"""Request a checkpoint for the identified slurm job step.
-
-    Continue its execution upon completion of the checkpoint.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :param int MaxWait: Maximum time to wait
-    :param string ImageDir: Directory to write checkpoint files
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    """
-    cdef int apiError = 0
-    cdef int errCode = slurm.slurm_checkpoint_create(JobID, JobStep,
-                                                     MaxWait, ImageDir)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
-cpdef int slurm_checkpoint_requeue(uint32_t JobID=0, uint16_t MaxWait=60,
-                                   char* ImageDir='') except? -1:
-    u"""Initiate a checkpoint request for identified slurm job step.
-
-    The job will be requeued after the checkpoint operation completes.
-
-    :param int JobID: Job identifier
-    :param int MaxWait: Maximum time in seconds to wait for operation to complete
-    :param string ImageDir: Directory to write checkpoint files
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    """
-    cdef int apiError = 0
-    cdef int errCode = slurm.slurm_checkpoint_requeue(JobID, MaxWait, ImageDir)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
-cpdef int slurm_checkpoint_vacate(uint32_t JobID=0, uint32_t JobStep=0,
-                                  uint16_t MaxWait=60, char* ImageDir='') except? -1:
-    u"""Request a checkpoint for the identified slurm Job Step.
-
-    Terminate its execution upon completion of the checkpoint.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :param int MaxWait: Maximum time to wait
-    :param string ImageDir: Directory to store checkpoint files
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    """
-    cdef int apiError = 0
-    cdef int errCode = slurm_checkpoint_vacate(JobID, JobStep, MaxWait, ImageDir)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
-cpdef int slurm_checkpoint_restart(uint32_t JobID=0, uint32_t JobStep=0,
-                                   uint16_t Stick=0, char* ImageDir='') except? -1:
-    u"""Request that a previously checkpointed slurm job resume execution.
-
-    It may continue execution on different nodes than were originally used.
-    Execution may be delayed if resources are not immediately available.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :param int Stick: Stick to nodes previously running om
-    :param string ImageDir: Directory to find checkpoint image files
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    """
-    cdef int apiError = 0
-    cdef int errCode = slurm.slurm_checkpoint_restart(JobID, JobStep, Stick, ImageDir)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
-cpdef int slurm_checkpoint_complete(uint32_t JobID=0, uint32_t JobStep=0,
-                                    time_t BeginTime=0, uint32_t ErrorCode=0,
-                                    char* ErrMsg='') except? -1:
-    u"""Note that a requested checkpoint has been completed.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :param int BeginTime: Begin time of checkpoint
-    :param int ErrorCode: Error code, highest value fore all complete calls is preserved
-    :param string ErrMsg: Error message, preserved for highest error code
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    """
-    cdef int apiError = 0
-    cdef int errCode = slurm.slurm_checkpoint_complete(JobID, JobStep,
-                                                       BeginTime, ErrorCode,
-                                                       ErrMsg)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
-cpdef int slurm_checkpoint_task_complete(uint32_t JobID=0, uint32_t JobStep=0,
-                                         uint32_t TaskID=0, time_t BeginTime=0,
-                                         uint32_t ErrorCode=0, char* ErrMsg='') except? -1:
-    u"""Note that a requested checkpoint has been completed.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :param int TaskID: Task identifier
-    :param int BeginTime: Begin time of checkpoint
-    :param int ErrorCode: Error code, highest value fore all complete calls is preserved
-    :param string ErrMsg: Error message, preserved for highest error code
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    """
-    cdef int apiError = 0
-    cdef int errCode = slurm.slurm_checkpoint_task_complete(JobID, JobStep,
-                                                            TaskID, BeginTime,
-                                                            ErrorCode, ErrMsg)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
-#
-# Slurm Job Checkpoint Functions
-#
-
-
-def slurm_checkpoint_error(uint32_t JobID=0, uint32_t JobStep=0):
-    u"""Get error information about the last checkpoint operation for job step.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :returns: 0 for success or a slurm error code
-    :rtype: `integer`
-    :returns: Slurm error message and error string
-    :rtype: `string`
-    """
-    cdef:
-        uint32_t ErrorCode = 0
-        char* Msg = NULL
-        int errCode = slurm.slurm_checkpoint_error(JobID, JobStep, &ErrorCode, &Msg)
-
-    error_string = None
-    if errCode != 0:
-        error_string = u'%d:%s' % (ErrorCode, Msg)
-        free(Msg)
-
-    return errCode, error_string
-
-
-cpdef int slurm_checkpoint_tasks(uint32_t JobID=0, uint16_t JobStep=0,
-                                 uint16_t MaxWait=60, char* NodeList='') except? -1:
-    u"""Send checkpoint request to tasks of specified slurm job step.
-
-    :param int JobID: Job identifier
-    :param int JobStep: Job step identifier
-    :param int MaxWait: Seconds to wait for the operation to complete
-    :param string NodeList: String of nodelist
-    :returns: 0 for success, non zero on failure and with errno set
-    :rtype: `integer`
-    """
-    cdef:
-        slurm.time_t BeginTime = <slurm.time_t>NULL
-        char* ImageDir = NULL
-        int apiError = 0
-        int errCode = slurm.slurm_checkpoint_tasks(JobID, JobStep,
-                                                   BeginTime, ImageDir,
-                                                   MaxWait, NodeList)
-
-    if errCode != 0:
-        apiError = slurm.slurm_get_errno()
-        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-    return errCode
-
-
 #
 # Slurm Job Class to Control Configuration Read/Update
 #
@@ -2211,14 +1942,6 @@ cdef class job:
             Job_dict[u'num_cpus'] = self._record.num_cpus
             Job_dict[u'num_nodes'] = self._record.num_nodes
             Job_dict[u'num_tasks'] = self._record.num_tasks
-
-            if self._record.pack_job_id:
-                Job_dict[u'pack_job_id'] = self._record.pack_job_id
-                Job_dict[u'pack_job_offset'] = self._record.pack_job_offset
-
-            if self._record.pack_job_id_set:
-                Job_dict[u'pack_job_id_set'] = self._record.pack_job_id_set
-
             Job_dict[u'partition'] = slurm.stringOrNone(self._record.partition, '')
 
             if self._record.pn_min_memory & slurm.MEM_PER_CPU:
@@ -2742,9 +2465,9 @@ cdef class job:
         job_opts["get_user_env_time"] = -1
 
         if not job_opts.get("export_env"):
-            slurm.slurm_env_array_merge(&desc.environment, <const_char_pptr>slurm.environ)
+            slurm.slurm_env_array_merge(&desc.environment, <slurm.const_char_pptr>slurm.environ)
         elif job_opts.get("export_env") == "ALL":
-            slurm.slurm_env_array_merge(&desc.environment, <const_char_pptr>slurm.environ)
+            slurm.slurm_env_array_merge(&desc.environment, <slurm.const_char_pptr>slurm.environ)
         elif job_opts.get("export_env") == "NONE":
             desc.environment = slurm.slurm_env_array_create()
             # env_array_merge_slurm(&desc->environment, (const char **)environ);
@@ -2794,14 +2517,6 @@ cdef class job:
             acctg_freq = job_opts.get("acctg_freq").encode("UTF-8")
             desc.acctg_freq = acctg_freq
 
-        # TODO: needs to get xfree'd?
-        desc.ckpt_dir = slurm.slurm_get_checkpoint_dir()
-
-        if job_opts.get("ckpt_interval"):
-            desc.ckpt_interval = <uint16_t>job_opts.get("ckpt_interval")
-        else:
-            desc.ckpt_interval = <uint16_t>0
-
         # TODO: spank_job_env_size
 
         if job_opts.get("cpu_freq_min"):
@@ -2844,7 +2559,7 @@ cdef class job:
             envc += 1
         return envc
 
-    cdef void print_db_notok(self, const_char_ptr cname, bool isenv):
+    cdef void print_db_notok(self, slurm.const_char_ptr cname, bool isenv):
         b_all = "all".encode("UTF-8", "replace")
         if errno:
             sys.stderr.write("There is a problem talking to the database:") # %m.  "
@@ -3731,11 +3446,6 @@ cdef class jobstep:
                     else:
                        Step_dict[u'step_id_str'] =  "{0}.{1}".format(job_step_info_ptr.job_steps[i].job_id, step_id)
 
-                Step_dict[u'ckpt_dir'] = slurm.stringOrNone(
-                    job_step_info_ptr.job_steps[i].ckpt_dir, ''
-                )
-
-                Step_dict[u'ckpt_interval'] = job_step_info_ptr.job_steps[i].ckpt_interval
                 Step_dict[u'cpus_per_tres'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].cpus_per_tres, '')
 
                 Step_dict[u'dist'] = slurm.stringOrNone(
