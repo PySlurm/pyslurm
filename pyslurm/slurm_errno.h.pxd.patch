@@ -1,4 +1,11 @@
-2a3,5
->     int SLURM_SUCCESS
->     int SLURM_ERROR
-> 
+--- slurm_errno.h.pxd.old	2020-04-09 21:18:04.537352119 +0000
++++ slurm_errno.h.pxd	2020-04-10 05:51:22.893660264 +0000
+@@ -1,5 +1,8 @@
+ cdef extern from "slurm/slurm_errno.h":
+ 
++    int SLURM_SUCCESS
++    int SLURM_ERROR
++
+     cdef enum:
+         SLURM_UNEXPECTED_MSG_ERROR
+         SLURM_COMMUNICATIONS_CONNECTION_ERROR

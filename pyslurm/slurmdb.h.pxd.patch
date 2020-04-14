@@ -1,5 +1,13 @@
-4a5,8
->     enum:
->         CLUSTER_FLAG_CRAY_A
->         SLURMDB_JOB_FLAG_NOTSET
-> 
+--- slurmdb.h.pxd.old	2020-04-10 05:58:42.154238261 +0000
++++ slurmdb.h.pxd	2020-04-10 11:57:08.652031069 +0000
+@@ -2,6 +2,10 @@
+ 
+ cdef extern from "slurm/slurmdb.h":
+ 
++    enum:
++        CLUSTER_FLAG_CRAY_A
++        SLURMDB_JOB_FLAG_NOTSET
++
+     cdef enum:
+         SLURM_UNEXPECTED_MSG_ERROR
+         SLURM_COMMUNICATIONS_CONNECTION_ERROR
