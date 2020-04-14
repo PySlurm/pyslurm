@@ -1,0 +1,5 @@
+4a5,8
+>     enum:
+>         CLUSTER_FLAG_CRAY_A
+>         SLURMDB_JOB_FLAG_NOTSET
+> 

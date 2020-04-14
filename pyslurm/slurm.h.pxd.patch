@@ -1,0 +1,13 @@
+4a5,16
+>     enum:
+>         SLURM_VERSION_NUMBER
+> 
+>     uint32_t NO_VAL
+>     uint16_t NO_VAL16
+>     uint32_t INFINITE
+>     uint16_t SHOW_ALL
+>     uint64_t MEM_PER_CPU
+>     uint16_t INFINITE16
+>     uint16_t SHOW_DETAIL
+>     uint64_t NO_VAL64
+> 
