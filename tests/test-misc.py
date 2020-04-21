@@ -15,8 +15,8 @@ def test_slurm_reconfigure():
 def test_slurm_api_version():
     """Misc: Test slurm_api_version()."""
     ver = pyslurm.slurm_api_version()
-    assert_equals(ver[0], 19)
-    assert_equals(ver[1], 5)
+    assert_equals(ver[0], 20)
+    assert_equals(ver[1], 2)
 
 
 def test_slurm_load_slurmd_status():
