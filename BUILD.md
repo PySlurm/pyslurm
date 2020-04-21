@@ -5,6 +5,7 @@
 ```bash
 cd /root
 git clone https://github.com/bikerdanny/pyslurm.git
+cd pyslurm
 git checkout 20.02.1
 ```
 
