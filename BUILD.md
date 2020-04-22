@@ -7,7 +7,7 @@ git clone https://github.com/bikerdanny/docker-centos-slurm
 cd docker-centos-slurm
 sed -i "s/controller1/c10/g" config.ini
 sed -i "s/compute1/c10/g" config.ini
-pip3 install j2cmd
+pip3 install j2cli
 j2 aio.docker-compose.yml.j2 config.ini > docker-compose.yml
 mkdir var_lib_mysql
 mkdir etc_munge
