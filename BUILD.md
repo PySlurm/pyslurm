@@ -18,7 +18,7 @@ mkdir shared
 docker-compose up -d
 docker-compose exec c10 bash
 supervisorctl stop slurmctld
-echo "SwitchName=s2 Nodes=c10" > /etc/slurm/topology
+echo "SwitchName=s2 Nodes=c10" > /etc/slurm/topology.conf
 echo "#
 # TOPOLOGY
 TopologyPlugin=topology/tree" >> /etc/slurm/slurm.conf
