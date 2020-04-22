@@ -22,7 +22,7 @@ sacctmgr show cluster # if the command returns successfully, you can start slurm
 supervisorctl start slurmctld
 sinfo
 ```
-From now on you can do the following steps inside the container.
+The following steps you could do inside the container.
 
 ## Checkout PySlurm
 
