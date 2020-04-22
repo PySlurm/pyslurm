@@ -3963,7 +3963,7 @@ cdef class reservation:
                 Res_dict[u'end_time'] = record.end_time
                 Res_dict[u'features'] = slurm.listOrNone(record.features, ',')
 
-                flags = slurm.slurm_reservation_flags_string(record.flags)
+                flags = slurm.slurm_reservation_flags_string(&record)
                 Res_dict[u'flags'] = slurm.stringOrNone(flags, '')
 
                 Res_dict[u'licenses'] = __get_licenses(record.licenses)
@@ -5862,36 +5862,36 @@ cdef inline object __get_trigger_type(uint32_t TriggerType):
     return u"%s" % rtype
 
 
-def get_res_state(uint16_t inx):
-    u"""Returns a string that represents the state of the slurm reservation.
-
-    :param int flags: Slurm reservation flags
-        - RESERVE_FLAG_MAINT            0x00000001
-        - RESERVE_FLAG_NO_MAINT         0x00000002
-        - RESERVE_FLAG_DAILY            0x00000004
-        - RESERVE_FLAG_NO_DAILY         0x00000008
-        - RESERVE_FLAG_WEEKLY           0x00000010
-        - RESERVE_FLAG_NO_WEEKLY        0x00000020
-        - RESERVE_FLAG_IGN_JOBS         0x00000040
-        - RESERVE_FLAG_NO_IGN_JOB       0x00000080
-        - RESERVE_FLAG_ANY_NODES        0x00000100
-        - RESERVE_FLAG_NO_ANY_NODES     0x00000200
-        - RESERVE_FLAG_STATIC           0x00000400
-        - RESERVE_FLAG_NO_STATIC        0x00000800
-        - RESERVE_FLAG_PART_NODES       0x00001000
-        - RESERVE_FLAG_NO_PART_NODES    0x00002000
-        - RESERVE_FLAG_OVERLAP          0x00004000
-        - RESERVE_FLAG_SPEC_NODES       0x00008000
-        - RESERVE_FLAG_FIRST_CORES      0x00010000
-        - RESERVE_FLAG_TIME_FLOAT       0x00020000
-        - RESERVE_FLAG_REPLACE          0x00040000
-    :returns: Reservation state string
-    :rtype: `string`
-    """
-    try:
-        return slurm.slurm_reservation_flags_string(inx)
-    except:
-        pass
+#def get_res_state(uint16_t inx):
+#    u"""Returns a string that represents the state of the slurm reservation.
+#
+#    :param int flags: Slurm reservation flags
+#        - RESERVE_FLAG_MAINT            0x00000001
+#        - RESERVE_FLAG_NO_MAINT         0x00000002
+#        - RESERVE_FLAG_DAILY            0x00000004
+#        - RESERVE_FLAG_NO_DAILY         0x00000008
+#        - RESERVE_FLAG_WEEKLY           0x00000010
+#        - RESERVE_FLAG_NO_WEEKLY        0x00000020
+#        - RESERVE_FLAG_IGN_JOBS         0x00000040
+#        - RESERVE_FLAG_NO_IGN_JOB       0x00000080
+#        - RESERVE_FLAG_ANY_NODES        0x00000100
+#        - RESERVE_FLAG_NO_ANY_NODES     0x00000200
+#        - RESERVE_FLAG_STATIC           0x00000400
+#        - RESERVE_FLAG_NO_STATIC        0x00000800
+#        - RESERVE_FLAG_PART_NODES       0x00001000
+#        - RESERVE_FLAG_NO_PART_NODES    0x00002000
+#        - RESERVE_FLAG_OVERLAP          0x00004000
+#        - RESERVE_FLAG_SPEC_NODES       0x00008000
+#        - RESERVE_FLAG_FIRST_CORES      0x00010000
+#        - RESERVE_FLAG_TIME_FLOAT       0x00020000
+#        - RESERVE_FLAG_REPLACE          0x00040000
+#    :returns: Reservation state string
+#    :rtype: `string`
+#    """
+#    try:
+#        return slurm.slurm_reservation_flags_string(inx)
+#    except:
+#        pass
 
 
 def get_debug_flags(uint64_t inx):
