@@ -18,6 +18,10 @@ mkdir shared
 docker-compose up -d
 docker-compose exec c10 bash
 supervisorctl stop slurmctld
+echo "SwitchName=s2 Nodes=c10" > /etc/slurm/topology
+echo "#
+# TOPOLOGY
+TopologyPlugin=topology/tree" >> /etc/slurm/slurm.conf
 sacctmgr show cluster # if the command returns successfully, you can start slurmctld again
 supervisorctl start slurmctld
 sinfo
