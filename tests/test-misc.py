@@ -21,7 +21,8 @@ def test_slurm_api_version():
 
 def test_slurm_load_slurmd_status():
     """Misc: Test slurm_load_slurmd_status()."""
-    status_info = pyslurm.slurm_load_slurmd_status()["localhost"]
+    test_node = pyslurm.node().ids()[-1]
+    status_info = pyslurm.slurm_load_slurmd_status()[test_node]
 
     sctl = subprocess.Popen(["scontrol", "-d", "show", "slurmd"],
                             stdout=subprocess.PIPE).communicate()
