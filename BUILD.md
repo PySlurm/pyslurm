@@ -5,9 +5,11 @@
 ```bash
 git clone https://github.com/bikerdanny/docker-centos-slurm
 cd docker-centos-slurm
+pip3 install j2cli
+j2 Dockerfile.j2 config.ini > Dockerfile
+docker build -t bikerdanny/slurm:20.02.1 .
 sed -i "s/controller1/c10/g" config.ini
 sed -i "s/compute1/c10/g" config.ini
-pip3 install j2cli
 j2 aio.docker-compose.yml.j2 config.ini > docker-compose.yml
 mkdir var_lib_mysql
 mkdir etc_munge
@@ -19,7 +21,6 @@ supervisorctl stop slurmctld
 sacctmgr show cluster # if the command returns successfully, you can start slurmctld again
 supervisorctl start slurmctld
 sinfo
-yum install -y which vim
 ```
 From now on you can do the following steps inside the container.
 
