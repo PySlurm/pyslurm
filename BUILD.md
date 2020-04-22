@@ -19,6 +19,7 @@ supervisorctl stop slurmctld
 sacctmgr show cluster # if the command returns successfully, you can start slurmctld again
 supervisorctl start slurmctld
 sinfo
+yum install -y which vim
 ```
 From now on you can do the following steps inside the container.
 
