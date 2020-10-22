@@ -88,7 +88,7 @@ class Pyslurm:
             if os.path.isfile(path) and path.endswith(".pyx"):
                 files.append(path.replace(os.path.sep, ".")[:-4])
             elif os.path.isdir(path):
-                scandir(path, files)
+                Pyslurm.scandir(path, files)
 
         return files
 
