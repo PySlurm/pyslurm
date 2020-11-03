@@ -1,4 +1,4 @@
-# Build PySlurm (20.02.1)
+# Build PySlurm (20.02.5)
 
 ## Prepare Slurm container (optional)
 
@@ -7,7 +7,7 @@ git clone https://github.com/bikerdanny/docker-centos-slurm
 cd docker-centos-slurm
 pip3 install j2cli
 j2 Dockerfile.j2 config.ini > Dockerfile
-docker build -t bikerdanny/slurm:20.02.1 .
+docker build -t bikerdanny/slurm:20.02.5 .
 sed -i "s/controller1/c10/g" config.ini
 sed -i "s/compute1/c10/g" config.ini
 j2 aio.docker-compose.yml.j2 config.ini > docker-compose.yml
@@ -21,7 +21,10 @@ supervisorctl stop slurmctld
 echo "SwitchName=s2 Nodes=c10" > /etc/slurm/topology.conf
 echo "#
 # TOPOLOGY
-TopologyPlugin=topology/tree" >> /etc/slurm/slurm.conf
+TopologyPlugin=topology/tree
+#
+# PlugStackConfig
+PlugStackConfig=/etc/slurm/plugstack.conf" >> /etc/slurm/slurm.conf
 sacctmgr show cluster # if the command returns successfully, you can start slurmctld again
 supervisorctl start slurmctld
 sinfo
@@ -34,7 +37,7 @@ The following steps you could do inside the container.
 cd /root
 git clone https://github.com/bikerdanny/pyslurm.git
 cd pyslurm
-git checkout 20.02.1
+git checkout 20.02.5
 ```
 
 ## Build pxd files for slurm.h slurmdb.h and slurm_errno.h
