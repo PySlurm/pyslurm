@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 import pyslurm
 from nose.tools import assert_equals, assert_true
+import time
 
 from common import scontrol_show
 
@@ -54,7 +55,6 @@ def test_node_scontrol():
 
 def test_node_update():
     """Node: Test node().update()."""
-    import time
     time.sleep(3)
     test_node = pyslurm.node().ids()[-1]
     node_test_before = pyslurm.node().find_id(test_node)
