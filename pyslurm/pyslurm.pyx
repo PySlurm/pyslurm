@@ -2835,6 +2835,9 @@ cdef class job:
             mcs_label = job_opts.get("mcs_label").encode("UTF-8", "replace")
             desc.mcs_label = mcs_label
 
+        if job_opts.get("gres"):
+            desc.gres = job_opts.get("gres")
+
         return 0
 
     cdef int envcount(self, char **env):
