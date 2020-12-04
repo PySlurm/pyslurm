@@ -827,7 +827,6 @@ cdef extern from 'slurm/slurm.h' nogil:
         char *x11_magic_cookie
         char *x11_target
         uint16_t x11_target_port
-        char *gres
 
     ctypedef job_descriptor job_desc_msg_t
 

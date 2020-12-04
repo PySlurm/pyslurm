@@ -2835,9 +2835,9 @@ cdef class job:
             mcs_label = job_opts.get("mcs_label").encode("UTF-8", "replace")
             desc.mcs_label = mcs_label
 
-        if job_opts.get("gres"):
-            gres = job_opts.get("gres").encode("UTF-8", "replace")
-            desc.gres = gres
+        if job_opts.get("tres_per_node"):
+            tres_per_node = job_opts.get("tres_per_node").encode("UTF-8", "replace")
+            desc.tres_per_node = tres_per_node
 
         return 0
 
