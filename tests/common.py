@@ -14,7 +14,7 @@ def scontrol_show(subcommand, *args):
     ).communicate()
 
     sctl_stdout = sctl[0].strip().decode("UTF-8", "replace").split()
-    sctl_dict = dict((value.split("=")[0], value.split("=")[1])
+    sctl_dict = dict((value.split("=")[0], value.split("=")[1] if len(value.split("=")) > 1 else '')
                      for value in sctl_stdout)
 
     return sctl_dict

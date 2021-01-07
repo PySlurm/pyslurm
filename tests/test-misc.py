@@ -15,13 +15,14 @@ def test_slurm_reconfigure():
 def test_slurm_api_version():
     """Misc: Test slurm_api_version()."""
     ver = pyslurm.slurm_api_version()
-    assert_equals(ver[0], 19)
-    assert_equals(ver[1], 5)
+    assert_equals(ver[0], 20)
+    assert_equals(ver[1], 2)
 
 
 def test_slurm_load_slurmd_status():
     """Misc: Test slurm_load_slurmd_status()."""
-    status_info = pyslurm.slurm_load_slurmd_status()["localhost"]
+    test_node = pyslurm.node().ids()[-1]
+    status_info = pyslurm.slurm_load_slurmd_status()[test_node]
 
     sctl = subprocess.Popen(["scontrol", "-d", "show", "slurmd"],
                             stdout=subprocess.PIPE).communicate()

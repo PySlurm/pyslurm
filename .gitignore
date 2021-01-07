@@ -15,6 +15,7 @@ pyslurm/*.pxi~
 pyslurm/*.pxd~
 pyslurm/*.so
 pyslurm/*.c
+pyslurm/*.pxd
 
 # Ignore vim swap files
 *.swp

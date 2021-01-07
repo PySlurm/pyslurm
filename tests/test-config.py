@@ -45,13 +45,11 @@ def test_config_scontrol():
 
     assert_equals(config_info["acct_gather_profile_type"], sctl_dict["AcctGatherProfileType"])
     assert_equals(config_info["authtype"], sctl_dict["AuthType"])
-    assert_equals(config_info["checkpoint_type"], sctl_dict["CheckpointType"])
     assert_equals(config_info["cluster_name"], sctl_dict["ClusterName"])
     assert_equals(config_info["core_spec_plugin"], sctl_dict["CoreSpecPlugin"])
     assert_equals(config_info["ext_sensors_type"], sctl_dict["ExtSensorsType"])
     assert_equals(config_info["first_job_id"], int(sctl_dict["FirstJobId"]))
     assert_equals(config_info["job_acct_gather_type"], sctl_dict["JobAcctGatherType"])
-    assert_equals(config_info["job_ckpt_dir"], sctl_dict["JobCheckpointDir"])
     assert_equals(config_info["job_comp_host"], sctl_dict["JobCompHost"])
     assert_equals(config_info["job_comp_loc"], sctl_dict["JobCompLoc"])
     assert_equals(config_info["job_comp_port"], int(sctl_dict["JobCompPort"]))
