@@ -5,7 +5,7 @@
  cdef extern from "slurm/slurmdb.h":
  
 +    enum:
-+        CLUSTER_FLAG_CRAY_A
++        CLUSTER_FLAG_CRAY_N
 +        SLURMDB_JOB_FLAG_NOTSET
 +
      cdef enum:
