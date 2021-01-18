@@ -1,4 +1,4 @@
-# Build PySlurm (20.02.5)
+# Build PySlurm (20.11.2)
 
 ## Prepare Slurm container (optional)
 

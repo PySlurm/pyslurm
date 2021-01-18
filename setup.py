@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 
 CYTHON_VERSION_MIN = "0.19"
-SLURM_VERSION = "20.02"
+SLURM_VERSION = "20.11"
 
 def fatal(logstring, code=1):
     logger.error(logstring)
