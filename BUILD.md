@@ -71,6 +71,11 @@ j2 slurm.j2 > slurm.pxd
 
 ## Build and install PySlurm
 
+If you do not want to do all the above steps and just try the generated `slurm.pxd`from
+the above procedure. You can copy for example:
+ * cp generated/20.11/slurm.pxd pyslurm
+ * then build it with the below procedure
+
 ```bash
 pip3 install Cython
 cd /root/pyslurm
