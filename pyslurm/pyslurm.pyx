@@ -3416,7 +3416,7 @@ cdef class jobstep:
             dict Steps = {}
             dict StepDict = {}
             uint16_t ShowFlags = self._ShowFlags ^ slurm.SHOW_ALL
-            int i = 0
+            size_t i = 0
             int errCode = slurm.slurm_get_job_steps(
                 last_time, self.JobID, self.StepID, &job_step_info_ptr, ShowFlags
             )
@@ -4313,7 +4313,7 @@ cdef class topology:
 
     cpdef __get(self):
         cdef:
-            int i
+            size_t i = 0
             dict Topo = {}, Topo_dict
 
         if self._topo_info_ptr is not NULL:
