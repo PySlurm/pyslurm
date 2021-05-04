@@ -2,7 +2,7 @@
 PySlurm: Slurm Interface for Python
 ***********************************
 
-.. image:: https://travis-ci.org/PySlurm/pyslurm.svg?branch=19.05.0
+.. image:: https://travis-ci.org/PySlurm/pyslurm.svg?branch=20.02.0
     :target: https://travis-ci.org/PySlurm/pyslurm
 
 Overview
@@ -11,7 +11,7 @@ Overview
 Currently PySlurm is under development to move from it's thin layer on top of
 the Slurm C API to an object orientated interface.
 
-This release is based on Slurm 19.05.
+This release is based on Slurm 20.02.
 
 Prerequisites
 *************
@@ -24,7 +24,7 @@ This PySlurm branch has been tested with:
 
 * Cython 0.19.2, and the latest stable
 * Python 2.7, 3.4, 3.5 and 3.6
-* Slurm 19.05.0
+* Slurm 20.02
 
 
 Installation
