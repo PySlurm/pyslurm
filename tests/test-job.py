@@ -102,7 +102,7 @@ def test_job_find_user_int():
 def test_job_kill():
     """Job: Test job().slurm_kill_job()."""
     test_job_search_before = pyslurm.job().find(name="name", val="pyslurm_test_job")
-    test_job_id = test_job_search_before[0]
+    test_job_id = test_job_search_before[-1]
     time.sleep(3)
 
     rc = pyslurm.slurm_kill_job(test_job_id, Signal=9, BatchFlag=pyslurm.KILL_JOB_BATCH)

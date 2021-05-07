@@ -17,8 +17,8 @@ logging.basicConfig(
     level=logging.DEBUG
 )
 
-CYTHON_VERSION_MIN = "0.19.2"
-SLURM_VERSION = "19.05"
+CYTHON_VERSION_MIN = "0.19"
+SLURM_VERSION = "20.02"
 
 def fatal(logstring, code=1):
     logger.error(logstring)
@@ -76,19 +76,19 @@ class Pyslurm:
             https://github.com/PySlurm/pyslurm/issues.
             """))
 
-    @staticmethod
-    def scandir(dir, files=[]):
+    def scandir(self, dir, files=[]):
         """
         Scan the directory for extension files, converting them to extension names
         in dotted notation.
         """
         for file in os.listdir(dir):
+
             path = os.path.join(dir, file)
 
             if os.path.isfile(path) and path.endswith(".pyx"):
                 files.append(path.replace(os.path.sep, ".")[:-4])
             elif os.path.isdir(path):
-                scandir(path, files)
+                self.scandir(path, files)
 
         return files
 
