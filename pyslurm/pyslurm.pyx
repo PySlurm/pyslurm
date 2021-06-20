@@ -5177,7 +5177,14 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'qosid'] = job.qosid
                 JOBS_info[u'req_cpus'] = job.req_cpus
                 JOBS_info[u'req_gres'] = slurm.stringOrNone(job.req_gres, '')
-                JOBS_info[u'req_mem'] = job.req_mem
+
+                if job.req_mem & slurm.MEM_PER_CPU:
+                    JOBS_info[u'req_mem'] = job.req_mem & (~slurm.MEM_PER_CPU)
+                    JOBS_info[u'req_mem_per_cpu'] = True
+                else:
+                    JOBS_info[u'req_mem'] = job.req_mem
+                    JOBS_info[u'req_mem_per_cpu'] = False
+
                 JOBS_info[u'requid'] = job.requid
                 JOBS_info[u'resvid'] = job.resvid
                 JOBS_info[u'resv_name'] = slurm.stringOrNone(job.resv_name,'')
