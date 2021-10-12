@@ -408,7 +408,7 @@ cdef class config:
         :returns: Dictionary of values for given config key
         :rtype: `dict`
         """
-        return self.__JobDict.get(keyID, {})
+        return self.__ConfigDict.get(keyID, {})
 
     cdef void __free(self):
         u"""Free memory allocated by slurm_load_ctl_conf."""
