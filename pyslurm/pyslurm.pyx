@@ -2557,6 +2557,18 @@ cdef class job:
             mcs_label = job_opts.get("mcs_label").encode("UTF-8", "replace")
             desc.mcs_label = mcs_label
 
+        if job_opts.get("tres_per_job"):
+            tres_per_job = job_opts.get("tres_per_job").encode("UTF-8", "replace")
+            desc.tres_per_job = tres_per_job
+
+        if job_opts.get("tres_per_node"):
+            tres_per_node = job_opts.get("tres_per_node").encode("UTF-8", "replace")
+            desc.tres_per_node = tres_per_node
+
+        if job_opts.get("tres_per_task"):
+            tres_per_task = job_opts.get("tres_per_task").encode("UTF-8", "replace")
+            desc.tres_per_task = tres_per_task
+
         return 0
 
     cdef int envcount(self, char **env):
