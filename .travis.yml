@@ -5,19 +5,19 @@ branches:
     - master
 env:
   matrix:
-    - SLURM=19.05.0 CYTHON=0.29.14 PYTHON=3.6
-    - SLURM=19.05.0 CYTHON=0.29.14 PYTHON=3.5
-    - SLURM=19.05.0 CYTHON=0.29.14 PYTHON=3.4
-    - SLURM=19.05.0 CYTHON=0.29.14 PYTHON=2.7
-    - SLURM=19.05.0 CYTHON=0.19.2 PYTHON=3.6
-    - SLURM=19.05.0 CYTHON=0.19.2 PYTHON=3.5
-    - SLURM=19.05.0 CYTHON=0.19.2 PYTHON=3.4
-    - SLURM=19.05.0 CYTHON=0.19.2 PYTHON=2.7
+    - SLURM=20.02.5 CYTHON=0.29.24 PYTHON=3.6
+    - SLURM=20.02.5 CYTHON=0.29.24 PYTHON=3.7
+    - SLURM=20.02.5 CYTHON=0.29.24 PYTHON=3.8
+    - SLURM=20.02.5 CYTHON=0.29.24 PYTHON=3.9
+    - SLURM=20.02.5 CYTHON=0.19.2 PYTHON=3.6
+    - SLURM=20.02.5 CYTHON=0.19.2 PYTHON=3.7
+    - SLURM=20.02.5 CYTHON=0.19.2 PYTHON=3.8
+    - SLURM=20.02.5 CYTHON=0.19.2 PYTHON=3.9
 services:
   - docker
 before_install:
   - docker pull giovtorres/docker-centos7-slurm:$SLURM
-  - docker run -d -it -h ernie --name slurm-$SLURM -v $PWD:/pyslurm giovtorres/docker-centos7-slurm:$SLURM
+  - docker run -d -it -h slurmctl --name slurm-$SLURM -v $PWD:/pyslurm giovtorres/docker-centos7-slurm:$SLURM
 install: true
 before_script:
   - docker exec -e PYTHON=$PYTHON -e CYTHON=$CYTHON slurm-$SLURM /pyslurm/scripts/build.sh
