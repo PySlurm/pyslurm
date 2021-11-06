@@ -1829,6 +1829,17 @@ cdef class job:
                 Job_dict[u'array_task_id'] = None
                 Job_dict[u'array_task_str'] = None
 
+            if self._record.het_job_id:
+                Job_dict[u'het_job_id'] = self._record.het_job_id
+                Job_dict[u'het_job_id_set'] = slurm.stringOrNone(
+                    self._record.het_job_id_set, ''
+                )
+                Job_dict[u'het_job_offset'] = self._record.het_job_offset
+            else:
+                Job_dict[u'het_job_id'] = None
+                Job_dict[u'het_job_id_set'] = None
+                Job_dict[u'het_job_offset'] = None
+
             if self._record.array_max_tasks:
                 Job_dict[u'array_max_tasks'] = self._record.array_max_tasks
             else:
