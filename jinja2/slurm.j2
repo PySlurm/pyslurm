@@ -6,7 +6,12 @@ from libcpp cimport bool
 from posix.unistd cimport uid_t, pid_t
 from libc.stdint cimport int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t
 from cpython.version cimport PY_MAJOR_VERSION
+from posix.unistd cimport uid_t, pid_t, gid_t
+from libc.stdint cimport uint32_t, uint16_t, uint64_t
 
+cdef extern from "<netinet/in.h>" nogil:
+    ctypedef struct sockaddr_in
+    ctypedef struct sockaddr_storage
 
 cdef extern from '<stdio.h>' nogil:
     ctypedef struct FILE

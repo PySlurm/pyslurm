@@ -164,6 +164,7 @@ cdef extern from "slurm/slurmdb.h":
         List assoc_list
         List coordinators
         char* description
+        uint32_t flags
         char* name
         char* organization
 
@@ -211,6 +212,7 @@ cdef extern from "slurm/slurmdb.h":
         slurmdb_bf_usage_t* bf_usage
         char* cluster
         uint32_t def_qos_id
+        uint16_t flags
         uint32_t grp_jobs
         uint32_t grp_jobs_accrue
         uint32_t grp_submit_jobs
@@ -379,7 +381,6 @@ cdef extern from "slurm/slurmdb.h":
     ctypedef struct slurmdb_job_rec_t:
         char* account
         char* admin_comment
-        char* alloc_gres
         uint32_t alloc_nodes
         uint32_t array_job_id
         uint32_t array_max_tasks
@@ -410,7 +411,6 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t priority
         uint32_t qosid
         uint32_t req_cpus
-        char* req_gres
         uint64_t req_mem
         uint32_t requid
         uint32_t resvid
@@ -542,12 +542,6 @@ cdef extern from "slurm/slurmdb.h":
         double unused_wall
         List tres_list
 
-    ctypedef struct slurmdb_selected_step_t:
-        uint32_t array_task_id
-        uint32_t het_job_offset
-        uint32_t jobid
-        uint32_t stepid
-
     ctypedef struct slurmdb_step_rec_t:
         uint32_t elapsed
         time_t end
@@ -564,7 +558,7 @@ cdef extern from "slurm/slurmdb.h":
         time_t start
         uint32_t state
         slurmdb_stats_t stats
-        uint32_t stepid
+        slurm_step_id_t step_id
         char* stepname
         uint32_t suspended
         uint32_t sys_cpu_sec
@@ -657,6 +651,7 @@ cdef extern from "slurm/slurmdb.h":
         List coord_accts
         char* default_acct
         char* default_wckey
+        uint32_t flags
         char* name
         char* old_name
         uint32_t uid
@@ -681,6 +676,7 @@ cdef extern from "slurm/slurmdb.h":
     ctypedef struct slurmdb_wckey_rec_t:
         List accounting_list
         char* cluster
+        uint32_t flags
         uint32_t id
         uint16_t is_def
         char* name
@@ -814,9 +810,7 @@ cdef extern from "slurm/slurmdb.h":
 
     List slurmdb_report_user_top_usage(void* db_conn, slurmdb_user_cond_t* user_cond, bool group_accounts)
 
-    void* slurmdb_connection_get()
-
-    void* slurmdb_connection_get2(uint16_t* persist_conn_flags)
+    void* slurmdb_connection_get(uint16_t* persist_conn_flags)
 
     int slurmdb_connection_close(void** db_conn)
 
@@ -965,8 +959,6 @@ cdef extern from "slurm/slurmdb.h":
     void slurmdb_destroy_print_tree(void* object)
 
     void slurmdb_destroy_hierarchical_rec(void* object)
-
-    void slurmdb_destroy_selected_step(void* object)
 
     void slurmdb_destroy_report_job_grouping(void* object)
 
