@@ -6,7 +6,13 @@ from libcpp cimport bool
 from posix.unistd cimport uid_t, pid_t
 from libc.stdint cimport int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t
 from cpython.version cimport PY_MAJOR_VERSION
+from posix.unistd cimport uid_t, pid_t, gid_t
+from libc.stdint cimport uint32_t, uint16_t, uint64_t
 
+
+cdef extern from "<netinet/in.h>" nogil:
+    ctypedef struct sockaddr_in
+    ctypedef struct sockaddr_storage
 
 cdef extern from '<stdio.h>' nogil:
     ctypedef struct FILE
@@ -46,6 +52,7 @@ cdef extern from *:
     ctypedef struct listIterator
     ctypedef struct slurm_step_ctx_struct
     ctypedef char const_char "const char"
+    ctypedef struct slurm_ctl_conf_t
     ctypedef char* const_char_ptr "const char*"
     ctypedef char** const_char_pptr "const char**"
 
@@ -125,7 +132,6 @@ cdef inline boolToString(int value):
 
 cdef extern char **environ
 
-cdef extern uint16_t slurm_get_preempt_mode ()
 cdef extern char *slurm_preempt_mode_string (uint16_t preempt_mode)
 cdef extern void slurm_make_time_str (time_t *time, char *string, int size)
 cdef extern char *slurm_job_state_string (uint16_t inx)
