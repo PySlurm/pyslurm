@@ -16,5 +16,6 @@ sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 from .pyslurm import *
 from .__version__ import __version__
 
+
 def version():
     return __version__

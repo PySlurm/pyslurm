@@ -52,7 +52,7 @@ then
 fi
 
 # Add the cluster to the slurm database
-sacctmgr --immediate add cluster name=linux
+#sacctmgr --immediate add cluster name=linux
 
 # Restart Slurm components to apply configuration changes
 supervisorctl restart slurmctld
@@ -66,14 +66,7 @@ supervisorctl restart slurmd
 # Wait for nodes to become IDLE
 wait_for_cmd "sinfo | grep -q normal.*idle" "Waiting for nodes to transition to IDLE"
 
-# Print the PySlurm version
-echo "---> PySlurm version"
-python$PYTHON -c "import pyslurm; print(pyslurm.version())"
-
-# Print the Slurm API version
-echo "---> Slurm API version"
-python$PYTHON -c "import pyslurm; print(pyslurm.slurm_api_version())"
-
+# TODO: convert to setup method/fixture
 # Submit test job with jobstep via srun for testing
 echo "---> Submitting sleep job"
 sbatch --wrap="srun sleep 1000"
