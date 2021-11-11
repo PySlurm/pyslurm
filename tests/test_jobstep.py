@@ -1,29 +1,28 @@
-from __future__ import absolute_import, unicode_literals
+"""Test cases for Job Steps."""
 
 import pyslurm
-import subprocess
-from nose.tools import assert_equals, assert_true
+
 
 def test_jobstep_get():
     """Jobstep: Test jobstep().get() return type."""
     all_jobsteps = pyslurm.jobstep().get()
-    assert_true(isinstance(all_jobsteps, dict))
+    assert isinstance(all_jobsteps, dict)
 
 
 def test_jobstep_ids():
     """Jobstep: Test jobstep().ids() return type."""
     all_jobstep_ids = pyslurm.jobstep().ids()
-    assert_true(isinstance(all_jobstep_ids, dict))
+    assert isinstance(all_jobstep_ids, dict)
 
 
 def test_jobstep_count():
     """Jobstep: Test jobstep count."""
     all_jobsteps = pyslurm.jobstep().get()
     all_jobstep_ids = pyslurm.jobstep().ids()
-    assert_equals(len(all_jobsteps), len(all_jobstep_ids))
+    assert len(all_jobsteps) == len(all_jobstep_ids)
 
 
-#def test_jobstep_scontrol():
+# def test_jobstep_scontrol():
 #    """Jobstep: Compare scontrol values to PySlurm values."""
 #    all_jobstep_ids = pyslurm.jobstep().ids()
 #
