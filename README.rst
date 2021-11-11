@@ -75,6 +75,62 @@ the pyslurm module once it is built:
     make html
 
 
+Testing
+*******
+
+PySlurm requires an installation of Slurm.
+
+Using a Test Container
+----------------------
+
+To run tests locally without an existing Slurm cluster, `docker` and
+`docker-compose` is required.
+
+Clone the project::
+
+    git clone https://github.com/PySlurm/pyslurm.git
+    cd pyslurm
+
+Start the Slurm container in the background::
+
+    docker-compose up -d
+
+The cluster takes a few seconds to start all the required Slurm services. Tail the logs::
+
+    docker logs -f slurmctl
+
+When the cluster is ready, you will see the following log message::
+
+    Cluster is now available
+
+Press CTRL+C to stop tailing the logs. Slurm is now running in a container in detached mode. `docker-compose` also bind mounds the git directory
+inside the container at `/pyslurm` so that the container has access to the test cases.
+
+Install test dependencies::
+
+    pipenv sync --dev
+
+Execute the tests inside the container::
+
+    pipenv run pytest -sv scripts/run_tests_in_container.py
+
+When testing is complete, stop the running Slurm container::
+
+    docker-compose down
+
+Testing on an Existing Slurm Cluster
+------------------------------------
+
+You may also choose to clone the project and run tests on a node where Slurm is already compiled and installed::
+
+    git clone https://github.com/PySlurm/pyslurm.git
+    cd pyslurm
+    python3.9 setup.py build
+    python3.9 setup.py install
+    ./scripts/configure.sh
+    pipenv sync --dev
+    pipenv run pytest -sv
+
 Authors
 *******
 

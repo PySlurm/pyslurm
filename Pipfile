@@ -8,6 +8,10 @@ cython = "*"
 
 [dev-packages]
 black = "*"
+pytest = "*"
+pytest-sugar = "*"
+pytest-testinfra = "*"
+isort = "*"
 
 [pipenv]
 allow_prereleases = true

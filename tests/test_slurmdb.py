@@ -48,7 +48,6 @@ def get_user():
         ["squeue", "-O", "username", "-h"], stdout=subprocess.PIPE, stderr=None
     ).communicate()
     for username in users[0].splitlines():
-        print(username.decode())
         uid = pwd.getpwnam("{}".format(username.strip().decode()))
         yield username.strip().decode(), uid.pw_uid
 
