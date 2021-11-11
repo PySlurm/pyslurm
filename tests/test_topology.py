@@ -1,13 +1,14 @@
-from __future__ import absolute_import, unicode_literals
+"""Test cases for Slurm Topologies."""
+
+import subprocess
 
 import pyslurm
-import subprocess
-from nose.tools import assert_equals, assert_true
+
 
 def test_get_topology():
     """Topology: Test get_topology() return type"""
     test_topology = pyslurm.topology().get()
-    assert_true(isinstance(test_topology, dict))
+    assert isinstance(test_topology, dict)
 
 
 def test_topology_scontrol():
@@ -17,7 +18,8 @@ def test_topology_scontrol():
 
     scontrol = subprocess.Popen(
         ["scontrol", "-ddo", "show", "topology", "s2"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     ).communicate()
 
     scontrol_stdout = scontrol[0].strip().decode("UTF-8")
@@ -38,8 +40,8 @@ def test_topology_scontrol():
                 sctl.update({kv[0]: kv[1]})
 
     s2 = test_topology["s2"]
-    assert_equals(s2.get("name"), sctl.get("SwitchName"))
-    assert_equals(s2.get("level"), sctl.get("Level"))
-    assert_equals(s2.get("link_speed"), sctl.get("LinkSpeed"))
-    assert_equals(s2.get("nodes"), sctl.get("Nodes"))
-    assert_equals(s2.get("switches"), sctl.get("Switches"))
+    assert s2.get("name") == sctl.get("SwitchName")
+    assert s2.get("level") == sctl.get("Level")
+    assert s2.get("link_speed") == sctl.get("LinkSpeed")
+    assert s2.get("nodes") == sctl.get("Nodes")
+    assert s2.get("switches") == sctl.get("Switches")

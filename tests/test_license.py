@@ -1,13 +1,14 @@
-from __future__ import absolute_import, unicode_literals
+"""Test cases for Slurm license."""
+
+import subprocess
 
 import pyslurm
-import subprocess
-from nose.tools import assert_equals, assert_true
+
 
 def test_get_license():
     """License: Test licenses().get() return type"""
     licenses = pyslurm.licenses().get()
-    assert_true(isinstance(licenses, dict))
+    assert isinstance(licenses, dict)
 
 
 def test_license_scontrol():
@@ -16,8 +17,7 @@ def test_license_scontrol():
     test_license = all_licenses["matlab"]
 
     scontrol = subprocess.Popen(
-        ["scontrol", "-ddo", "show", "license", "matlab"],
-        stdout=subprocess.PIPE
+        ["scontrol", "-ddo", "show", "license", "matlab"], stdout=subprocess.PIPE
     ).communicate()
 
     scontrol_stdout = scontrol[0].strip().decode("UTF-8", "replace").split()
@@ -33,8 +33,10 @@ def test_license_scontrol():
         else:
             sctl.update({kv[0]: kv[1]})
 
-    assert_equals("matlab", sctl.get("LicenseName"))
-    assert_equals(test_license.get("total"), sctl.get("Total"))
-    assert_equals(test_license.get("in_use"), sctl.get("Used"))
-    assert_equals(test_license.get("available"), sctl.get("Free"))
+    assert "matlab" == sctl.get("LicenseName")
+    assert test_license.get("total") == sctl.get("Total")
+    assert test_license.get("in_use") == sctl.get("Used")
+    assert test_license.get("available") == sctl.get("Free")
+
+
 #    assert_equals(test_license.get("remote"), sctl.get("Remote"))
