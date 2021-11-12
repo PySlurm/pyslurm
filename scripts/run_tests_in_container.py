@@ -11,4 +11,6 @@ def test_run():
     print(host.check_output(f"{python} setup.py build"))
     print(host.check_output(f"{python} setup.py install"))
     print(host.check_output("./scripts/configure.sh"))
+    print(host.check_output(f"{python} -m pip uninstall --yes pytest"))
+    print(host.check_output(f"{python} -m pip install pytest"))
     print(host.check_output("pytest -v"))
