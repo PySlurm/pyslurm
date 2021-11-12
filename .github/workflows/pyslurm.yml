@@ -1,0 +1,47 @@
+name: PySlurm
+on: [push]
+jobs:
+  Build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version:
+          - "3.6"
+          - "3.7"
+          - "3.8"
+          - "3.9"
+      fail-fast: false
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies
+        run: |
+          which python
+          which python${{ matrix.python-version }}
+          python${{ matrix.python-version }} -m pip install --upgrade pip
+          python${{ matrix.python-verison }} -m pip install pipenv
+          pipenv --python ${{matrix.python-version }} install --dev --skip-lock
+      - name: Start Slurm Container
+        uses: sudo-bot/action-docker-compose@latest
+        with:
+          cli-args: "-f docker-compose-github.yml up -d"
+        env:
+          PYTHON: ${{ matrix.python-version }}
+      - name: Debug
+        run: |
+          docker ps -a
+          docker version
+          pwd
+          ls -al
+          docker inspect slurmctl
+          env | sort
+      - name: Build/Install/Test PySlurm
+        run: |
+          pipenv run pytest -sv scripts/run_tests_in_container.py
+        env:
+          PYTHON: ${{ matrix.python-version }}
+

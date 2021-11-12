@@ -2,8 +2,8 @@
 PySlurm: Slurm Interface for Python
 ***********************************
 
-.. image:: https://travis-ci.org/PySlurm/pyslurm.svg?branch=20.11
-    :target: https://travis-ci.org/PySlurm/pyslurm
+.. image:: https://github.com/PySlurm/pyslurm/actions/workflows/pyslurm.yml/badge.svg
+    :target: https://github.com/PySlurm/pyslurm/actions/workflows/pyslurm.yml
 
 Overview
 ========

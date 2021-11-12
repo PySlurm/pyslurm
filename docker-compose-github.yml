@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  slurm:
+    image: giovtorres/docker-centos7-slurm:20.11.8
+    hostname: slurmctl
+    container_name: slurmctl
+    stdin_open: true
+    tty: true
+    working_dir: /pyslurm
+    environment:
+      PYTHON: "3.9"
+    volumes:
+      - ${RUNNER_WORKSPACE}/pyslurm:/pyslurm
