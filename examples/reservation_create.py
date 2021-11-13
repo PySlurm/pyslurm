@@ -2,7 +2,6 @@
 """
 Create a Slurm reservation
 """
-from __future__ import print_function
 
 import sys
 import time

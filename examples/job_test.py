@@ -2,7 +2,6 @@
 """
 Class to access/modify Slurm Job Information.
 """
-from __future__ import print_function
 
 import pyslurm
 

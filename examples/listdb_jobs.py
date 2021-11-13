@@ -16,11 +16,17 @@ def job_display(job):
 
 if __name__ == "__main__":
     try:
-        start = (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime("%Y-%m-%dT00:00:00")
-        end = (datetime.datetime.utcnow() + datetime.timedelta(days=1)).strftime("%Y-%m-%dT00:00:00")
+        start = (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime(
+            "%Y-%m-%dT00:00:00"
+        )
+        end = (datetime.datetime.utcnow() + datetime.timedelta(days=1)).strftime(
+            "%Y-%m-%dT00:00:00"
+        )
 
         jobs = pyslurm.slurmdb_jobs()
-        jobs_dict = jobs.get(starttime=start.encode('utf-8'), endtime=end.encode('utf-8'))
+        jobs_dict = jobs.get(
+            starttime=start.encode("utf-8"), endtime=end.encode("utf-8")
+        )
         if jobs_dict:
             for key, value in jobs_dict.items():
                 print("{} Job: {}".format("{", key))

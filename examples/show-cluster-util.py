@@ -2,7 +2,6 @@
 """
 Print cluster utilization.
 """
-from __future__ import print_function
 
 import sys
 
@@ -20,7 +19,7 @@ def human_readable(num, suffix="B"):
 
 
 def get_util(nodes):
-    """ Return a tuple of cpu and memory percent values."""
+    """Return a tuple of cpu and memory percent values."""
     all_metrics = {
         "total_cpus_alloc": 0,
         "total_cpus_idle": 0,

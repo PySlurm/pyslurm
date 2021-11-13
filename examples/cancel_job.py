@@ -2,7 +2,6 @@
 """
 Cancel a scheduled job
 """
-from __future__ import print_function
 
 import pyslurm
 

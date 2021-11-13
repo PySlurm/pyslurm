@@ -15,8 +15,6 @@ Modify the state of a Node or BG Base Partition
    Some states are not valid on a Blue Gene
 """
 
-from __future__ import print_function
-
 import pyslurm
 
 Node_dict = {

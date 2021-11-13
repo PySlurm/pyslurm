@@ -2,7 +2,6 @@
 """
 Retrieve list up Slurm controllers
 """
-from __future__ import print_function
 
 import socket
 

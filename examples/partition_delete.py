@@ -2,7 +2,6 @@
 """
 Delete a given slurm partition
 """
-from __future__ import print_function
 
 import pyslurm
 

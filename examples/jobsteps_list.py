@@ -2,7 +2,6 @@
 """
 List steps jobs have gone through
 """
-from __future__ import print_function
 
 import pyslurm
 

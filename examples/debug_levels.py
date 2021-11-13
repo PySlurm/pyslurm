@@ -2,7 +2,6 @@
 """
 How to set Slurm debug level
 """
-from __future__ import print_function
 
 import pyslurm
 
