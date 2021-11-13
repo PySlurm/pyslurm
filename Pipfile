@@ -12,6 +12,7 @@ pytest = "*"
 pytest-sugar = "*"
 pytest-testinfra = "*"
 isort = "*"
+flake8 = "*"
 
 [pipenv]
 allow_prereleases = true
