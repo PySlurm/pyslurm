@@ -2,7 +2,6 @@
 """
 List Slurm licenses
 """
-from __future__ import print_function
 
 
 def display(lic_dict):

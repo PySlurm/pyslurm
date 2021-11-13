@@ -2,7 +2,6 @@
 """
 List Slurm partitions
 """
-from __future__ import print_function
 
 
 def display(part_dict):

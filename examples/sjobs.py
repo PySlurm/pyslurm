@@ -2,7 +2,6 @@
 """
 List Slurm jobs from certain users
 """
-from __future__ import print_function
 
 import sys
 from pwd import getpwnam, getpwuid

@@ -48,8 +48,6 @@ ctypedef struct trigger_info:
     char *   program
 """
 
-from __future__ import print_function
-
 import pyslurm
 
 trigDict = {

@@ -2,7 +2,6 @@
 """
 List Slurm nodes
 """
-from __future__ import print_function
 
 
 def display(node_dict):

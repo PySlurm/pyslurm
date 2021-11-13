@@ -2,7 +2,6 @@
 """
 List triggers
 """
-from __future__ import print_function
 
 import pyslurm
 

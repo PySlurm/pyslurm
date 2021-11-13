@@ -2,7 +2,6 @@
 """
 Display Slurm node information in XML
 """
-from __future__ import print_function
 
 import os
 import os.path

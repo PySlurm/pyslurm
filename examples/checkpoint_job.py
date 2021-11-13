@@ -2,7 +2,6 @@
 """
 Retrieve a jobs checkpoint status
 """
-from __future__ import print_function
 
 import pyslurm
 

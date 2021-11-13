@@ -2,7 +2,6 @@
 """
 Retrieve list of blocked items
 """
-from __future__ import print_function
 
 import pyslurm
 

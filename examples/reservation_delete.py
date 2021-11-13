@@ -2,7 +2,6 @@
 """
 Delete Slurm reservations
 """
-from __future__ import print_function
 
 import pyslurm
 
