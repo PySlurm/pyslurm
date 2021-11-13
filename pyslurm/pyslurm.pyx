@@ -1,6 +1,6 @@
 # cython: embedsignature=True
 # cython: profile=False
-# cython: language_level=2
+# cython: language_level=3
 import os
 import re
 import sys
@@ -4890,7 +4890,7 @@ cdef class qos:
         cdef:
             slurm.slurmdb_qos_cond_t *new_qos_cond = NULL
             int apiError = 0
-            uint16_t* persist_conn_flags = NULL 
+            uint16_t* persist_conn_flags = NULL
             void* dbconn = slurm.slurmdb_connection_get(persist_conn_flags)
             slurm.List QOSList = slurm.slurmdb_qos_get(dbconn, new_qos_cond)
 
@@ -5046,7 +5046,7 @@ cdef class slurmdb_jobs:
             slurm.List JOBSList
             slurm.ListIterator iters = NULL
 
-       
+
         if clusters:
             self.job_cond.cluster_list = slurm.slurm_list_create(NULL)
             for _cluster in clusters:
@@ -5147,7 +5147,7 @@ cdef class slurmdb_jobs:
                 JOBS_info[u'start'] = job.start
                 JOBS_info[u'state'] = job.state
                 JOBS_info[u'state_str'] = slurm.stringOrNone(slurm.slurm_job_state_string(job.state), '')
-                
+
                 # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
                 # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
                 # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
@@ -5187,7 +5187,7 @@ cdef class slurmdb_jobs:
                         step_info[u'end'] = step.end
                         step_info[u'exitcode'] = step.exitcode
 
-                        # Don't add this unless you want to create an endless recursive structure 
+                        # Don't add this unless you want to create an endless recursive structure
                         # step_info[u'job_ptr'] = JOBS_Info # job's record
 
                         step_info[u'nnodes'] = step.nnodes
