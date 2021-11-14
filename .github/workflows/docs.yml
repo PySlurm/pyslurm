@@ -13,11 +13,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Start Slurm Container
+        uses: sudo-bot/action-docker-compose@latest
+        with:
+          cli-args: "-f docker-compose-github.yml up -d"
+        env:
+          PYTHON: "3.9"
+
       - name: Build PySlurm
         run: |
-          python3 -m pip install Cython
-          python3 setup.py build
-          python3 setup.py install
+          docker exec slurmctl python3.9 -m pip install Cython
+          docker exec slurmctl python3.9 setup.py build
+          docker exec slurmctl python3.9 setup.py install
+
+      - name: Install Sphinx
+        run: |
+          docker exec slurmctl python3.9 -m pip install sphinx
 
       - name: Build Docs and Commit
         uses: sphinx-notes/pages@master
