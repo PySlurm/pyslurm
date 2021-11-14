@@ -28,10 +28,10 @@ jobs:
 
       - name: Install Sphinx
         run: |
-          docker exec slurmctl python3.9 -m pip install sphinx
 
       - name: Build Docs
         run: |
+          docker exec slurmctl python3.9 -m pip install sphinx pydata_sphinx_theme
           docker exec slurmctl make -C docs html
 
 #      - name: Build Docs and Commit
