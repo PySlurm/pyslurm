@@ -15,6 +15,7 @@ jobs:
 
       - name: Build PySlurm
         run: |
+          python3 -m pip install Cython
           python3 setup.py build
           python3 setup.py install
 
