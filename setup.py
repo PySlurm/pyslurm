@@ -312,7 +312,7 @@ class Pyslurm:
         # Build up the set of Extension objects
         extensions = [self.make_extension(name) for name in ext_names]
 
-        with open(os.path.join(self.here, "README.rst")) as f:
+        with open(os.path.join(self.here, "README.md")) as f:
             long_description = f.read()
 
         setup(
