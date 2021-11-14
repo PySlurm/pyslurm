@@ -1,0 +1,25 @@
+name: Docs
+on:
+  push:
+    branches:
+      - main
+      - sphinx
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - name: Build and Commit
+        uses: sphinx-notes/pages@master
+        with:
+          documentation_path: docs
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages

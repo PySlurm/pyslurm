@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 cython = "*"
+sphinx = "*"
+pydata-sphinx-theme = "*"
 
 [dev-packages]
 black = "*"

@@ -68,7 +68,7 @@ the documentation from the reStructuredText based docstrings found in the
 pyslurm module once it is built:
 
 ```shell
-cd doc
+cd docs
 make clean
 make html
 ```

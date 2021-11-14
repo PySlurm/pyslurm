@@ -2,7 +2,7 @@
 build/
 
 # Ignore Docs Directory #
-#doc/
+#docs/
 
 # Ignore Temporary Build Files #
 pyslurm/pyslurm.c
