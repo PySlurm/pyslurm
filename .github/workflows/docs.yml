@@ -30,13 +30,17 @@ jobs:
         run: |
           docker exec slurmctl python3.9 -m pip install sphinx
 
-      - name: Build Docs and Commit
-        uses: sphinx-notes/pages@master
-        with:
-          documentation_path: docs/source
+      - name: Build Docs
+        run: |
+          docker exec slurmctl make -C docs html
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: gh-pages
+#      - name: Build Docs and Commit
+#        uses: sphinx-notes/pages@master
+#        with:
+#          documentation_path: docs/source
+
+#      - name: Push changes
+#        uses: ad-m/github-push-action@master
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          branch: gh-pages
