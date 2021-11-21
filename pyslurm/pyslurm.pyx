@@ -4009,7 +4009,7 @@ cdef class reservation:
                 Res_dict[u'burst_buffer'] = slurm.listOrNone(record.burst_buffer, ',')
                 Res_dict[u'core_cnt'] = record.core_cnt
                 Res_dict[u'end_time'] = record.end_time
-                Res_dict[u'features'] = slurm.listOrNone(record.features, ',')
+                Res_dict[u'features'] = slurm.stringOrNone(record.features, '')
 
                 flags = slurm.slurm_reservation_flags_string(&record)
                 Res_dict[u'flags'] = slurm.stringOrNone(flags, '')
@@ -4106,7 +4106,7 @@ def slurm_create_reservation(dict reservation_dict={}):
         resv_msg.core_cnt[0] = uint32_value
 
     if reservation_dict.get('node_list'):
-        b_node_list = reservation_dict[u'node_list'].encode("UTF-8")
+        b_node_list = reservation_dict[u'node_list'].encode("UTF-8", "replace")
         resv_msg.node_list = b_node_list
         if reservation_dict.get('core_cnt'):
             hl = hostlist()
@@ -4123,6 +4123,10 @@ def slurm_create_reservation(dict reservation_dict={}):
     if reservation_dict.get('users'):
         b_users = reservation_dict[u'users'].encode("UTF-8", "replace")
         resv_msg.users = b_users
+
+    if reservation_dict.get('features'):
+        b_features = reservation_dict[u'features'].encode("UTF-8", "replace")
+        resv_msg.features = b_features
 
     if reservation_dict.get('accounts'):
         b_accounts = reservation_dict[u'accounts'].encode("UTF-8", "replace")
@@ -4201,7 +4205,7 @@ def slurm_update_reservation(dict reservation_dict={}):
         resv_msg.core_cnt[0] = uint32_value
 
     if reservation_dict.get('node_list'):
-        b_node_list = reservation_dict[u'node_list'].encode("UTF-8")
+        b_node_list = reservation_dict[u'node_list']
         resv_msg.node_list = b_node_list
         if reservation_dict.get('core_cnt'):
             hl = hostlist()
@@ -4218,6 +4222,10 @@ def slurm_update_reservation(dict reservation_dict={}):
     if reservation_dict.get('users'):
         b_users = reservation_dict[u'users'].encode("UTF-8", "replace")
         resv_msg.users = b_users
+
+    if reservation_dict.get('features'):
+        b_features = reservation_dict[u'features'].encode("UTF-8", "replace")
+        resv_msg.features = b_features
 
     if reservation_dict.get('accounts'):
         b_accounts = reservation_dict[u'accounts'].encode("UTF-8", "replace")
@@ -4281,6 +4289,7 @@ def create_reservation_dict():
         u'node_cnt': 0,
         u'name': None,
         u'node_list': None,
+        u'features': None,
         u'flags': None,
         u'partition': None,
         u'licenses': None,
