@@ -1,3 +1,7 @@
+"""
+The Pyslurm Setup - build options
+"""
+
 import os
 import logging
 import sys
@@ -7,6 +11,7 @@ from distutils.dir_util import remove_tree
 from distutils.core import Extension
 from distutils.version import LooseVersion
 
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 
@@ -15,15 +20,18 @@ SLURM_VERSION = "20.11"
 
 
 def fatal(log_string, code=1):
+    """Fatal logger"""
     logger.error(log_string)
     sys.exit(code)
 
 
 def warn(log_string):
+    """Warn logger"""
     logger.error(log_string)
 
 
 def info(log_string):
+    """Info logger"""
     logger.info(log_string)
 
 
@@ -32,11 +40,11 @@ try:
     from Cython.Compiler.Version import version as cython_version
 
     if LooseVersion(cython_version) < LooseVersion(CYTHON_VERSION_MIN):
-        info("Cython version %s installed" % cython_version)
-        fatal("Please use Cython version >= %s" % CYTHON_VERSION_MIN)
+        info(f"Cython version %s installed {cython_version}")
+        fatal(f"Please use Cython version >= {CYTHON_VERSION_MIN}")
 except ImportError:
     fatal("Cython (https://cython.org) is required to build PySlurm")
-    fatal("Please use Cython version >= %s" % CYTHON_VERSION_MIN)
+    fatal(f"Please use Cython version >= {CYTHON_VERSION_MIN}")
 
 
 if sys.version_info[:2] < (3, 6):
@@ -44,6 +52,8 @@ if sys.version_info[:2] < (3, 6):
 
 
 class Pyslurm:
+    """Main setup class"""
+
     def __init__(self):
         self.here = os.path.abspath(os.path.dirname(__file__))
         self.about = {}
@@ -53,11 +63,13 @@ class Pyslurm:
         self.slurm_dir = None
         self.bgq = 0
 
-        with open(os.path.join(self.here, "pyslurm", "__version__.py"), "r") as f:
+        file_path = os.path.join(self.here, "pyslurm", "__version__.py")
+        with open(file_path, "r", encoding="latin-1") as f:
             exec(f.read(), self.about)
 
     @staticmethod
     def usage():
+        """Display usage flags"""
         print(
             textwrap.dedent(
                 """
@@ -80,17 +92,17 @@ class Pyslurm:
         )
 
     @staticmethod
-    def scandir(dir, files=None):
+    def scandir(filedir, files=None):
         """
-        Scan the directory for extension files, converting them to extension names
-        in dotted notation.
+        Scan the directory for extension files, converting
+        them to extension names in dotted notation
         """
         if files is None:
             files = []
 
-        for file in os.listdir(dir):
+        for file in os.listdir(filedir):
 
-            path = os.path.join(dir, file)
+            path = os.path.join(filedir, file)
 
             if os.path.isfile(path) and path.endswith(".pyx"):
                 files.append(path.replace(os.path.sep, ".")[:-4])
@@ -102,7 +114,7 @@ class Pyslurm:
     def make_extension(self, extension_name):
         """Generate an Extension object from its dotted name"""
         extension_path = extension_name.replace(".", os.path.sep) + ".pyx"
-        runtime_library_dirs = [self.slurm_lib, "{0}/slurm".format(self.slurm_lib)]
+        runtime_library_dirs = [self.slurm_lib, f"{self.slurm_lib}/slurm"]
         return Extension(
             extension_name,
             [extension_path],
@@ -117,64 +129,73 @@ class Pyslurm:
 
     @staticmethod
     def inc_vers2str(hex_inc_version):
-        """Return a slurm version number string decoded from the bit shifted
-        components of the slurm version hex string supplied in slurm.h."""
+        """
+        Return a slurm version number string decoded from
+        the bit shifted components of the slurm version hex
+        string supplied in slurm.h
+        """
         a = int(hex_inc_version, 16)
         b = (a >> 16 & 0xFF, a >> 8 & 0xFF, a & 0xFF)
-        return "{0:02d}.{1:02d}.{2:02d}".format(*b)
+        return f"{b[0]:02d}.{b[1]:02d}.{b[2]:02d}"
 
     def read_inc_version(self, fname):
-        """Read the supplied include file and extract slurm version number
-        in the line #define SLURM_VERSION_NUMBER 0x020600"""
-        hex = ""
-
-        with open(fname, "r") as f:
+        """
+        Read the supplied include file and extract the
+        slurm version number in the define line e.g
+        #define SLURM_VERSION_NUMBER 0x020600
+        """
+        hex_version = ""
+        with open(fname, "r", encoding="latin-1") as f:
             for line in f:
                 if line.find("#define SLURM_VERSION_NUMBER") == 0:
-                    hex = line.split(" ")[2].strip()
+                    hex_version = line.split(" ")[2].strip()
                     info(
-                        "Build - Detected Slurm version - %s (%s)"
-                        % (hex, self.inc_vers2str(hex))
+                        "Build - Detected Slurm version - "
+                        f"{hex_version} {self.inc_vers2str(hex_version)}"
                     )
-        return hex
+
+        if not hex_version:
+            fatal("Build - Unable to detect Slurm version")
+
+        return hex_version
 
     def check_lib_path(self, slurm_path):
+        """Check the Slurm library path"""
         if not slurm_path:
             slurm_path = self.default_slurm_dir
 
         slurm_path = os.path.normpath(slurm_path)
-
         # if base dir given then search lib64 and then lib
         for lib_path in ["lib64", "lib"]:
             slurm_lib_path = os.path.join(slurm_path, lib_path)
 
-            if os.path.exists("{0}/libslurm.so".format(slurm_lib_path)):
-                info("Build - Found Slurm shared library in %s" % slurm_lib_path)
+            if os.path.exists(f"{slurm_lib_path}/libslurm.so"):
+                info(f"Build - Found Slurm shared library in {slurm_lib_path}")
                 return slurm_lib_path
 
         # if base dir given then check this
-        if os.path.exists("{0}/libslurm.so".format(slurm_path)):
-            info("Build - Found Slurm shared library in %s" % slurm_path)
+        if os.path.exists(f"{slurm_path}/libslurm.so"):
+            info(f"Build - Found Slurm shared library in {slurm_path}")
             return slurm_path
         else:
-            info("Build - Cannot locate Slurm shared library in %s" % slurm_path)
+            fatal(f"Build - Cannot locate Slurm shared library in {slurm_path}")
             return None
 
     def create_bluegene_include(self):
-        """Create pyslurm/bluegene.pxi include file."""
+        """
+        Create pyslurm/bluegene.pxi include file.
+        """
         info("Build - Generating pyslurm/bluegene.pxi file")
         try:
-            with open("pyslurm/bluegene.pxi", "w") as f:
+            with open("pyslurm/bluegene.pxi", "w", encoding="latin-1") as f:
                 f.write("DEF BG=1\n")
-                f.write("DEF BGQ={0}\n".format(self.bgq))
-        except:
+                f.write(f"DEF BGQ={self.bgq}\n")
+        except IOError:
             fatal("Build - Unable to write Blue Gene type to pyslurm/bluegene.pxi")
 
     @staticmethod
     def clean():
-        """
-        Cleanup build directory and temporary files.
-        """
+        """Cleanup build directory and temporary files"""
         info("Clean - checking for objects to clean")
 
         if os.path.isdir("build"):
@@ -192,21 +213,22 @@ class Pyslurm:
             if os.path.exists(file):
                 if os.path.isfile(file):
                     try:
-                        info("Clean - removing %s" % file)
+                        info(f"Clean - removing {file}")
                         os.unlink(file)
-                    except:
-                        fatal("Clean - failed to remove %s" % file)
+                    except OSError:
+                        fatal(f"Clean - failed to remove {file}")
                 else:
-                    fatal("Clean - %s is not a file !" % file)
+                    fatal(f"Clean - {file} is not a file !")
 
         info("Clean - completed")
 
     def build(self):
+        """Build the PySlurm package"""
         info("")
-        info("Building PySlurm (%s)" % self.about["__version__"])
+        info(f'Building PySlurm ({self.about["__version__"]})')
         info("------------------------------")
         info("")
-        info("Cython version %s installed" % cython_version)
+        info(f"Cython version {cython_version} installed")
         info("")
 
         # Clean up temporary build objects first
@@ -229,36 +251,33 @@ class Pyslurm:
             self.usage()
         elif self.slurm_dir and not (self.slurm_lib or self.slurm_inc):
             self.slurm_lib = self.slurm_dir
-            self.slurm_inc = "{0}/include".format(self.slurm_dir)
+            self.slurm_inc = f"{self.slurm_dir}/include"
         elif not self.slurm_dir and not self.slurm_lib and not self.slurm_inc:
             self.slurm_lib = self.default_slurm_dir
-            self.slurm_inc = "{0}/include".format(self.default_slurm_dir)
+            self.slurm_inc = f"{self.default_slurm_dir}/include"
         elif not self.slurm_dir and (not self.slurm_lib or not self.slurm_inc):
             self.usage()
 
         # Test for slurm.h maybe from derived paths
-        if os.path.exists("{0}/slurm/slurm.h".format(self.slurm_inc)):
-            info("Build - Found Slurm header in %s" % self.slurm_inc)
-        elif os.path.exists("{0}/slurm.h".format(self.slurm_inc)):
-            info("Build - Found Slurm header in %s" % self.slurm_inc)
+        if os.path.exists(f"{self.slurm_inc}/slurm/slurm.h"):
+            info(f"Build - Found Slurm header in {self.slurm_inc}/slurm")
+        elif os.path.exists(f"{self.slurm_inc}/slurm.h"):
+            info(f"Build - Found Slurm header in {self.slurm_inc}")
         else:
-            fatal("Build - Cannot locate the Slurm include in %s" % self.slurm_inc)
+            fatal(f"Build - Cannot locate the Slurm include in {self.slurm_inc}")
 
         # Test for Slurm MAJOR.MINOR version match (ignoring .MICRO)
         try:
-            slurm_inc_ver = self.read_inc_version(
-                "{0}/slurm/slurm.h".format(self.slurm_inc)
-            )
+            slurm_inc_ver = self.read_inc_version(f"{self.slurm_inc}/slurm/slurm.h")
         except IOError:
-            slurm_inc_ver = self.read_inc_version("{0}/slurm.h".format(self.slurm_inc))
+            slurm_inc_ver = self.read_inc_version(f"{self.slurm_inc}/slurm.h")
 
         major = (int(slurm_inc_ver, 16) >> 16) & 0xFF
         minor = (int(slurm_inc_ver, 16) >> 8) & 0xFF
 
         if LooseVersion(str(major) + "." + str(minor)) != LooseVersion(SLURM_VERSION):
             fatal(
-                "Build - Incorrect slurm version detected, requires Slurm %s"
-                % SLURM_VERSION
+                f"Build - Incorrect slurm version detected, requires Slurm {SLURM_VERSION}"
             )
 
         # Test for libslurm in lib64 and then lib
@@ -270,6 +289,7 @@ class Pyslurm:
         self.create_bluegene_include()
 
     def parse_setuppy_commands(self):
+        """Parse the given setup commands"""
         args = sys.argv[1:]
 
         if len(args) == 0:
@@ -304,6 +324,7 @@ class Pyslurm:
                 self.build()
 
     def setup_package(self):
+        """Define the PySlurm package"""
         self.parse_setuppy_commands()
 
         # Get the list of extensions
@@ -312,7 +333,11 @@ class Pyslurm:
         # Build up the set of Extension objects
         extensions = [self.make_extension(name) for name in ext_names]
 
-        with open(os.path.join(self.here, "README.md")) as f:
+        with open(
+            os.path.join(self.here, "README.md"),
+            "r",
+            encoding="latin-1",
+        ) as f:
             long_description = f.read()
 
         setup(
