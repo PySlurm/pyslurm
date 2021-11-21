@@ -14,7 +14,7 @@ def human_readable(num, suffix="B"):
         return "0.0 GB"
     for unit in ["", "K", "M", "G", "T", "P"]:
         if abs(num) < 1024.0:
-            return "%.1f %s%s" % (num, unit, suffix)
+            return f"{num:.1f} {unit}{suffix}"
         num /= 1024.0
 
 
@@ -77,72 +77,55 @@ def display_metrics(metrics):
     IN: (dict) dictionary of all node, cpu and memory states
     """
     print()
-    print("Total Allocated Nodes      : {0:>8}".format(metrics["total_nodes_alloc"]))
-    print("Total Mixed Nodes          : {0:>8}".format(metrics["total_nodes_mixed"]))
-    print("Total Idle Nodes           : {0:>8}".format(metrics["total_nodes_idle"]))
-    print("Total Down Nodes           : {0:>8}".format(metrics["total_nodes_down"]))
+    print(f"Total Allocated Nodes      : {metrics['total_nodes_alloc']:>8}")
+    print(f"Total Mixed Nodes          : {metrics['total_nodes_mixed']:>8}")
+    print(f"Total Idle Nodes           : {metrics['total_nodes_idle']:>8}")
+    print(f"Total Down Nodes           : {metrics['total_nodes_down']:>8}")
     print(
-        "Total Eligible Nodes       : {0:>8}".format(
-            metrics["total_nodes_config"] - metrics["total_nodes_down"]
-        )
+        "Total Eligible Nodes       : "
+        f"{metrics['total_nodes_config'] - metrics['total_nodes_down']:>8}"
     )
-    print("Total Configured Nodes     : {0:>8}".format(metrics["total_nodes_config"]))
+    print(f"Total Configured Nodes     : {metrics['total_nodes_config']:>8}")
     print("")
 
-    print("Total Allocated CPUs       : {0:>8}".format(metrics["total_cpus_alloc"]))
-    print("Total Idle CPUs            : {0:>8}".format(metrics["total_cpus_idle"]))
-    print("Total Down CPUs            : {0:>8}".format(metrics["total_cpus_down"]))
+    print(f"Total Allocated CPUs       : {metrics['total_cpus_alloc']:>8}")
+    print(f"Total Idle CPUs            : {metrics['total_cpus_idle']:>8}")
+    print(f"Total Down CPUs            : {metrics['total_cpus_down']:>8}")
     print(
-        "Total Eligible CPUs        : {0:>8}".format(
-            metrics["total_cpus_config"] - metrics["total_cpus_down"]
-        )
+        "Total Eligible CPUs        : "
+        f"{metrics['total_cpus_config'] - metrics['total_cpus_down']:>8}"
     )
-    print("Total Configured CPUs      : {0:>8}".format(metrics["total_cpus_config"]))
-    print(
-        "Cluster CPU Utilization    : {0:>7}%".format(
-            metrics["total_cpus_alloc"]
-            * 100
-            / (metrics["total_cpus_config"] - metrics["total_cpus_down"])
-        )
+    print(f"Total Configured CPUs      : {metrics['total_cpus_config']:>8}")
+    cluster_cpu_util = (
+        metrics["total_cpus_alloc"]
+        * 100
+        / (metrics["total_cpus_config"] - metrics["total_cpus_down"])
     )
+    print(f"Cluster CPU Utilization    : {cluster_cpu_util:>7}")
     print()
 
     print(
-        "Total Allocated Memory     : {0:>8}".format(
-            human_readable(metrics["total_memory_alloc"] * 1024 * 1024)
-        )
+        "Total Allocated Memory     : "
+        f"{human_readable(metrics['total_memory_alloc'] * 1024 * 1024):>8}"
     )
+    total_memory_idle = human_readable(metrics["total_memory_idle"] * 1024 * 1024)
+    print(f"Total Idle Memory          : {total_memory_idle:>8}")
+    total_memory_down = human_readable(metrics["total_memory_down"] * 1024 * 1024)
+    print(f"Total Down Memory          : {total_memory_down:>8}")
+    total_eligible_memory = human_readable(
+        (metrics["total_memory_config"] - metrics["total_memory_down"]) * 1024 * 1024
+    )
+    print(f"Total Eligible Memory      : {total_eligible_memory:>8}")
     print(
-        "Total Idle Memory          : {0:>8}".format(
-            human_readable(metrics["total_memory_idle"] * 1024 * 1024)
-        )
+        "Total Configured Memory    : "
+        f"{human_readable(metrics['total_memory_config'] * 1024 * 1024):>8}"
     )
-    print(
-        "Total Down Memory          : {0:>8}".format(
-            human_readable(metrics["total_memory_down"] * 1024 * 1024)
-        )
+    memory_util = (
+        metrics["total_memory_alloc"]
+        * 100
+        / (metrics["total_memory_config"] - metrics["total_memory_down"])
     )
-    print(
-        "Total Eligible Memory      : {0:>8}".format(
-            human_readable(
-                (metrics["total_memory_config"] - metrics["total_memory_down"])
-                * 1024
-                * 1024
-            )
-        )
-    )
-    print(
-        "Total Configured Memory    : {0:>8}".format(
-            human_readable(metrics["total_memory_config"] * 1024 * 1024)
-        )
-    )
-    print(
-        "Cluster Memory Utilization : {0:>7}%".format(
-            metrics["total_memory_alloc"]
-            * 100
-            / (metrics["total_memory_config"] - metrics["total_memory_down"])
-        )
-    )
+    print(f"Cluster Memory Utilization : {memory_util:>7}")
     print()
 
 
@@ -151,10 +134,10 @@ if __name__ == "__main__":
         # Make sure pyslurm works or else exit here
         pyslurmnode = pyslurm.node()
         # Get all node info
-        nodes = pyslurmnode.get()
+        new_nodes = pyslurmnode.get()
     except ValueError as value_error:
-        print("Query failed - {0}".format(value_error))
+        print(f"Query failed - {value_error}")
         sys.exit(1)
 
-    metrics = get_util(nodes)
-    display_metrics(metrics)
+    new_metrics = get_util(new_nodes)
+    display_metrics(new_metrics)

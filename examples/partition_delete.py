@@ -5,11 +5,11 @@ Delete a given slurm partition
 
 import pyslurm
 
-partition = "part_test"
+PARTITION = "part_test"
 
 try:
-    pyslurm.slurm_delete_partition(partition)
+    pyslurm.slurm_delete_partition(PARTITION)
 except ValueError as e:
-    print("Partition ({0}) delete failed - {1}".format(partition, e.args[0]))
+    print(f"Partition ({PARTITION}) delete failed - {e.args[0]}")
 else:
-    print("Partition ({0}) deleted".format(partition))
+    print(f"Partition ({PARTITION}) deleted")

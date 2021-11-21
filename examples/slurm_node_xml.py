@@ -18,40 +18,36 @@ re_meminfo_parser = re.compile(r"^(?P<key>\S*):\s*(?P<value>\d*)\s*kB")
 stdout_orig = sys.stdout
 
 
-def loadavg(host, rrd=""):
+def loadavg(load_host, rrd=""):
     """Get Slurm load average"""
-    loadavg = "/proc/loadavg"
-    load_rrd = "{0}/{1}_loadavg.rrd".format(rrd, host)
+    load_proc = "/proc/loadavg"
+    load_rrd = f"{rrd}/{load_host}_loadavg.rrd"
 
     try:
-        f = open(loadavg, "r").readline().strip()
+        load_data = open(load_proc, "r", encoding="latin-1").readline().strip()
     except IOError:
         return (-1, -1, -1, -1, -1)
 
-    data = f.split()
+    load_data = load_data.split()
 
-    avg1min, avg5min, avg15min = map(float, data[:3])
-    running, total = map(int, data[3].split("/"))
+    avg1min, avg5min, avg15min = map(float, load_data[:3])
+    running, total = map(int, load_data[3].split("/"))
 
     if rrd != "":
         if not os.path.exists(load_rrd):
             os.system(
-                "/usr/bin/rrdtool create {0} --step 60 \
+                f"/usr/bin/rrdtool create {load_rrd} --step 60 \
                     DS:loadl1:GAUGE:120:0:U \
                     DS:loadl5:GAUGE:120:0:U \
                     DS:loadl15:GAUGE:120:0:U \
                     RRA:AVERAGE:0.5:1:2160 \
                     RRA:AVERAGE:0.5:5:2016 \
                     RRA:AVERAGE:0.5:15:2880 \
-                    RRA:AVERAGE:0.5:60:8760".format(
-                    load_rrd
-                )
+                    RRA:AVERAGE:0.5:60:8760"
             )
 
         os.system(
-            "/usr/bin/rrdtool update {0} N:{1}:{2}:{3}".format(
-                load_rrd, avg1min, avg5min, avg15min
-            )
+            f"/usr/bin/rrdtool update {load_rrd} N:{avg1min}:{avg5min}:{avg15min}"
         )
 
     return avg1min, avg5min, avg15min, running, total
@@ -59,41 +55,42 @@ def loadavg(host, rrd=""):
 
 def uptime():
     """Get Slurm uptime"""
-    uptime = "/proc/uptime"
+    uptime_proc = "/proc/uptime"
 
     try:
-        f = open(uptime, "r").readline().strip()
+        uptime_val = open(uptime_proc, "r", encoding="latin-1").readline().strip()
     except IOError:
         return (-1, -1)
 
-    data = f.split()
+    uptime_val = uptime_val.split()
 
-    return data
+    return uptime_val
 
 
 def meminfo():
     """Get Slurm memory information"""
     result = {}
-    meminfo = "/proc/meminfo"
+    meminfo_proc = "/proc/meminfo"
+
     try:
-        f = open(meminfo, "r").readlines()
+        meminfo_val = open(meminfo_proc, "r", encoding="latin-1").readlines()
     except IOError:
         return result
 
-    for line in f:
-        match = re_meminfo_parser.match(line)
+    for values in meminfo_val:
+        match = re_meminfo_parser.match(values)
         if not match:
             continue
-        key, value = match.groups(["key", "value"])
-        result[key] = int(value)
+        mem_key, mem_value = match.groups(["key", "value"])
+        result[mem_key] = int(mem_value)
 
     return result
 
 
 if __name__ == "__main__":
 
-    usage = "Usage: %prog [options] arg"
-    parser = OptionParser(usage)
+    USAGE = "Usage: %prog [options] arg"
+    parser = OptionParser(USAGE)
 
     parser.add_option(
         "-o",
@@ -125,48 +122,46 @@ if __name__ == "__main__":
     hosts = socket.gethostbyaddr(socket.gethostname())[1]
     my_host = hosts[0]
 
-    lock_file = "/var/tmp/slurm_node_xml.lck"
-    if os.path.exists(lock_file):
-        print("Previous lock file ({0}) exists !".format(lock_file))
+    LOCK_FILE = "/var/tmp/slurm_node_xml.lck"
+    if os.path.exists(LOCK_FILE):
+        print(f"Previous lock file ({LOCK_FILE}) exists !")
         sys.exit()
     else:
-        open(lock_file, "w").close()
+        open(LOCK_FILE, "w", encoding="latin-1").close()
 
-    rrd = ""
+    RRD = ""
     if options.rrd:
-        rrd = options.directory
+        RRD = options.directory
 
-    node_file = r"{0}/{1}.xml".format(options.directory, my_host)
+    node_file = f"{options.directory}/{my_host}.xml"
     if not options.output:
         stdout_orig = sys.stdout
-        sys.stdout = open(node_file, "w")
+        sys.stdout = open(node_file, "w", encoding="iso-8859-1")
 
     now = int(time.time())
     sys.stdout.write('<?xml version="1.0" encoding="iso-8859-1" ?>\n')
     sys.stdout.write("<node>\n")
-    sys.stdout.write("\t<name>{0}</name>\n".format(my_host))
-    sys.stdout.write("\t<lastUpdate>{0}</lastUpdate>\n".format(now))
+    sys.stdout.write(f"\t<name>{my_host}</name>\n")
+    sys.stdout.write("\t<lastUpdate>{now}</lastUpdate>\n")
 
-    Average = loadavg(my_host, rrd)
-    sys.stdout.write(
-        "\t<loadAvg>{0},{1},{2}</loadAvg>\n".format(Average[0], Average[1], Average[2])
-    )
+    Average = loadavg(my_host, RRD)
+    sys.stdout.write(f"\t<loadAvg>{Average[0]},{Average[1]},{Average[2]}</loadAvg>\n")
 
     Uptime = uptime()
-    sys.stdout.write("\t<upTime>{0},{1}</upTime>\n".format(Uptime[0], Uptime[1]))
+    sys.stdout.write(f"\t<upTime>{Uptime[0]},{Uptime[1]}</upTime>\n")
 
     Memory = meminfo()
-    sys.stdout.write("\t<memTotal>{0}</memTotal>\n".format(Memory["MemTotal"]))
-    sys.stdout.write("\t<memFree>{0}</memFree>\n".format(Memory["MemFree"]))
-    sys.stdout.write("\t<cached>{0}</cached>\n".format(Memory["Cached"]))
-    sys.stdout.write("\t<buffers>{0}</buffers>\n".format(Memory["Buffers"]))
+    sys.stdout.write(f"\t<memTotal>{Memory['MemTotal']}</memTotal>\n")
+    sys.stdout.write(f"\t<memFree>{Memory['MemFree']}</memFree>\n")
+    sys.stdout.write(f"\t<cached>{Memory['Cached']}</cached>\n")
+    sys.stdout.write(f"\t<buffers>{Memory['Buffers']}</buffers>\n")
 
     a = pyslurm.slurm_load_slurmd_status()
     if a:
         for host, data in a.items():
             sys.stdout.write("\t<slurmd>\n")
             for key, value in data.items():
-                sys.stdout.write("\t\t<{0}>{1}</{0}>\n".format(key, value, key))
+                sys.stdout.write(f"\t\t<{key}>{value}</{key}>\n")
                 sys.stdout.write("\t</slurmd>\n")
 
     a = pyslurm.job()
@@ -185,14 +180,12 @@ if __name__ == "__main__":
                 PiDs[jobid] = []
 
             a = os.popen(
-                "/bin/ps --noheaders -u {0} -o pid,ppid,size,rss,vsize,pcpu,args".format(
-                    userid
-                ),
+                f"/bin/ps --noheaders -u {userid} -o pid,ppid,size,rss,vsize,pcpu,args",
                 "r",
             )
             for lines in a:
                 line = lines.split()
-                command = " ".join(line[6:])
+                COMMAND = " ".join(line[6:])
                 newline = [
                     line[0],
                     line[1],
@@ -200,7 +193,7 @@ if __name__ == "__main__":
                     line[3],
                     line[4],
                     line[5],
-                    command,
+                    COMMAND,
                 ]
                 pid = int(line[0])
                 rc, slurm_jobid = pyslurm.slurm_pid2jobid(pid)
@@ -213,18 +206,16 @@ if __name__ == "__main__":
         sys.stdout.write("\t<jobs>\n")
         for job, value in PiDs.items():
             sys.stdout.write("\t\t<job>\n")
-            sys.stdout.write("\t\t\t<id>{0}</id>\n".format(job))
+            sys.stdout.write(f"\t\t\t<id>{job}</id>\n")
             for pid in value:
                 sys.stdout.write("\t\t\t<process>\n")
-                sys.stdout.write("\t\t\t\t<pid>{0}</pid>\n".format(pid[0]))
-                sys.stdout.write("\t\t\t\t<ppid>{0}</ppid>\n".format(pid[1]))
-                sys.stdout.write("\t\t\t\t<size>{0}</size>\n".format(pid[2]))
-                sys.stdout.write("\t\t\t\t<rss>{0}</rss>\n".format(pid[3]))
-                sys.stdout.write("\t\t\t\t<vsize>{0}</vsize>\n".format(pid[4]))
-                sys.stdout.write("\t\t\t\t<pcpu>{0}</pcpu>\n".format(pid[5]))
-                sys.stdout.write(
-                    "\t\t\t\t<args><![CDATA[{0}]]></args>\n".format(pid[6])
-                )
+                sys.stdout.write(f"\t\t\t\t<pid>{pid[0]}</pid>\n")
+                sys.stdout.write(f"\t\t\t\t<ppid>{pid[1]}</ppid>\n")
+                sys.stdout.write(f"\t\t\t\t<size>{pid[2]}</size>\n")
+                sys.stdout.write(f"\t\t\t\t<rss>{pid[3]}</rss>\n")
+                sys.stdout.write(f"\t\t\t\t<vsize>{pid[4]}</vsize>\n")
+                sys.stdout.write(f"\t\t\t\t<pcpu>{pid[5]}</pcpu>\n")
+                sys.stdout.write(f"\t\t\t\t<args><![CDATA[{pid[6]}]]></args>\n")
                 sys.stdout.write("\t\t\t</process>\n")
             sys.stdout.write("\t\t</job>\n")
 
@@ -238,4 +229,4 @@ if __name__ == "__main__":
         sys.stdout = stdout_orig
         os.chmod(node_file, 0o644)
 
-    os.remove(lock_file)
+    os.remove(LOCK_FILE)

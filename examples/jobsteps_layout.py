@@ -12,27 +12,27 @@ def display(steps):
 
     for job, job_step in sorted(steps.items()):
 
-        print("Job: {0}".format(job))
+        print(f"Job: {job}")
         for step, step_dict in job_step.items():
 
-            print("\tStep: {0}".format(step))
+            print(f"\tStep: {step}")
             for task, value in sorted(step_dict.items()):
 
                 if task in date_fields:
 
                     if value == 0:
-                        print("\t\t{0:<20} : N/A".format(task))
+                        print(f"\t\t{task:<20} : N/A")
                     else:
                         ddate = pyslurm.epoch2date(value)
-                        print("\t\t{0:<20} : {1}".format(task, ddate))
+                        print(f"\t\t{task:<20} : {ddate}")
                 else:
-                    print("\t\t{0:<20} : {1}".format(task, value))
+                    print(f"\t\t{task:<20} : {value}")
 
 
 if __name__ == "__main__":
 
     a = pyslurm.jobstep()
-    steps = a.get()
+    job_steps = a.get()
 
-    if steps:
-        display(steps)
+    if job_steps:
+        display(job_steps)

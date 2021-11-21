@@ -10,20 +10,20 @@ a = steps.get()
 
 if a:
     for job, job_step in sorted(a.items()):
-        print("Job: {0}".format(job))
+        print(f"Job: {job}")
         for step, step_data in sorted(job_step.items()):
-            print("\tStep: {0}".format(step))
+            print(f"\tStep: {step}")
             for step_item, item_data in sorted(step_data.items()):
                 if "start_time" in step_item:
                     ddate = pyslurm.epoch2date(item_data)
-                    print("\t\t{0:<15} : {1}".format(step_item, ddate))
+                    print(f"\t\t{step_item:<15} : {ddate}")
                 else:
-                    print("\t\t{0:<15} : {1}".format(step_item, item_data))
+                    print(f"\t\t{step_item:<15} : {item_data}")
             layout = steps.layout(job, step)
             print("\t\tLayout:")
             for name, value in sorted(layout.items()):
-                print("\t\t\t{0:<15} : {1}".format(name, value))
+                print(f"\t\t\t{name:<15} : {value}")
 
-    print("{0:*^80}".format(""))
+    print(f"{'':*^80}")
 else:
     print("No jobsteps found !")

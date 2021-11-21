@@ -7,18 +7,17 @@ List Slurm licenses
 def display(lic_dict):
     """Format output"""
     if lic_dict:
-        print(
-            "State last updated : {0}".format(slurm.epoch2date(licenses.lastUpdate()))
-        )
-        print("{0:*^80}".format(""))
+        license_date = slurm.epoch2date(licenses.lastUpdate())
+        print(f"State last updated : {license_date}")
+        print(f"{'':*^80}")
 
         for key, value in lic_dict.items():
 
-            print("{0} :".format(key))
+            print(f"{key} :")
             for part_key in sorted(value.keys()):
-                print("\t{0:<17} : {1}".format(part_key, value[part_key]))
+                print(f"\t{part_key:<17} : {value[part_key]}")
 
-            print("{0:*^80}".format(""))
+            print(f"{'':*^80}")
     else:
         print("No Licenses found !")
 
@@ -43,11 +42,11 @@ if __name__ == "__main__":
             new = licenses.lastUpdate()
             if new > old:
                 old = new
-                print("{0:*^80}".format(""))
+                print(f"{'':*^80}")
                 display(lic)
-                print("{0:*^80}".format(""))
+                print(f"{'':*^80}")
     except ValueError as value_error:
-        print("License error : {0}".format(value_error.args[0]))
+        print(f"License error : {value_error.args[0]}")
         sys.exit(-1)
     except KeyboardInterrupt:
         print("Exiting....")

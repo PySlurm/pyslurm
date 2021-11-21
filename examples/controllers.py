@@ -4,16 +4,15 @@ Retrieve list up Slurm controllers
 """
 
 import socket
-
 import pyslurm
 
 
-def controller_up(controller=1):
+def controller_up(controller=0):
     """Check if controller up via ping"""
     try:
         pyslurm.slurm_ping(controller)
-    except ValueError as value_error:
-        print("Failed - {0}".format(value_error.args[0]))
+    except ValueError as ping_error:
+        print(f"Failed - {ping_error.args[0]}")
     else:
         print("Success")
 
@@ -21,30 +20,31 @@ def controller_up(controller=1):
 if __name__ == "__main__":
 
     print()
-    print("PySLURM\t\t{0}".format(pyslurm.version()))
-    print("SLURM API\t{0}-{1}-{2}\n".format(*pyslurm.slurm_api_version()))
+    print(f"PySLURM\t\t{pyslurm.version()}")
+    major, minor, micro = pyslurm.slurm_api_version()
+    print(f"SLURM API\t{major}-{minor}-{micro}\n")
 
     host = socket.gethostname()
-    print("Checking host.....{0}".format(host))
+    print(f"Checking host.....{host}")
 
     try:
         a = pyslurm.is_controller(host)
-        print("\tHost is controller ({0})\n".format(a))
+        print(f"\tHost is controller ({a})\n")
 
         print("Querying SLURM controllers")
-        primary, backup = pyslurm.get_controllers()
+        control_machs = pyslurm.get_controllers()
 
-        print("\tPrimary - {0}".format(primary))
-        print("\tBackup  - {0}".format(backup))
+        X = 0
+        for machine in control_machs:
+            if X == 0:
+                print(f"\tPrimary - {machine}")
+                print("\t\tPing .....", end=" ")
+                controller_up()
+            else:
+                print(f"\tBackup{X}  - {machine}")
+                print("\t\tPing .....", end=" ")
+                controller_up(X)
+            X = X + 1
 
-        print("\nPinging SLURM controllers")
-
-        if primary:
-            print("\tPrimary .....", end=" ")
-            controller_up()
-
-        if backup:
-            print("\tBackup .....", end=" ")
-            controller_up(2)
     except ValueError as value_error:
-        print("Error - {0}".format(value_error.args[0]))
+        print(f"Error - {value_error.args[0]}")

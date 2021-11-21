@@ -11,11 +11,13 @@ import pyslurm
 
 def event_display(event):
     """Format output"""
-    for key, value in event.items():
-        if (key == "time_start") or (key == "time_end"):
-            print("\t{}={}  <->  {}".format(key, value, datetime.fromtimestamp(value)))
+    for event_key, event_value in event.items():
+        if (event_key == "time_start") or (event_key == "time_end"):
+            print(
+                f"\t{event_key}={event_value}  <->  {datetime.fromtimestamp(event_value)}"
+            )
         else:
-            print("\t{}={}".format(key, value))
+            print(f"\t{event_key}={event_value}")
 
 
 if __name__ == "__main__":
@@ -27,20 +29,20 @@ if __name__ == "__main__":
 
         start = time.mktime(time.strptime(sys.argv[1], "%Y-%m-%d"))
         end = time.mktime(time.strptime(sys.argv[2], "%Y-%m-%d"))
-        print("start={}, end={}".format(start, end))
+        print(f"start={start}, end={end}")
 
         events = pyslurm.slurmdb_events()
         events.set_event_condition(start, end)
         events_dict = events.get()
-        ii = 0
+        II = 0
         if events_dict:
             for key, value in events_dict.items():
                 d = int(value["time_end"]) - int(value["time_start"])
-                ii += 1
+                II += 1
                 print("{")
                 event_display(value)
                 print("}")
         else:
             print("No event found")
     except ValueError as value_error:
-        print("Error:{}".format(value_error.args[0]))
+        print(f"Error:{value_error.args[0]}")

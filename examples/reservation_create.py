@@ -21,9 +21,9 @@ res_dict["name"] = "res_test"
 try:
     resid = a.create(res_dict)
 except ValueError as value_error:
-    print("Reservation creation failed - {0}".format(value_error.args[0]))
+    print(f"Reservation creation failed - {value_error.args[0]}")
 else:
-    print("Success - Created reservation {0}\n".format(resid))
+    print(f"Success - Created reservation {format(resid)}\n")
 
     res_dict = a.get()
     if res_dict.get(resid):
@@ -31,26 +31,26 @@ else:
         date_fields = ["end_time", "start_time"]
 
         value = res_dict[resid]
-        print("Res ID : {0}".format(resid))
+        print(f"Res ID : {resid}")
         for res_key in sorted(value.keys()):
 
             if res_key in date_fields:
 
                 if value[res_key] == 0:
-                    print("\t{0:<20} : N/A".format(res_key))
+                    print(f"\t{res_key:<20} : N/A")
                 else:
                     ddate = pyslurm.epoch2date(value[res_key])
-                    print("\t{0:<20} : {1}".format(res_key, ddate))
+                    print(f"\t{res_key:<20} : {ddate}")
             else:
-                print("\t{0:<20} : {1}".format(res_key, value[res_key]))
+                print(f"\t{res_key:<20} : {value[res_key]}")
 
-        print("{0:-^80}".format(""))
+        print(f"{'':-^80}")
 
     else:
-        print("No reservation {0} found !".format(resid))
+        print(f"No reservation {resid} found !")
         sys.exit(-1)
 
     print()
-    print("{0:-^80}".format(" All Reservations "))
+    print(f"{' All Reservations ':-^80}")
     a.print_reservation_info_msg()
-    print("{0:-^80}".format(""))
+    print(f"{'':-^80}")

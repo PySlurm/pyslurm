@@ -11,15 +11,15 @@ import pyslurm
 
 def list_users(job_dict):
     """List Slurm users"""
-    users = []
+    job_users = []
     if job_dict:
 
         for _, value in sorted(job_dict.items()):
 
-            if value["account"] not in users:
-                users.append(value["account"])
+            if value["account"] not in job_users:
+                job_users.append(value["account"])
 
-    return users
+    return job_users
 
 
 if __name__ == "__main__":
@@ -28,87 +28,76 @@ if __name__ == "__main__":
         pyslurmjob = pyslurm.job()
         jobs = pyslurmjob.get()
     except ValueError as value_error:
-        print("Job query failed - {0}".format(value_error.args[0]))
+        print(f"Job query failed - {value_error.args[0]}")
         sys.exit(1)
 
     users = list_users(jobs)
 
-    delim = "+-------------------------------------------+-----------+------------+---------------+-----------------+--------------+--------------+"
-    print(delim)
+    DELIM = "+-------------------------------------------+-----------+------------"
+    "+---------------+-----------------+--------------+--------------+"
+    print(DELIM)
     print(
-        "|                USER (NAME)                | CPUS USED | NODES USED | CPU REQUESTED | NODES REQUESTED | JOBS RUNNING | JOBS PENDING |"
+        "|                USER (NAME)                | CPUS USED | NODES USED "
+        "| CPU REQUESTED | NODES REQUESTED | JOBS RUNNING | JOBS PENDING |"
     )
-    print(delim)
+    print(DELIM)
 
-    total_procs_request = 0
-    total_nodes_request = 0
-    total_procs_used = 0
-    total_nodes_used = 0
-    total_job_running = 0
-    total_job_pending = 0
+    TOTAL_PROCS_REQUEST = 0
+    TOTAL_NODES_REQUEST = 0
+    TOTAL_PROCS_USED = 0
+    TOTAL_NODES_USED = 0
+    TOTAL_JOB_RUNNING = 0
+    TOTAL_JOB_PENDING = 0
 
     for user in users:
 
         user_jobs = pyslurmjob.find("account", user)
         try:
             gecos = getpwnam(user)[4].split(",")[0]
-        except Exception as split_error:
-            print("Couldn't split\n {}".format(gecos))
+        except ValueError:
+            print(f"Couldn't split\n {gecos}")
             sys.exit(1)
 
-        procs_request = 0
-        nodes_request = 0
-        procs_used = 0
-        nodes_used = 0
-        running = 0
-        pending = 0
+        PROCS_REQUEST = 0
+        NODES_REQUEST = 0
+        PROCS_USED = 0
+        NODES_USED = 0
+        RUNNING = 0
+        PENDING = 0
 
         for jobid in user_jobs:
 
             if not user:
                 user = jobs[jobid]["user_id"]
-                gecos = "{0}".format(getpwuid(user)[4])
-                user = "{0}".format(user)
+                gecos = f"{getpwuid(user)[4]}"
+                user = f"{user}"
 
             if jobs[jobid]["job_state"] == "PENDING":
-                pending = pending + 1
-                procs_request = procs_request + jobs[jobid]["num_cpus"]
-                nodes_request = nodes_request + jobs[jobid]["num_nodes"]
+                PENDING = PENDING + 1
+                PROCS_REQUEST = PROCS_REQUEST + jobs[jobid]["num_cpus"]
+                NODES_REQUEST = NODES_REQUEST + jobs[jobid]["num_nodes"]
 
             if jobs[jobid]["job_state"] == "RUNNING":
-                running = running + 1
-                procs_used = procs_used + jobs[jobid]["num_cpus"]
-                nodes_used = nodes_used + jobs[jobid]["num_nodes"]
+                RUNNING = RUNNING + 1
+                PROCS_USED = PROCS_USED + jobs[jobid]["num_cpus"]
+                NODES_USED = NODES_USED + jobs[jobid]["num_nodes"]
 
-        total_procs_request = total_procs_request + procs_request
-        total_nodes_request = total_nodes_request + nodes_request
-        total_procs_used = total_procs_used + procs_used
-        total_nodes_used = total_nodes_used + nodes_used
-        total_job_running = total_job_running + running
-        total_job_pending = total_job_pending + pending
+        TOTAL_PROCS_REQUEST = TOTAL_PROCS_REQUEST + PROCS_REQUEST
+        TOTAL_NODES_REQUEST = TOTAL_NODES_REQUEST + NODES_REQUEST
+        TOTAL_PROCS_USED = TOTAL_PROCS_USED + PROCS_USED
+        TOTAL_NODES_USED = TOTAL_NODES_USED + NODES_USED
+        TOTAL_JOB_RUNNING = TOTAL_JOB_RUNNING + RUNNING
+        TOTAL_JOB_PENDING = TOTAL_JOB_PENDING + PENDING
 
         print(
-            "|{0:>9} ({1:30}) | {2:>9d} | {3:>10d} | {4:>13d} | {5:>15d} | {6:>12d} | {7:>12d} |".format(
-                user.upper(),
-                gecos,
-                procs_used,
-                nodes_used,
-                procs_request,
-                nodes_request,
-                running,
-                pending,
-            )
+            f"|{user.upper():>9} ({gecos:30}) | {PROCS_USED:>9d} | {NODES_USED:>10d} "
+            f"| {PROCS_REQUEST:>13d} | {NODES_REQUEST:>15d} | {RUNNING:>12d} | {PENDING:>12d} |"
         )
 
-    print(delim)
+    print(DELIM)
     print(
-        "|                   TOTAL                   | {0:>9d} | {1:>10d} | {2:>13d} | {3:>15d} | {4:>12d} | {5:>12d} |".format(
-            total_procs_used,
-            total_nodes_used,
-            total_procs_request,
-            total_nodes_request,
-            total_job_running,
-            total_job_pending,
-        )
+        f"|                   TOTAL                   | {TOTAL_PROCS_USED:>9d} "
+        f"| {TOTAL_NODES_USED:>10d} | {TOTAL_PROCS_REQUEST:>13d} | {TOTAL_NODES_REQUEST:>15d} "
+        f"| {TOTAL_JOB_RUNNING:>12d} | {TOTAL_JOB_PENDING:>12d} |"
     )
-    print(delim)
+    print(DELIM)

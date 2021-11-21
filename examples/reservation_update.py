@@ -15,6 +15,6 @@ try:
     a.update(res_dict)
 
 except ValueError as value_error:
-    print("Error - {0}".format(value_error.args[0]))
+    print(f"Error - {value_error.args[0]}")
 else:
-    print("Reservation {0} updated".format(res_dict["name"]))
+    print(f"Reservation {res_dict['name']} updated")

@@ -5,10 +5,10 @@ Delete Slurm reservations
 
 import pyslurm
 
-resName = "res_test"
+RESNAME = "res_test"
 try:
-    rc = pyslurm.slurm_delete_reservation(resName)
+    rc = pyslurm.slurm_delete_reservation(RESNAME)
 except ValueError as value_error:
-    print("Reservation ({0}) delete failed - {1}".format(resName, value_error.args[0]))
+    print(f"Reservation ({RESNAME}) delete failed - {value_error.args[0]}")
 else:
-    print("Reservation {0} deleted".format(resName))
+    print(f"Reservation {RESNAME} deleted")

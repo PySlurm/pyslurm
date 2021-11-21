@@ -27,6 +27,6 @@ try:
     a = pyslurm.node()
     rc = a.update(Node_dict)
 except ValueError as e:
-    print("Node Update error - {0}".format(e.args[0]))
+    print(f"Node Update error - {e.args[0]}")
 else:
-    print("Node {0} successfully updated".format(Node_dict["node_names"]))
+    print(f"Node {Node_dict['node_names']} successfully updated")

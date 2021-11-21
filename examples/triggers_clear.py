@@ -5,12 +5,12 @@ Remove trigger by trigger ID
 
 import pyslurm
 
-TrigID = 5
+TRIGID = 5
 a = pyslurm.trigger()
 
 try:
-    a.clear(TrigID)
+    a.clear(TRIGID)
 except ValueError as value_error:
-    print("Unable to clear trigger : {0}".format(value_error.args[0]))
+    print(f"Unable to clear trigger : {value_error.args[0]}")
 else:
-    print("TriggerID ({0}) cleared".format(TrigID))
+    print(f"TriggerID ({TRIGID}) cleared")

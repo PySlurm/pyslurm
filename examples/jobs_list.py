@@ -22,22 +22,22 @@ def display(job_dict):
 
         for key, value in sorted(job_dict.items()):
 
-            print("JobID {0} :".format(key))
+            print(f"JobID {key} :")
             for part_key in sorted(value.keys()):
 
                 if part_key in time_fields:
-                    print("\t{0:<20} : Infinite".format(part_key))
+                    print(f"\t{part_key:<20} : Infinite")
                     continue
 
                 if part_key in date_fields:
 
                     if value[part_key] == 0:
-                        print("\t{0:<20} : N/A".format(part_key))
+                        print(f"\t{part_key:<20} : N/A")
                     else:
                         ddate = pyslurm.epoch2date(value[part_key])
-                        print("\t{0:<20} : {1}".format(part_key, ddate))
+                        print(f"\t{part_key:<20} : {ddate}")
                 else:
-                    print("\t{0:<20} : {1}".format(part_key, value[part_key]))
+                    print("\t{part_key:<20} : {value[part_key]}")
 
             print("-" * 80)
 
@@ -53,21 +53,21 @@ if __name__ == "__main__":
             display(jobs)
 
             print()
-            print("Number of Jobs - {0}".format(len(jobs)))
+            print(f"Number of Jobs - {len(jobs)}")
             print()
 
             pending = a.find("job_state", "PENDING")
             running = a.find("job_state", "RUNNING")
             held = a.find("job_state", "RUNNING")
 
-            print("Number of pending jobs - {0}".format(len(pending)))
-            print("Number of running jobs - {0}".format(len(running)))
+            print(f"Number of pending jobs - {len(pending)}")
+            print(f"Number of running jobs - {len(running)}")
             print()
 
-            print("JobIDs in Running state - {0}".format(running))
-            print("JobIDs in Pending state - {0}".format(pending))
+            print(f"JobIDs in Running state - {running}")
+            print(f"JobIDs in Pending state - {pending}")
             print()
         else:
             print("No jobs found !")
     except ValueError as value_error:
-        print("Job query failed - {0}".format(value_error.args[0]))
+        print(f"Job query failed - {value_error.args[0]}")

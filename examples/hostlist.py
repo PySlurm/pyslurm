@@ -7,36 +7,36 @@ import pyslurm
 
 b = pyslurm.hostlist()
 
-hosts = "dummy0,dummy1,dummy1,dummy3,dummy4"
-print("Creating hostlist ...... with {0}".format(hosts))
-if b.create(hosts):
+HOSTS = "dummy0,dummy1,dummy1,dummy3,dummy4"
+print(f"Creating hostlist ...... with {HOSTS}")
+if b.create(HOSTS):
     print()
-    print("\tHost list count is {0}".format(b.count()))
-    node = "dummy3"
-    pos = b.find(node)
+    print(f"\tHost list count is {b.count()}")
+    NODE = "dummy3"
+    pos = b.find(NODE)
     if pos == -1:
-        print("Failed to find {0} in list".format(node))
+        print(f"Failed to find {NODE} in list")
     else:
-        print("\tHost {0} found at position {1}".format(node, pos))
+        print(f"\tHost {NODE} found at position {pos}")
     print("\tCalling uniq on current host list")
     b.uniq()
 
-    print("\tNew host list is {0}".format(b.get()))
-    print("\tNew host list count is {0}".format(b.count()))
-    pos = b.find(node)
+    print(f"\tNew host list is {b.get()}")
+    print(f"\tNew host list count is {b.count()}")
+    pos = b.find(NODE)
     if pos == -1:
-        print("Failed to find {0} in list".format(node))
+        print(f"Failed to find {NODE}")
     else:
-        print("\tHost {0} found at position {1}".format(node, pos))
+        print(f"\tHost {NODE} found at position {pos}")
 
-    print("\tRanged host list is {0}".format(b.get()))
+    print(f"\tRanged host list is {b.get()}")
     print()
 
-    node = "dummy18"
-    print("\tPushing new entry {0}".format(node))
-    if b.push(node):
+    NODE = "dummy18"
+    print(f"\tPushing new entry {NODE}")
+    if b.push(NODE):
         print("\t\tSuccess !")
-        print("\tNew ranged list is {0}".format(b.get()))
+        print(f"\tNew ranged list is {b.get()}")
     else:
         print("\t\tFailed !")
     print()
@@ -44,15 +44,15 @@ if b.create(hosts):
     print("\tDropping first host from list")
     name = b.pop()
     if name:
-        print("\t\tDropped host {0} from list".format(name))
-        print("\t\tNew host count is {0}".format(b.count()))
-        print("\t\tNew host list is {0}".format(b.get()))
+        print(f"\t\tDropped host {name} from list")
+        print(f"\t\tNew host count is {b.count()}")
+        print(f"\t\tNew host list is {b.get()}")
     else:
         print("\t\tFailed !")
 
     print("Destroying host list")
     b.destroy()
-    print("\tHost listcount is {0}".format(b.count()))
+    print(f"\tHost listcount is {b.count()}")
 
 else:
     print("\tFailed to create initial list !")

@@ -62,6 +62,6 @@ try:
     a = pyslurm.trigger()
     a.set(trigDict)
 except ValueError as value_error:
-    print("Trigger set failed - {0}".format(value_error.args[0]))
+    print(f"Trigger set failed - {value_error.args[0]}")
 else:
     print("Trigger set !")

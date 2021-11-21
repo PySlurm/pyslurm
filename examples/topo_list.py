@@ -9,7 +9,7 @@ try:
     a = pyslurm.topology()
     b = a.get()
 except ValueError as value_error:
-    print("Topology error - {0}".format(value_error.args[0]))
+    print(f"Topology error - {value_error.args[0]}")
 else:
     if not b:
         print("No topology found")

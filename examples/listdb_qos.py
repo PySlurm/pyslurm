@@ -11,13 +11,13 @@ if __name__ == "__main__":
             for key, value in qosDict.items():
                 print("{")
                 if isinstance(value, dict):
-                    print("\t{}=".format(key))
+                    print(f"\t{key}=")
                     for k, v in value.items():
-                        print("\t\t{}={}".format(k, v))
+                        print(f"\t\t{k}={v}")
                 else:
-                    print("\t{}={}".format(key, value))
+                    print("\t{key}={value}")
                 print("}")
         else:
             print("No QOS found")
     except ValueError as qos_exception:
-        print("Error:{}".format(qos_exception.args[0]))
+        print(f"Error:{qos_exception.args[0]}")
