@@ -12,34 +12,32 @@ def display(block_dict):
 
         date_fields = []
 
-        print("{0:*^80}".format(""))
+        print(f"{'':*^80}")
 
         for key, value in block_dict.items():
 
-            print("{0} :".format(key))
+            print(f"{key} :")
             for part_key in sorted(value.items()):
 
                 if part_key in date_fields:
                     ddate = value[part_key]
                     if ddate == 0:
-                        print("\t{0:<17} : N/A".format(part_key))
+                        print(f"\t{part_key:<17} : N/A")
                     elif ("reason_uid" in part_key) and (value["reason"] is None):
-                        print("\t{0:<17} :".format(part_key))
+                        print(f"\t{part_key:<17} :")
                     else:
                         ddate = pyslurm.epoch2date(ddate)
-                        print("\t{0:<17} : {1}".format(part_key, ddate))
+                        print(f"\t{part_key:<17} : {ddate}")
                 elif part_key == "connection_type":
                     print(
-                        "\t{0:<17} : {1}".format(
-                            part_key, pyslurm.get_connection_type(value[part_key])
-                        )
+                        f"\t{part_key:<17} : {pyslurm.get_connection_type(value[part_key])}"
                     )
                 elif part_key == "state":
-                    print("\t{0:<17} : {1}".format(part_key, value[part_key]))
+                    print(f"\t{part_key:<17} : {value[part_key]}")
                 else:
-                    print("\t{0:<17} : {1}".format(part_key, value[part_key]))
+                    print(f"\t{part_key:<17} : {value[part_key]}")
 
-            print("{0:*^80}".format(""))
+            print(f"{'':*^80}")
 
 
 if __name__ == "__main__":
@@ -47,12 +45,12 @@ if __name__ == "__main__":
     a = pyslurm.block()
     try:
         a.load()
-        block_dict = a.get()
+        new_block_dict = a.get()
     except ValueError as value_error:
-        print("Block query failed - {0}".format(value_error.args[0]))
+        print(f"Block query failed - {value_error.args[0]}")
     else:
-        if block_dict:
-            display(block_dict)
-            print("\nBlock IDs - {0}\n".format(a.ids()))
+        if new_block_dict:
+            display(new_block_dict)
+            print(f"\nBlock IDs - {a.ids()}\n")
         else:
             print("No Blocks found !")
