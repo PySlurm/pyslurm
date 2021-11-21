@@ -244,34 +244,33 @@ ctypedef struct config_key_pair_t:
 #
 
 
-# FIXME
-#def get_controllers():
-#    u"""Get information about slurm controllers.
-#
-#    :return: Name of primary controller, Name of backup controller
-#    :rtype: `tuple`
-#    """
-#    cdef:
-#        slurm.slurm_conf_t *slurm_ctl_conf_ptr = NULL
-#        slurm.time_t Time = <slurm.time_t>NULL
-#        int apiError = 0
-#        int errCode = slurm.slurm_load_ctl_conf(Time, &slurm_ctl_conf_ptr)
-#
-#    if errCode != 0:
-#        apiError = slurm.slurm_get_errno()
-#        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-#
-#    primary = backup = None
-#    if slurm_ctl_conf_ptr is not NULL:
-#
-#        if slurm_ctl_conf_ptr.control_machine is not NULL:
-#            primary = slurm.stringOrNone(slurm_ctl_conf_ptr.control_machine, '')
-#        if slurm_ctl_conf_ptr.backup_controller is not NULL:
-#            backup = slurm.stringOrNone(slurm_ctl_conf_ptr.backup_controller, '')
-#
-#        slurm.slurm_free_ctl_conf(slurm_ctl_conf_ptr)
-#
-#    return primary, backup
+def get_controllers():
+    u"""Get information about slurm controllers.
+
+    :return: Name of primary controller, Name of backup controller
+    :rtype: `tuple`
+    """
+    cdef:
+        slurm.slurm_conf_t *slurm_ctl_conf_ptr = NULL
+        slurm.time_t Time = <slurm.time_t>NULL
+        int apiError = 0
+        int errCode = slurm.slurm_load_ctl_conf(Time, &slurm_ctl_conf_ptr)
+
+    if errCode != 0:
+        apiError = slurm.slurm_get_errno()
+        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+
+    primary = backup = None
+    if slurm_ctl_conf_ptr is not NULL:
+
+        if slurm_ctl_conf_ptr.control_machine is not NULL:
+            primary = slurm.stringOrNone(slurm_ctl_conf_ptr.control_machine, '')
+        if slurm_ctl_conf_ptr.backup_controller is not NULL:
+            backup = slurm.stringOrNone(slurm_ctl_conf_ptr.backup_controller, '')
+
+        slurm.slurm_free_ctl_conf(slurm_ctl_conf_ptr)
+
+    return primary, backup
 
 
 # FIXME
