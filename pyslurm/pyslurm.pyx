@@ -247,7 +247,7 @@ ctypedef struct config_key_pair_t:
 def get_controllers():
     u"""Get information about slurm controllers.
 
-    :return: Name of primary controller, Name of backup controller
+    :return: Name of primary controller, Name of backup controllers
     :rtype: `tuple`
     """
     cdef:
@@ -255,25 +255,26 @@ def get_controllers():
         slurm.time_t Time = <slurm.time_t>NULL
         int apiError = 0
         int errCode = slurm.slurm_load_ctl_conf(Time, &slurm_ctl_conf_ptr)
+        uint32_t length = 0
 
     if errCode != 0:
         apiError = slurm.slurm_get_errno()
         raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    primary = backup = None
+    control_machs = []
     if slurm_ctl_conf_ptr is not NULL:
 
         if slurm_ctl_conf_ptr.control_machine is not NULL:
-            primary = slurm.stringOrNone(slurm_ctl_conf_ptr.control_machine, '')
-        if slurm_ctl_conf_ptr.backup_controller is not NULL:
-            backup = slurm.stringOrNone(slurm_ctl_conf_ptr.backup_controller, '')
+            length = slurm_ctl_conf_ptr.control_cnt
+            for index in range(length):
+                primary = slurm.stringOrNone(slurm_ctl_conf_ptr.control_machine[index], '')
+                control_machs.append(primary)
 
         slurm.slurm_free_ctl_conf(slurm_ctl_conf_ptr)
 
-    return primary, backup
+    return control_machs
 
 
-# FIXME
 #def is_controller(Host=None):
 #    u"""Return slurm controller status for host.
 #
