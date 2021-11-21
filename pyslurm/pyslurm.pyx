@@ -1,6 +1,6 @@
 # cython: embedsignature=True
 # cython: profile=False
-# cython: language_level=2
+# cython: language_level=3
 import os
 import re
 import sys
@@ -55,13 +55,9 @@ cdef extern from "alps_cray.h" nogil:
 cdef extern from "xmalloc.h" nogil:
     cdef void *xmalloc(size_t size)
 
-try:
-    import __builtin__
-except ImportError:
-    # Python 3
-    import builtins as __builtin__
+import builtins as __builtin__
 
-cimport slurm
+from pyslurm cimport slurm
 
 include "pydefines/slurm_errno_defines.pxi"
 include "pydefines/slurm_errno_enums.pxi"
@@ -910,7 +906,7 @@ cdef class partition:
 
                 if record.allow_accounts or not record.deny_accounts:
                     if record.allow_accounts == NULL or \
-                       record.allow_accounts[0] == "\0":
+                       record.allow_accounts[0] == "\0".encode("UTF-8"):
                         Part_dict[u'allow_accounts'] = u"ALL"
                     else:
                         Part_dict[u'allow_accounts'] = slurm.listOrNone(
@@ -929,7 +925,7 @@ cdef class partition:
                         record.allow_alloc_nodes, ',')
 
                 if record.allow_groups == NULL or \
-                   record.allow_groups[0] == "\0":
+                   record.allow_groups[0] == "\0".encode("UTF-8"):
                     Part_dict[u'allow_groups'] = u"ALL"
                 else:
                     Part_dict[u'allow_groups'] = slurm.listOrNone(
@@ -937,7 +933,7 @@ cdef class partition:
 
                 if record.allow_qos or not record.deny_qos:
                     if record.allow_qos == NULL or \
-                       record.allow_qos[0] == "\0":
+                       record.allow_qos[0] == "\0".encode("UTF-8"):
                         Part_dict[u'allow_qos'] = u"ALL"
                     else:
                         Part_dict[u'allow_qos'] = slurm.listOrNone(
@@ -2829,7 +2825,7 @@ cdef secs2time_str(uint32_t time):
     """
     cdef:
         char *time_str
-        long days, hours, minutes, seconds
+        double days, hours, minutes, seconds
 
     if time == slurm.INFINITE:
         time_str = "UNLIMITED"
@@ -2859,7 +2855,7 @@ cdef mins2time_str(uint32_t time):
     :rtype: `str`
     """
     cdef:
-        long days, hours, minutes, seconds
+        double days, hours, minutes, seconds
 
     if time == slurm.INFINITE:
         return u"UNLIMITED"
