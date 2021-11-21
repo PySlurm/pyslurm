@@ -1041,6 +1041,11 @@ cdef class partition:
                 # https://github.com/SchedMD/slurm/commit/bd76db3cd28f418f31de877f3c39a439b09289f7
 
                 preempt_mode = record.preempt_mode
+                if preempt_mode == slurm.NO_VAL16:
+                      Part_dict[u'preempt_mode'] = slurm.stringOrNone(
+                                slurm.slurm_preempt_mode_string(preempt_mode), ''
+                                )
+
                 # HvB
                 # if preempt_mode == slurm.NO_VAL16:
                 #     preempt_mode = slurm.slurm_get_preempt_mode()
