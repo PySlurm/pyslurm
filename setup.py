@@ -63,9 +63,12 @@ class Pyslurm:
         self.slurm_dir = None
         self.bgq = 0
 
+        # TODO - This needs an recode
         file_path = os.path.join(self.here, "pyslurm", "__version__.py")
-        with open(file_path, "r", encoding="latin-1") as f:
-            exec(f.read(), self.about)
+        with open(file_path, "r", encoding="latin-1") as file_object:
+            for line in file_object:
+                (key, val) = line.strip("\n").split(' = ')
+                self.about[key] = val.strip('"')
 
     @staticmethod
     def usage():
