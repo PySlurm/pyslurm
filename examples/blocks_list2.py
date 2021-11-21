@@ -20,7 +20,7 @@ class DictDiffer:
     """
 
     def __init__(self, current_dict, past_dict):
-        """set class attr"""
+        """Set class attr"""
         self.current_dict, self.past_dict = current_dict, past_dict
         self.set_current, self.set_past = (
             set(current_dict.keys()),
@@ -51,15 +51,15 @@ class DictDiffer:
 
 if __name__ == "__main__":
 
-    interval = 2
-    change = 0
+    INTERVAL = 2
+    CHANGE = 0
 
     a = pyslurm.block()
     block_dict = a.get()
     lastUpdate = a.lastUpdate()
 
-    print("Loaded Slurm block data at {0}".format(pyslurm.epoch2date(lastUpdate)))
-    print("Waiting for updated data ... polling every {0} second".format(interval))
+    print(f"Loaded Slurm block data at {pyslurm.epoch2date(lastUpdate)}")
+    print(f"Waiting for updated data ... polling every {INTERVAL} second")
 
     sleep(0.5)
 
@@ -69,25 +69,21 @@ if __name__ == "__main__":
         if newUpdate > lastUpdate:
 
             lastUpdate = a.lastUpdate()
-            print(
-                "Block data update time changed - {0}".format(
-                    pyslurm.epoch2date(lastUpdate)
-                )
-            )
+            print(f"Block data update time changed - {pyslurm.epoch2date(lastUpdate)}")
 
             b = DictDiffer(block_dict, new_dict)
             if b.changed():
-                print("\tChanged block {0}".format(b.changed()))
-                change = 1
+                print(f"\tChanged block {b.changed()}")
+                CHANGE = 1
             if b.added():
-                print("\tAdded block {0}".format(b.added()))
-                change = 1
+                print(f"\tAdded block {b.added()}")
+                CHANGE = 1
             if b.removed():
-                print("\tRemoved block {0}".format(b.removed()))
-                change = 1
-            if change == 0:
+                print(f"\tRemoved block {b.removed()})")
+                CHANGE = 1
+            if CHANGE == 0:
                 print("\tBut no data was changed !")
-            change = 0
+            CHANGE = 0
             block_dict = new_dict
 
-        sleep(interval)
+        sleep(INTERVAL)
