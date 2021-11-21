@@ -1648,7 +1648,7 @@ cdef class job:
     def __cinit__(self):
         self._job_ptr = NULL
         self._lastUpdate = 0
-        self._ShowFlags = slurm.SHOW_DETAIL | slurm.SHOW_DETAIL
+        self._ShowFlags = slurm.SHOW_DETAIL | slurm.SHOW_ALL
 
     def __dealloc__(self):
         pass
