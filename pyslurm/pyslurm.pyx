@@ -701,7 +701,11 @@ cdef class config:
             Ctl_dict[u'slurmd_timeout'] = self.__Config_ptr.slurmd_timeout
             Ctl_dict[u'srun_epilog'] = slurm.stringOrNone(self.__Config_ptr.srun_epilog, '')
 
-            # Ctl_dict[u'srun_port_range'] = self.__Config_ptr.srun_port_range
+            a = [0,0]
+            if self.__Config_ptr.srun_port_range != NULL:
+                a[0] = self.__Config_ptr.srun_port_range[0]
+                a[1] = self.__Config_ptr.srun_port_range[1]
+            Ctl_dict[u'srun_port_range'] = tuple(a)
 
             Ctl_dict[u'srun_prolog'] = slurm.stringOrNone(self.__Config_ptr.srun_prolog, '')
             Ctl_dict[u'state_save_location'] = slurm.stringOrNone(self.__Config_ptr.state_save_location, '')
