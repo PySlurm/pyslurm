@@ -275,22 +275,25 @@ def get_controllers():
     return control_machs
 
 
-#def is_controller(Host=None):
-#    u"""Return slurm controller status for host.
-#
-#    :param string Host: Name of host to check
-#
-#    :returns: None, primary or backup
-#    :rtype: `string`
-#    """
-#    primary, backup = get_controllers()
-#    if not Host:
-#        Host = gethostname()
-#
-#    if primary == Host:
-#        return u'primary'
-#    if backup == Host:
-#        return u'backup'
+def is_controller(Host=None):
+    u"""Return slurm controller status for host.
+
+    :param string Host: Name of host to check
+
+    :returns: None, primary or backup
+    :rtype: `string`
+    """
+    control_machs = get_controllers()
+    if not Host:
+        Host = gethostname()
+
+    index = control_machs.index(Host)
+    if index == -1:
+        return None
+    if index == 0:
+        return u'primary'
+    if index > 0:
+        return u'backup'
 
 
 def slurm_api_version():
