@@ -3,6 +3,7 @@
 Display Slurm node information in XML
 """
 
+import argparse
 import os
 import os.path
 import pwd
@@ -10,7 +11,6 @@ import re
 import socket
 import sys
 import time
-from optparse import OptionParser
 
 import pyslurm
 
@@ -89,10 +89,8 @@ def meminfo():
 
 if __name__ == "__main__":
 
-    USAGE = "Usage: %prog [options] arg"
-    parser = OptionParser(USAGE)
-
-    parser.add_option(
+    parser = argparse.ArgumentParser(description="Slurm Node XML Output")
+    parser.add_argument(
         "-o",
         "--stdout",
         dest="output",
@@ -100,26 +98,25 @@ if __name__ == "__main__":
         default=False,
         help="Write to standard output",
     )
-    parser.add_option(
+    parser.add_argument(
         "-d",
         "--dir",
         dest="directory",
         action="store",
-        default=os.getcwd(),
+        default=os.getcwd,
         help="Directory to write data to",
     )
-    parser.add_option(
+    parser.add_argument(
         "-r",
         "--rrd",
         dest="rrd",
-        default=False,
         action="store_true",
+        default=False,
         help="Write rrd data",
     )
+    options = parser.parse_args()
 
-    (options, args) = parser.parse_args()
-
-    hosts = socket.gethostbyaddr(socket.gethostname())[1]
+    hosts = socket.gethostbyaddr(socket.gethostname())
     my_host = hosts[0]
 
     LOCK_FILE = "/var/tmp/slurm_node_xml.lck"
@@ -162,7 +159,7 @@ if __name__ == "__main__":
             sys.stdout.write("\t<slurmd>\n")
             for key, value in data.items():
                 sys.stdout.write(f"\t\t<{key}>{value}</{key}>\n")
-                sys.stdout.write("\t</slurmd>\n")
+            sys.stdout.write("\t</slurmd>\n")
 
     a = pyslurm.job()
     jobs = a.get()
