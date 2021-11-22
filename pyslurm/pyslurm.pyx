@@ -658,6 +658,9 @@ cdef class config:
             Ctl_dict[u'reboot_program'] = slurm.stringOrNone(self.__Config_ptr.reboot_program, '')
             Ctl_dict[u'reconfig_flags'] = self.__Config_ptr.reconfig_flags
             Ctl_dict[u'resume_fail_program'] = slurm.stringOrNone(self.__Config_ptr.resume_fail_program, '')
+            Ctl_dict[u'requeue_exit'] = slurm.stringOrNone(self.__Config_ptr.requeue_exit, '')
+            Ctl_dict[u'requeue_exit_hold'] = slurm.stringOrNone(self.__Config_ptr.requeue_exit_hold, '')
+            Ctl_dict[u'resume_fail_program'] = slurm.stringOrNone(self.__Config_ptr.resume_fail_program, '')
             Ctl_dict[u'resume_program'] = slurm.stringOrNone(self.__Config_ptr.resume_program, '')
             Ctl_dict[u'resume_rate'] = self.__Config_ptr.resume_rate
             Ctl_dict[u'resume_timeout'] = self.__Config_ptr.resume_timeout
@@ -673,6 +676,7 @@ cdef class config:
             Ctl_dict[u'sched_params'] = slurm.stringOrNone(self.__Config_ptr.sched_params, '')
             Ctl_dict[u'sched_time_slice'] = self.__Config_ptr.sched_time_slice
             Ctl_dict[u'schedtype'] = slurm.stringOrNone(self.__Config_ptr.schedtype, '')
+            Ctl_dict[u'scron_params'] = slurm.stringOrNone(self.__Config_ptr.scron_params, '')
             Ctl_dict[u'select_type'] = slurm.stringOrNone(self.__Config_ptr.select_type, '')
             Ctl_dict[u'select_type_param'] = self.__Config_ptr.select_type_param
             Ctl_dict[u'slurm_conf'] = slurm.stringOrNone(self.__Config_ptr.slurm_conf, '')
@@ -685,6 +689,7 @@ cdef class config:
             # TODO: slurmctld_host
             Ctl_dict[u'slurmctld_logfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_logfile, '')
             Ctl_dict[u'slurmctld_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_pidfile, '')
+            Ctl_dict[u'slurmctld_plugstack'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_plugstack, '')
             Ctl_dict[u'slurmctld_port'] = self.__Config_ptr.slurmctld_port
             Ctl_dict[u'slurmctld_port_count'] = self.__Config_ptr.slurmctld_port_count
             Ctl_dict[u'slurmctld_primary_off_prog'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_primary_off_prog, '')
@@ -720,6 +725,7 @@ cdef class config:
             Ctl_dict[u'task_plugin'] = slurm.stringOrNone(self.__Config_ptr.task_plugin, '')
             Ctl_dict[u'task_plugin_param'] = self.__Config_ptr.task_plugin_param
             Ctl_dict[u'task_prolog'] = slurm.stringOrNone(self.__Config_ptr.task_prolog, '')
+            Ctl_dict[u'tcp_timeout'] = self.__Config_ptr.tcp_timeout
             Ctl_dict[u'tmp_fs'] = slurm.stringOrNone(self.__Config_ptr.tmp_fs, '')
             Ctl_dict[u'topology_param'] = slurm.stringOrNone(self.__Config_ptr.topology_param, '')
             Ctl_dict[u'topology_plugin'] = slurm.stringOrNone(self.__Config_ptr.topology_plugin, '')
