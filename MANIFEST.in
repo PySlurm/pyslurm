@@ -4,7 +4,6 @@ include pyslurm/slurm_defines.pxi
 include pyslurm/slurm.pxd
 include pyslurm/xmalloc.h
 include README.rst
-include CONTRIBUTORS.rst
 include COPYING.txt
 include THANKS.rst
 graft examples
