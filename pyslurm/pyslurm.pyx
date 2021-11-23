@@ -605,7 +605,6 @@ cdef class config:
             Ctl_dict[u'min_job_age'] = self.__Config_ptr.min_job_age
             Ctl_dict[u'mpi_default'] = slurm.stringOrNone(self.__Config_ptr.mpi_default, '')
             Ctl_dict[u'mpi_params'] = slurm.stringOrNone(self.__Config_ptr.mpi_params, '')
-            #HVB Ctl_dict[u'msg_aggr_params'] = slurm.stringOrNone(self.__Config_ptr.msg_aggr_params, '')
             Ctl_dict[u'msg_timeout'] = self.__Config_ptr.msg_timeout
             Ctl_dict[u'next_job_id'] = self.__Config_ptr.next_job_id
             Ctl_dict[u'node_prefix'] = slurm.stringOrNone(self.__Config_ptr.node_prefix, '')
@@ -669,7 +668,6 @@ cdef class config:
             Ctl_dict[u'resv_prolog'] = slurm.stringOrNone(self.__Config_ptr.resv_prolog, '')
             Ctl_dict[u'ret2service'] = self.__Config_ptr.ret2service
             Ctl_dict[u'route_plugin'] = slurm.stringOrNone(self.__Config_ptr.route_plugin, '')
-            #HvB Ctl_dict[u'salloc_default_command'] = slurm.stringOrNone(self.__Config_ptr.salloc_default_command, '')
             Ctl_dict[u'sbcast_parameters'] = slurm.stringOrNone(self.__Config_ptr.sbcast_parameters, '')
             Ctl_dict[u'sched_logfile'] = slurm.stringOrNone(self.__Config_ptr.sched_logfile, '')
             Ctl_dict[u'sched_log_level'] = self.__Config_ptr.sched_log_level
@@ -1051,14 +1049,6 @@ cdef class partition:
                       Part_dict[u'preempt_mode'] = slurm.stringOrNone(
                                 slurm.slurm_preempt_mode_string(preempt_mode), ''
                                 )
-
-                # HvB
-                # if preempt_mode == slurm.NO_VAL16:
-                #     preempt_mode = slurm.slurm_get_preempt_mode()
-                # Part_dict[u'preempt_mode'] = slurm.stringOrNone(
-                #     slurm.slurm_preempt_mode_string(preempt_mode), ''
-                # )
-
                 Part_dict[u'priority_job_factor'] = record.priority_job_factor
                 Part_dict[u'priority_tier'] = record.priority_tier
                 Part_dict[u'qos_char'] = slurm.stringOrNone(record.qos_char, '')
@@ -3115,7 +3105,7 @@ cdef class node:
             Host_dict[u'cores_per_socket'] = record.cores
             # TODO: cpu_alloc, cpu_tot
             Host_dict[u'cpus'] = record.cpus
-
+            
             # FIXME
             #if record.cpu_bind:
             #    slurm.slurm_sprint_cpu_bind_type(tmp_str, record.cpu_bind)
