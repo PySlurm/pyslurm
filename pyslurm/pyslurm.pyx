@@ -6081,7 +6081,6 @@ def get_preempt_mode(uint16_t inx):
         - PREEMPT_MODE_OFF        0x0000
         - PREEMPT_MODE_SUSPEND    0x0001
         - PREEMPT_MODE_REQUEUE    0x0002
-        - PREEMPT_MODE_CHECKPOINT 0x0004
         - PREEMPT_MODE_CANCEL     0x0008
         - PREEMPT_MODE_GANG       0x8000
     :returns: Preempt mode string
