@@ -6243,7 +6243,9 @@ def get_job_state(inx):
         - JOB_NODE_FAIL   7
         - JOB_PREEMPTED   8
         - JOB_BOOT_FAIL   10
-        - JOB_END         11
+        - JOB_DEADLINE    11
+        - JOB_OOM         12
+        - JOB_END
     :returns: Job state string
     :rtype: `string`
     """
