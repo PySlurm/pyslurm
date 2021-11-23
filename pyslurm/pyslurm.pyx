@@ -5745,6 +5745,7 @@ def get_trigger_res_type(uint16_t inx):
         - TRIGGER_RES_TYPE_SLURMDBD   4
         - TRIGGER_RES_TYPE_DATABASE   5
         - TRIGGER_RES_TYPE_FRONT_END  6
+        - TRIGGER_RES_TYPE_OTHER      7
     :returns:  Trigger reservation state string
     :rtype: `string`
     """
@@ -5765,6 +5766,8 @@ cdef inline object __get_trigger_res_type(uint16_t ResType):
         rtype = 'database'
     elif ResType == TRIGGER_RES_TYPE_FRONT_END:
         rtype = 'front_end'
+    elif ResType == TRIGGER_RES_TYPE_OTHER:
+        rtype = 'other'
 
     return u"%s" % rtype
 
