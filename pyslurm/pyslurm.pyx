@@ -123,56 +123,77 @@ cdef inline SLURM_ID_HASH_LEGACY(hash_id):
 #
 
 cdef inline IS_JOB_PENDING(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) == JOB_PENDING
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_PENDING)
 
 cdef inline IS_JOB_RUNNING(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) == JOB_RUNNING
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_RUNNING)
 
 cdef inline IS_JOB_SUSPENDED(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) == JOB_SUSPENDED
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_SUSPENDED)
 
 cdef inline IS_JOB_COMPLETE(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) == JOB_COMPLETE
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_COMPLETE)
 
 cdef inline IS_JOB_CANCELLED(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) == JOB_CANCELLED
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_CANCELLED)
 
 cdef inline IS_JOB_FAILED(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) == JOB_FAILED
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_FAILED)
 
 cdef inline IS_JOB_TIMEOUT(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) == JOB_TIMEOUT
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_TIMEOUT)
 
 cdef inline IS_JOB_NODE_FAILED(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) == JOB_NODE_FAIL
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_NODE_FAIL)
+
+cdef inline IS_JOB_DEADLINE(slurm.slurm_job_info_t _X):
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_DEADLINE)
+
+cdef inline IS_JOB_OOM(slurm.slurm_job_info_t _X):
+    return ((_X.job_state & JOB_STATE_BASE) == JOB_OOM)
+
+cdef inline IS_JOB_POWER_UP_NODE(slurm.slurm_job_info_t _X):
+    return (_X.job_state & JOB_STATE_BASE)
 
 #
 # Derived job states
 #
 
 cdef inline IS_JOB_COMPLETING(slurm.slurm_job_info_t _X):
-    return _X.job_state & JOB_COMPLETING
+    return (_X.job_state & JOB_COMPLETING)
 
 cdef inline IS_JOB_CONFIGURING(slurm.slurm_job_info_t _X):
-    return _X.job_state & JOB_CONFIGURING
+    return (_X.job_state & JOB_CONFIGURING)
 
 cdef inline IS_JOB_STARTED(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) > JOB_PENDING
+    return ((_X.job_state & JOB_STATE_BASE) > JOB_PENDING)
 
 cdef inline IS_JOB_FINISHED(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_STATE_BASE) > JOB_SUSPENDED
+    return ((_X.job_state & JOB_STATE_BASE) > JOB_SUSPENDED)
 
 cdef inline IS_JOB_COMPLETED(slurm.slurm_job_info_t _X):
-    return (IS_JOB_FINISHED(_X) and (_X.job_state & JOB_COMPLETING) == 0)
+    return (IS_JOB_FINISHED(_X) and ((_X.job_state & JOB_COMPLETING) == 0))
 
 cdef inline IS_JOB_RESIZING(slurm.slurm_job_info_t _X):
-    return _X.job_state & JOB_RESIZING
+    return (_X.job_state & JOB_RESIZING)
 
 cdef inline IS_JOB_REQUEUED(slurm.slurm_job_info_t _X):
-    return _X.job_state & JOB_REQUEUE
+    return (_X.job_state & JOB_REQUEUE)
+
+cdef inline IS_JOB_FED_REQUEUED(slurm.slurm_job_info_t _X):
+    return (_X.job_state & JOB_REQUEUE_FED)
 
 cdef inline IS_JOB_UPDATE_DB(slurm.slurm_job_info_t _X):
-    return _X.job_state & JOB_UPDATE_DB
+    return (_X.job_state & JOB_UPDATE_DB)
+
+cdef inline IS_JOB_REVOKED(slurm.slurm_job_info_t _X):
+    return (_X.job_state & JOB_REVOKED)
+
+cdef inline IS_JOB_SIGNALING(slurm.slurm_job_info_t _X):
+    return (_X.job_state & JOB_SIGNALING)
+
+cdef inline IS_JOB_STAGE_OUT(slurm.slurm_job_info_t _X):
+    return (_X.job_state & JOB_STAGE_OUT)
 
 #
 # Defined node states
@@ -204,35 +225,47 @@ cdef inline IS_NODE_FUTURE(slurm.node_info_t _X):
 #
 
 cdef inline IS_NODE_CLOUD(slurm.node_info_t _X):
-    return _X.node_state & NODE_STATE_CLOUD
+    return (_X.node_state & NODE_STATE_CLOUD)
 
 cdef inline IS_NODE_DRAIN(slurm.node_info_t _X):
-    return _X.node_state & NODE_STATE_DRAIN
+    return (_X.node_state & NODE_STATE_DRAIN)
 
 cdef inline IS_NODE_DRAINING(slurm.node_info_t _X):
     return ((_X.node_state & NODE_STATE_DRAIN) and
-            (IS_NODE_ALLOCATED(_X) or IS_NODE_ERROR(_X) or IS_NODE_MIXED(_X)))
+            (IS_NODE_ALLOCATED(_X) or IS_NODE_MIXED(_X)))
+
+cdef inline IS_NODE_DYNAMIC(slurm.node_info_t _X):
+    return (_X.node_state and NODE_STATE_DYNAMIC)
 
 cdef inline IS_NODE_DRAINED(slurm.node_info_t _X):
-    return IS_NODE_DRAIN(_X) and not IS_NODE_DRAINING(_X)
+    return (IS_NODE_DRAIN(_X) and not IS_NODE_DRAINING(_X))
 
 cdef inline IS_NODE_COMPLETING(slurm.node_info_t _X):
-    return _X.node_state & NODE_STATE_COMPLETING
+    return (_X.node_state & NODE_STATE_COMPLETING)
 
 cdef inline IS_NODE_NO_RESPOND(slurm.node_info_t _X):
-    return _X.node_state & NODE_STATE_NO_RESPOND
+    return (_X.node_state & NODE_STATE_NO_RESPOND)
 
 cdef inline IS_NODE_POWER_SAVE(slurm.node_info_t _X):
-    return _X.node_state & NODE_STATE_POWER_SAVE
+    return (_X.node_state & NODE_STATE_POWER_SAVE)
+
+cdef inline IS_NODE_POWERIMG_DOWN(slurm.node_info_t _X):
+    return (_X.node_state & NODE_STATE_POWERING_DOWN)
 
 cdef inline IS_NODE_FAIL(slurm.node_info_t _X):
-    return _X.node_state & NODE_STATE_FAIL
+    return (_X.node_state & NODE_STATE_FAIL)
 
 cdef inline IS_NODE_POWER_UP(slurm.node_info_t _X):
-    return _X.node_state & NODE_STATE_POWER_UP
+    return (_X.node_state & NODE_STATE_POWER_UP)
 
 cdef inline IS_NODE_MAINT(slurm.node_info_t _X):
-    return _X.node_state & NODE_STATE_MAINT
+    return (_X.node_state & NODE_STATE_MAINT)
+
+cdef inline IS_NODE_REBOOT(slurm.node_info_t _X):
+    return (_X.node_state & NODE_STATE_REBOOT)
+
+cdef inline IS_NODE_REBOOT_ISSUED(slurm.node_info_t _X):
+    return (_X.node_state & NODE_STATE_REBOOT_ISSUED)
 
 ctypedef struct config_key_pair_t:
     char *name
