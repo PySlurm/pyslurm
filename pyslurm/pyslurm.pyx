@@ -5871,6 +5871,8 @@ cdef inline object __get_trigger_type(uint32_t TriggerType):
         return 'primary_database_failure'
     elif TriggerType == TRIGGER_TYPE_PRI_DB_RES_OP:
         rtype = 'primary_database_resumed_operation'
+    elif TriggerType == TRIGGER_TYPE_BURST_BUFFER:
+        rtype = 'burst_buffer'
 
     return u"%s" % rtype
 
