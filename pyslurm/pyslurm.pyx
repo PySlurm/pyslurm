@@ -3122,11 +3122,7 @@ cdef class node:
                 slurm.stringOrNone(record.gres_used, '')
             )
 
-            if record.mcs_label == NULL:
-                Host_dict[u'mcs_label'] = None
-            else:
-                Host_dict[u'mcs_label'] = record.mcs_label
-
+            Host_dict[u'mcs_label'] = slurm.stringOrNone(record.mcs_label, '')
             Host_dict[u'mem_spec_limit'] = record.mem_spec_limit
             Host_dict[u'name'] = slurm.stringOrNone(record.name, '')
 
