@@ -300,8 +300,6 @@ cdef extern from "slurm/slurm.h":
     enum:
         SLURM_VERSION_NUMBER
 
-
-
     uint8_t SYSTEM_DIMENSIONS
     uint8_t HIGHEST_DIMENSIONS
 
@@ -344,6 +342,7 @@ cdef extern from "slurm/slurm.h":
     uint32_t JOB_RESV_DEL_HOLD
     uint32_t JOB_SIGNALING
     uint32_t JOB_STAGE_OUT
+    uint32_t JOB_REQUEUE_CRON
 
     uint8_t READY_JOB_ERROR
     uint8_t READY_JOB_FATAL
@@ -429,6 +428,8 @@ cdef extern from "slurm/slurm.h":
     uint32_t NODE_STATE_REBOOT
     uint32_t NODE_STATE_CANCEL_REBOOT
     uint32_t NODE_STATE_POWERING_DOWN
+    uint32_t NODE_STATE_DYNAMIC
+    uint32_t NODE_STATE_REBOOT_ISSUED
 
     uint8_t SHOW_ALL
     uint8_t SHOW_DETAIL
@@ -511,7 +512,6 @@ cdef extern from "slurm/slurm.h":
     uint32_t GRES_DISABLE_BIND
     uint32_t JOB_WAS_RUNNING
     uint32_t RESET_ACCRUE_TIME
-
 
     uint32_t JOB_MEM_SET
     uint32_t JOB_RESIZED
@@ -4236,7 +4236,6 @@ cdef extern from "slurm/slurmdb.h":
     List slurmdb_wckeys_modify(void* db_conn, slurmdb_wckey_cond_t* wckey_cond, slurmdb_wckey_rec_t* wckey)
 
     List slurmdb_wckeys_remove(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
-
 
 
 #
