@@ -445,8 +445,6 @@ NODE_STATE_ERROR                = slurm.NODE_STATE_ERROR
 NODE_STATE_MIXED                = slurm.NODE_STATE_MIXED
 NODE_STATE_FUTURE               = slurm.NODE_STATE_FUTURE
 NODE_STATE_END                  = slurm.NODE_STATE_END
-NODE_STATE_DYNAMIC              = slurm.NODE_STATE_DYNAMIC
-NODE_STATE_REBOOT_ISSUED        = slurm.NODE_STATE_REBOOT_ISSUED
 
 # end enum node_states
 
