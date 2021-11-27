@@ -249,7 +249,7 @@ cdef inline IS_NODE_NO_RESPOND(slurm.node_info_t _X):
 cdef inline IS_NODE_POWER_SAVE(slurm.node_info_t _X):
     return (_X.node_state & NODE_STATE_POWER_SAVE)
 
-cdef inline IS_NODE_POWERIMG_DOWN(slurm.node_info_t _X):
+cdef inline IS_NODE_POWERING_DOWN(slurm.node_info_t _X):
     return (_X.node_state & NODE_STATE_POWERING_DOWN)
 
 cdef inline IS_NODE_FAIL(slurm.node_info_t _X):
