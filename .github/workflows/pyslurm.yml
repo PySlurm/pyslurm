@@ -10,11 +10,11 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - "3.6"
-          - "3.7"
-          - "3.8"
-          - "3.9"
-          - "3.10"
+          - "3.6.15"
+          - "3.7.12"
+          - "3.8.12"
+          - "3.9.9"
+          - "3.10.0"
       fail-fast: false
     steps:
       - name: Checkout repository code
@@ -29,8 +29,8 @@ jobs:
         run: |
           which python
           which python${{ matrix.python-version }}
-          python${{ matrix.python-version }} -m pip install --upgrade pip
-          python${{ matrix.python-verison }} -m pip install pipenv
+          python -m pip install --upgrade pip
+          python -m pip install pipenv
           pipenv --python ${{ matrix.python-version }} install --dev --skip-lock
 
       - name: Start Slurm Container
