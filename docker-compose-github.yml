@@ -8,7 +8,5 @@ services:
     stdin_open: true
     tty: true
     working_dir: /pyslurm
-#    environment:
-#      PYTHON: "3.9"
     volumes:
       - ${RUNNER_WORKSPACE}/pyslurm:/pyslurm
