@@ -27,8 +27,6 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          which python
-          which python${{ matrix.python-version }}
           python -m pip install --upgrade pip
           python -m pip install pipenv
           pipenv --python ${{ matrix.python-version }} install --dev --skip-lock
