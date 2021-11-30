@@ -103,7 +103,7 @@ if __name__ == "__main__":
         "--dir",
         dest="directory",
         action="store",
-        default=os.getcwd,
+        default=os.getcwd(),
         help="Directory to write data to",
     )
     parser.add_argument(

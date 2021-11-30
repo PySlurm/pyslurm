@@ -4250,7 +4250,7 @@ cdef inline listOrNone(char* value, sep_char):
     if not sep_char:
         return value.decode("UTF-8", "replace")
 
-    if sep_char == b'':
+    if sep_char == '':
         return value.decode("UTF-8", "replace")
 
     return value.decode("UTF_8", "replace").split(sep_char)
@@ -4260,8 +4260,8 @@ cdef inline stringOrNone(char* value, value2):
     if value is NULL:
         if value2 is '':
             return None
-        return u"%s" % value2
-    return u"%s" % value.decode("UTF-8", "replace")
+        return value2
+    return value.decode("UTF-8", "replace")
 
 
 cdef inline int16orNone(uint16_t value):
@@ -4290,7 +4290,7 @@ cdef inline int16orUnlimited(uint16_t value, return_type):
         if return_type is "int":
             return None
         else:
-            return u"UNLIMITED"
+            return "UNLIMITED"
     else:
         if return_type is "int":
             return value
@@ -4300,8 +4300,8 @@ cdef inline int16orUnlimited(uint16_t value, return_type):
 
 cdef inline boolToString(int value):
     if value == 0:
-        return u'False'
-    return u'True'
+        return 'False'
+    return 'True'
 
 
 cdef extern char **environ
