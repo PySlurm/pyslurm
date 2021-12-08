@@ -37,7 +37,7 @@ def display(job_dict):
                         ddate = pyslurm.epoch2date(value[part_key])
                         print(f"\t{part_key:<20} : {ddate}")
                 else:
-                    print("\t{part_key:<20} : {value[part_key]}")
+                    print(f"\t{part_key:<20} : {value[part_key]}")
 
             print("-" * 80)
 
