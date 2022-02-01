@@ -271,9 +271,9 @@ class Pyslurm:
 
         # Test for Slurm MAJOR.MINOR version match (ignoring .MICRO)
         try:
-            slurm_inc_ver = self.read_inc_version(f"{self.slurm_inc}/slurm/slurm.h")
+            slurm_inc_ver = self.read_inc_version(f"{self.slurm_inc}/slurm/slurm_version.h")
         except IOError:
-            slurm_inc_ver = self.read_inc_version(f"{self.slurm_inc}/slurm.h")
+            slurm_inc_ver = self.read_inc_version(f"{self.slurm_inc}/slurm_version.h")
 
         major = (int(slurm_inc_ver, 16) >> 16) & 0xFF
         minor = (int(slurm_inc_ver, 16) >> 8) & 0xFF
