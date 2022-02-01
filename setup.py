@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 
 CYTHON_VERSION_MIN = "0.19"
-SLURM_VERSION = "20.11"
+SLURM_VERSION = "21.08"
 
 
 def fatal(log_string, code=1):
