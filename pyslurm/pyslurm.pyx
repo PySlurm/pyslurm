@@ -5333,7 +5333,7 @@ cdef class slurmdb_jobs:
                 JOBS_info['used_gres'] = slurm.stringOrNone(job.used_gres, '')
                 JOBS_info['user'] = slurm.stringOrNone(job.user,'')
                 JOBS_info['user_cpu_sec'] = job.user_cpu_sec
-                JOBS_info['user_cpu_sec'] = job.user_cpu_usec
+                JOBS_info['user_cpu_usec'] = job.user_cpu_usec
                 JOBS_info['wckey'] = slurm.stringOrNone(job.wckey, '')
                 JOBS_info['wckeyid'] = job.wckeyid
                 JOBS_info['work_dir'] = slurm.stringOrNone(job.work_dir, '')
