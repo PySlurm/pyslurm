@@ -160,6 +160,10 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t with_coords
         uint16_t with_deleted
 
+    cdef enum:
+        SLURMDB_ACCT_FLAG_NONE
+        SLURMDB_ACCT_FLAG_DELETED
+
     ctypedef struct slurmdb_account_rec_t:
         List assoc_list
         List coordinators
@@ -331,7 +335,7 @@ cdef extern from "slurm/slurmdb.h":
         uint64_t over_secs
         uint64_t pdown_secs
         time_t period_start
-        uint64_t resv_secs
+        uint64_t plan_secs
         slurmdb_tres_rec_t tres_rec
 
     ctypedef struct slurmdb_clus_res_rec_t:
@@ -390,12 +394,14 @@ cdef extern from "slurm/slurmdb.h":
         char* blockid
         char* cluster
         char* constraints
+        char* container
         uint64_t db_index
         uint32_t derived_ec
         char* derived_es
         uint32_t elapsed
         time_t eligible
         time_t end
+        char* env
         uint32_t exitcode
         uint32_t flags
         void* first_step_ptr
@@ -415,6 +421,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t requid
         uint32_t resvid
         char* resv_name
+        char* script
         uint32_t show_full
         time_t start
         uint32_t state
@@ -422,21 +429,22 @@ cdef extern from "slurm/slurmdb.h":
         slurmdb_stats_t stats
         List steps
         time_t submit
+        char* submit_line
         uint32_t suspended
         char* system_comment
-        uint32_t sys_cpu_sec
-        uint32_t sys_cpu_usec
+        uint64_t sys_cpu_sec
+        uint64_t sys_cpu_usec
         uint32_t timelimit
-        uint32_t tot_cpu_sec
-        uint32_t tot_cpu_usec
+        uint64_t tot_cpu_sec
+        uint64_t tot_cpu_usec
         uint16_t track_steps
         char* tres_alloc_str
         char* tres_req_str
         uint32_t uid
         char* used_gres
         char* user
-        uint32_t user_cpu_sec
-        uint32_t user_cpu_usec
+        uint64_t user_cpu_sec
+        uint64_t user_cpu_usec
         char* wckey
         uint32_t wckeyid
         char* work_dir
@@ -473,6 +481,7 @@ cdef extern from "slurm/slurmdb.h":
         char* grp_tres_run_mins
         uint64_t* grp_tres_run_mins_ctld
         uint32_t grp_wall
+        double limit_factor
         uint32_t max_jobs_pa
         uint32_t max_jobs_pu
         uint32_t max_jobs_accrue_pa
@@ -543,6 +552,7 @@ cdef extern from "slurm/slurmdb.h":
         List tres_list
 
     ctypedef struct slurmdb_step_rec_t:
+        char* container
         uint32_t elapsed
         time_t end
         int32_t exitcode
@@ -560,14 +570,15 @@ cdef extern from "slurm/slurmdb.h":
         slurmdb_stats_t stats
         slurm_step_id_t step_id
         char* stepname
+        char* submit_line
         uint32_t suspended
-        uint32_t sys_cpu_sec
+        uint64_t sys_cpu_sec
         uint32_t sys_cpu_usec
         uint32_t task_dist
-        uint32_t tot_cpu_sec
+        uint64_t tot_cpu_sec
         uint32_t tot_cpu_usec
         char* tres_alloc_str
-        uint32_t user_cpu_sec
+        uint64_t user_cpu_sec
         uint32_t user_cpu_usec
 
     ctypedef struct slurmdb_res_cond_t:
@@ -644,6 +655,10 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t with_wckeys
         uint16_t without_defaults
 
+    cdef enum:
+        SLURMDB_USER_FLAG_NONE
+        SLURMDB_USER_FLAG_DELETED
+
     cdef struct slurmdb_user_rec:
         uint16_t admin_level
         List assoc_list
@@ -672,6 +687,10 @@ cdef extern from "slurm/slurmdb.h":
         List user_list
         uint16_t with_usage
         uint16_t with_deleted
+
+    cdef enum:
+        SLURMDB_WCKEY_FLAG_NONE
+        SLURMDB_WCKEY_FLAG_DELETED
 
     ctypedef struct slurmdb_wckey_rec_t:
         List accounting_list
