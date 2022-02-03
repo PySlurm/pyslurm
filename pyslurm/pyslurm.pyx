@@ -1590,17 +1590,18 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
 
 
 cpdef int slurm_kill_job2(slurm.const_char_ptr JobID='', uint16_t Signal=0,
-                          uint16_t BatchFlag=0) except? -1:
+                          uint16_t BatchFlag=0, char* sibling=NULL) except? -1:
     """Terminate a running slurm job step.
 
     :param const char * JobID: Job identifier
     :param int Signal: Signal to send
     :param int BatchFlag: Job batch flag (default=0)
+    :param string sibling: optional string of sibling cluster to send the message to
     :returns: 0 for success or -1 for error and set slurm errno
     :rtype: `integer`
     """
     cdef int apiError = 0
-    cdef int errCode = slurm.slurm_kill_job2(JobID, Signal, BatchFlag)
+    cdef int errCode = slurm.slurm_kill_job2(JobID, Signal, BatchFlag, sibling)
 
     if errCode != 0:
         apiError = slurm.slurm_get_errno()
