@@ -384,7 +384,6 @@ SLURM_DIST_CORECYCLIC           = slurm.SLURM_DIST_CORECYCLIC
 SLURM_DIST_COREBLOCK            = slurm.SLURM_DIST_COREBLOCK
 SLURM_DIST_CORECFULL            = slurm.SLURM_DIST_CORECFULL
 
-SLURM_DIST_NO_LLLP              = slurm.SLURM_DIST_NO_LLLP
 SLURM_DIST_UNKNOWN              = slurm.SLURM_DIST_UNKNOWN
 
 # end enum task_disk_states
@@ -430,7 +429,6 @@ MEM_BIND_PREFER                 = slurm.MEM_BIND_PREFER
 
 ACCEL_BIND_VERBOSE              = slurm.ACCEL_BIND_VERBOSE
 ACCEL_BIND_CLOSEST_GPU          = slurm.ACCEL_BIND_CLOSEST_GPU
-ACCEL_BIND_CLOSEST_MIC          = slurm.ACCEL_BIND_CLOSEST_MIC
 ACCEL_BIND_CLOSEST_NIC          = slurm.ACCEL_BIND_CLOSEST_NIC
 
 # end enum accel_bind_type
@@ -447,26 +445,3 @@ NODE_STATE_FUTURE               = slurm.NODE_STATE_FUTURE
 NODE_STATE_END                  = slurm.NODE_STATE_END
 
 # end enum node_states
-
-# enum ctx_keys
-
-SLURM_STEP_CTX_STEPID                   = slurm.SLURM_STEP_CTX_STEPID
-SLURM_STEP_CTX_TASKS                    = slurm.SLURM_STEP_CTX_TASKS
-SLURM_STEP_CTX_TID                      = slurm.SLURM_STEP_CTX_TID
-SLURM_STEP_CTX_RESP                     = slurm.SLURM_STEP_CTX_RESP
-SLURM_STEP_CTX_CRED                     = slurm.SLURM_STEP_CTX_CRED
-SLURM_STEP_CTX_SWITCH_JOB               = slurm.SLURM_STEP_CTX_SWITCH_JOB
-SLURM_STEP_CTX_NUM_HOSTS                = slurm.SLURM_STEP_CTX_NUM_HOSTS
-SLURM_STEP_CTX_HOST                     = slurm.SLURM_STEP_CTX_HOST
-SLURM_STEP_CTX_JOBID                    = slurm.SLURM_STEP_CTX_JOBID
-SLURM_STEP_CTX_USER_MANAGED_SOCKETS     = slurm.SLURM_STEP_CTX_USER_MANAGED_SOCKETS
-SLURM_STEP_CTX_NODE_LIST                = slurm.SLURM_STEP_CTX_NODE_LIST
-SLURM_STEP_CTX_TIDS                     = slurm.SLURM_STEP_CTX_TIDS
-SLURM_STEP_CTX_DEF_CPU_BIND_TYPE        = slurm.SLURM_STEP_CTX_DEF_CPU_BIND_TYPE
-
-# end enum ctx_keys
-
-
-
-
-
