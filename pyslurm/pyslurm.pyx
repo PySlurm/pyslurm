@@ -4962,8 +4962,7 @@ cdef class qos:
         cdef:
             slurm.slurmdb_qos_cond_t *new_qos_cond = NULL
             int apiError = 0
-            uint16_t* persist_conn_flags = NULL 
-            void* dbconn = slurm.slurmdb_connection_get(persist_conn_flags)
+            void* dbconn = slurm.slurmdb_connection_get(NULL)
             slurm.List QOSList = slurm.slurmdb_qos_get(dbconn, new_qos_cond)
 
         if QOSList is NULL:
@@ -5080,11 +5079,10 @@ cdef class slurmdb_jobs:
     cdef:
         void* db_conn
         slurm.slurmdb_job_cond_t *job_cond
-        uint16_t* persist_conn_flags
 
     def __cinit__(self):
         self.job_cond = <slurm.slurmdb_job_cond_t *>xmalloc(sizeof(slurm.slurmdb_job_cond_t))
-        self.db_conn = slurm.slurmdb_connection_get(self.persist_conn_flags)
+        self.db_conn = slurm.slurmdb_connection_get(NULL)
 
     def __dealloc__(self):
         slurm.xfree(self.job_cond)
