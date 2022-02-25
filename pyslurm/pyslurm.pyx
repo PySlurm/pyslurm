@@ -377,6 +377,31 @@ def slurm_load_slurmd_status():
 
     return Status
 
+def slurm_init(conf_file=None):
+    """
+    This function MUST be called before any internal API calls to ensure
+    Slurm's internal configuration structures have been populated.
+
+    :param string conf_file: Absolute path to the configuration file
+    (optional). If None (default value), libslurm automatically locates its
+    own configuration.
+
+    :returns: None
+    :rtype: None
+    """
+    if conf_file:
+        slurm.slurm_init(conf_file.encode('UTF-8'))
+    else:
+        slurm.slurm_init(NULL)
+
+def slurm_fini():
+    """Call at process termination to cleanup internal configuration
+    structures.
+
+    :returns: None
+    :rtype: None
+    """
+    slurm.slurm_fini()
 
 #
 # Slurm Config Class
