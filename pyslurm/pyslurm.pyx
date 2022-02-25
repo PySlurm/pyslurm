@@ -6491,3 +6491,6 @@ cdef class licenses:
         else:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+
+# Automatically load Slurm configuration data structure at pyslurm module load
+slurm_init()
