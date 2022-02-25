@@ -5459,9 +5459,11 @@ cdef class slurmdb_clusters:
     def __cinit__(self):
         self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
         slurm.slurmdb_init_cluster_cond(self.cluster_cond, 0)
+        self.db_conn = slurm.slurmdb_connection_get(NULL)
 
     def __dealloc__(self):
         slurm.slurmdb_destroy_cluster_cond(self.cluster_cond)
+        slurm.slurmdb_connection_close(&self.db_conn)
 
     def set_cluster_condition(self, start_time, end_time):
         """Limit the next get() call to clusters that existed after and before
