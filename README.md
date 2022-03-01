@@ -16,7 +16,7 @@ This PySlurm branch has been tested with:
 
 * Cython (latest stable)
 * Python 3.6, 3.7, 3.8, and 3.9
-* Slurm 20.11
+* Slurm 21.08
 
 ## Installation
 

@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   slurm:
-    image: giovtorres/docker-centos7-slurm:20.11.8
+    image: giovtorres/docker-centos7-slurm:21.08.0
     hostname: slurmctl
     container_name: slurmctl
     stdin_open: true

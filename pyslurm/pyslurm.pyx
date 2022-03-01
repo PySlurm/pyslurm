@@ -152,7 +152,7 @@ cdef inline IS_JOB_DEADLINE(slurm.slurm_job_info_t _X):
 cdef inline IS_JOB_OOM(slurm.slurm_job_info_t _X):
     return ((_X.job_state & JOB_STATE_BASE) == JOB_OOM)
 
-cdef inline IS_JOB_POWER_UP_NODE(slurm.slurm_job_info_t _X):
+cdef inline IS_JOB_POWERING_UP_NODE(slurm.slurm_job_info_t _X):
     return (_X.job_state & JOB_STATE_BASE)
 
 #
@@ -246,8 +246,8 @@ cdef inline IS_NODE_COMPLETING(slurm.node_info_t _X):
 cdef inline IS_NODE_NO_RESPOND(slurm.node_info_t _X):
     return (_X.node_state & NODE_STATE_NO_RESPOND)
 
-cdef inline IS_NODE_POWER_SAVE(slurm.node_info_t _X):
-    return (_X.node_state & NODE_STATE_POWER_SAVE)
+cdef inline IS_NODE_POWERED_DOWN(slurm.node_info_t _X):
+    return (_X.node_state & NODE_STATE_POWERED_DOWN)
 
 cdef inline IS_NODE_POWERING_DOWN(slurm.node_info_t _X):
     return (_X.node_state & NODE_STATE_POWERING_DOWN)
@@ -255,14 +255,14 @@ cdef inline IS_NODE_POWERING_DOWN(slurm.node_info_t _X):
 cdef inline IS_NODE_FAIL(slurm.node_info_t _X):
     return (_X.node_state & NODE_STATE_FAIL)
 
-cdef inline IS_NODE_POWER_UP(slurm.node_info_t _X):
-    return (_X.node_state & NODE_STATE_POWER_UP)
+cdef inline IS_NODE_POWERING_UP(slurm.node_info_t _X):
+    return (_X.node_state & NODE_STATE_POWERING_UP)
 
 cdef inline IS_NODE_MAINT(slurm.node_info_t _X):
     return (_X.node_state & NODE_STATE_MAINT)
 
-cdef inline IS_NODE_REBOOT(slurm.node_info_t _X):
-    return (_X.node_state & NODE_STATE_REBOOT)
+cdef inline IS_NODE_REBOOT_REQUESTED(slurm.node_info_t _X):
+    return (_X.node_state & NODE_STATE_REBOOT_REQUESTED)
 
 cdef inline IS_NODE_REBOOT_ISSUED(slurm.node_info_t _X):
     return (_X.node_state & NODE_STATE_REBOOT_ISSUED)
@@ -377,6 +377,31 @@ def slurm_load_slurmd_status():
 
     return Status
 
+def slurm_init(conf_file=None):
+    """
+    This function MUST be called before any internal API calls to ensure
+    Slurm's internal configuration structures have been populated.
+
+    :param string conf_file: Absolute path to the configuration file
+    (optional). If None (default value), libslurm automatically locates its
+    own configuration.
+
+    :returns: None
+    :rtype: None
+    """
+    if conf_file:
+        slurm.slurm_init(conf_file.encode('UTF-8'))
+    else:
+        slurm.slurm_init(NULL)
+
+def slurm_fini():
+    """Call at process termination to cleanup internal configuration
+    structures.
+
+    :returns: None
+    :rtype: None
+    """
+    slurm.slurm_fini()
 
 #
 # Slurm Config Class
@@ -564,6 +589,8 @@ cdef class config:
             Ctl_dict['authtype'] = slurm.stringOrNone(self.__Config_ptr.authtype, '')
             Ctl_dict['batch_start_timeout'] = self.__Config_ptr.batch_start_timeout
             Ctl_dict['bb_type'] = slurm.stringOrNone(self.__Config_ptr.bb_type, '')
+            Ctl_dict['bcast_exclude'] = slurm.stringOrNone(self.__Config_ptr.bcast_exclude, '')
+            Ctl_dict['bcast_parameters'] = slurm.stringOrNone(self.__Config_ptr.bcast_parameters, '')
             Ctl_dict['boot_time'] = self.__Config_ptr.boot_time
             Ctl_dict['core_spec_plugin'] = slurm.stringOrNone(self.__Config_ptr.core_spec_plugin, '')
             Ctl_dict['cli_filter_plugins'] = slurm.stringOrNone(self.__Config_ptr.cli_filter_plugins, '')
@@ -701,7 +728,6 @@ cdef class config:
             Ctl_dict['resv_prolog'] = slurm.stringOrNone(self.__Config_ptr.resv_prolog, '')
             Ctl_dict['ret2service'] = self.__Config_ptr.ret2service
             Ctl_dict['route_plugin'] = slurm.stringOrNone(self.__Config_ptr.route_plugin, '')
-            Ctl_dict['sbcast_parameters'] = slurm.stringOrNone(self.__Config_ptr.sbcast_parameters, '')
             Ctl_dict['sched_logfile'] = slurm.stringOrNone(self.__Config_ptr.sched_logfile, '')
             Ctl_dict['sched_log_level'] = self.__Config_ptr.sched_log_level
             Ctl_dict['sched_params'] = slurm.stringOrNone(self.__Config_ptr.sched_params, '')
@@ -752,6 +778,7 @@ cdef class config:
             Ctl_dict['suspend_time'] = self.__Config_ptr.suspend_time
             Ctl_dict['suspend_timeout'] = self.__Config_ptr.suspend_timeout
             Ctl_dict['switch_type'] = slurm.stringOrNone(self.__Config_ptr.switch_type, '')
+            Ctl_dict['switch_param'] = slurm.stringOrNone(self.__Config_ptr.switch_param, '')
             Ctl_dict['task_epilog'] = slurm.stringOrNone(self.__Config_ptr.task_epilog, '')
             Ctl_dict['task_plugin'] = slurm.stringOrNone(self.__Config_ptr.task_plugin, '')
             Ctl_dict['task_plugin_param'] = self.__Config_ptr.task_plugin_param
@@ -1085,7 +1112,10 @@ cdef class partition:
                 Part_dict['priority_job_factor'] = record.priority_job_factor
                 Part_dict['priority_tier'] = record.priority_tier
                 Part_dict['qos_char'] = slurm.stringOrNone(record.qos_char, '')
+                Part_dict['resume_timeout'] = record.resume_timeout
                 Part_dict['state'] = get_partition_state(record.state_up)
+                Part_dict['suspend_time'] = record.suspend_time
+                Part_dict['suspend_timout'] = record.suspend_timeout
                 Part_dict['total_cpus'] = record.total_cpus
                 Part_dict['total_nodes'] = record.total_nodes
                 Part_dict['tres_fmt_str'] = slurm.stringOrNone(record.tres_fmt_str, '')
@@ -1585,17 +1615,18 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
 
 
 cpdef int slurm_kill_job2(slurm.const_char_ptr JobID='', uint16_t Signal=0,
-                          uint16_t BatchFlag=0) except? -1:
+                          uint16_t BatchFlag=0, char* sibling=NULL) except? -1:
     """Terminate a running slurm job step.
 
     :param const char * JobID: Job identifier
     :param int Signal: Signal to send
     :param int BatchFlag: Job batch flag (default=0)
+    :param string sibling: optional string of sibling cluster to send the message to
     :returns: 0 for success or -1 for error and set slurm errno
     :rtype: `integer`
     """
     cdef int apiError = 0
-    cdef int errCode = slurm.slurm_kill_job2(JobID, Signal, BatchFlag)
+    cdef int errCode = slurm.slurm_kill_job2(JobID, Signal, BatchFlag, sibling)
 
     if errCode != 0:
         apiError = slurm.slurm_get_errno()
@@ -1671,12 +1702,14 @@ cdef class job:
         slurm.job_info_msg_t *_job_ptr
         slurm.slurm_job_info_t *_record
         slurm.time_t _lastUpdate
+        slurm.time_t _lastBackfill
         uint16_t _ShowFlags
         dict _JobDict
 
     def __cinit__(self):
         self._job_ptr = NULL
         self._lastUpdate = 0
+        self._lastBackfill = 0
         self._ShowFlags = slurm.SHOW_DETAIL | slurm.SHOW_ALL
 
     def __dealloc__(self):
@@ -1689,6 +1722,14 @@ cdef class job:
         :rtype: `integer`
         """
         return self._lastUpdate
+
+    def lastBackfill(self):
+        """Get the time (epoch seconds) of last backfilling run.
+
+        :returns: epoch seconds
+        :rtype: `integer`
+        """
+        return self._lastBackfill
 
     cpdef ids(self):
         """Return the job IDs from retrieved data.
@@ -1836,6 +1877,7 @@ cdef class job:
 
         self._JobDict = {}
         self._lastUpdate = self._job_ptr.last_update
+        self._lastBackfill = self._job_ptr.last_backfill
         exit_status = 0
         term_sig = 0
 
@@ -2062,6 +2104,7 @@ cdef class job:
             Job_dict['run_time'] = run_time
             Job_dict['run_time_str'] = secs2time_str(run_time)
             Job_dict['sched_nodes'] = slurm.stringOrNone(self._record.sched_nodes, '')
+            Job_dict['selinux_context'] = slurm.stringOrNone(self._record.selinux_context, '')
 
             if self._record.shared == 0:
                 Job_dict['shared'] = "0"
@@ -2289,6 +2332,10 @@ cdef class job:
         else:
             desc.contiguous = 0
 
+        if job_opts.get("container"):
+            container = job_opts.get("container").encode("UTF-8", "replace")
+            desc.container = container
+
         if job_opts.get("core_spec"):
             desc.core_spec = job_opts.get("core_spec")
         else:
@@ -2384,6 +2431,10 @@ cdef class job:
             desc.task_dist = job_opts.get("distribution")
         else:
             desc.task_dist = slurm.SLURM_DIST_UNKNOWN
+
+        if job_opts.get("container"):
+            container = job_opts.get("container").encode("UTF-8", "replace")
+            desc.container = container
 
         # TODO: what's the default opt.network?
         # Slurm on Cray
@@ -2651,7 +2702,7 @@ cdef class job:
 
     cdef bool is_alps_cray_system(self):
         if slurm.working_cluster_rec:
-            return slurm.working_cluster_rec.flags & slurm.CLUSTER_FLAG_CRAY_N
+            return slurm.working_cluster_rec.flags & slurm.CLUSTER_FLAG_CRAY
         if ALPS_CRAY_SYSTEM:
             return True
         return False
@@ -3146,6 +3197,7 @@ cdef class node:
 
             Host_dict['cpu_load'] = slurm.int32orNone(record.cpu_load)
             Host_dict['cpu_spec_list'] = slurm.listOrNone(record.cpu_spec_list, '')
+            Host_dict['extra'] = slurm.stringOrNone(record.extra, '')
             Host_dict['features'] = slurm.listOrNone(record.features, '')
             Host_dict['features_active'] = slurm.listOrNone(record.features_act, '')
             Host_dict['free_mem'] = slurm.int64orNone(record.free_mem)
@@ -3154,7 +3206,7 @@ cdef class node:
             Host_dict['gres_used'] = self.parse_gres(
                 slurm.stringOrNone(record.gres_used, '')
             )
-
+            Host_dict['last_busy'] = record.last_busy
             Host_dict['mcs_label'] = slurm.stringOrNone(record.mcs_label, '')
             Host_dict['mem_spec_limit'] = record.mem_spec_limit
             Host_dict['name'] = slurm.stringOrNone(record.name, '')
@@ -3225,8 +3277,8 @@ cdef class node:
                 node_state &= (~NODE_STATE_FAIL)
                 drain_str = "+FAIL"
 
-            if (node_state & NODE_STATE_POWER_SAVE):
-                node_state &= (~NODE_STATE_POWER_SAVE)
+            if (node_state & NODE_STATE_POWERED_DOWN):
+                node_state &= (~NODE_STATE_POWERED_DOWN)
                 power_str = "+POWER"
 
             if (node_state & NODE_STATE_POWERING_DOWN):
@@ -3515,6 +3567,8 @@ cdef class jobstep:
                     else:
                        Step_dict['step_id_str'] =  "{0}.{1}".format(job_id, step_id)
 
+                Step_dict['cluster'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].cluster, '')
+                Step_dict['container'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].container, '')
                 Step_dict['cpus_per_tres'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].cpus_per_tres, '')
 
                 Step_dict['dist'] = slurm.stringOrNone(
@@ -3538,6 +3592,7 @@ cdef class jobstep:
 
                 job_state = slurm.slurm_job_state_string(job_step_info_ptr.job_steps[i].state)
                 Step_dict['state'] = slurm.stringOrNone(job_state, '')
+                Step_dict['submit_line'] = slurm.stringOrNone(job_step_info_ptr.job_steps[i].submit_line, '')
 
                 if job_step_info_ptr.job_steps[i].time_limit == slurm.INFINITE:
                     Step_dict['time_limit'] = "UNLIMITED"
@@ -4932,8 +4987,7 @@ cdef class qos:
         cdef:
             slurm.slurmdb_qos_cond_t *new_qos_cond = NULL
             int apiError = 0
-            uint16_t* persist_conn_flags = NULL 
-            void* dbconn = slurm.slurmdb_connection_get(persist_conn_flags)
+            void* dbconn = slurm.slurmdb_connection_get(NULL)
             slurm.List QOSList = slurm.slurmdb_qos_get(dbconn, new_qos_cond)
 
         if QOSList is NULL:
@@ -5050,11 +5104,10 @@ cdef class slurmdb_jobs:
     cdef:
         void* db_conn
         slurm.slurmdb_job_cond_t *job_cond
-        uint16_t* persist_conn_flags
 
     def __cinit__(self):
         self.job_cond = <slurm.slurmdb_job_cond_t *>xmalloc(sizeof(slurm.slurmdb_job_cond_t))
-        self.db_conn = slurm.slurmdb_connection_get(self.persist_conn_flags)
+        self.db_conn = slurm.slurmdb_connection_get(NULL)
 
     def __dealloc__(self):
         slurm.xfree(self.job_cond)
@@ -5159,11 +5212,14 @@ cdef class slurmdb_jobs:
                 JOBS_info['associd'] = job.associd
                 JOBS_info['blockid'] = slurm.stringOrNone(job.blockid, '')
                 JOBS_info['cluster'] = slurm.stringOrNone(job.cluster, '')
+                JOBS_info['constraints'] = slurm.stringOrNone(job.constraints, '')
+                JOBS_info['container'] = slurm.stringOrNone(job.container, '')
                 JOBS_info['derived_ec'] = job.derived_ec
                 JOBS_info['derived_es'] = slurm.stringOrNone(job.derived_es, '')
                 JOBS_info['elapsed'] = job.elapsed
                 JOBS_info['eligible'] = job.eligible
                 JOBS_info['end'] = job.end
+                JOBS_info['env'] = slurm.stringOrNone(job.env, '')
                 JOBS_info['exitcode'] = job.exitcode
                 JOBS_info['gid'] = job.gid
                 JOBS_info['jobid'] = job.jobid
@@ -5185,6 +5241,7 @@ cdef class slurmdb_jobs:
                 JOBS_info['requid'] = job.requid
                 JOBS_info['resvid'] = job.resvid
                 JOBS_info['resv_name'] = slurm.stringOrNone(job.resv_name,'')
+                JOBS_info['script'] = slurm.stringOrNone(job.script,'')
                 JOBS_info['show_full'] = job.show_full
                 JOBS_info['start'] = job.start
                 JOBS_info['state'] = job.state
@@ -5225,6 +5282,7 @@ cdef class slurmdb_jobs:
                     if step is not NULL:
                         step_id = step.step_id.step_id
 
+                        step_info['container'] = slurm.stringOrNone(step.container, '')
                         step_info['elapsed'] = step.elapsed
                         step_info['end'] = step.end
                         step_info['exitcode'] = step.exitcode
@@ -5268,6 +5326,7 @@ cdef class slurmdb_jobs:
                         stats['tres_usage_out_tot'] = slurm.stringOrNone(step.stats.tres_usage_out_tot, '')
                         step_info['stepid'] = step_id
                         step_info['stepname'] = slurm.stringOrNone(step.stepname, '')
+                        step_info['submit_line'] = slurm.stringOrNone(step.submit_line, '')
                         step_info['suspended'] = step.suspended
                         step_info['sys_cpu_sec'] = step.sys_cpu_sec
                         step_info['sys_cpu_usec'] = step.sys_cpu_usec
@@ -5283,6 +5342,7 @@ cdef class slurmdb_jobs:
                 slurm.slurm_list_iterator_destroy(stepsIter)
 
                 JOBS_info['submit'] = job.submit
+                JOBS_info['submit_line'] = slurm.stringOrNone(job.submit_line,'')
                 JOBS_info['suspended'] = job.suspended
                 JOBS_info['sys_cpu_sec'] = job.sys_cpu_sec
                 JOBS_info['sys_cpu_usec'] = job.sys_cpu_usec
@@ -5296,7 +5356,7 @@ cdef class slurmdb_jobs:
                 JOBS_info['used_gres'] = slurm.stringOrNone(job.used_gres, '')
                 JOBS_info['user'] = slurm.stringOrNone(job.user,'')
                 JOBS_info['user_cpu_sec'] = job.user_cpu_sec
-                JOBS_info['user_cpu_sec'] = job.user_cpu_usec
+                JOBS_info['user_cpu_usec'] = job.user_cpu_usec
                 JOBS_info['wckey'] = slurm.stringOrNone(job.wckey, '')
                 JOBS_info['wckeyid'] = job.wckeyid
                 JOBS_info['work_dir'] = slurm.stringOrNone(job.work_dir, '')
@@ -5424,9 +5484,11 @@ cdef class slurmdb_clusters:
     def __cinit__(self):
         self.cluster_cond = <slurm.slurmdb_cluster_cond_t *>xmalloc(sizeof(slurm.slurmdb_cluster_cond_t))
         slurm.slurmdb_init_cluster_cond(self.cluster_cond, 0)
+        self.db_conn = slurm.slurmdb_connection_get(NULL)
 
     def __dealloc__(self):
         slurm.slurmdb_destroy_cluster_cond(self.cluster_cond)
+        slurm.slurmdb_connection_close(&self.db_conn)
 
     def set_cluster_condition(self, start_time, end_time):
         """Limit the next get() call to clusters that existed after and before
@@ -5509,7 +5571,7 @@ cdef class slurmdb_clusters:
                                 acct_tres_dict['alloc_secs'] = acct_tres.alloc_secs
                                 acct_tres_dict['down_secs'] = acct_tres.down_secs
                                 acct_tres_dict['idle_secs'] = acct_tres.idle_secs
-                                acct_tres_dict['resv_secs'] = acct_tres.resv_secs
+                                acct_tres_dict['plan_secs'] = acct_tres.plan_secs
                                 acct_tres_dict['pdown_secs'] = acct_tres.pdown_secs
                                 acct_tres_dict['over_secs'] = acct_tres.over_secs
                                 acct_tres_dict['period_start'] = acct_tres.period_start
@@ -5936,6 +5998,9 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
     if (debug_flags & DEBUG_FLAG_BURST_BUF):
         debugFlags.append('BurstBuffer')
 
+    if (debug_flags & DEBUG_FLAG_CGROUP):
+        debugFlags.append('Cgroup')
+
     if (debug_flags & DEBUG_FLAG_CPU_FREQ):
         debugFlags.append('CpuFrequency')
 
@@ -5984,9 +6049,6 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
     if (debug_flags & DEBUG_FLAG_EXT_SENSORS):
         debugFlags.append('ExtSensors')
 
-    if (debug_flags & DEBUG_FLAG_FILESYSTEM):
-        debugFlags.append('Filesystem')
-
     if (debug_flags & DEBUG_FLAG_FEDR):
         debugFlags.append('Federation')
 
@@ -6005,6 +6067,9 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
     if (debug_flags & DEBUG_FLAG_INTERCONNECT):
         debugFlags.append('Interconnect')
 
+    if (debug_flags & DEBUG_FLAG_JAG):
+        debugFlags.append('Jag')
+
     if (debug_flags & DEBUG_FLAG_JOB_CONT):
         debugFlags.append('JobContainer')
 
@@ -6017,14 +6082,8 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
     if (debug_flags & DEBUG_FLAG_NO_CONF_HASH):
         debugFlags.append('NO_CONF_HASH')
 
-    if (debug_flags & DEBUG_FLAG_NO_REALTIME):
-        debugFlags.append('NoRealTime')
-
     if (debug_flags & DEBUG_FLAG_POWER):
         debugFlags.append('Power')
-
-    if (debug_flags & DEBUG_FLAG_POWER_SAVE):
-        debugFlags.append('PowerSave')
 
     if (debug_flags & DEBUG_FLAG_PRIO):
         debugFlags.append('Priority')
@@ -6041,6 +6100,9 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
     if (debug_flags & DEBUG_FLAG_SELECT_TYPE):
         debugFlags.append('SelectType')
 
+    if (debug_flags & DEBUG_FLAG_SCRIPT):
+        debugFlags.append('Script')
+
     if (debug_flags & DEBUG_FLAG_STEPS):
         debugFlags.append('Steps')
 
@@ -6052,9 +6114,6 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
 
     if (debug_flags & DEBUG_FLAG_TIME_CRAY):
         debugFlags.append('TimeCray')
-
-    if (debug_flags & DEBUG_FLAG_TRES_NODE):
-        debugFlags.append('TRESNode')
 
     if (debug_flags & DEBUG_FLAG_TRACE_JOBS):
         debugFlags.append('TraceJobs')
@@ -6432,3 +6491,6 @@ cdef class licenses:
         else:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+
+# Automatically load Slurm configuration data structure at pyslurm module load
+slurm_init()

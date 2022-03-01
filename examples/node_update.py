@@ -8,9 +8,9 @@ Modify the state of a Node or BG Base Partition
           NODE_STATE_DRAIN
           NODE_STATE_COMPLETING
           NODE_STATE_NO_RESPOND
-          NODE_STATE_POWER_SAVE
+          NODE_STATE_POWERED_DOWN
           NODE_STATE_FAIL
-          NODE_STATE_POWER_UP
+          NODE_STATE_POWERING_UP
 
    Some states are not valid on a Blue Gene
 """
