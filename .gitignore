@@ -16,6 +16,8 @@ pyslurm/*.pxi~
 pyslurm/*.pxd~
 pyslurm/*.so
 pyslurm/*.c
+pyslurm/**/*.c
+pyslurm/**/__pycache__
 
 # Ignore vim swap files
 *.swp
@@ -25,6 +27,7 @@ tests/*.pyc
 
 # Ignore pycache (Python 3)
 */__pycache__
+*/**/__pycache__
 
 # Ignore job output files
 *.out

@@ -61,7 +61,6 @@ cdef extern from '<pthread.h>' nogil:
 cdef extern from *:
     ctypedef struct slurm_job_credential
     ctypedef struct switch_jobinfo
-    ctypedef struct job_resources
     ctypedef struct select_jobinfo
     ctypedef struct select_nodeinfo
     ctypedef struct jobacctinfo
