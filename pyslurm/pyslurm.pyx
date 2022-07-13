@@ -52,12 +52,10 @@ cdef extern from "<sys/resource.h>" nogil:
 cdef extern from "alps_cray.h" nogil:
     cdef int ALPS_CRAY_SYSTEM
 
-cdef extern from "xmalloc.h" nogil:
-    cdef void *xmalloc(size_t size)
-
 import builtins as __builtin__
 
 from pyslurm cimport slurm
+from pyslurm.slurm cimport xmalloc
 
 include "pydefines/slurm_errno_defines.pxi"
 include "pydefines/slurm_errno_enums.pxi"
@@ -233,9 +231,6 @@ cdef inline IS_NODE_DRAIN(slurm.node_info_t _X):
 cdef inline IS_NODE_DRAINING(slurm.node_info_t _X):
     return ((_X.node_state & NODE_STATE_DRAIN) and
             (IS_NODE_ALLOCATED(_X) or IS_NODE_MIXED(_X)))
-
-cdef inline IS_NODE_DYNAMIC(slurm.node_info_t _X):
-    return (_X.node_state and NODE_STATE_DYNAMIC)
 
 cdef inline IS_NODE_DRAINED(slurm.node_info_t _X):
     return (IS_NODE_DRAIN(_X) and not IS_NODE_DRAINING(_X))
@@ -646,7 +641,7 @@ cdef class config:
             Ctl_dict['job_file_append'] = bool(self.__Config_ptr.job_file_append)
             Ctl_dict['job_requeue'] = bool(self.__Config_ptr.job_requeue)
             Ctl_dict['job_submit_plugins'] = slurm.stringOrNone(self.__Config_ptr.job_submit_plugins, '')
-            Ctl_dict['keep_alive_time'] = slurm.int16orNone(self.__Config_ptr.keep_alive_time)
+            Ctl_dict['keep_alive_time'] = slurm.int16orNone(self.__Config_ptr.keepalive_time)
             Ctl_dict['kill_on_bad_exit'] = bool(self.__Config_ptr.kill_on_bad_exit)
             Ctl_dict['kill_wait'] = self.__Config_ptr.kill_wait
             Ctl_dict['launch_params'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
@@ -1614,7 +1609,7 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
     return errCode
 
 
-cpdef int slurm_kill_job2(slurm.const_char_ptr JobID='', uint16_t Signal=0,
+cpdef int slurm_kill_job2(const char *JobID='', uint16_t Signal=0,
                           uint16_t BatchFlag=0, char* sibling=NULL) except? -1:
     """Terminate a running slurm job step.
 
@@ -2576,9 +2571,9 @@ cdef class job:
         job_opts["get_user_env_time"] = -1
 
         if not job_opts.get("export_env"):
-            slurm.slurm_env_array_merge(&desc.environment, <slurm.const_char_pptr>slurm.environ)
+            slurm.slurm_env_array_merge(&desc.environment, <const char**>slurm.environ)
         elif job_opts.get("export_env") == "ALL":
-            slurm.slurm_env_array_merge(&desc.environment, <slurm.const_char_pptr>slurm.environ)
+            slurm.slurm_env_array_merge(&desc.environment, <const char**>slurm.environ)
         elif job_opts.get("export_env") == "NONE":
             desc.environment = slurm.slurm_env_array_create()
             # env_array_merge_slurm(&desc->environment, (const char **)environ);
@@ -2682,7 +2677,7 @@ cdef class job:
             envc += 1
         return envc
 
-    cdef void print_db_notok(self, slurm.const_char_ptr cname, bool isenv):
+    cdef void print_db_notok(self, const char *cname, bool isenv):
         b_all = "all".encode("UTF-8", "replace")
         if errno:
             sys.stderr.write("There is a problem talking to the database:") # %m.  "
@@ -5250,25 +5245,6 @@ cdef class slurmdb_jobs:
                 # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
                 # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
                 # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
-                JOBS_info['stats'] = {}
-                stats = JOBS_info['stats']
-                stats['act_cpufreq'] = job.stats.act_cpufreq
-                stats['consumed_energy'] = job.stats.consumed_energy
-                stats['tres_usage_in_max'] = slurm.stringOrNone(job.stats.tres_usage_in_max, '')
-                stats['tres_usage_in_max_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_nodeid, '')
-                stats['tres_usage_in_max_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_taskid, '')
-                stats['tres_usage_in_min'] = slurm.stringOrNone(job.stats.tres_usage_in_min, '')
-                stats['tres_usage_in_min_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_nodeid, '')
-                stats['tres_usage_in_min_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_taskid, '')
-                stats['tres_usage_in_tot'] = slurm.stringOrNone(job.stats.tres_usage_in_tot, '')
-                stats['tres_usage_out_ave'] = slurm.stringOrNone(job.stats.tres_usage_out_ave, '')
-                stats['tres_usage_out_max'] = slurm.stringOrNone(job.stats.tres_usage_out_max, '')
-                stats['tres_usage_out_max_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_nodeid, '')
-                stats['tres_usage_out_max_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_taskid, '')
-                stats['tres_usage_out_min'] = slurm.stringOrNone(job.stats.tres_usage_out_min, '')
-                stats['tres_usage_out_min_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_nodeid, '')
-                stats['tres_usage_out_min_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_taskid, '')
-                stats['tres_usage_out_tot'] = slurm.stringOrNone(job.stats.tres_usage_out_tot, '')
 
                 # add job steps
                 JOBS_info['steps'] = {}
@@ -5349,7 +5325,6 @@ cdef class slurmdb_jobs:
                 JOBS_info['timelimit'] = job.timelimit
                 JOBS_info['tot_cpu_sec'] = job.tot_cpu_sec
                 JOBS_info['tot_cpu_usec'] = job.tot_cpu_usec
-                JOBS_info['track_steps'] = job.track_steps
                 JOBS_info['tres_alloc_str'] = slurm.stringOrNone(job.tres_alloc_str,'')
                 JOBS_info['tres_req_str'] = slurm.stringOrNone(job.tres_req_str,'')
                 JOBS_info['uid'] = job.uid
@@ -6108,9 +6083,6 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
 
     if (debug_flags & DEBUG_FLAG_SWITCH):
         debugFlags.append('Switch')
-
-    if (debug_flags & DEBUG_FLAG_TASK):
-        debugFlags.append('Task')
 
     if (debug_flags & DEBUG_FLAG_TIME_CRAY):
         debugFlags.append('TimeCray')
