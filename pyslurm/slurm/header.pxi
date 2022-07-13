@@ -1,66 +1,10 @@
-# cython: embedsignature=True
-# cython: profile=False
-
-
-from libcpp cimport bool
-from posix.unistd cimport uid_t, pid_t
-from libc.stdint cimport int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t
-from cpython.version cimport PY_MAJOR_VERSION
-from posix.unistd cimport uid_t, pid_t, gid_t
-from libc.stdint cimport uint32_t, uint16_t, uint64_t
-
-
-cdef extern from "<netinet/in.h>" nogil:
-    ctypedef struct sockaddr_in
-    ctypedef struct sockaddr_storage
-
-cdef extern from '<stdio.h>' nogil:
-    ctypedef struct FILE
-    cdef FILE *stdout
-
-
-cdef extern from '<Python.h>' nogil:
-    cdef FILE *PyFile_AsFile(object file)
-    char *__FILE__
-    cdef int __LINE__
-    char *__FUNCTION__
-
-
-cdef extern from '<time.h>' nogil:
-    ctypedef long time_t
-
-
-cdef extern from "<netinet/in.h>" nogil:
-    ctypedef struct sockaddr_in
-
-
-cdef extern from "<pthread.h>" nogil:
-    ctypedef union pthread_mutex_t
-
-
-cdef extern from *:
-    ctypedef struct slurm_job_credential
-    ctypedef struct switch_jobinfo
-    ctypedef struct job_resources
-    ctypedef struct select_jobinfo
-    ctypedef struct select_nodeinfo
-    ctypedef struct jobacctinfo
-    ctypedef struct allocation_msg_thread
-    ctypedef struct sbcast_cred
-    ctypedef struct hostlist
-    ctypedef struct xlist
-    ctypedef struct listIterator
-    ctypedef struct slurm_step_ctx_struct
-    ctypedef char const_char "const char"
-    ctypedef struct slurm_ctl_conf_t
-    ctypedef char* const_char_ptr "const char*"
-    ctypedef char** const_char_pptr "const char**"
-
-
 cdef extern from "slurm/slurm_errno.h":
 
-    int SLURM_SUCCESS
-    int SLURM_ERROR
+    uint8_t SLURM_SUCCESS
+    uint8_t ESPANK_SUCCESS
+    int8_t SLURM_ERROR
+
+cdef extern from "slurm/slurm_errno.h":
 
     ctypedef enum slurm_err_t:
         SLURM_UNEXPECTED_MSG_ERROR
@@ -212,6 +156,9 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_RESERVATION_USER_GROUP
         ESLURM_PARTITION_ASSOC
         ESLURM_IN_STANDBY_USE_BACKUP
+        ESLURM_BAD_THREAD_PER_CORE
+        ESLURM_INVALID_PREFER
+        ESLURM_INSUFFICIENT_GRES
         ESPANK_ERROR
         ESPANK_BAD_ARG
         ESPANK_NOT_TASK
@@ -255,6 +202,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURMD_STEP_NOTSUSPENDED
         ESLURMD_INVALID_SOCKET_NAME_LEN
         ESLURMD_CONTAINER_RUNTIME_INVALID
+        ESLURMD_CPU_BIND_ERROR
         ESCRIPT_CHDIR_FAILED
         ESCRIPT_OPEN_OUTPUT_FAILED
         ESCRIPT_NON_ZERO_RETURN
@@ -282,6 +230,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_RESULT_TOO_LARGE
         ESLURM_DB_QUERY_TOO_WIDE
         ESLURM_DB_CONNECTION_INVALID
+        ESLURM_NO_REMOVE_DEFAULT_ACCOUNT
         ESLURM_FED_CLUSTER_MAX_CNT
         ESLURM_FED_CLUSTER_MULTIPLE_ASSIGNMENT
         ESLURM_INVALID_CLUSTER_FEATURE
@@ -303,6 +252,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_DATA_REGEX_COMPILE
         ESLURM_DATA_UNKNOWN_MIME_TYPE
         ESLURM_DATA_TOO_LARGE
+        ESLURM_CONTAINER_NOT_CONFIGURED
 
     char* slurm_strerror(int errnum)
 
@@ -312,17 +262,14 @@ cdef extern from "slurm/slurm_errno.h":
 
     void slurm_perror(char* msg)
 
-
 cdef extern from "slurm/slurm.h":
 
     enum:
         SLURM_VERSION_NUMBER
 
-
-
     uint8_t SYSTEM_DIMENSIONS
     uint8_t HIGHEST_DIMENSIONS
-
+    uint8_t HOST_NAME_MAX
     uint8_t INFINITE8
     uint16_t INFINITE16
     uint32_t INFINITE
@@ -335,15 +282,12 @@ cdef extern from "slurm/slurm.h":
     uint16_t MAX_TASKS_PER_NODE
     uint32_t MAX_JOB_ID
     uint8_t MAX_FED_CLUSTERS
-
+    uint32_t SLURM_MAX_NORMAL_STEP_ID
     uint32_t SLURM_PENDING_STEP
-    uint32_t SLURM_BATCH_SCRIPT
     uint32_t SLURM_EXTERN_CONT
-
+    uint32_t SLURM_BATCH_SCRIPT
+    uint32_t SLURM_INTERACTIVE_STEP
     uint8_t DEFAULT_EIO_SHUTDOWN_WAIT
-
-    uint16_t SLURM_SSL_SIGNATURE_LENGTH
-
     uint8_t JOB_STATE_BASE
     uint32_t JOB_STATE_FLAGS
     uint16_t JOB_LAUNCH_FAILED
@@ -362,13 +306,11 @@ cdef extern from "slurm/slurm.h":
     uint32_t JOB_RESV_DEL_HOLD
     uint32_t JOB_SIGNALING
     uint32_t JOB_STAGE_OUT
-
-    uint8_t READY_JOB_ERROR
-    uint8_t READY_JOB_FATAL
+    int8_t READY_JOB_FATAL
+    int8_t READY_JOB_ERROR
     uint8_t READY_NODE_STATE
     uint8_t READY_JOB_STATE
     uint8_t READY_PROLOG_STATE
-
     uint8_t MAIL_JOB_BEGIN
     uint8_t MAIL_JOB_END
     uint8_t MAIL_JOB_FAIL
@@ -379,14 +321,11 @@ cdef extern from "slurm/slurm.h":
     uint8_t MAIL_JOB_TIME50
     uint16_t MAIL_JOB_STAGE_OUT
     uint16_t MAIL_ARRAY_TASKS
-
+    uint16_t MAIL_INVALID_DEPEND
     uint8_t ARRAY_TASK_REQUEUED
-
     uint32_t NICE_OFFSET
-
     uint8_t PARTITION_SUBMIT
     uint8_t PARTITION_SCHED
-
     uint8_t PARTITION_DOWN
     uint8_t PARTITION_UP
     uint8_t PARTITION_DRAIN
@@ -394,7 +333,6 @@ cdef extern from "slurm/slurm.h":
     uint8_t PARTITION_ENFORCE_NONE
     uint8_t PARTITION_ENFORCE_ALL
     uint8_t PARTITION_ENFORCE_ANY
-
     uint8_t ACCT_GATHER_PROFILE_NOT_SET
     uint8_t ACCT_GATHER_PROFILE_NONE
     uint8_t ACCT_GATHER_PROFILE_ENERGY
@@ -402,20 +340,16 @@ cdef extern from "slurm/slurm.h":
     uint8_t ACCT_GATHER_PROFILE_LUSTRE
     uint8_t ACCT_GATHER_PROFILE_NETWORK
     uint32_t ACCT_GATHER_PROFILE_ALL
-
     uint16_t SLURM_DIST_STATE_BASE
     uint32_t SLURM_DIST_STATE_FLAGS
     uint32_t SLURM_DIST_PACK_NODES
     uint32_t SLURM_DIST_NO_PACK_NODES
-
     uint16_t SLURM_DIST_NODEMASK
     uint16_t SLURM_DIST_SOCKMASK
     uint16_t SLURM_DIST_COREMASK
     uint16_t SLURM_DIST_NODESOCKMASK
-
     uint8_t OPEN_MODE_APPEND
     uint8_t OPEN_MODE_TRUNCATE
-
     uint32_t CPU_FREQ_RANGE_FLAG
     uint32_t CPU_FREQ_LOW
     uint32_t CPU_FREQ_MEDIUM
@@ -426,8 +360,8 @@ cdef extern from "slurm/slurm.h":
     uint32_t CPU_FREQ_PERFORMANCE
     uint32_t CPU_FREQ_POWERSAVE
     uint32_t CPU_FREQ_USERSPACE
+    uint32_t CPU_FREQ_SCHEDUTIL
     uint32_t CPU_FREQ_GOV_MASK
-
     uint8_t NODE_STATE_BASE
     uint32_t NODE_STATE_FLAGS
     uint8_t NODE_STATE_NET
@@ -445,14 +379,15 @@ cdef extern from "slurm/slurm.h":
     uint32_t NODE_STATE_REBOOT_REQUESTED
     uint32_t NODE_STATE_REBOOT_CANCEL
     uint32_t NODE_STATE_POWERING_DOWN
-    uint32_t NODE_STATE_DYNAMIC
+    uint32_t NODE_STATE_DYNAMIC_FUTURE
     uint32_t NODE_STATE_REBOOT_ISSUED
     uint32_t NODE_STATE_PLANNED
     uint32_t NODE_STATE_INVALID_REG
     uint32_t NODE_STATE_POWER_DOWN
     uint32_t NODE_STATE_POWER_UP
     uint32_t NODE_STATE_POWER_DRAIN
-
+    uint32_t NODE_STATE_DYNAMIC_NORM
+    uint8_t SLURM_SSL_SIGNATURE_LENGTH
     uint8_t SHOW_ALL
     uint8_t SHOW_DETAIL
     uint8_t SHOW_MIXED
@@ -460,7 +395,6 @@ cdef extern from "slurm/slurm.h":
     uint8_t SHOW_SIBLING
     uint8_t SHOW_FEDERATION
     uint8_t SHOW_FUTURE
-
     uint8_t CR_CPU
     uint8_t CR_SOCKET
     uint8_t CR_CORE
@@ -472,10 +406,8 @@ cdef extern from "slurm/slurm.h":
     uint16_t CR_OTHER_CONS_TRES
     uint16_t CR_CORE_DEFAULT_DIST_BLOCK
     uint16_t CR_LLN
-
     uint64_t MEM_PER_CPU
     uint16_t SHARED_FORCE
-
     uint8_t PRIVATE_DATA_JOBS
     uint8_t PRIVATE_DATA_NODES
     uint8_t PRIVATE_DATA_PARTITIONS
@@ -485,7 +417,6 @@ cdef extern from "slurm/slurm.h":
     uint8_t PRIVATE_DATA_RESERVATIONS
     uint8_t PRIVATE_CLOUD_NODES
     uint16_t PRIVATE_DATA_EVENTS
-
     uint8_t PRIORITY_RESET_NONE
     uint8_t PRIORITY_RESET_NOW
     uint8_t PRIORITY_RESET_DAILY
@@ -493,11 +424,9 @@ cdef extern from "slurm/slurm.h":
     uint8_t PRIORITY_RESET_MONTHLY
     uint8_t PRIORITY_RESET_QUARTERLY
     uint8_t PRIORITY_RESET_YEARLY
-
     uint8_t PROP_PRIO_OFF
     uint8_t PROP_PRIO_ON
     uint8_t PROP_PRIO_NICER
-
     uint8_t PRIORITY_FLAGS_ACCRUE_ALWAYS
     uint8_t PRIORITY_FLAGS_MAX_TRES
     uint8_t PRIORITY_FLAGS_SIZE_RELATIVE
@@ -509,33 +438,28 @@ cdef extern from "slurm/slurm.h":
     uint16_t PRIORITY_FLAGS_NO_NORMAL_PART
     uint16_t PRIORITY_FLAGS_NO_NORMAL_QOS
     uint16_t PRIORITY_FLAGS_NO_NORMAL_TRES
-
     uint8_t KILL_INV_DEP
     uint8_t NO_KILL_INV_DEP
     uint8_t HAS_STATE_DIR
     uint8_t BACKFILL_TEST
     uint8_t GRES_ENFORCE_BIND
     uint8_t TEST_NOW_ONLY
-    uint8_t NODE_REBOOT
+    uint8_t JOB_SEND_ENV
     uint16_t SPREAD_JOB
     uint16_t USE_MIN_NODES
     uint16_t JOB_KILL_HURRY
     uint16_t TRES_STR_CALC
-
     uint16_t SIB_JOB_FLUSH
     uint16_t HET_JOB_FLAG
     uint16_t JOB_NTASKS_SET
     uint16_t JOB_CPUS_SET
     uint32_t BF_WHOLE_NODE_TEST
     uint32_t TOP_PRIO_TMP
-
     uint32_t JOB_ACCRUE_OVER
-
     uint32_t GRES_DISABLE_BIND
     uint32_t JOB_WAS_RUNNING
     uint32_t RESET_ACCRUE_TIME
-
-
+    uint32_t CRON_JOB
     uint32_t JOB_MEM_SET
     uint32_t JOB_RESIZED
     uint32_t USE_DEFAULT_ACCT
@@ -543,27 +467,25 @@ cdef extern from "slurm/slurm.h":
     uint32_t USE_DEFAULT_QOS
     uint32_t USE_DEFAULT_WCKEY
     uint32_t JOB_DEPENDENT
-
+    uint32_t JOB_MAGNETIC
+    uint32_t JOB_PART_ASSIGNED
+    uint64_t BACKFILL_SCHED
+    uint64_t BACKFILL_LAST
+    uint64_t JOB_SEND_SCRIPT
     uint8_t X11_FORWARD_ALL
     uint8_t X11_FORWARD_BATCH
     uint8_t X11_FORWARD_FIRST
     uint8_t X11_FORWARD_LAST
-
     uint8_t ALLOC_SID_ADMIN_HOLD
     uint8_t ALLOC_SID_USER_HOLD
-
     uint8_t JOB_SHARED_NONE
     uint8_t JOB_SHARED_OK
     uint8_t JOB_SHARED_USER
     uint8_t JOB_SHARED_MCS
-
     uint8_t SLURM_POWER_FLAGS_LEVEL
-
     uint16_t CORE_SPEC_THREAD
-
     uint8_t JOB_DEF_CPU_PER_GPU
     uint8_t JOB_DEF_MEM_PER_GPU
-
     uint8_t PART_FLAG_DEFAULT
     uint8_t PART_FLAG_HIDDEN
     uint8_t PART_FLAG_NO_ROOT
@@ -571,7 +493,6 @@ cdef extern from "slurm/slurm.h":
     uint8_t PART_FLAG_REQ_RESV
     uint8_t PART_FLAG_LLN
     uint8_t PART_FLAG_EXCLUSIVE_USER
-
     uint16_t PART_FLAG_DEFAULT_CLR
     uint16_t PART_FLAG_HIDDEN_CLR
     uint16_t PART_FLAG_NO_ROOT_CLR
@@ -579,7 +500,6 @@ cdef extern from "slurm/slurm.h":
     uint16_t PART_FLAG_REQ_RESV_CLR
     uint16_t PART_FLAG_LLN_CLR
     uint16_t PART_FLAG_EXC_USER_CLR
-
     uint8_t RESERVE_FLAG_MAINT
     uint8_t RESERVE_FLAG_NO_MAINT
     uint8_t RESERVE_FLAG_DAILY
@@ -588,7 +508,6 @@ cdef extern from "slurm/slurm.h":
     uint8_t RESERVE_FLAG_NO_WEEKLY
     uint8_t RESERVE_FLAG_IGN_JOBS
     uint8_t RESERVE_FLAG_NO_IGN_JOB
-
     uint16_t RESERVE_FLAG_ANY_NODES
     uint16_t RESERVE_FLAG_NO_ANY_NODES
     uint16_t RESERVE_FLAG_STATIC
@@ -610,11 +529,14 @@ cdef extern from "slurm/slurm.h":
     uint32_t RESERVE_FLAG_NO_FLEX
     uint32_t RESERVE_FLAG_DUR_PLUS
     uint32_t RESERVE_FLAG_DUR_MINUS
-
     uint32_t RESERVE_FLAG_NO_HOLD_JOBS
     uint32_t RESERVE_FLAG_REPLACE_DOWN
     uint32_t RESERVE_FLAG_NO_PURGE_COMP
-
+    uint64_t RESERVE_FLAG_MAGNETIC
+    uint64_t RESERVE_FLAG_NO_MAGNETIC
+    uint64_t RESERVE_FLAG_SKIP
+    uint64_t RESERVE_FLAG_HOURLY
+    uint64_t RESERVE_FLAG_NO_HOURLY
     uint8_t DEBUG_FLAG_SELECT_TYPE
     uint8_t DEBUG_FLAG_STEPS
     uint8_t DEBUG_FLAG_TRIGGERS
@@ -622,6 +544,7 @@ cdef extern from "slurm/slurm.h":
     uint8_t DEBUG_FLAG_NET_RAW
     uint8_t DEBUG_FLAG_NO_CONF_HASH
     uint8_t DEBUG_FLAG_GRES
+    uint8_t DEBUG_FLAG_MPI
     uint16_t DEBUG_FLAG_DATA
     uint16_t DEBUG_FLAG_WORKQ
     uint16_t DEBUG_FLAG_NET
@@ -637,7 +560,6 @@ cdef extern from "slurm/slurm.h":
     uint32_t DEBUG_FLAG_PROFILE
     uint32_t DEBUG_FLAG_INTERCONNECT
     uint32_t DEBUG_FLAG_JOB_CONT
-    uint32_t DEBUG_FLAG_TASK
     uint32_t DEBUG_FLAG_PROTOCOL
     uint32_t DEBUG_FLAG_BACKFILL_MAP
     uint32_t DEBUG_FLAG_TRACE_JOBS
@@ -668,35 +590,36 @@ cdef extern from "slurm/slurm.h":
     uint64_t DEBUG_FLAG_JAG
     uint64_t DEBUG_FLAG_CGROUP
     uint64_t DEBUG_FLAG_SCRIPT
-
     uint8_t PREEMPT_MODE_OFF
     uint8_t PREEMPT_MODE_SUSPEND
     uint8_t PREEMPT_MODE_REQUEUE
     uint8_t PREEMPT_MODE_CANCEL
+    uint8_t PREEMPT_MODE_COND_OFF
+    uint16_t PREEMPT_MODE_WITHIN
     uint16_t PREEMPT_MODE_GANG
-
     uint8_t RECONFIG_KEEP_PART_INFO
     uint8_t RECONFIG_KEEP_PART_STAT
-
     uint8_t HEALTH_CHECK_NODE_IDLE
     uint8_t HEALTH_CHECK_NODE_ALLOC
     uint8_t HEALTH_CHECK_NODE_MIXED
     uint16_t HEALTH_CHECK_CYCLE
     uint8_t HEALTH_CHECK_NODE_ANY
-
     uint8_t PROLOG_FLAG_ALLOC
     uint8_t PROLOG_FLAG_NOHOLD
     uint8_t PROLOG_FLAG_CONTAIN
     uint8_t PROLOG_FLAG_SERIAL
     uint8_t PROLOG_FLAG_X11
-
+    uint8_t PROLOG_FLAG_DEFER_BATCH
     uint8_t CTL_CONF_OR
     uint8_t CTL_CONF_SJC
     uint8_t CTL_CONF_DRJ
     uint8_t CTL_CONF_ASRU
     uint8_t CTL_CONF_PAM
     uint8_t CTL_CONF_WCKEY
-
+    uint8_t CTL_CONF_IPV4_ENABLED
+    uint8_t CTL_CONF_IPV6_ENABLED
+    uint16_t CTL_CONF_SJS
+    uint16_t CTL_CONF_SJE
     uint8_t LOG_FMT_ISO8601_MS
     uint8_t LOG_FMT_ISO8601
     uint8_t LOG_FMT_RFC5424_MS
@@ -704,12 +627,9 @@ cdef extern from "slurm/slurm.h":
     uint8_t LOG_FMT_CLOCK
     uint8_t LOG_FMT_SHORT
     uint8_t LOG_FMT_THREAD_ID
-
     uint8_t STAT_COMMAND_RESET
     uint8_t STAT_COMMAND_GET
-
     uint8_t TRIGGER_FLAG_PERM
-
     uint8_t TRIGGER_RES_TYPE_JOB
     uint8_t TRIGGER_RES_TYPE_NODE
     uint8_t TRIGGER_RES_TYPE_SLURMCTLD
@@ -717,7 +637,6 @@ cdef extern from "slurm/slurm.h":
     uint8_t TRIGGER_RES_TYPE_DATABASE
     uint8_t TRIGGER_RES_TYPE_FRONT_END
     uint8_t TRIGGER_RES_TYPE_OTHER
-
     uint8_t TRIGGER_TYPE_UP
     uint8_t TRIGGER_TYPE_DOWN
     uint8_t TRIGGER_TYPE_FAIL
@@ -738,7 +657,9 @@ cdef extern from "slurm/slurm.h":
     uint32_t TRIGGER_TYPE_PRI_DB_FAIL
     uint32_t TRIGGER_TYPE_PRI_DB_RES_OP
     uint32_t TRIGGER_TYPE_BURST_BUFFER
-
+    uint8_t ASSOC_MGR_INFO_FLAG_ASSOC
+    uint8_t ASSOC_MGR_INFO_FLAG_USERS
+    uint8_t ASSOC_MGR_INFO_FLAG_QOS
     uint8_t KILL_JOB_BATCH
     uint8_t KILL_JOB_ARRAY
     uint8_t KILL_STEPS_ONLY
@@ -748,9 +669,7 @@ cdef extern from "slurm/slurm.h":
     uint8_t KILL_OOM
     uint8_t KILL_NO_SIBS
     uint16_t KILL_JOB_RESV
-
     uint16_t WARN_SENT
-
     uint8_t BB_FLAG_DISABLE_PERSISTENT
     uint8_t BB_FLAG_ENABLE_PERSISTENT
     uint8_t BB_FLAG_EMULATE_CRAY
@@ -775,10 +694,7 @@ cdef extern from "slurm/slurm.h":
     uint8_t BB_STATE_TEARDOWN_FAIL
     uint8_t BB_STATE_COMPLETE
 
-    uint8_t ASSOC_MGR_INFO_FLAG_ASSOC
-    uint8_t ASSOC_MGR_INFO_FLAG_USERS
-    uint8_t ASSOC_MGR_INFO_FLAG_QOS
-
+cdef extern from "slurm/slurm.h":
 
     ctypedef sockaddr_storage slurm_addr_t
 
@@ -800,7 +716,11 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef sbcast_cred sbcast_cred_t
 
-    cdef enum job_states:
+    ctypedef struct slurm_hash_t:
+        unsigned char type
+        unsigned char hash[32]
+
+    cpdef enum job_states:
         JOB_PENDING
         JOB_RUNNING
         JOB_SUSPENDED
@@ -815,7 +735,7 @@ cdef extern from "slurm/slurm.h":
         JOB_OOM
         JOB_END
 
-    cdef enum job_state_reason:
+    cpdef enum job_state_reason:
         WAIT_NO_REASON
         WAIT_PRIORITY
         WAIT_DEPENDENCY
@@ -1016,18 +936,25 @@ cdef extern from "slurm/slurm.h":
         WAIT_QOS_MIN_BILLING
         WAIT_RESV_DELETED
 
-    cdef enum job_acct_types:
+    cpdef enum job_acct_types:
         JOB_START
         JOB_STEP
         JOB_SUSPEND
         JOB_TERMINATED
 
-    cdef enum auth_plugin_type:
+    cpdef enum auth_plugin_type:
         AUTH_PLUGIN_NONE
         AUTH_PLUGIN_MUNGE
         AUTH_PLUGIN_JWT
 
-    cdef enum select_plugin_type:
+    cpdef enum hash_plugin_type:
+        HASH_PLUGIN_DEFAULT
+        HASH_PLUGIN_NONE
+        HASH_PLUGIN_K12
+        HASH_PLUGIN_SHA256
+        HASH_PLUGIN_CNT
+
+    cpdef enum select_plugin_type:
         SELECT_PLUGIN_CONS_RES
         SELECT_PLUGIN_LINEAR
         SELECT_PLUGIN_SERIAL
@@ -1036,26 +963,27 @@ cdef extern from "slurm/slurm.h":
         SELECT_PLUGIN_CONS_TRES
         SELECT_PLUGIN_CRAY_CONS_TRES
 
-    cdef enum switch_plugin_type:
+    cpdef enum switch_plugin_type:
         SWITCH_PLUGIN_NONE
         SWITCH_PLUGIN_GENERIC
         SWITCH_PLUGIN_CRAY
+        SWITCH_PLUGIN_SLINGSHOT
 
-    cdef enum select_jobdata_type:
+    cpdef enum select_jobdata_type:
         SELECT_JOBDATA_PAGG_ID
         SELECT_JOBDATA_PTR
         SELECT_JOBDATA_CLEANING
         SELECT_JOBDATA_NETWORK
         SELECT_JOBDATA_RELEASED
 
-    cdef enum select_nodedata_type:
+    cpdef enum select_nodedata_type:
         SELECT_NODEDATA_SUBCNT
         SELECT_NODEDATA_PTR
         SELECT_NODEDATA_MEM_ALLOC
         SELECT_NODEDATA_TRES_ALLOC_FMT_STR
         SELECT_NODEDATA_TRES_ALLOC_WEIGHTED
 
-    cdef enum select_print_mode:
+    cpdef enum select_print_mode:
         SELECT_PRINT_HEAD
         SELECT_PRINT_DATA
         SELECT_PRINT_MIXED
@@ -1074,7 +1002,7 @@ cdef extern from "slurm/slurm.h":
         SELECT_PRINT_RESV_ID
         SELECT_PRINT_START_LOC
 
-    cdef enum select_node_cnt:
+    cpdef enum select_node_cnt:
         SELECT_GET_NODE_SCALING
         SELECT_GET_NODE_CPU_CNT
         SELECT_GET_MP_CPU_CNT
@@ -1083,19 +1011,19 @@ cdef extern from "slurm/slurm.h":
         SELECT_SET_NODE_CNT
         SELECT_SET_MP_CNT
 
-    cdef enum acct_gather_profile_info:
+    cpdef enum acct_gather_profile_info:
         ACCT_GATHER_PROFILE_DIR
         ACCT_GATHER_PROFILE_DEFAULT
         ACCT_GATHER_PROFILE_RUNNING
 
-    cdef enum jobacct_data_type:
+    cpdef enum jobacct_data_type:
         JOBACCT_DATA_TOTAL
         JOBACCT_DATA_PIPE
         JOBACCT_DATA_RUSAGE
         JOBACCT_DATA_TOT_VSIZE
         JOBACCT_DATA_TOT_RSS
 
-    cdef enum acct_energy_type:
+    cpdef enum acct_energy_type:
         ENERGY_DATA_JOULES_TASK
         ENERGY_DATA_STRUCT
         ENERGY_DATA_RECONFIG
@@ -1106,7 +1034,7 @@ cdef extern from "slurm/slurm.h":
         ENERGY_DATA_NODE_ENERGY_UP
         ENERGY_DATA_STEP_PTR
 
-    cdef enum task_dist_states:
+    cpdef enum task_dist_states:
         SLURM_DIST_CYCLIC
         SLURM_DIST_BLOCK
         SLURM_DIST_ARBITRARY
@@ -1147,13 +1075,12 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef task_dist_states task_dist_states_t
 
-    cdef enum cpu_bind_type:
+    cpdef enum cpu_bind_type:
         CPU_BIND_VERBOSE
         CPU_BIND_TO_THREADS
         CPU_BIND_TO_CORES
         CPU_BIND_TO_SOCKETS
         CPU_BIND_TO_LDOMS
-        CPU_BIND_TO_BOARDS
         CPU_BIND_NONE
         CPU_BIND_RANK
         CPU_BIND_MAP
@@ -1170,7 +1097,7 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef cpu_bind_type cpu_bind_type_t
 
-    cdef enum mem_bind_type:
+    cpdef enum mem_bind_type:
         MEM_BIND_VERBOSE
         MEM_BIND_NONE
         MEM_BIND_RANK
@@ -1182,14 +1109,14 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef mem_bind_type mem_bind_type_t
 
-    cdef enum accel_bind_type:
+    cpdef enum accel_bind_type:
         ACCEL_BIND_VERBOSE
         ACCEL_BIND_CLOSEST_GPU
         ACCEL_BIND_CLOSEST_NIC
 
     ctypedef accel_bind_type accel_bind_type_t
 
-    cdef enum node_states:
+    cpdef enum node_states:
         NODE_STATE_UNKNOWN
         NODE_STATE_DOWN
         NODE_STATE_IDLE
@@ -1206,6 +1133,8 @@ cdef extern from "slurm/slurm.h":
         SSF_OVERCOMMIT
         SSF_WHOLE
         SSF_INTERACTIVE
+        SSF_MEM_ZERO
+        SSF_OVERLAP_FORCE
 
     void slurm_init(char* conf)
 
@@ -1322,7 +1251,7 @@ cdef extern from "slurm/slurm.h":
         uint32_t argc
         char** argv
         char* array_inx
-        void* array_bitmap
+        bitstr_t* array_bitmap
         char* batch_features
         time_t begin_time
         uint64_t bitflags
@@ -1345,6 +1274,7 @@ cdef extern from "slurm/slurm.h":
         char* dependency
         time_t end_time
         char** environment
+        slurm_hash_t env_hash
         uint32_t env_size
         char* extra
         char* exc_nodes
@@ -1375,6 +1305,7 @@ cdef extern from "slurm/slurm.h":
         char* partition
         uint16_t plane_size
         uint8_t power_flags
+        char* prefer
         uint32_t priority
         uint32_t profile
         char* qos
@@ -1386,6 +1317,7 @@ cdef extern from "slurm/slurm.h":
         char* reservation
         char* script
         void* script_buf
+        slurm_hash_t script_hash
         uint16_t shared
         uint32_t site_factor
         char** spank_job_env
@@ -1447,7 +1379,7 @@ cdef extern from "slurm/slurm.h":
         char* admin_comment
         char* alloc_node
         uint32_t alloc_sid
-        void* array_bitmap
+        bitstr_t* array_bitmap
         uint32_t array_job_id
         uint32_t array_task_id
         uint32_t array_max_tasks
@@ -1522,6 +1454,7 @@ cdef extern from "slurm/slurm.h":
         uint32_t num_nodes
         uint32_t num_tasks
         char* partition
+        char* prefer
         uint64_t pn_min_memory
         uint16_t pn_min_cpus
         uint32_t pn_min_tmp_disk
@@ -1577,6 +1510,8 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef job_info slurm_job_info_t
 
+    ctypedef slurm_job_info_t job_info_t
+
     cdef struct priority_factors_object:
         char* cluster_name
         uint32_t job_id
@@ -1602,8 +1537,6 @@ cdef extern from "slurm/slurm.h":
         List priority_factors_list
 
     ctypedef priority_factors_response_msg priority_factors_response_msg_t
-
-    ctypedef slurm_job_info_t job_info_t
 
     cdef struct job_info_msg:
         time_t last_backfill
@@ -1729,7 +1662,7 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef srun_step_missing_msg srun_step_missing_msg_t
 
-    cdef enum suspend_opts:
+    cpdef enum suspend_opts:
         SUSPEND_JOB
         RESUME_JOB
 
@@ -1938,6 +1871,7 @@ cdef extern from "slurm/slurm.h":
         uint32_t cpu_load
         uint64_t free_mem
         uint16_t cpus
+        uint16_t cpus_efctv
         char* cpu_spec_list
         acct_gather_energy_t* energy
         ext_sensors_data_t* ext_sensors
@@ -2080,6 +2014,7 @@ cdef extern from "slurm/slurm.h":
         char* name
         int32_t* node_inx
         char* nodes
+        char* nodesets
         uint16_t over_time_limit
         uint16_t preempt_mode
         uint16_t priority_job_factor
@@ -2104,6 +2039,7 @@ cdef extern from "slurm/slurm.h":
         char* account
         uint32_t job_id
         char* alias_list
+        char* batch_host
         uint32_t cpu_freq_min
         uint32_t cpu_freq_max
         uint32_t cpu_freq_gov
@@ -2303,7 +2239,9 @@ cdef extern from "slurm/slurm.h":
         uint16_t job_file_append
         uint16_t job_requeue
         char* job_submit_plugins
-        uint16_t keep_alive_time
+        uint32_t keepalive_interval
+        uint32_t keepalive_probes
+        uint32_t keepalive_time
         uint16_t kill_on_bad_exit
         uint16_t kill_wait
         char* launch_params
@@ -2317,11 +2255,13 @@ cdef extern from "slurm/slurm.h":
         uint32_t max_job_cnt
         uint32_t max_job_id
         uint64_t max_mem_per_cpu
+        uint32_t max_node_cnt
         uint32_t max_step_cnt
         uint16_t max_tasks_per_node
         char* mcs_plugin
         char* mcs_plugin_params
         uint32_t min_job_age
+        void* mpi_conf
         char* mpi_default
         char* mpi_params
         uint16_t msg_timeout
@@ -2730,8 +2670,6 @@ cdef extern from "slurm/slurm.h":
 
     void slurm_step_launch_fwd_wake(slurm_step_ctx_t* ctx)
 
-    int slurm_mpi_plugin_init(char* plugin_name)
-
     long slurm_api_version()
 
     int slurm_load_ctl_conf(time_t update_time, slurm_conf_t** slurm_ctl_conf_ptr)
@@ -2858,7 +2796,11 @@ cdef extern from "slurm/slurm.h":
 
     void slurm_init_update_node_msg(update_node_msg_t* update_node_msg)
 
+    int slurm_create_node(update_node_msg_t* node_msg)
+
     int slurm_update_node(update_node_msg_t* node_msg)
+
+    int slurm_delete_node(update_node_msg_t* node_msg)
 
     int slurm_load_front_end(time_t update_time, front_end_info_msg_t** resp)
 
@@ -3059,15 +3001,12 @@ cdef extern from "slurm/slurm.h":
 
     int slurm_remove_crontab(uid_t uid, gid_t gid)
 
-
 cdef extern from "slurm/slurmdb.h":
-
 
     uint32_t QOS_FLAG_BASE
     uint32_t QOS_FLAG_NOTSET
     uint32_t QOS_FLAG_ADD
     uint32_t QOS_FLAG_REMOVE
-
     uint8_t QOS_FLAG_PART_MIN_NODE
     uint8_t QOS_FLAG_PART_MAX_NODE
     uint8_t QOS_FLAG_PART_TIME_LIMIT
@@ -3078,29 +3017,25 @@ cdef extern from "slurm/slurmdb.h":
     uint8_t QOS_FLAG_OVER_PART_QOS
     uint16_t QOS_FLAG_NO_DECAY
     uint16_t QOS_FLAG_USAGE_FACTOR_SAFE
-
     uint32_t SLURMDB_RES_FLAG_BASE
     uint32_t SLURMDB_RES_FLAG_NOTSET
     uint32_t SLURMDB_RES_FLAG_ADD
     uint32_t SLURMDB_RES_FLAG_REMOVE
-
     uint32_t FEDERATION_FLAG_BASE
     uint32_t FEDERATION_FLAG_NOTSET
     uint32_t FEDERATION_FLAG_ADD
     uint32_t FEDERATION_FLAG_REMOVE
-
     uint8_t CLUSTER_FED_STATE_BASE
     uint16_t CLUSTER_FED_STATE_FLAGS
     uint8_t CLUSTER_FED_STATE_DRAIN
     uint8_t CLUSTER_FED_STATE_REMOVE
-
     uint8_t SLURMDB_JOB_FLAG_NONE
     uint8_t SLURMDB_JOB_CLEAR_SCHED
     uint8_t SLURMDB_JOB_FLAG_NOTSET
     uint8_t SLURMDB_JOB_FLAG_SUBMIT
     uint8_t SLURMDB_JOB_FLAG_SCHED
     uint8_t SLURMDB_JOB_FLAG_BACKFILL
-
+    uint8_t SLURMDB_JOB_FLAG_START_R
     uint8_t JOBCOND_FLAG_DUP
     uint8_t JOBCOND_FLAG_NO_STEP
     uint8_t JOBCOND_FLAG_NO_TRUNC
@@ -3109,19 +3044,17 @@ cdef extern from "slurm/slurmdb.h":
     uint8_t JOBCOND_FLAG_NO_WHOLE_HETJOB
     uint8_t JOBCOND_FLAG_NO_WAIT
     uint8_t JOBCOND_FLAG_NO_DEFAULT_USAGE
-
+    uint16_t JOBCOND_FLAG_SCRIPT
+    uint16_t JOBCOND_FLAG_ENV
     uint16_t SLURMDB_PURGE_BASE
     uint32_t SLURMDB_PURGE_FLAGS
     uint32_t SLURMDB_PURGE_HOURS
     uint32_t SLURMDB_PURGE_DAYS
     uint32_t SLURMDB_PURGE_MONTHS
     uint32_t SLURMDB_PURGE_ARCHIVE
-
     uint32_t SLURMDB_FS_USE_PARENT
-
     uint16_t SLURMDB_CLASSIFIED_FLAG
     uint8_t SLURMDB_CLASS_BASE
-
     uint8_t CLUSTER_FLAG_A1
     uint8_t CLUSTER_FLAG_A2
     uint8_t CLUSTER_FLAG_A3
@@ -3135,14 +3068,10 @@ cdef extern from "slurm/slurmdb.h":
     uint16_t CLUSTER_FLAG_CRAY
     uint16_t CLUSTER_FLAG_FED
     uint16_t CLUSTER_FLAG_EXT
+    uint8_t ASSOC_FLAG_DELETED
+    uint8_t SLURMDB_EVENT_COND_OPEN
 
-    uint8_t SLURMDB_ASSOC_FLAG_NONE
-    uint8_t SLURMDB_ASSOC_FLAG_DELETED
-    uint8_t SLURMDB_USER_FLAG_NONE
-    uint8_t SLURMDB_USER_FLAG_DELETED
-    uint8_t SLURMDB_WCKEY_FLAG_NONE
-    uint8_t SLURMDB_WCKEY_FLAG_DELETED
-
+cdef extern from "slurm/slurmdb.h":
 
     ctypedef enum slurmdb_admin_level_t:
         SLURMDB_ADMIN_NOTSET
@@ -3211,7 +3140,7 @@ cdef extern from "slurm/slurmdb.h":
         SLURMDB_ADD_TRES
         SLURMDB_UPDATE_FEDS
 
-    cdef enum cluster_fed_states:
+    cpdef enum cluster_fed_states:
         CLUSTER_FED_STATE_NA
         CLUSTER_FED_STATE_ACTIVE
         CLUSTER_FED_STATE_INACTIVE
@@ -3302,7 +3231,7 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t with_coords
         uint16_t with_deleted
 
-    cdef enum:
+    cpdef enum:
         SLURMDB_ACCT_FLAG_NONE
         SLURMDB_ACCT_FLAG_DELETED
 
@@ -3371,6 +3300,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t grp_wall
         uint32_t id
         uint16_t is_def
+        slurmdb_assoc_usage_t* leaf_usage
         uint32_t lft
         uint32_t max_jobs
         uint32_t max_jobs_accrue
@@ -3454,14 +3384,14 @@ cdef extern from "slurm/slurmdb.h":
         List accounting_list
         uint16_t classification
         time_t comm_fail_time
-        # slurm_addr_t control_addr
+        # slurm_addr_t control_addr incomplete type complaint
         char* control_host
         uint32_t control_port
         uint16_t dimensions
         int* dim_size
         slurmdb_cluster_fed_t fed
         uint32_t flags
-        # pthread_mutex_t lock
+        # pthread_mutex_t lock incomplete type complaint
         char* name
         char* nodes
         uint32_t plugin_id_select
@@ -3490,6 +3420,7 @@ cdef extern from "slurm/slurmdb.h":
 
     ctypedef struct slurmdb_event_cond_t:
         List cluster_list
+        uint32_t cond_flags
         uint32_t cpus_max
         uint32_t cpus_min
         uint16_t event_type
@@ -3568,7 +3499,6 @@ cdef extern from "slurm/slurmdb.h":
         time_t start
         uint32_t state
         uint32_t state_reason_prev
-        slurmdb_stats_t stats
         List steps
         time_t submit
         char* submit_line
@@ -3579,7 +3509,6 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t timelimit
         uint64_t tot_cpu_sec
         uint64_t tot_cpu_usec
-        uint16_t track_steps
         char* tres_alloc_str
         char* tres_req_str
         uint32_t uid
@@ -3797,7 +3726,7 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t with_wckeys
         uint16_t without_defaults
 
-    cdef enum:
+    cpdef enum:
         SLURMDB_USER_FLAG_NONE
         SLURMDB_USER_FLAG_DELETED
 
@@ -3830,7 +3759,7 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t with_usage
         uint16_t with_deleted
 
-    cdef enum:
+    cpdef enum:
         SLURMDB_WCKEY_FLAG_NONE
         SLURMDB_WCKEY_FLAG_DELETED
 
@@ -3898,7 +3827,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t count
         List tres_list
 
-    cdef enum:
+    cpdef enum:
         DBD_ROLLUP_HOUR
         DBD_ROLLUP_DAY
         DBD_ROLLUP_MONTH
@@ -4206,92 +4135,3 @@ cdef extern from "slurm/slurmdb.h":
     List slurmdb_wckeys_modify(void* db_conn, slurmdb_wckey_cond_t* wckey_cond, slurmdb_wckey_rec_t* wckey)
 
     List slurmdb_wckeys_remove(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
-
-
-#
-# PySlurm helper functions
-#
-
-
-cdef inline listOrNone(char* value, sep_char):
-    if value is NULL:
-        return []
-
-    if not sep_char:
-        return value.decode("UTF-8", "replace")
-
-    if sep_char == '':
-        return value.decode("UTF-8", "replace")
-
-    return value.decode("UTF_8", "replace").split(sep_char)
-
-
-cdef inline stringOrNone(char* value, value2):
-    if value is NULL:
-        if value2 is '':
-            return None
-        return value2
-    return value.decode("UTF-8", "replace")
-
-
-cdef inline int16orNone(uint16_t value):
-    if value is NO_VAL16:
-        return None
-    else:
-        return value
-
-
-cdef inline int32orNone(uint32_t value):
-    if value is NO_VAL:
-        return None
-    else:
-        return value
-
-
-cdef inline int64orNone(uint64_t value):
-    if value is NO_VAL64:
-        return None
-    else:
-        return value
-
-
-cdef inline int16orUnlimited(uint16_t value, return_type):
-    if value is INFINITE16:
-        if return_type is "int":
-            return None
-        else:
-            return "UNLIMITED"
-    else:
-        if return_type is "int":
-            return value
-        else:
-            return str(value)
-
-
-cdef inline boolToString(int value):
-    if value == 0:
-        return 'False'
-    return 'True'
-
-
-cdef extern char **environ
-
-cdef extern char *slurm_preempt_mode_string (uint16_t preempt_mode)
-cdef extern void slurm_make_time_str (time_t *time, char *string, int size)
-cdef extern char *slurm_job_state_string (uint16_t inx)
-cdef extern char *slurm_job_reason_string (int inx)
-cdef extern void slurm_env_array_merge(char ***dest_array, const_char_pptr src_array)
-cdef extern char **slurm_env_array_create()
-cdef extern int slurm_env_array_overwrite(char ***array_ptr, const_char_ptr name, const_char_ptr value)
-cdef extern char *slurm_node_state_string (uint32_t inx)
-cdef extern char *slurm_step_layout_type_name (task_dist_states_t task_dist)
-cdef extern void slurm_xfree (void **, const_char_ptr, int, const_char_ptr)
-cdef extern char *slurm_reservation_flags_string (reserve_info_t *resv_ptr)
-cdef extern void slurm_free_stats_response_msg (stats_info_response_msg_t *msg)
-cdef extern int slurm_addto_char_list_with_case(List char_list, char *names, bool lower_case_noralization)
-cdef extern int slurm_addto_step_list(List step_list, char *names)
-cdef extern time_t slurm_parse_time(char *time_str, int past)
-cdef extern int slurmdb_report_set_start_end_time(time_t *start, time_t *end)
-
-cdef inline xfree(void *__p):
-    slurm_xfree(&__p, __FILE__, __LINE__, __FUNCTION__)
