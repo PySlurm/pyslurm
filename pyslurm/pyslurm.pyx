@@ -44,18 +44,11 @@ cdef extern from "<sys/resource.h>" nogil:
     enum: PRIO_PROCESS
     int getpriority(int, id_t)
 
-#cdef extern from *:
-#    # deprecated backwards compatiblity declaration
-#    ctypedef char*  const_char_ptr  "const char*"
-#    ctypedef char** const_char_pptr "const char**"
-
 cdef extern from "alps_cray.h" nogil:
     cdef int ALPS_CRAY_SYSTEM
 
-cdef extern from "xmalloc.h" nogil:
-    cdef void *xmalloc(size_t size)
-
 import builtins as __builtin__
+from pyslurm.slurm cimport xmalloc
 
 from pyslurm cimport slurm
 
@@ -1614,7 +1607,7 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
     return errCode
 
 
-cpdef int slurm_kill_job2(slurm.const_char_ptr JobID='', uint16_t Signal=0,
+cpdef int slurm_kill_job2(const char *JobID='', uint16_t Signal=0,
                           uint16_t BatchFlag=0, char* sibling=NULL) except? -1:
     """Terminate a running slurm job step.
 
@@ -2596,9 +2589,9 @@ cdef class job:
         job_opts["get_user_env_time"] = -1
 
         if not job_opts.get("export_env"):
-            slurm.slurm_env_array_merge(&desc.environment, <slurm.const_char_pptr>slurm.environ)
+            slurm.slurm_env_array_merge(&desc.environment, <const char**>slurm.environ)
         elif job_opts.get("export_env") == "ALL":
-            slurm.slurm_env_array_merge(&desc.environment, <slurm.const_char_pptr>slurm.environ)
+            slurm.slurm_env_array_merge(&desc.environment, <const char**>slurm.environ)
         elif job_opts.get("export_env") == "NONE":
             desc.environment = slurm.slurm_env_array_create()
             # env_array_merge_slurm(&desc->environment, (const char **)environ);
@@ -2702,7 +2695,7 @@ cdef class job:
             envc += 1
         return envc
 
-    cdef void print_db_notok(self, slurm.const_char_ptr cname, bool isenv):
+    cdef void print_db_notok(self, const char *cname, bool isenv):
         b_all = "all".encode("UTF-8", "replace")
         if errno:
             sys.stderr.write("There is a problem talking to the database:") # %m.  "
