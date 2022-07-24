@@ -1,6 +1,7 @@
 # cython: embedsignature=True
 # cython: profile=False
 # cython: language_level=3
+# cython: auto_pickle=False
 import os
 import re
 import sys

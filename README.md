@@ -8,56 +8,51 @@ PySlurm is the Python client library for the [Slurm](https://slurm.schedmd.com) 
 
 ## Prerequisites
 
-* [Slurm](https://slurm.schedmd.com)
-* [Python](https://www.python.org)
-* [Cython](https://cython.org)
+* [Slurm](https://slurm.schedmd.com) - Slurm shared library and header files
+* [Python](https://www.python.org) - >= 3.6
+* [Cython](https://cython.org) - >= 0.29.30 but < 3.0
 
-This PySlurm branch has been tested with:
-
-* Cython (latest stable)
-* Python 3.6, 3.7, 3.8, and 3.9
-* Slurm 22.05
+This PySlurm branch is for the Slurm Major-Release 21.08
 
 ## Installation
 
-You will need to instruct the setup.py script where either the Slurm install
-root directory or where the Slurm libraries and Slurm header files are.
+By default, it is searched inside `/usr/include` for the Header files and in
+`/usr/lib64` for Slurms shared-library (`libslurm.so`) during Installation.
+For Slurm installations in different locations, you will need to provide
+the corresponding paths to the necessary files.
 
-### Slurm installed using system defaults (/usr)
+You can specify these Paths with environment variables, for example:
 
 ```shell
-python setup.py build
+export SLURM_INCLUDE_DIR=/opt/slurm/21.08/include
+export SLURM_LIB_DIR=/opt/slurm/21.08/lib
+```
+
+Then you can proceed to install PySlurm, for example:
+
+```shell
+pip install pyslurm==21.08.0
+```
+
+Or by cloning the repository:
+
+```shell
+git clone https://github.com/PySlurm/pyslurm.git && cd pyslurm
 python setup.py install
+
+# Or simply with pip
+pip install .
 ```
 
-### Custom installation location
+Also see `python setup.py --help`
 
-```shell
-python setup.py build --slurm=PATH_TO_SLURM_DIR
-python setup.py install
-```
+## Release Versioning
 
-### Custom Slurm library and include directories
-
-```shell
-python setup.py build --slurm-lib=PATH_TO_SLURM_LIB --slurm-inc=PATH_TO_SLURM_INC
-python setup.py install
-```
-
-### Indicate Blue Gene type Q on build line
-
-```shell
-python setup.py build --bgq
-```
-
-### Cleanup build artifacts
-
-The build will automatically call a cleanup procedure to remove temporary build
-files but this can be called directly if needed as well with :
-
-```shell
-python setup.py clean
-```
+PySlurm's versioning scheme follows the official Slurm versioning. The first
+two numbers (MAJOR.MINOR) always correspond to Slurms Major-Release, for example
+`21.08`. The last number (MICRO) is however not tied in any way to Slurms
+MICRO version. For example, any PySlurm 21.08.X version should work with any
+Slurm 21.08.X release.
 
 ## Documentation
 
@@ -138,8 +133,7 @@ already compiled and installed:
 ```shell
 git clone https://github.com/PySlurm/pyslurm.git
 cd pyslurm
-python3.9 setup.py build
-python3.9 setup.py install
+pip install .
 ./scripts/configure.sh
 pipenv sync --dev
 pipenv run pytest -sv
