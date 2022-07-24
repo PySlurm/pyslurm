@@ -26,11 +26,9 @@ cdef inline void xfree_ptr(void *__p):
 
 cdef extern char *slurm_xstrdup(const char *str)
 
-
 #
 # Slurm time functions
 #
-
 
 cdef extern void slurm_secs2time_str(time_t time, char *string, int size)
 cdef extern void slurm_mins2time_str(time_t time, char *string, int size)
@@ -43,7 +41,6 @@ cdef extern time_t slurm_parse_time(char *time_str, int past)
 # Slurm Job functions
 #
 
-
 cdef extern void slurm_free_job_desc_msg(job_desc_msg_t *msg)
 cdef extern void slurm_free_job_info(job_info_t *job)
 cdef extern void slurm_free_job_info_members(job_info_t *job)
@@ -55,16 +52,11 @@ cdef extern char *slurm_job_share_string(uint16_t shared)
 
 #
 # Slurm environment functions
-#
 
 cdef extern void slurm_env_array_merge(char ***dest_array, const char **src_array)
 cdef extern char **slurm_env_array_create()
 cdef extern int slurm_env_array_overwrite(char ***array_ptr, const char *name, const char *value)
 cdef extern void slurm_env_array_free(char **env_array)
-# cdef extern void slurm_env_array_merge_slurm(char ***dest_array, const char **src_array)
-
-
-cdef extern int slurm_select_fini()
 
 #
 # Misc
@@ -78,9 +70,4 @@ cdef extern void slurm_free_stats_response_msg (stats_info_response_msg_t *msg)
 cdef extern int slurm_addto_char_list_with_case(List char_list, char *names, bool lower_case_noralization)
 cdef extern int slurm_addto_step_list(List step_list, char *names)
 cdef extern int slurmdb_report_set_start_end_time(time_t *start, time_t *end)
-cdef extern int debug_str2flags(char *debug_flags, uint64_t *flags_out)
-cdef extern char *debug_flags2str(uint64_t debug_flags)
-cdef extern void slurm_sprint_cpu_bind_type(char *str, cpu_bind_type_t cpu_bind_type)
 cdef extern uint16_t slurm_get_track_wckey()
-cdef extern char *select_type_param_string(uint16_t select_type_param)
-

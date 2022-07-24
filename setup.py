@@ -19,7 +19,7 @@ CYTHON_VERSION_MIN = "0.29.30"
 
 SLURM_RELEASE = "22.5"
 PYSLURM_PATCH_RELEASE = "0"
-SLURM_SHARED_LIB = "libslurmfull.so"
+SLURM_SHARED_LIB = "libslurm.so"
 CURRENT_DIR = pathlib.Path(__file__).parent
 
 metadata = dict(
@@ -178,7 +178,7 @@ def make_extensions():
     ext_meta = { 
         "include_dirs": [config.slurm_inc, "."],
         "library_dirs": [config.slurm_lib],
-        "libraries": ["slurmfull"],
+        "libraries": ["slurm"],
         "runtime_library_dirs": [config.slurm_lib],
     }
 
