@@ -602,7 +602,7 @@ cdef class config:
             Ctl_dict['cpu_freq_govs'] = self.__Config_ptr.cpu_freq_govs
             Ctl_dict['cred_type'] = slurm.stringOrNone(self.__Config_ptr.cred_type, '')
             Ctl_dict['debug_flags'] = self.__Config_ptr.debug_flags
-            Ctl_dict['def_mem_per_cp'] = self.__Config_ptr.def_mem_per_cpu
+            Ctl_dict['def_mem_per_cpu'] = self.__Config_ptr.def_mem_per_cpu
             Ctl_dict['dependency_params'] = slurm.stringOrNone(self.__Config_ptr.dependency_params, '')
             Ctl_dict['eio_timeout'] = self.__Config_ptr.eio_timeout
             Ctl_dict['enforce_part_limits'] = bool(self.__Config_ptr.enforce_part_limits)
@@ -1027,16 +1027,16 @@ cdef class partition:
 
                 if record.def_mem_per_cpu & slurm.MEM_PER_CPU:
                     if record.def_mem_per_cpu == slurm.MEM_PER_CPU:
-                        Part_dict['def_mem_per_cp'] = "UNLIMITED"
+                        Part_dict['def_mem_per_cpu'] = "UNLIMITED"
                         Part_dict['def_mem_per_node'] = None
                     else:
-                        Part_dict['def_mem_per_cp'] = record.def_mem_per_cpu & (~slurm.MEM_PER_CPU)
+                        Part_dict['def_mem_per_cpu'] = record.def_mem_per_cpu & (~slurm.MEM_PER_CPU)
                         Part_dict['def_mem_per_node'] = None
                 elif record.def_mem_per_cpu == 0:
-                    Part_dict['def_mem_per_cp'] = None
+                    Part_dict['def_mem_per_cpu'] = None
                     Part_dict['def_mem_per_node'] = "UNLIMITED"
                 else:
-                    Part_dict['def_mem_per_cp'] = None
+                    Part_dict['def_mem_per_cpu'] = None
                     Part_dict['def_mem_per_node'] = record.def_mem_per_cpu
 
                 if record.default_time == slurm.INFINITE:
