@@ -110,3 +110,35 @@ def test_job_kill():
     # time.sleep(3)
     # test_job_search_after = pyslurm.job().find_id(test_job_id)[0]
     # assert_equals(test_job_search_after.get("job_state"), "FAILED")
+
+
+def test_job_wait_finished():
+    """Job: Test job().wait_finished()."""
+    test_job = {
+        "wrap": "sleep 30",
+        "job_name": "pyslurm_test_job",
+        "ntasks": 1,
+        "cpus_per_task": 1,
+    }
+    test_job_id = pyslurm.job().submit_batch_job(test_job)
+    start_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    # wait for the job to finish
+    pyslurm.job().wait_finished(test_job_id)
+    end_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    assert start_job_state != "COMPLETED"
+    assert end_job_state == "COMPLETED"
+
+    # test again with another wrap time
+    test_job = {
+        "wrap": "sleep 300",
+        "job_name": "pyslurm_test_job",
+        "ntasks": 1,
+        "cpus_per_task": 1,
+    }
+    test_job_id = pyslurm.job().submit_batch_job(test_job)
+    start_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    # wait for the job to finish
+    pyslurm.job().wait_finished(test_job_id)
+    end_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    assert start_job_state != "COMPLETED"
+    assert end_job_state == "COMPLETED"
