@@ -2883,6 +2883,18 @@ cdef class job:
         #return "Submitted batch job %s" % job_id
         return job_id
 
+    def wait_finished(self, jobid):
+        """
+        Block until the job given by the jobid finishes.
+        :param jobid: The job id of the slurm job.
+        :returns: None
+        :rtype: `None`
+        """
+        job_info = self.find_id(jobid)
+        while job_info[0]["job_state"] != "COMPLETED":
+            p_time.sleep(5)
+            job_info = self.find_id(jobid)
+
 
 def slurm_pid2jobid(uint32_t JobPID=0):
     """Get the slurm job id from a process id.
