@@ -1778,7 +1778,7 @@ cdef class job:
 
         return retList
 
-    cdef _load_single_job(jobid):
+    cdef _load_single_job(self, jobid):
         """
         Uses slurm_load_job to setup the self._job_ptr for a single job given by the jobid.
         After calling this, the job pointer can be used in other methods
