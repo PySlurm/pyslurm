@@ -1816,31 +1816,17 @@ cdef class job:
     def find_id(self, jobid):
         """Retrieve job ID data.
 
-        This method accepts both string and integer formats of the jobid.  It
-        calls slurm_xlate_job_id() to convert the jobid appropriately.
-        This works for single jobs and job arrays.
+        This method accepts both string and integer formats of the jobid.
+        This works for single jobs and job arrays. It uses the internal
+        helper _load_single_job to do slurm_load_job. If the job corresponing
+        to the jobid does not exist, a ValueError will be raised.
 
         :param str jobid: Job id key string to search
         :returns: List of dictionary of values for given job id
         :rtype: `list`
         """
-        cdef:
-            int apiError
-            int rc
-
-        if isinstance(jobid, int) or isinstance(jobid, long):
-            jobid = str(jobid).encode("UTF-8")
-        else:
-            jobid = jobid.encode("UTF-8")
-
-        jobid_xlate = slurm.slurm_xlate_job_id(jobid)
-        rc = slurm.slurm_load_job(&self._job_ptr, jobid_xlate, self._ShowFlags)
-
-        if rc == slurm.SLURM_SUCCESS:
-            return list(self.get_job_ptr().values())
-        else:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+        self._load_single_job(jobid)
+        return list(self.get_job_ptr().values())
 
     def find_user(self, user):
         """Retrieve a user's job data.
@@ -2925,10 +2911,10 @@ cdef class job:
         :returns: None
         :rtype: `None`
         """
-        job_info = self.find_id(jobid)
-        while job_info[0]["job_state"] != "COMPLETED":
+        self._load_single_job(jobid)
+        while not IS_JOB_COMPLETED(self._job_ptr.job_array[0]):
             p_time.sleep(5)
-            job_info = self.find_id(jobid)
+            self._load_single_job(jobid)
 
 
 def slurm_pid2jobid(uint32_t JobPID=0):
