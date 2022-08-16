@@ -1778,6 +1778,41 @@ cdef class job:
 
         return retList
 
+    cdef _load_single_job(jobid):
+        """
+        Uses slurm_load_job to setup the self._job_ptr for a single job given by the jobid.
+        After calling this, the job pointer can be used in other methods
+        to operate on the informations of the job.
+
+        This method accepts both string and integer formate of the jobid. It
+        calls slurm_xlate_job_id to convert the jobid appropriately.
+
+        Raises an value error if the jobid does not correspond to a existing job.
+
+        :param str jobid: The jobid
+        :returns: void
+        :rtype: None.
+        """
+        cdef:
+            int apiError
+            int rc
+
+        # uniform jobid paramenter, which can be given as int or string
+        if isinstance(jobid, int) or isinstance(jobid, long):
+            jobid = str(jobid).encode("UTF-8")
+        else:
+            jobid = jobid.encode("UTF-8")
+        # convert jobid appropriately for slurm
+        jobid_xlate = slurm.slurm_xlate_job_id(jobid)
+
+        # load the job which sets the self._job_ptr pointer
+        rc = slurm.slurm_load_job(&self._job_ptr, jobid_xlate, self._ShowFlags)
+
+        # error handling
+        if rc != slurm.SLURM_SUCCESS:
+            apiError = slurm.slurm_get_errno()
+            raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+
     def find_id(self, jobid):
         """Retrieve job ID data.
 
