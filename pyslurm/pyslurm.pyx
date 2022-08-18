@@ -1797,7 +1797,7 @@ cdef class job:
             int apiError
             int rc
 
-        # uniform jobid paramenter, which can be given as int or string
+        # jobid can be given as int or string
         if isinstance(jobid, int) or isinstance(jobid, long):
             jobid = str(jobid).encode("UTF-8")
         else:
@@ -1808,7 +1808,6 @@ cdef class job:
         # load the job which sets the self._job_ptr pointer
         rc = slurm.slurm_load_job(&self._job_ptr, jobid_xlate, self._ShowFlags)
 
-        # error handling
         if rc != slurm.SLURM_SUCCESS:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
@@ -1818,7 +1817,7 @@ cdef class job:
 
         This method accepts both string and integer formats of the jobid.
         This works for single jobs and job arrays. It uses the internal
-        helper _load_single_job to do slurm_load_job. If the job corresponing
+        helper _load_single_job to do slurm_load_job. If the job corresponding
         to the jobid does not exist, a ValueError will be raised.
 
         :param str jobid: Job id key string to search
@@ -2907,14 +2906,33 @@ cdef class job:
     def wait_finished(self, jobid):
         """
         Block until the job given by the jobid finishes.
+        This works for single jobs, as well as job arrays.
         :param jobid: The job id of the slurm job.
-        :returns: None
-        :rtype: `None`
+        To reference a job with job array set, use the first/"master" jobid
+        (the same as given by squeue)
+        :returns: The exit code of the slurm job.
+        :rtype: `int`
         """
-        self._load_single_job(jobid)
-        while not IS_JOB_COMPLETED(self._job_ptr.job_array[0]):
+        exit_status = -9999
+        complete = False
+        while not complete:
+            complete = True
             p_time.sleep(5)
             self._load_single_job(jobid)
+            for i in range(0, self._job_ptr.record_count):
+                self._record = &self._job_ptr.job_array[i]
+                if IS_JOB_COMPLETED(self._job_ptr.job_array[i]):
+                    exit_status_arrayjob = None
+                    if WIFEXITED(self._record.exit_code):
+                        exit_status_arrayjob = WEXITSTATUS(self._record.exit_code)
+                    else:
+                        exit_status_arrayjob = 1
+                    # set exit code to the highest of all jobs in job array
+                    exit_status = max([exit_status, exit_status_arrayjob])
+                else:
+                    # go on with the next interation, unil all jobs in array are completed
+                    complete = False
+        return exit_status
 
 
 def slurm_pid2jobid(uint32_t JobPID=0):
