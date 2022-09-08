@@ -2932,6 +2932,7 @@ cdef class job:
                 else:
                     # go on with the next interation, unil all jobs in array are completed
                     complete = False
+            slurm.slurm_free_job_info_msg(self._job_ptr)
         return exit_status
 
 
