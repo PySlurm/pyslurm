@@ -598,7 +598,7 @@ cdef class config:
             Ctl_dict['cpu_freq_govs'] = self.__Config_ptr.cpu_freq_govs
             Ctl_dict['cred_type'] = slurm.stringOrNone(self.__Config_ptr.cred_type, '')
             Ctl_dict['debug_flags'] = self.__Config_ptr.debug_flags
-            Ctl_dict['def_mem_per_cp'] = self.__Config_ptr.def_mem_per_cpu
+            Ctl_dict['def_mem_per_cpu'] = self.__Config_ptr.def_mem_per_cpu
             Ctl_dict['dependency_params'] = slurm.stringOrNone(self.__Config_ptr.dependency_params, '')
             Ctl_dict['eio_timeout'] = self.__Config_ptr.eio_timeout
             Ctl_dict['enforce_part_limits'] = bool(self.__Config_ptr.enforce_part_limits)
@@ -1023,16 +1023,16 @@ cdef class partition:
 
                 if record.def_mem_per_cpu & slurm.MEM_PER_CPU:
                     if record.def_mem_per_cpu == slurm.MEM_PER_CPU:
-                        Part_dict['def_mem_per_cp'] = "UNLIMITED"
+                        Part_dict['def_mem_per_cpu'] = "UNLIMITED"
                         Part_dict['def_mem_per_node'] = None
                     else:
-                        Part_dict['def_mem_per_cp'] = record.def_mem_per_cpu & (~slurm.MEM_PER_CPU)
+                        Part_dict['def_mem_per_cpu'] = record.def_mem_per_cpu & (~slurm.MEM_PER_CPU)
                         Part_dict['def_mem_per_node'] = None
                 elif record.def_mem_per_cpu == 0:
-                    Part_dict['def_mem_per_cp'] = None
+                    Part_dict['def_mem_per_cpu'] = None
                     Part_dict['def_mem_per_node'] = "UNLIMITED"
                 else:
-                    Part_dict['def_mem_per_cp'] = None
+                    Part_dict['def_mem_per_cpu'] = None
                     Part_dict['def_mem_per_node'] = record.def_mem_per_cpu
 
                 if record.default_time == slurm.INFINITE:
@@ -1774,34 +1774,54 @@ cdef class job:
 
         return retList
 
-    def find_id(self, jobid):
-        """Retrieve job ID data.
+    cdef _load_single_job(self, jobid):
+        """
+        Uses slurm_load_job to setup the self._job_ptr for a single job given by the jobid.
+        After calling this, the job pointer can be used in other methods
+        to operate on the informations of the job.
 
-        This method accepts both string and integer formats of the jobid.  It
-        calls slurm_xlate_job_id() to convert the jobid appropriately.
-        This works for single jobs and job arrays.
+        This method accepts both string and integer formate of the jobid. It
+        calls slurm_xlate_job_id to convert the jobid appropriately.
 
-        :param str jobid: Job id key string to search
-        :returns: List of dictionary of values for given job id
-        :rtype: `list`
+        Raises an value error if the jobid does not correspond to a existing job.
+
+        :param str jobid: The jobid
+        :returns: void
+        :rtype: None.
         """
         cdef:
             int apiError
             int rc
 
+        # jobid can be given as int or string
         if isinstance(jobid, int) or isinstance(jobid, long):
             jobid = str(jobid).encode("UTF-8")
         else:
             jobid = jobid.encode("UTF-8")
-
+        # convert jobid appropriately for slurm
         jobid_xlate = slurm.slurm_xlate_job_id(jobid)
+
+        # load the job which sets the self._job_ptr pointer
         rc = slurm.slurm_load_job(&self._job_ptr, jobid_xlate, self._ShowFlags)
 
-        if rc == slurm.SLURM_SUCCESS:
-            return list(self.get_job_ptr().values())
-        else:
+        if rc != slurm.SLURM_SUCCESS:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
+
+    def find_id(self, jobid):
+        """Retrieve job ID data.
+
+        This method accepts both string and integer formats of the jobid.
+        This works for single jobs and job arrays. It uses the internal
+        helper _load_single_job to do slurm_load_job. If the job corresponding
+        to the jobid does not exist, a ValueError will be raised.
+
+        :param str jobid: Job id key string to search
+        :returns: List of dictionary of values for given job id
+        :rtype: `list`
+        """
+        self._load_single_job(jobid)
+        return list(self.get_job_ptr().values())
 
     def find_user(self, user):
         """Retrieve a user's job data.
@@ -2878,6 +2898,38 @@ cdef class job:
 
         #return "Submitted batch job %s" % job_id
         return job_id
+
+    def wait_finished(self, jobid):
+        """
+        Block until the job given by the jobid finishes.
+        This works for single jobs, as well as job arrays.
+        :param jobid: The job id of the slurm job.
+        To reference a job with job array set, use the first/"master" jobid
+        (the same as given by squeue)
+        :returns: The exit code of the slurm job.
+        :rtype: `int`
+        """
+        exit_status = -9999
+        complete = False
+        while not complete:
+            complete = True
+            p_time.sleep(5)
+            self._load_single_job(jobid)
+            for i in range(0, self._job_ptr.record_count):
+                self._record = &self._job_ptr.job_array[i]
+                if IS_JOB_COMPLETED(self._job_ptr.job_array[i]):
+                    exit_status_arrayjob = None
+                    if WIFEXITED(self._record.exit_code):
+                        exit_status_arrayjob = WEXITSTATUS(self._record.exit_code)
+                    else:
+                        exit_status_arrayjob = 1
+                    # set exit code to the highest of all jobs in job array
+                    exit_status = max([exit_status, exit_status_arrayjob])
+                else:
+                    # go on with the next interation, unil all jobs in array are completed
+                    complete = False
+            slurm.slurm_free_job_info_msg(self._job_ptr)
+        return exit_status
 
 
 def slurm_pid2jobid(uint32_t JobPID=0):
