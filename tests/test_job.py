@@ -110,3 +110,79 @@ def test_job_kill():
     # time.sleep(3)
     # test_job_search_after = pyslurm.job().find_id(test_job_id)[0]
     # assert_equals(test_job_search_after.get("job_state"), "FAILED")
+
+
+def test_job_wait_finished():
+    """Job: Test job().wait_finished()."""
+    test_job = {
+        "wrap": "sleep 30",
+        "job_name": "pyslurm_test_job",
+        "ntasks": 1,
+        "cpus_per_task": 1,
+    }
+    test_job_id = pyslurm.job().submit_batch_job(test_job)
+    start_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+
+    # wait for the job to finish
+    exit_code = pyslurm.job().wait_finished(test_job_id)
+
+    end_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    assert start_job_state != "COMPLETED"
+    assert end_job_state == "COMPLETED"
+    assert exit_code == 0
+
+    # test again with another wrap
+    test_job = {
+        "wrap": "sleep 300; exit 1",  # "exit 1" should yield failure ending
+        "job_name": "pyslurm_test_job",
+        "ntasks": 1,
+        "cpus_per_task": 1,
+    }
+    test_job_id = pyslurm.job().submit_batch_job(test_job)
+    start_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+
+    # wait for the job to finish
+    exit_code = pyslurm.job().wait_finished(test_job_id)
+
+    end_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    assert start_job_state != "COMPLETED"
+    assert end_job_state == "FAILED"
+    assert exit_code == 1
+
+
+def test_job_wait_finished_w_arrays():
+    """Job: Test job().wait_finished() with job arrays."""
+    test_job = {
+        "wrap": "sleep 30; exit 0",
+        "job_name": "pyslurm_array_test_job",
+        "ntasks": 1,
+        "cpus_per_task": 1,
+        "array_inx": "0,1,2",
+    }
+    test_job_id = pyslurm.job().submit_batch_job(test_job)
+    start_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    # wait for the job to finish
+    exit_code = pyslurm.job().wait_finished(test_job_id)
+    end_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    assert start_job_state != "COMPLETED"
+    assert end_job_state == "COMPLETED"
+    assert exit_code == 0
+
+    # test for exit codes: maximum exit code of all array jobs
+    test_job = {
+        # use array ID as exit code to yield different exit codes: 0, 1, 2
+        "wrap": "sleep 30; exit $SLURM_ARRAY_TASK_ID",
+        "job_name": "pyslurm_array_test_job",
+        "ntasks": 1,
+        "cpus_per_task": 1,
+        "array_inx": "0,1,2",
+    }
+    test_job_id = pyslurm.job().submit_batch_job(test_job)
+    start_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    # wait for the job to finish
+    exit_code = pyslurm.job().wait_finished(test_job_id)
+    end_job_state = pyslurm.job().find_id(test_job_id)[0]["job_state"]
+    assert start_job_state != "COMPLETED"
+    # exit code 2 (the maximum of all) should yield FAILED for the entire job
+    assert end_job_state == "FAILED"
+    assert exit_code == 2
