@@ -2064,12 +2064,12 @@ cdef class job:
 
             if self._record.pn_min_memory & slurm.MEM_PER_CPU:
                 self._record.pn_min_memory &= (~slurm.MEM_PER_CPU)
-                Job_dict['mem_per_cp'] = True
+                Job_dict['mem_per_cpu'] = True
                 Job_dict['min_memory_cp'] = self._record.pn_min_memory
                 Job_dict['mem_per_node'] = False
                 Job_dict['min_memory_node'] = None
             else:
-                Job_dict['mem_per_cp'] = False
+                Job_dict['mem_per_cpu'] = False
                 Job_dict['min_memory_cp'] = None
                 Job_dict['mem_per_node'] = True
                 Job_dict['min_memory_node'] = self._record.pn_min_memory
@@ -2517,8 +2517,8 @@ cdef class job:
 
         if job_opts.get("realmem"):
             desc.pn_min_memory = job_opts.get("realmem")
-        elif job_opts.get("mem_per_cp"):
-            desc.pn_min_memory = job_opts.get("mem_per_cp") | slurm.MEM_PER_CPU
+        elif job_opts.get("mem_per_cpu"):
+            desc.pn_min_memory = job_opts.get("mem_per_cpu") | slurm.MEM_PER_CPU
 
         if job_opts.get("tmpdisk"):
             desc.pn_min_tmp_disk = job_opts.get("tmpdisk")
