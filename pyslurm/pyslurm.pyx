@@ -655,7 +655,7 @@ cdef class config:
             Ctl_dict['max_dbd_msgs'] = self.__Config_ptr.max_dbd_msgs
             Ctl_dict['max_job_cnt'] = self.__Config_ptr.max_job_cnt
             Ctl_dict['max_job_id'] = self.__Config_ptr.max_job_id
-            Ctl_dict['max_mem_per_cp'] = self.__Config_ptr.max_mem_per_cpu
+            Ctl_dict['max_mem_per_cpu'] = self.__Config_ptr.max_mem_per_cpu
             Ctl_dict['max_step_cnt'] = self.__Config_ptr.max_step_cnt
             Ctl_dict['max_tasks_per_node'] = self.__Config_ptr.max_tasks_per_node
             Ctl_dict['min_job_age'] = self.__Config_ptr.min_job_age
@@ -1058,16 +1058,16 @@ cdef class partition:
 
                 if record.max_mem_per_cpu & slurm.MEM_PER_CPU:
                     if record.max_mem_per_cpu == slurm.MEM_PER_CPU:
-                        Part_dict['max_mem_per_cp'] = "UNLIMITED"
+                        Part_dict['max_mem_per_cpu'] = "UNLIMITED"
                         Part_dict['max_mem_per_node'] = None
                     else:
-                        Part_dict['max_mem_per_cp'] = record.max_mem_per_cpu & (~slurm.MEM_PER_CPU)
+                        Part_dict['max_mem_per_cpu'] = record.max_mem_per_cpu & (~slurm.MEM_PER_CPU)
                         Part_dict['max_mem_per_node'] = None
                 elif record.max_mem_per_cpu == 0:
-                    Part_dict['max_mem_per_cp'] = None
+                    Part_dict['max_mem_per_cpu'] = None
                     Part_dict['max_mem_per_node'] = "UNLIMITED"
                 else:
-                    Part_dict['max_mem_per_cp'] = None
+                    Part_dict['max_mem_per_cpu'] = None
                     Part_dict['max_mem_per_node'] = record.max_mem_per_cpu
 
                 if record.max_nodes == slurm.INFINITE:
@@ -5281,10 +5281,10 @@ cdef class slurmdb_jobs:
 
                 if job.req_mem & slurm.MEM_PER_CPU:
                     JOBS_info['req_mem'] = job.req_mem & (~slurm.MEM_PER_CPU)
-                    JOBS_info['req_mem_per_cp'] = True
+                    JOBS_info['req_mem_per_cpu'] = True
                 else:
                     JOBS_info['req_mem'] = job.req_mem
-                    JOBS_info['req_mem_per_cp'] = False
+                    JOBS_info['req_mem_per_cpu'] = False
 
                 JOBS_info['requid'] = job.requid
                 JOBS_info['resvid'] = job.resvid
