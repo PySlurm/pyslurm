@@ -655,7 +655,7 @@ cdef class config:
             Ctl_dict['max_dbd_msgs'] = self.__Config_ptr.max_dbd_msgs
             Ctl_dict['max_job_cnt'] = self.__Config_ptr.max_job_cnt
             Ctl_dict['max_job_id'] = self.__Config_ptr.max_job_id
-            Ctl_dict['max_mem_per_cp'] = self.__Config_ptr.max_mem_per_cpu
+            Ctl_dict['max_mem_per_cpu'] = self.__Config_ptr.max_mem_per_cpu
             Ctl_dict['max_step_cnt'] = self.__Config_ptr.max_step_cnt
             Ctl_dict['max_tasks_per_node'] = self.__Config_ptr.max_tasks_per_node
             Ctl_dict['min_job_age'] = self.__Config_ptr.min_job_age
@@ -1058,16 +1058,16 @@ cdef class partition:
 
                 if record.max_mem_per_cpu & slurm.MEM_PER_CPU:
                     if record.max_mem_per_cpu == slurm.MEM_PER_CPU:
-                        Part_dict['max_mem_per_cp'] = "UNLIMITED"
+                        Part_dict['max_mem_per_cpu'] = "UNLIMITED"
                         Part_dict['max_mem_per_node'] = None
                     else:
-                        Part_dict['max_mem_per_cp'] = record.max_mem_per_cpu & (~slurm.MEM_PER_CPU)
+                        Part_dict['max_mem_per_cpu'] = record.max_mem_per_cpu & (~slurm.MEM_PER_CPU)
                         Part_dict['max_mem_per_node'] = None
                 elif record.max_mem_per_cpu == 0:
-                    Part_dict['max_mem_per_cp'] = None
+                    Part_dict['max_mem_per_cpu'] = None
                     Part_dict['max_mem_per_node'] = "UNLIMITED"
                 else:
-                    Part_dict['max_mem_per_cp'] = None
+                    Part_dict['max_mem_per_cpu'] = None
                     Part_dict['max_mem_per_node'] = record.max_mem_per_cpu
 
                 if record.max_nodes == slurm.INFINITE:
@@ -2064,12 +2064,12 @@ cdef class job:
 
             if self._record.pn_min_memory & slurm.MEM_PER_CPU:
                 self._record.pn_min_memory &= (~slurm.MEM_PER_CPU)
-                Job_dict['mem_per_cp'] = True
+                Job_dict['mem_per_cpu'] = True
                 Job_dict['min_memory_cp'] = self._record.pn_min_memory
                 Job_dict['mem_per_node'] = False
                 Job_dict['min_memory_node'] = None
             else:
-                Job_dict['mem_per_cp'] = False
+                Job_dict['mem_per_cpu'] = False
                 Job_dict['min_memory_cp'] = None
                 Job_dict['mem_per_node'] = True
                 Job_dict['min_memory_node'] = self._record.pn_min_memory
@@ -2517,8 +2517,8 @@ cdef class job:
 
         if job_opts.get("realmem"):
             desc.pn_min_memory = job_opts.get("realmem")
-        elif job_opts.get("mem_per_cp"):
-            desc.pn_min_memory = job_opts.get("mem_per_cp") | slurm.MEM_PER_CPU
+        elif job_opts.get("mem_per_cpu"):
+            desc.pn_min_memory = job_opts.get("mem_per_cpu") | slurm.MEM_PER_CPU
 
         if job_opts.get("tmpdisk"):
             desc.pn_min_tmp_disk = job_opts.get("tmpdisk")
@@ -5281,10 +5281,10 @@ cdef class slurmdb_jobs:
 
                 if job.req_mem & slurm.MEM_PER_CPU:
                     JOBS_info['req_mem'] = job.req_mem & (~slurm.MEM_PER_CPU)
-                    JOBS_info['req_mem_per_cp'] = True
+                    JOBS_info['req_mem_per_cpu'] = True
                 else:
                     JOBS_info['req_mem'] = job.req_mem
-                    JOBS_info['req_mem_per_cp'] = False
+                    JOBS_info['req_mem_per_cpu'] = False
 
                 JOBS_info['requid'] = job.requid
                 JOBS_info['resvid'] = job.resvid
