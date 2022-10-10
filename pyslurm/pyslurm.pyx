@@ -5185,6 +5185,7 @@ cdef class slurmdb_jobs:
                 JOBS_info['cluster'] = slurm.stringOrNone(job.cluster, '')
                 JOBS_info['derived_ec'] = job.derived_ec
                 JOBS_info['derived_es'] = slurm.stringOrNone(job.derived_es, '')
+                JOBS_info['comment'] = slurm.stringOrNone(job.derived_es, '')
                 JOBS_info['elapsed'] = job.elapsed
                 JOBS_info['eligible'] = job.eligible
                 JOBS_info['end'] = job.end
