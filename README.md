@@ -21,24 +21,18 @@ By default, it is searched inside `/usr/include` for the Header files and in
 For Slurm installations in different locations, you will need to provide
 the corresponding paths to the necessary files.
 
-You can specify these Paths with environment variables, for example:
+You can specify these Paths with environment variables (recommended), for example:
 
 ```shell
 export SLURM_INCLUDE_DIR=/opt/slurm/22.05/include
 export SLURM_LIB_DIR=/opt/slurm/22.05/lib
 ```
 
-Then you can proceed to install PySlurm, for example:
-
-```shell
-pip install pyslurm==22.05.0
-```
-
-Or by cloning the repository:
+Then you can proceed to install PySlurm, for example by cloning the Repository:
 
 ```shell
 git clone https://github.com/PySlurm/pyslurm.git && cd pyslurm
-python setup.py install
+scripts/build.sh
 
 # Or simply with pip
 pip install .
