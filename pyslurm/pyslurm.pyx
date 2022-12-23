@@ -2065,12 +2065,12 @@ cdef class job:
             if self._record.pn_min_memory & slurm.MEM_PER_CPU:
                 self._record.pn_min_memory &= (~slurm.MEM_PER_CPU)
                 Job_dict['mem_per_cpu'] = True
-                Job_dict['min_memory_cp'] = self._record.pn_min_memory
+                Job_dict['min_memory_cpu'] = self._record.pn_min_memory
                 Job_dict['mem_per_node'] = False
                 Job_dict['min_memory_node'] = None
             else:
                 Job_dict['mem_per_cpu'] = False
-                Job_dict['min_memory_cp'] = None
+                Job_dict['min_memory_cpu'] = None
                 Job_dict['mem_per_node'] = True
                 Job_dict['min_memory_node'] = self._record.pn_min_memory
 
@@ -5106,17 +5106,17 @@ cdef class qos:
                     QOS_info['grp_tres_run_mins'] = slurm.stringOrNone(qos.grp_tres_run_mins, '')
                     # QOS_info['grp_tres_run_mins_ctld']
                     QOS_info['grp_wall'] = qos.grp_wall
-                    QOS_info['max_jobs_p'] = qos.max_jobs_pu
-                    QOS_info['max_submit_jobs_p'] = qos.max_submit_jobs_pu
+                    QOS_info['max_jobs_pu'] = qos.max_jobs_pu
+                    QOS_info['max_submit_jobs_pu'] = qos.max_submit_jobs_pu
                     QOS_info['max_tres_mins_pj'] = slurm.stringOrNone(qos.max_tres_mins_pj, '')
                     # QOS_info['max_tres_min_pj_ctld']
                     QOS_info['max_tres_pj'] = slurm.stringOrNone(qos.max_tres_pj, '')
                     # QOS_info['max_tres_min_pj_ctld']
                     QOS_info['max_tres_pn'] = slurm.stringOrNone(qos.max_tres_pn, '')
                     # QOS_info['max_tres_min_pn_ctld']
-                    QOS_info['max_tres_p'] = slurm.stringOrNone(qos.max_tres_pu, '')
+                    QOS_info['max_tres_pu'] = slurm.stringOrNone(qos.max_tres_pu, '')
                     # QOS_info['max_tres_min_pu_ctld']
-                    QOS_info['max_tres_run_mins_p'] = slurm.stringOrNone(
+                    QOS_info['max_tres_run_mins_pu'] = slurm.stringOrNone(
                         qos.max_tres_run_mins_pu, '')
 
                     QOS_info['max_wall_pj'] = qos.max_wall_pj
