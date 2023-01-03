@@ -1,13 +1,25 @@
 #!/bin/bash
 set -e
 
-###################################
-# Build PySlurm
-###################################
+usage() { echo "Usage: $0 [-j jobs]" 1>&2; exit 1; }
 
-cd pyslurm
-echo "---> Building PySlurm..."
-python$PYTHON setup.py build
+# Option to allow parallel build
+OPT_JOBS=1
 
-echo "---> Installing PySlurm..."
-python$PYTHON setup.py install
+PYTHON_VERSION=3
+
+while getopts ":j:" o; do
+    case "${o}" in
+        j)
+            OPT_JOBS=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+python"$PYTHON_VERSION" setup.py build -j "$OPT_JOBS"
+python"$PYTHON_VERSION" setup.py install

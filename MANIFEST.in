@@ -5,4 +5,4 @@ graft tests
 graft doc
 graft pyslurm/slurm
 graft pyslurm/pydefines
-include pyslurm/alps_cray.h
+recursive-include pyslurm *.pyx *.px[di] *.h
