@@ -4314,6 +4314,9 @@ def slurm_update_reservation(dict reservation_dict={}):
         if time_value != -1:
             resv_msg.start_time = time_value
 
+    if reservation_dict.get('end_time'):
+        resv_msg.end_time = reservation_dict['end_time']
+
     if reservation_dict.get('duration'):
         resv_msg.duration = reservation_dict.get('duration')
 
