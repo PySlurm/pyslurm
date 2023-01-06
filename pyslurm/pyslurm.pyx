@@ -4375,6 +4375,9 @@ def slurm_update_reservation(dict reservation_dict={}):
         resv_msg.flags = int_value
 
     errCode = slurm.slurm_update_reservation(&resv_msg)
+    if errCode != 0:
+        apiError = slurm.slurm_get_errno()
+        raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
 
