@@ -300,9 +300,8 @@ def parse_setuppy_commands():
         cleanup_build()
         return False
 
-    build_cmd = ('install', 'sdist', 'build', 'build_ext', 'build_py',
-                 'build_clib', 'build_scripts', 'bdist_wheel', 'bdist_rpm',
-                 'build_src', 'bdist_egg', 'develop')
+    build_cmd = ('build', 'build_ext', 'build_py', 'build_clib',
+        'build_scripts', 'bdist_wheel', 'build_src', 'bdist_egg', 'develop')
 
     for cmd in build_cmd:
         if cmd in args:
@@ -318,10 +317,14 @@ def setup_package():
     build_it = parse_setuppy_commands()
 
     if build_it:
-        if "sdist" not in sys.argv:
-            parse_slurm_args()
-            slurm_sanity_checks()
-            cythongen()
+        parse_slurm_args()
+        slurm_sanity_checks()
+        cythongen()
+
+    if "install" in sys.argv:
+        parse_slurm_args()
+        slurm_sanity_checks()
+        metadata["ext_modules"] = make_extensions()
 
     setup(**metadata)
 
