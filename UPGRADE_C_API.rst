@@ -51,13 +51,8 @@ Then, simply generate the header definitions like in this example:
     scripts/pyslurm_bindgen.py -D /directoy/with/slurm/headers > pyslurm/slurm/header.pxi
 
 The script outputs everything to `stdout`. Simply redirect the output to the file: :code:`pyslurm/slurm/header.pxi`.
+The headers should now be fully translated.
 
-Now, 99% of the work is done for generating the headers. For the 1% left, you now need to open the generated file, search for the two follwowing statements and comment them out:
-
-- `slurm_addr_t control_addr`
-- `phtread_mutex_t lock`
-
-The compiler will otherwise complain that these are incomplete type definitions.
 
 Compiling, Updating, Testing
 ----------------------------
