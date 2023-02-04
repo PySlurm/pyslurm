@@ -2310,19 +2310,71 @@ cdef class job:
 
     def slurm_job_batch_script(self, jobid):
         """
-        Retrieve the batch script for a given jobid.
+        Return the contents of the batch-script for a Job.
 
-        :param str jobid: Job id key string to search
-        :returns: String output of a jobid's batch script
+        Note: The string returned also includes all the "\n" characters
+              (new-line).
+
+        :param jobid: ID of the Job for which the script should be retrieved.
+        :type jobid: Union[str, int]
+        :raises: [ValueError]: When retrieving the Batch-Script for the Job was
+            not successful.
+        :returns: The content of the batch script.
         :rtype: `str`
         """
+        # This reimplements the slurm_job_batch_script API call. Otherwise we
+        # would have to parse the FILE* ptr we get from it back into a
+        # char* which would be a bit silly. Source:
+        # https://github.com/SchedMD/slurm/blob/7162f15af8deaf02c3bbf940d59e818cdeb5c69d/src/api/job_info.c#L1319
+        cdef:
+            slurm.job_id_msg_t msg
+            slurm.slurm_msg_t req
+            slurm.slurm_msg_t resp
+            int rc = slurm.SLURM_SUCCESS
+            str script = None
+
         if isinstance(jobid, int) or isinstance(jobid, long):
             jobid = str(jobid).encode("UTF-8")
         else:
             jobid = jobid.encode("UTF-8")
 
         jobid_xlate = slurm.slurm_xlate_job_id(jobid)
-        return slurm.slurm_job_batch_script(slurm.stdout, jobid_xlate)
+
+        slurm.slurm_msg_t_init(&req)
+        slurm.slurm_msg_t_init(&resp)
+
+        memset(&msg, 0, sizeof(msg))
+        msg.job_id   = jobid_xlate
+        req.msg_type = slurm.REQUEST_BATCH_SCRIPT
+        req.data     = &msg
+
+        rc = slurm.slurm_send_recv_controller_msg(&req, &resp,
+                                                  slurm.working_cluster_rec)
+        if rc < 0:
+            err = slurm.slurm_get_errno()
+            raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(err), ''),
+                             err)
+
+        if resp.msg_type == slurm.RESPONSE_BATCH_SCRIPT:
+            script = slurm.stringOrNone(<char*>resp.data, None)
+            slurm.xfree(resp.data)
+
+        elif resp.msg_type == slurm.RESPONSE_SLURM_RC:
+            rc = (<slurm.return_code_msg_t*> resp.data).return_code
+            slurm.slurm_free_return_code_msg(<slurm.return_code_msg_t*>resp.data)
+
+            if rc == slurm.SLURM_ERROR:
+                rc = slurm.slurm_get_errno()
+
+            raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(rc), ''),
+                             rc)
+
+        else:
+            rc = slurm.slurm_get_errno()
+            raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(rc), ''),
+                             rc)
+
+        return script
 
     cdef int fill_job_desc_from_opts(self, dict job_opts, slurm.job_desc_msg_t *desc):
         """
