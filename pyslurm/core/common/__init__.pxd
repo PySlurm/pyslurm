@@ -17,6 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
+# cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: language_level=3
 
@@ -26,3 +27,5 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from pyslurm.core.common cimport cstr
 from libc.stdlib cimport free
 
+cpdef uid_to_name(uint32_t uid, err_on_invalid=*, dict lookup=*)
+cpdef gid_to_name(uint32_t gid, err_on_invalid=*, dict lookup=*)

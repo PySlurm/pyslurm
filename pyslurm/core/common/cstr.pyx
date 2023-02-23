@@ -51,14 +51,10 @@ cdef inline to_unicode(char *_str, default=None):
         return default
 
 
-cdef fmalloc2(char **old, char **old2, val):
-    """Like fmalloc, but copies the value to 2 char pointers.
-
-    Memory will only be allocated once.
-    "old" and "old2" will both share this same pointer.
-    """
-    fmalloc(old, val)
-    old2[0] = old[0]
+cdef fmalloc2(char **p1, char **p2, val):
+    """Like fmalloc, but copies the value to 2 char pointers."""
+    fmalloc(p1, val)
+    fmalloc(p2, val)
 
 
 cdef fmalloc(char **old, val):
@@ -127,6 +123,11 @@ cdef from_list(char **old, vals, delim=","):
         final = delim.join(vals)
 
     fmalloc(old, final)
+
+
+cdef from_list2(char **p1, char **p2, vals, delim=","):
+    from_list(p1, vals, delim)
+    from_list(p2, vals, delim)
 
 
 cdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):

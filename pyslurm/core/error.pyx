@@ -29,8 +29,9 @@ def slurm_strerror(errno):
     """Convert a slurm errno to a string.
 
     Args:
-        errno (int): The error number for which the string representation
-            should be returned.
+        errno (int):
+            The error number for which the string representation should be
+            returned.
 
     Returns:
         str: String representation of errno.  
@@ -65,10 +66,12 @@ class RPCError(Exception):
     """Exception for handling Slurm RPC errors.
 
     Args:
-        errno (int): A slurm error number returned by RPC functions. Default
-            is None, which will get the last slurm error automatically. 
-        msg (str): An optional, custom error description. If this is set, the
-            errno will not be translated to its string representation.
+        errno (int):
+            A slurm error number returned by RPC functions. Default is None,
+            which will get the last slurm error automatically. 
+        msg (str):
+            An optional, custom error description. If this is set, the errno
+            will not be translated to its string representation.
     """
     def __init__(self, errno=slurm.SLURM_ERROR, msg=None):
         self.msg = msg
@@ -84,5 +87,11 @@ class RPCError(Exception):
 
 
 def verify_rpc(errno):
+    """Verify a Slurm RPC
+
+    Args:
+        errno (int):
+            A Slurm error value
+    """
     if errno != slurm.SLURM_SUCCESS:
         raise RPCError(errno)

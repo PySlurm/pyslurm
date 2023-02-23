@@ -81,7 +81,7 @@ cdef class Job:
         dict groups
 
     cdef alloc(self)
-    cdef time_t _calc_run_time(self)
+    cdef _calc_run_time(self)
 
     @staticmethod
     cdef Job from_ptr(slurm_job_info_t *in_ptr)

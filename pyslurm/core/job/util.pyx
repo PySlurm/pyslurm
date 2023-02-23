@@ -585,32 +585,3 @@ def cpufreq_to_str(freq):
         return freq
 
 
-def make_gres_str(vals, typ=""):
-    final = []
-    gres_dict = vals
-
-    if not vals:
-        return None
-
-    if isinstance(vals, str) and not vals.isdigit():
-        gres_dict = {}
-
-        gres_list = vals.replace("gres:", "")
-        for gres_str in gres_list.split(","):
-            gres_and_type, cnt = gres_str.rsplit(":", 1)
-            gres_dict.update({gres_and_type: int(cnt)})
-    elif isinstance(vals, dict):
-        for gres_and_type, cnt in gres_dict.items():
-            # Error immediately on specifications that contain more than one
-            # semicolon, as it is wrong.
-            if len(gres_and_type.split(":")) > 2:
-                raise ValueError(f"Invalid specifier: '{gres_and_type}'")
-
-            if typ not in gres_and_type:
-                gres_and_type = f"{gres_and_type}:{typ}"
-
-            final.append(f"gres:{gres_and_type}:{int(cnt)}")
-    else:
-        return f"gres:{typ}:{int(vals)}"
-
-    return ",".join(final)

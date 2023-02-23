@@ -24,6 +24,8 @@ from pyslurm.core.job import (
     JobSubmitDescription,
 )
 
+from pyslurm.core.node import Node, Nodes
+
 import pyslurm.core.error
 from pyslurm.core.error import (
     RPCError,
