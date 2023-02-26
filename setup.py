@@ -18,7 +18,7 @@ logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 CYTHON_VERSION_MIN = "0.29.30"
 
 SLURM_RELEASE = "22.5"
-PYSLURM_PATCH_RELEASE = "0"
+PYSLURM_PATCH_RELEASE = "1"
 SLURM_SHARED_LIB = "libslurm.so"
 CURRENT_DIR = pathlib.Path(__file__).parent
 
