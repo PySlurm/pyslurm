@@ -2,8 +2,6 @@
 
 This module provides a low-level Python wrapper around the Slurm C-API using Cython.
 
-## Contents
-
 ::: pyslurm.config
     handler: python
 
