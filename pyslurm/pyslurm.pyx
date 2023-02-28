@@ -275,7 +275,7 @@ ctypedef struct config_key_pair_t:
 
 def get_controllers():
     """
-        Get information about slurm controllers.
+    Get information about slurm controllers.
 
     :return: Name of primary controller, Name of backup controllers
     :rtype: tuple
@@ -307,7 +307,7 @@ def get_controllers():
 
 def is_controller(Host=None):
     """
-        Return slurm controller status for host.
+    Return slurm controller status for host.
 
     :param string Host: Name of host to check
 
@@ -329,7 +329,7 @@ def is_controller(Host=None):
 
 def slurm_api_version():
     """
-        Return the slurm API version number.
+    Return the slurm API version number.
 
     :returns: version_major, version_minor, version_micro
     :rtype: tuple
@@ -343,7 +343,7 @@ def slurm_api_version():
 
 def slurm_load_slurmd_status():
     """
-        Issue RPC to get and load the status of Slurmd daemon.
+    Issue RPC to get and load the status of Slurmd daemon.
 
     :returns: Slurmd information
     :rtype: dict
@@ -396,7 +396,7 @@ def slurm_init(conf_file=None):
 
 def slurm_fini():
     """
-        Call at process termination to cleanup internal configuration
+    Call at process termination to cleanup internal configuration
     structures.
 
     :returns: None
@@ -1182,7 +1182,7 @@ cdef class partition:
 
 def create_partition_dict():
     """
-        Returns a dictionary that can be populated by the user
+    Returns a dictionary that can be populated by the user
     and used for the update_partition and create_partition calls.
 
     :returns: Empty reservation dictionary
@@ -1209,7 +1209,7 @@ def create_partition_dict():
 
 def slurm_create_partition(dict partition_dict):
     """
-        Create a slurm partition.
+    Create a slurm partition.
 
     :param dict partition_dict: A populated partition dictionary,
         an empty one is created by create_partition_dict
@@ -1241,7 +1241,7 @@ def slurm_create_partition(dict partition_dict):
 
 def slurm_update_partition(dict partition_dict):
     """
-        Update a slurm partition.
+    Update a slurm partition.
 
     :param dict partition_dict: A populated partition dictionary,
         an empty one is created by create_partition_dict
@@ -1307,7 +1307,7 @@ def slurm_update_partition(dict partition_dict):
 
 def slurm_delete_partition(PartID):
     """
-        Delete a slurm partition.
+    Delete a slurm partition.
 
     :param string PartID: Name of slurm partition
     :returns: 0 for success else set the slurm error code as appropriately.
@@ -1428,7 +1428,7 @@ cpdef int slurm_set_debug_level(uint32_t DebugLevel=0) except? -1:
 cpdef int slurm_set_debugflags(uint32_t debug_flags_plus=0,
                                uint32_t debug_flags_minus=0) except? -1:
     """
-        Set the slurm controller debug flags.
+    Set the slurm controller debug flags.
 
     :param int debug_flags_plus: debug flags to be added
     :param int debug_flags_minus: debug flags to be removed
@@ -1601,7 +1601,7 @@ cpdef int slurm_signal_job(uint32_t JobID=0, uint16_t Signal=0) except? -1:
 cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0,
                                 uint16_t Signal=0) except? -1:
     """
-        Send a signal to a slurm job step.
+    Send a signal to a slurm job step.
 
     :param int JobID: Job identifier
     :param int JobStep: Job step identifier
@@ -1622,7 +1622,7 @@ cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0,
 cpdef int slurm_kill_job(uint32_t JobID=0, uint16_t Signal=0,
                          uint16_t BatchFlag=0) except? -1:
     """
-        Terminate a running slurm job step.
+    Terminate a running slurm job step.
 
     :param int JobID: Job identifier
     :param int Signal: Signal to send
@@ -1643,7 +1643,7 @@ cpdef int slurm_kill_job(uint32_t JobID=0, uint16_t Signal=0,
 cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
                               uint16_t Signal=0) except? -1:
     """
-        Terminate a running slurm job step.
+    Terminate a running slurm job step.
 
     :param int JobID: Job identifier
     :param int JobStep: Job step identifier
@@ -1664,7 +1664,7 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
 cpdef int slurm_kill_job2(const char *JobID='', uint16_t Signal=0,
                           uint16_t BatchFlag=0, char* sibling=NULL) except? -1:
     """
-        Terminate a running slurm job step.
+    Terminate a running slurm job step.
 
     :param const char * JobID: Job identifier
     :param int Signal: Signal to send
@@ -3061,7 +3061,7 @@ cdef class job:
 
 def slurm_pid2jobid(uint32_t JobPID=0):
     """
-        Get the slurm job id from a process id.
+    Get the slurm job id from a process id.
 
     :param int JobPID: Job process id
     :returns: 0 for success or a slurm error code
@@ -3165,7 +3165,7 @@ class SlurmError(Exception):
 
 def slurm_get_errno():
     """
-        Return the slurm error as set by a slurm API call.
+    Return the slurm error as set by a slurm API call.
 
     :returns: slurm error number
     :rtype: integer
@@ -3177,7 +3177,7 @@ def slurm_get_errno():
 
 def slurm_strerror(int Errno=0):
     """
-        Return slurm error message represented by a given slurm error number.
+    Return slurm error message represented by a given slurm error number.
 
     :param int Errno: slurm error number.
     :returns: slurm error string
@@ -3190,7 +3190,7 @@ def slurm_strerror(int Errno=0):
 
 def slurm_seterrno(int Errno=0):
     """
-        Set the slurm error number.
+    Set the slurm error number.
 
     :param int Errno: slurm error number
     """
@@ -3199,7 +3199,7 @@ def slurm_seterrno(int Errno=0):
 
 def slurm_perror(char* Msg=''):
     """
-        Print to standard error the supplied header.
+    Print to standard error the supplied header.
 
     Header is followed by a colon, followed by a text description of the last
     Slurm error code generated.
@@ -3559,7 +3559,7 @@ cdef class node:
 
 def slurm_update_node(dict node_dict):
     """
-        Update slurm node information.
+    Update slurm node information.
 
     :param dict node_dict: A populated node dictionary, an empty one is
         created by create_node_dict
@@ -3612,7 +3612,7 @@ def slurm_update_node(dict node_dict):
 
 def create_node_dict():
     """
-        Return a an update_node dictionary
+    Return a an update_node dictionary
 
     This dictionary can be populated by the user and used for the update_node
     call.
@@ -4365,7 +4365,7 @@ cdef class reservation:
 
 def slurm_create_reservation(dict reservation_dict={}):
     """
-        Create a slurm reservation.
+    Create a slurm reservation.
 
     :param dict reservation_dict: A populated reservation dictionary,
         an empty one is created by create_reservation_dict
@@ -4466,7 +4466,7 @@ def slurm_create_reservation(dict reservation_dict={}):
 
 def slurm_update_reservation(dict reservation_dict={}):
     """
-        Update a slurm reservation.
+    Update a slurm reservation.
 
     :param dict reservation_dict: A populated reservation dictionary,
         an empty one is created by create_reservation_dict
@@ -4561,7 +4561,7 @@ def slurm_update_reservation(dict reservation_dict={}):
 
 def slurm_delete_reservation(ResID):
     """
-        Delete a slurm reservation.
+    Delete a slurm reservation.
 
     :param string ResID: Reservation Identifier
     :returns: 0 for success or -1 for error, and the slurm error code is set appropriately.
@@ -4587,7 +4587,7 @@ def slurm_delete_reservation(ResID):
 
 def create_reservation_dict():
     """
-        Create and empty dict for use with create_reservation method.
+    Create and empty dict for use with create_reservation method.
 
     Returns a dictionary that can be populated by the user an used for
     the update_reservation and create_reservation calls.
@@ -6070,7 +6070,7 @@ cdef class slurmdb_reports:
 
 def get_last_slurm_error():
     """
-        Get and return the last error from a slurm API call.
+    Get and return the last error from a slurm API call.
 
     :returns: Slurm error number and the associated error string
     :rtype: integer
@@ -6115,7 +6115,7 @@ cdef inline dict __get_licenses(char *licenses):
 
 def get_node_use(inx):
     """
-        Returns a string that represents the block node mode.
+    Returns a string that represents the block node mode.
 
     :param int ResType: Slurm block node usage
     :returns: Block node usage string
@@ -6126,7 +6126,7 @@ def get_node_use(inx):
 
 def get_trigger_res_type(uint16_t inx):
     """
-        Returns a string that represents the slurm trigger res type.
+    Returns a string that represents the slurm trigger res type.
 
     :param int ResType: Slurm trigger res state
         - TRIGGER_RES_TYPE_JOB        1
@@ -6164,7 +6164,7 @@ cdef inline object __get_trigger_res_type(uint16_t ResType):
 
 def get_trigger_type(uint32_t inx):
     """
-        Returns a string that represents the state of the slurm trigger.
+    Returns a string that represents the state of the slurm trigger.
 
     :param int TriggerType: Slurm trigger type
         - TRIGGER_TYPE_UP                 0x00000001
@@ -6423,7 +6423,7 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
 
 def get_node_state(uint32_t inx):
     """
-        Returns a string that represents the state of the slurm node.
+    Returns a string that represents the state of the slurm node.
 
     :param int inx: Slurm node state
     :returns: Node state string
@@ -6434,7 +6434,7 @@ def get_node_state(uint32_t inx):
 
 def get_rm_partition_state(int inx):
     """
-        Returns a string that represents the partition state.
+    Returns a string that represents the partition state.
 
     :param int inx: Slurm partition state
     :returns: Partition state string
@@ -6465,7 +6465,7 @@ cdef inline object __get_rm_partition_state(int inx):
 
 def get_preempt_mode(uint16_t inx):
     """
-        Returns a string that represents the preempt mode.
+    Returns a string that represents the preempt mode.
 
     :param int inx: Slurm preempt mode
         - PREEMPT_MODE_OFF        0x0000
@@ -6481,7 +6481,7 @@ def get_preempt_mode(uint16_t inx):
 
 def get_partition_state(uint16_t inx):
     """
-        Returns a string that represents the state of the slurm partition.
+    Returns a string that represents the state of the slurm partition.
 
     :param int inx: Slurm partition state
         - PARTITION_DOWN      0x01
@@ -6566,7 +6566,7 @@ cdef inline object __get_partition_state(int inx, int extended=0):
 
 def get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
     """
-        Returns a string represents the state of the partition mode.
+    Returns a string represents the state of the partition mode.
 
     :param int inx: Slurm partition mode
     :returns: Partition mode string
@@ -6624,7 +6624,7 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
 
 def get_job_state(inx):
     """
-        Return the state of the slurm job state.
+    Return the state of the slurm job state.
 
     :param int inx: Slurm job state
         - JOB_PENDING     0
@@ -6652,7 +6652,7 @@ def get_job_state(inx):
 
 def get_job_state_reason(inx):
     """
-        Returns a reason why the slurm job is in a provided state.
+    Returns a reason why the slurm job is in a provided state.
 
     :param int inx: Slurm job state reason
     :returns: Reason string
@@ -6664,7 +6664,7 @@ def get_job_state_reason(inx):
 
 def epoch2date(epochSecs):
     """
-        Convert epoch secs to a python time string.
+    Convert epoch secs to a python time string.
 
     :param int epochSecs: Seconds since epoch
     :returns: Date
