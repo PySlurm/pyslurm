@@ -410,8 +410,8 @@ def slurm_fini():
 
 def get_private_data_list(data):
     """
-        Return the list of enciphered Private Data configuration.
-        """
+    Return the list of enciphered Private Data configuration.
+    """
 
     result = []
     exponent = 7
@@ -428,8 +428,8 @@ def get_private_data_list(data):
 
 cdef class config:
     """
-        Class to access slurm config Information.
-        """
+    Class to access slurm config Information.
+    """
 
     cdef:
         slurm.slurm_conf_t *slurm_ctl_conf_ptr
@@ -839,8 +839,8 @@ cdef class config:
 
 cdef class partition:
     """
-        Class to access/modify Slurm Partition Information.
-        """
+    Class to access/modify Slurm Partition Information.
+    """
 
     cdef:
         slurm.partition_info_msg_t *_Partition_ptr
@@ -1336,7 +1336,7 @@ def slurm_delete_partition(PartID):
 
 cpdef int slurm_ping(int Controller=0) except? -1:
     """
-        Issue RPC to check if slurmctld is responsive.
+    Issue RPC to check if slurmctld is responsive.
 
     :param int Controller: 0 for primary (Default=0), 1 for backup, 2 for backup2, ...
     :returns: 0 for success or slurm error code
@@ -1354,7 +1354,7 @@ cpdef int slurm_ping(int Controller=0) except? -1:
 
 cpdef int slurm_reconfigure() except? -1:
     """
-        Issue RPC to have slurmctld reload its configuration file.
+    Issue RPC to have slurmctld reload its configuration file.
 
     :returns: 0 for success or a slurm error code
     :rtype: integer
@@ -1371,7 +1371,7 @@ cpdef int slurm_reconfigure() except? -1:
 
 cpdef int slurm_shutdown(uint16_t Options=0) except? -1:
     """
-        Issue RPC to have slurmctld cease operations.
+    Issue RPC to have slurmctld cease operations.
 
     Both the primary and backup controller are shutdown.
 
@@ -1394,7 +1394,7 @@ cpdef int slurm_shutdown(uint16_t Options=0) except? -1:
 
 cpdef int slurm_takeover(int backup_inx) except? -1:
     """
-        Issue a RPC to have slurmctld backup controller take over.
+    Issue a RPC to have slurmctld backup controller take over.
 
     The backup controller takes over the primary controller.
 
@@ -1409,7 +1409,7 @@ cpdef int slurm_takeover(int backup_inx) except? -1:
 
 cpdef int slurm_set_debug_level(uint32_t DebugLevel=0) except? -1:
     """
-        Set the slurm controller debug level.
+    Set the slurm controller debug level.
 
     :param int DebugLevel: 0 (default) to 6
     :returns: 0 for success, -1 for error and set slurm error number
@@ -1448,7 +1448,7 @@ cpdef int slurm_set_debugflags(uint32_t debug_flags_plus=0,
 
 cpdef int slurm_set_schedlog_level(uint32_t Enable=0) except? -1:
     """
-        Set the slurm scheduler debug level.
+    Set the slurm scheduler debug level.
 
     :param int Enable: True = 0, False = 1
     :returns: 0 for success, -1 for error and set the slurm error number
@@ -1471,7 +1471,7 @@ cpdef int slurm_set_schedlog_level(uint32_t Enable=0) except? -1:
 
 cpdef int slurm_suspend(uint32_t JobID=0) except? -1:
     """
-        Suspend a running slurm job.
+    Suspend a running slurm job.
 
     :param int JobID: Job identifier
     :returns: 0 for success or a slurm error code
@@ -1489,7 +1489,7 @@ cpdef int slurm_suspend(uint32_t JobID=0) except? -1:
 
 cpdef int slurm_resume(uint32_t JobID=0) except? -1:
     """
-        Resume a running slurm job step.
+    Resume a running slurm job step.
 
     :param int JobID: Job identifier
     :returns: 0 for success or a slurm error code
@@ -1507,7 +1507,7 @@ cpdef int slurm_resume(uint32_t JobID=0) except? -1:
 
 cpdef int slurm_requeue(uint32_t JobID=0, uint32_t State=0) except? -1:
     """
-        Requeue a running slurm job step.
+    Requeue a running slurm job step.
 
     :param int JobID: Job identifier
     :returns: 0 for success or a slurm error code
@@ -1525,7 +1525,7 @@ cpdef int slurm_requeue(uint32_t JobID=0, uint32_t State=0) except? -1:
 
 cpdef long slurm_get_rem_time(uint32_t JobID=0) except? -1:
     """
-        Get the remaining time in seconds for a slurm job step.
+    Get the remaining time in seconds for a slurm job step.
 
     :param int JobID: Job identifier
     :returns: Remaining time in seconds or -1 on error
@@ -1543,7 +1543,7 @@ cpdef long slurm_get_rem_time(uint32_t JobID=0) except? -1:
 
 cpdef time_t slurm_get_end_time(uint32_t JobID=0) except? -1:
     """
-        Get the end time in seconds for a slurm job step.
+    Get the end time in seconds for a slurm job step.
 
     :param int JobID: Job identifier
     :returns: Remaining time in seconds or -1 on error
@@ -1562,7 +1562,7 @@ cpdef time_t slurm_get_end_time(uint32_t JobID=0) except? -1:
 
 cpdef int slurm_job_node_ready(uint32_t JobID=0) except? -1:
     """
-        Return if a node could run a slurm job now if dispatched.
+    Return if a node could run a slurm job now if dispatched.
 
     :param int JobID: Job identifier
     :returns: Node Ready code
@@ -1576,7 +1576,7 @@ cpdef int slurm_job_node_ready(uint32_t JobID=0) except? -1:
 
 cpdef int slurm_signal_job(uint32_t JobID=0, uint16_t Signal=0) except? -1:
     """
-        Send a signal to a slurm job step.
+    Send a signal to a slurm job step.
 
     :param int JobID: Job identifier
     :param int Signal: Signal to send (default=0)
@@ -1685,7 +1685,7 @@ cpdef int slurm_kill_job2(const char *JobID='', uint16_t Signal=0,
 
 cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0) except? -1:
     """
-        Complete a running slurm job step.
+    Complete a running slurm job step.
 
     :param int JobID: Job identifier
     :param int JobCode: Return code (default=0)
@@ -1704,7 +1704,7 @@ cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0) except? -1:
 
 cpdef int slurm_notify_job(uint32_t JobID=0, char* Msg='') except? -1:
     """
-        Notify a message to a running slurm job step.
+    Notify a message to a running slurm job step.
 
     :param string JobID: Job identifier (default=0)
     :param string Msg: Message string to send to job
@@ -1724,7 +1724,7 @@ cpdef int slurm_notify_job(uint32_t JobID=0, char* Msg='') except? -1:
 
 cpdef int slurm_terminate_job_step(uint32_t JobID=0, uint32_t JobStep=0) except? -1:
     """
-        Terminate a running slurm job step.
+    Terminate a running slurm job step.
 
     :param int JobID: Job identifier (default=0)
     :param int JobStep: Job step identifier (default=0)
@@ -1748,8 +1748,8 @@ cpdef int slurm_terminate_job_step(uint32_t JobID=0, uint32_t JobStep=0) except?
 
 cdef class job:
     """
-        Class to access/modify Slurm Job Information.
-        """
+    Class to access/modify Slurm Job Information.
+    """
 
     cdef:
         slurm.job_info_msg_t *_job_ptr
@@ -3083,7 +3083,7 @@ def slurm_pid2jobid(uint32_t JobPID=0):
 
 cdef secs2time_str(uint32_t time):
     """
-        Convert seconds to Slurm string format.
+    Convert seconds to Slurm string format.
 
     This method converts time in seconds (86400) to Slurm's string format
     (1-00:00:00).
@@ -3115,7 +3115,7 @@ cdef secs2time_str(uint32_t time):
 
 cdef mins2time_str(uint32_t time):
     """
-        Convert minutes to Slurm string format.
+    Convert minutes to Slurm string format.
 
     This method converts time in minutes (14400) to Slurm's string format
     (10-00:00:00).
@@ -3217,8 +3217,8 @@ def slurm_perror(char* Msg=''):
 
 cdef class node:
     """
-        Class to access/modify/update Slurm Node Information.
-        """
+    Class to access/modify/update Slurm Node Information.
+    """
 
     cdef:
         slurm.node_info_msg_t *_Node_ptr
@@ -3637,8 +3637,8 @@ def create_node_dict():
 
 cdef class jobstep:
     """
-        Class to access/modify Slurm Jobstep Information.
-        """
+    Class to access/modify Slurm Jobstep Information.
+    """
 
     cdef:
         slurm.time_t _lastUpdate
@@ -3899,8 +3899,8 @@ cdef class jobstep:
 
 cdef class hostlist:
     """
-        Wrapper class for Slurm hostlist functions.
-        """
+    Wrapper class for Slurm hostlist functions.
+    """
 
     cdef slurm.hostlist_t hl
 
@@ -4171,8 +4171,8 @@ cdef class trigger:
 
 cdef class reservation:
     """
-        Class to access/update/delete slurm reservation Information.
-        """
+    Class to access/update/delete slurm reservation Information.
+    """
 
     cdef:
         slurm.reserve_info_msg_t *_Res_ptr
@@ -4618,8 +4618,8 @@ def create_reservation_dict():
 
 cdef class topology:
     """
-        Class to access/update slurm topology information.
-        """
+    Class to access/update slurm topology information.
+    """
 
     cdef:
         slurm.topo_info_response_msg_t *_topo_info_ptr
@@ -5124,8 +5124,8 @@ cdef class statistics:
 
 cdef class front_end:
     """
-        Class to access/update slurm front end node information.
-        """
+    Class to access/update slurm front end node information.
+    """
 
     cdef:
         slurm.time_t Time
@@ -5247,8 +5247,8 @@ cdef class front_end:
 
 cdef class qos:
     """
-        Class to access/update slurm QOS information.
-        """
+    Class to access/update slurm QOS information.
+    """
 
     cdef:
         void *dbconn
@@ -5398,8 +5398,8 @@ cdef class qos:
 #
 cdef class slurmdb_jobs:
     """
-        Class to access Slurmdbd Jobs information.
-        """
+    Class to access Slurmdbd Jobs information.
+    """
 
     cdef:
         void* db_conn
@@ -5656,8 +5656,8 @@ cdef class slurmdb_jobs:
 #
 cdef class slurmdb_reservations:
     """
-        Class to access Slurmdbd reservations information.
-        """
+    Class to access Slurmdbd reservations information.
+    """
 
     cdef:
         void *dbconn
@@ -5761,8 +5761,8 @@ cdef class slurmdb_reservations:
 #
 cdef class slurmdb_clusters:
     """
-        Class to access Slurmdbd Clusters information.
-        """
+    Class to access Slurmdbd Clusters information.
+    """
 
     cdef:
         void *db_conn
@@ -5881,8 +5881,8 @@ cdef class slurmdb_clusters:
 #
 cdef class slurmdb_events:
     """
-        Class to access Slurmdbd events information.
-        """
+    Class to access Slurmdbd events information.
+    """
 
     cdef:
         void *dbconn
@@ -5963,8 +5963,8 @@ cdef class slurmdb_events:
 
 cdef class slurmdb_reports:
     """
-        Class to access Slurmdbd reports.
-        """
+    Class to access Slurmdbd reports.
+    """
 
     cdef:
         void *db_conn
@@ -6086,7 +6086,7 @@ def get_last_slurm_error():
 
 cdef inline dict __get_licenses(char *licenses):
     """
-        Returns a dict of licenses from the slurm license string.
+    Returns a dict of licenses from the slurm license string.
 
     :param string licenses: String containing license information
     :returns: Dictionary of licenses and associated value.
@@ -6508,7 +6508,7 @@ def get_partition_state(uint16_t inx):
 
 cdef inline object __get_partition_state(int inx, int extended=0):
     """
-        Returns a string that represents the state of the partition.
+    Returns a string that represents the state of the partition.
 
     :param int inx: Slurm partition type
     :param int extended:
@@ -6705,8 +6705,8 @@ class Dict(defaultdict):
 
 cdef class licenses:
     """
-        Class to access slurm controller license information.
-        """
+    Class to access slurm controller license information.
+    """
 
     cdef:
         slurm.license_info_msg_t *_msg
