@@ -21,7 +21,7 @@
 # cython: language_level=3
 
 from pyslurm cimport slurm
-from pyslurm.slurm cimport xfree, try_xmalloc, xmalloc, xfree_ptr
+from pyslurm.slurm cimport xfree, try_xmalloc, xmalloc
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from pyslurm.core.common cimport cstr
 from libc.stdlib cimport free

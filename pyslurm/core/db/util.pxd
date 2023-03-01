@@ -1,5 +1,5 @@
 #########################################################################
-# common/cstr.pxd - slurm string functions
+# util.pxd - pyslurm slurmdbd util functions
 #########################################################################
 # Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -17,22 +17,50 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
+# cython: embedsignature=True
 
 from pyslurm cimport slurm
-from pyslurm.slurm cimport xfree, try_xmalloc, xmalloc
-from libc.string cimport memcpy, strlen
+from pyslurm.core.common cimport cstr
+from pyslurm.slurm cimport (
+    ListIterator,
+    List,
+    slurm_list_iterator_create,
+    slurm_list_iterator_destroy,
+    slurm_list_iterator_reset,
+    slurm_list_count,
+    slurm_list_next,
+    slurm_list_destroy,
+    slurm_list_create,
+    slurm_list_pop,
+    slurm_xfree_ptr,
+)
 
-cdef char *from_unicode(s)
-cdef to_unicode(char *s, default=*)
-cdef fmalloc(char **old, val)
-cdef fmalloc2(char **p1, char **p2, val)
-cdef free_array(char **arr, count)
-cdef list to_list(char *str_list)
-cdef from_list(char **old, vals, delim=*)
-cdef from_list2(char **p1, char **p2, vals, delim=*)
-cdef dict to_dict(char *str_dict, str delim1=*, str delim2=*)
-cdef dict from_dict(char **old, vals, prepend=*, str delim1=*, str delim2=*)
-cdef to_gres_dict(char *gres)
-cdef from_gres_dict(vals, typ=*)
+
+cdef class SlurmListItem:
+    cdef void *data
+
+    @staticmethod
+    cdef SlurmListItem from_ptr(void *item)
+
+
+cdef class SlurmList:
+    cdef:
+        List info
+        int cnt
+        ListIterator itr
+        int itr_cnt
+        owned
+    
+    @staticmethod
+    cdef SlurmList wrap(List, owned=*)
+
+    @staticmethod
+    cdef SlurmList create(slurm.ListDelF delf)
+
+    @staticmethod
+    cdef to_char_list(List *in_list, vals)
+
+    @staticmethod
+    cdef to_str_pylist(List in_list)

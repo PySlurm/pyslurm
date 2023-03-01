@@ -1,5 +1,5 @@
 #########################################################################
-# common/cstr.pxd - slurm string functions
+# connection.pyx - pyslurm slurmdbd database connection
 #########################################################################
 # Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -17,22 +17,19 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
+# cython: embedsignature=True
 
 from pyslurm cimport slurm
-from pyslurm.slurm cimport xfree, try_xmalloc, xmalloc
-from libc.string cimport memcpy, strlen
+from libc.stdint cimport uint16_t
+from pyslurm.slurm cimport (
+    slurmdb_connection_get,
+    slurmdb_connection_close,
+)
 
-cdef char *from_unicode(s)
-cdef to_unicode(char *s, default=*)
-cdef fmalloc(char **old, val)
-cdef fmalloc2(char **p1, char **p2, val)
-cdef free_array(char **arr, count)
-cdef list to_list(char *str_list)
-cdef from_list(char **old, vals, delim=*)
-cdef from_list2(char **p1, char **p2, vals, delim=*)
-cdef dict to_dict(char *str_dict, str delim1=*, str delim2=*)
-cdef dict from_dict(char **old, vals, prepend=*, str delim1=*, str delim2=*)
-cdef to_gres_dict(char *gres)
-cdef from_gres_dict(vals, typ=*)
+
+cdef class Connection:
+    cdef:
+        void *conn
+        uint16_t conn_flags
