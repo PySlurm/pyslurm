@@ -130,6 +130,19 @@ ctypedef struct job_resources:
     uint16_t  threads_per_core
     uint8_t   whole_node
 
+#
+# TRES
+#
+ctypedef enum tres_types_t:
+    TRES_CPU = 1
+    TRES_MEM
+    TRES_ENERGY
+    TRES_NODE
+    TRES_BILLING
+    TRES_FS_DISK
+    TRES_VMEM
+    TRES_PAGES
+    TRES_STATIC_CNT
 
 # Global Environment
 cdef extern char **environ
@@ -238,3 +251,4 @@ cdef extern char *slurm_hostlist_deranged_string_malloc(hostlist_t hl)
 #
 
 cdef extern void slurmdb_job_cond_def_start_end(slurmdb_job_cond_t *job_cond)
+cdef extern uint64_t slurmdb_find_tres_count_in_string(char *tres_str_in, int id)

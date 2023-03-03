@@ -32,6 +32,8 @@ from pyslurm.slurm cimport (
     slurmdb_destroy_step_rec,
     try_xmalloc,
     slurmdb_job_cond_def_start_end,
+    slurm_job_state_string,
+    slurm_job_reason_string,
 )
 from pyslurm.core.db.util cimport SlurmList, SlurmListItem
 from pyslurm.core.db.connection cimport Connection

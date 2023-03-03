@@ -41,7 +41,7 @@ MEMORY_UNITS = {
 
 cpdef uid_to_name(uint32_t uid, err_on_invalid=True, dict lookup={}):
     """Translate UID to a User-Name."""
-    if uid == slurm.NO_VAL:
+    if uid == slurm.NO_VAL or uid == slurm.INFINITE:
         return None
 
     if lookup:
@@ -64,7 +64,7 @@ cpdef uid_to_name(uint32_t uid, err_on_invalid=True, dict lookup={}):
 
 cpdef gid_to_name(uint32_t gid, err_on_invalid=True, dict lookup={}):
     """Translate a uid to a Group-Name."""
-    if gid == slurm.NO_VAL:
+    if gid == slurm.NO_VAL or gid == slurm.INFINITE:
         return None
 
     if lookup:
