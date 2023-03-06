@@ -624,6 +624,10 @@ cdef class Job:
     @property
     def dependencies(self):
         """dict: Dependencies the Job has to other Jobs."""
+        dep = cstr.to_unicode(self.ptr.dependency, default=[])
+        if not dep:
+            return None
+
         out = {
             "after": [],
             "afterany": [],
@@ -634,10 +638,6 @@ cdef class Job:
             "singleton": False,
             "satisfy": "all",
         }
-        dep = cstr.to_unicode(self.ptr.dependency, default=[])
-
-        if not dep:
-            return out
 
         delim = ","
         if "?" in dep:
@@ -1376,7 +1376,7 @@ cdef class Job:
         return cstr.to_gres_dict(self.ptr.tres_per_node)
 
     @property
-    def acct_gather_profile(self):
+    def accounting_gather_profile(self):
         """list: Options that control gathering of Accounting information."""
         return get_acctg_profile(self.ptr.profile)
 
