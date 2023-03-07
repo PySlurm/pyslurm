@@ -11,6 +11,9 @@ jobs:
           - "3.8"
           - "3.9"
       fail-fast: false
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v2
@@ -44,4 +47,21 @@ jobs:
           pipenv run pytest -sv scripts/run_tests_in_container.py
         env:
           PYTHON: ${{ matrix.python-version }}
-
+      - name: Build Docs
+        uses: ammaraskar/sphinx-action@0.4
+        with:
+          docs-folder: doc
+      - name: Upload Github Pages asset
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: actions/upload-pages-artifact@v1.2.4
+        with:
+          path: build/html
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        id: deployment
+        uses: actions/deploy-pages@v1
+      - name: Publish package
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
