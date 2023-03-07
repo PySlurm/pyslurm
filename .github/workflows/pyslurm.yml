@@ -51,9 +51,11 @@ jobs:
         uses: ammaraskar/sphinx-action@0.4
         with:
           docs-folder: doc
+      - name: Build package
+        run: pip wheel .
       - name: Upload Github Pages asset
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: actions/upload-pages-artifact@v1.2.4
+        uses: actions/upload-pages-artifact@v1.0.7
         with:
           path: build/html
       - name: Deploy to GitHub Pages
