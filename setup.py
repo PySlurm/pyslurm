@@ -157,7 +157,7 @@ def cleanup_build():
         info("Removing build/")
         remove_tree("build", verbose=1)
 
-    files = find_files_with_extension("pyslurm", {".c", ".pyc"})
+    files = find_files_with_extension("pyslurm", {".c", ".pyc", ".so"})
 
     for file in files:
         if file.is_file():
