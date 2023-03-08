@@ -720,7 +720,7 @@ cdef extern from "slurm/slurm.h":
         unsigned char type
         unsigned char hash[32]
 
-    cpdef enum job_states:
+    cdef enum job_states:
         JOB_PENDING
         JOB_RUNNING
         JOB_SUSPENDED
@@ -735,7 +735,7 @@ cdef extern from "slurm/slurm.h":
         JOB_OOM
         JOB_END
 
-    cpdef enum job_state_reason:
+    cdef enum job_state_reason:
         WAIT_NO_REASON
         WAIT_PRIORITY
         WAIT_DEPENDENCY
@@ -936,25 +936,25 @@ cdef extern from "slurm/slurm.h":
         WAIT_QOS_MIN_BILLING
         WAIT_RESV_DELETED
 
-    cpdef enum job_acct_types:
+    cdef enum job_acct_types:
         JOB_START
         JOB_STEP
         JOB_SUSPEND
         JOB_TERMINATED
 
-    cpdef enum auth_plugin_type:
+    cdef enum auth_plugin_type:
         AUTH_PLUGIN_NONE
         AUTH_PLUGIN_MUNGE
         AUTH_PLUGIN_JWT
 
-    cpdef enum hash_plugin_type:
+    cdef enum hash_plugin_type:
         HASH_PLUGIN_DEFAULT
         HASH_PLUGIN_NONE
         HASH_PLUGIN_K12
         HASH_PLUGIN_SHA256
         HASH_PLUGIN_CNT
 
-    cpdef enum select_plugin_type:
+    cdef enum select_plugin_type:
         SELECT_PLUGIN_CONS_RES
         SELECT_PLUGIN_LINEAR
         SELECT_PLUGIN_SERIAL
@@ -963,27 +963,27 @@ cdef extern from "slurm/slurm.h":
         SELECT_PLUGIN_CONS_TRES
         SELECT_PLUGIN_CRAY_CONS_TRES
 
-    cpdef enum switch_plugin_type:
+    cdef enum switch_plugin_type:
         SWITCH_PLUGIN_NONE
         SWITCH_PLUGIN_GENERIC
         SWITCH_PLUGIN_CRAY
         SWITCH_PLUGIN_SLINGSHOT
 
-    cpdef enum select_jobdata_type:
+    cdef enum select_jobdata_type:
         SELECT_JOBDATA_PAGG_ID
         SELECT_JOBDATA_PTR
         SELECT_JOBDATA_CLEANING
         SELECT_JOBDATA_NETWORK
         SELECT_JOBDATA_RELEASED
 
-    cpdef enum select_nodedata_type:
+    cdef enum select_nodedata_type:
         SELECT_NODEDATA_SUBCNT
         SELECT_NODEDATA_PTR
         SELECT_NODEDATA_MEM_ALLOC
         SELECT_NODEDATA_TRES_ALLOC_FMT_STR
         SELECT_NODEDATA_TRES_ALLOC_WEIGHTED
 
-    cpdef enum select_print_mode:
+    cdef enum select_print_mode:
         SELECT_PRINT_HEAD
         SELECT_PRINT_DATA
         SELECT_PRINT_MIXED
@@ -1002,7 +1002,7 @@ cdef extern from "slurm/slurm.h":
         SELECT_PRINT_RESV_ID
         SELECT_PRINT_START_LOC
 
-    cpdef enum select_node_cnt:
+    cdef enum select_node_cnt:
         SELECT_GET_NODE_SCALING
         SELECT_GET_NODE_CPU_CNT
         SELECT_GET_MP_CPU_CNT
@@ -1011,19 +1011,19 @@ cdef extern from "slurm/slurm.h":
         SELECT_SET_NODE_CNT
         SELECT_SET_MP_CNT
 
-    cpdef enum acct_gather_profile_info:
+    cdef enum acct_gather_profile_info:
         ACCT_GATHER_PROFILE_DIR
         ACCT_GATHER_PROFILE_DEFAULT
         ACCT_GATHER_PROFILE_RUNNING
 
-    cpdef enum jobacct_data_type:
+    cdef enum jobacct_data_type:
         JOBACCT_DATA_TOTAL
         JOBACCT_DATA_PIPE
         JOBACCT_DATA_RUSAGE
         JOBACCT_DATA_TOT_VSIZE
         JOBACCT_DATA_TOT_RSS
 
-    cpdef enum acct_energy_type:
+    cdef enum acct_energy_type:
         ENERGY_DATA_JOULES_TASK
         ENERGY_DATA_STRUCT
         ENERGY_DATA_RECONFIG
@@ -1034,7 +1034,7 @@ cdef extern from "slurm/slurm.h":
         ENERGY_DATA_NODE_ENERGY_UP
         ENERGY_DATA_STEP_PTR
 
-    cpdef enum task_dist_states:
+    cdef enum task_dist_states:
         SLURM_DIST_CYCLIC
         SLURM_DIST_BLOCK
         SLURM_DIST_ARBITRARY
@@ -1075,7 +1075,7 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef task_dist_states task_dist_states_t
 
-    cpdef enum cpu_bind_type:
+    cdef enum cpu_bind_type:
         CPU_BIND_VERBOSE
         CPU_BIND_TO_THREADS
         CPU_BIND_TO_CORES
@@ -1097,7 +1097,7 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef cpu_bind_type cpu_bind_type_t
 
-    cpdef enum mem_bind_type:
+    cdef enum mem_bind_type:
         MEM_BIND_VERBOSE
         MEM_BIND_NONE
         MEM_BIND_RANK
@@ -1109,14 +1109,14 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef mem_bind_type mem_bind_type_t
 
-    cpdef enum accel_bind_type:
+    cdef enum accel_bind_type:
         ACCEL_BIND_VERBOSE
         ACCEL_BIND_CLOSEST_GPU
         ACCEL_BIND_CLOSEST_NIC
 
     ctypedef accel_bind_type accel_bind_type_t
 
-    cpdef enum node_states:
+    cdef enum node_states:
         NODE_STATE_UNKNOWN
         NODE_STATE_DOWN
         NODE_STATE_IDLE
@@ -1662,7 +1662,7 @@ cdef extern from "slurm/slurm.h":
 
     ctypedef srun_step_missing_msg srun_step_missing_msg_t
 
-    cpdef enum suspend_opts:
+    cdef enum suspend_opts:
         SUSPEND_JOB
         RESUME_JOB
 
@@ -3140,7 +3140,7 @@ cdef extern from "slurm/slurmdb.h":
         SLURMDB_ADD_TRES
         SLURMDB_UPDATE_FEDS
 
-    cpdef enum cluster_fed_states:
+    cdef enum cluster_fed_states:
         CLUSTER_FED_STATE_NA
         CLUSTER_FED_STATE_ACTIVE
         CLUSTER_FED_STATE_INACTIVE
@@ -3231,7 +3231,7 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t with_coords
         uint16_t with_deleted
 
-    cpdef enum:
+    cdef enum:
         SLURMDB_ACCT_FLAG_NONE
         SLURMDB_ACCT_FLAG_DELETED
 
@@ -3726,7 +3726,7 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t with_wckeys
         uint16_t without_defaults
 
-    cpdef enum:
+    cdef enum:
         SLURMDB_USER_FLAG_NONE
         SLURMDB_USER_FLAG_DELETED
 
@@ -3759,7 +3759,7 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t with_usage
         uint16_t with_deleted
 
-    cpdef enum:
+    cdef enum:
         SLURMDB_WCKEY_FLAG_NONE
         SLURMDB_WCKEY_FLAG_DELETED
 
@@ -3827,7 +3827,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t count
         List tres_list
 
-    cpdef enum:
+    cdef enum:
         DBD_ROLLUP_HOUR
         DBD_ROLLUP_DAY
         DBD_ROLLUP_MONTH
