@@ -45,24 +45,7 @@ from pyslurm.core.common import (
 
 
 cdef class Nodes(dict):
-    """A collection of Node objects.
 
-    By creating a new Nodes instance, all Nodes in the system will be
-    fetched from the slurmctld.
-
-    Args:
-        preload_passwd_info (bool): 
-            Decides whether to query passwd and groups information from the
-            system.
-            Could potentially speed up access to attributes of the Node where
-            a UID/GID is translated to a name.
-            If True, the information will fetched and stored in each of the
-            Node instances. The default is False.
-
-    Raises:
-        RPCError: When getting all the Nodes from the slurmctld failed.
-        MemoryError: If malloc fails to allocate memory.
-    """
     def __dealloc__(self):
         slurm_free_node_info_msg(self.info)
         slurm_free_partition_info_msg(self.part_info)
@@ -122,12 +105,10 @@ cdef class Nodes(dict):
 
     @property
     def free_memory_raw(self):
-        """int: Amount of free memory in this node collection. (Mebibytes)"""
         return _sum_prop(self, Node.free_memory)
 
     @property
     def free_memory(self):
-        """str: Humanized amount of free memory in this node collection."""
         return humanize(self.free_memory_raw, 2)
 
     @property
@@ -182,32 +163,12 @@ cdef class Nodes(dict):
 
 
 cdef class Node:
-    """A Slurm node."""
 
     def __cinit__(self):
         self.info = NULL
         self.umsg = NULL
 
     def __init__(self, str name=None, **kwargs):
-        """Initialize a Node instance
-
-        Args:
-            name (str):
-                Name of a node
-            **kwargs:
-                Any writable property. Writable attributes include:
-                    * name
-                    * configured_gres
-                    * address
-                    * hostname
-                    * extra
-                    * comment
-                    * weight
-                    * available_features
-                    * active_features
-                    * cpu_binding
-                    * state
-        """
         self._alloc_impl()
         self.name = name
         for k, v in kwargs.items():
@@ -420,7 +381,6 @@ cdef class Node:
 
     @property
     def name(self):
-        """str: Name of the node."""
         return cstr.to_unicode(self.info.name)
 
     @name.setter
@@ -429,7 +389,6 @@ cdef class Node:
 
     @property
     def architecture(self):
-        """str: Architecture of the node (e.g. x86_64)"""
         return cstr.to_unicode(self.info.arch)
 
     @property

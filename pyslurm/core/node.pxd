@@ -50,7 +50,30 @@ from pyslurm.slurm cimport (
 
 
 cdef class Nodes(dict):
+    """A collection of Node objects.
 
+    By creating a new Nodes instance, all Nodes in the system will be
+    fetched from the slurmctld.
+
+    Args:
+        preload_passwd_info (bool): 
+            Decides whether to query passwd and groups information from the
+            system.
+            Could potentially speed up access to attributes of the Node where
+            a UID/GID is translated to a name.
+            If True, the information will fetched and stored in each of the
+            Node instances. The default is False.
+
+    Attributes:
+        free_memory_raw (int):
+            Amount of free memory in this node collection. (Mebibytes)
+        free_memory (str):
+            Humanized amount of free memory in this node collection.
+
+    Raises:
+        RPCError: When getting all the Nodes from the slurmctld failed.
+        MemoryError: If malloc fails to allocate memory.
+    """
     cdef:
         node_info_msg_t *info
         partition_info_msg_t *part_info
@@ -58,6 +81,34 @@ cdef class Nodes(dict):
 
 
 cdef class Node:
+    """A Slurm node.
+
+    Args:
+        name (str):
+            Name of a node
+        **kwargs:
+            Any writable property. Writable attributes include:
+                * name
+                * configured_gres
+                * address
+                * hostname
+                * extra
+                * comment
+                * weight
+                * available_features
+                * active_features
+                * cpu_binding
+                * state
+
+    Attributes:
+        name (str):
+            Name of the node.
+        architecture (str):
+            Architecture of the node (e.g. x86_64)
+
+    Raises:
+        MemoryError: If malloc fails to allocate memory.
+    """
     cdef:
         node_info_t *info
         update_node_msg_t *umsg
