@@ -19,7 +19,6 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
-# cython: embedsignature=True
 
 
 from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
@@ -31,6 +30,7 @@ from pyslurm.core.common.ctime import (
     secs_to_timestr,
     timestamp_to_date,
     mins_to_timestr,
+    _raw_time,
 )
 from pyslurm.core.common import (
     gid_to_name,
@@ -82,12 +82,54 @@ cdef class JobStep:
             return int(sid)
 
     @property
+    def alloc_cpus(self):
+        return self.requested_cpus
+
+    @property
+    def alloc_nodes(self):
+        nnodes = u32_parse(self.ptr.nnodes)
+        if not nnodes and self.ptr.tres_alloc_str:
+            return TrackableResources.find_count_in_str(
+                    self.ptr.tres_alloc_str, slurm.TRES_NODE)
+        else:
+            return nnodes
+
+    @property
+    def requested_cpus(self):
+        req_cpus = TrackableResources.find_count_in_str(
+                self.ptr.tres_alloc_str, slurm.TRES_CPU)
+
+        if req_cpus == slurm.INFINITE64 and step.job_ptr:
+            tres_alloc_str = cstr.to_unicode(step.job_ptr.tres_alloc_str)
+            req_cpus = TrackableResources.find_count_in_str(tres_alloc_str,
+                                                            slurm.TRES_CPU)
+            if not req_cpus:
+                tres_req_str = cstr.to_unicode(step.job_ptr.tres_req_str)
+                req_cpus = TrackableResources.find_count_in_str(tres_req_str,
+                                                                slurm.TRES_CPU)
+        else:
+            req_cpus = 0
+
+        return req_cpus
+
+    # Only in Parent Job available:
+    # association_id
+    # admin_comment
+
+
+    # ACT_CPUFREQ
+
+    @property
     def container(self):
         return cstr.to_unicode(self.ptr.container)
 
     @property
     def elapsed_time(self):
         return secs_to_timestr(self.ptr.elapsed)
+
+    @property
+    def end_time_raw(self):
+        return _raw_time(self.ptr.end)
 
     @property
     def end_time(self):
@@ -167,6 +209,8 @@ cdef class Jobs(dict):
             SlurmListItem job_ptr
             SlurmListItem step_ptr
             SlurmList step_list
+            int cpu_tres_rec_count = 0
+            int step_cpu_tres_rec_count = 0
 
         # Allow the user to both specify search conditions via a JobConditions
         # instance or **kwargs.
@@ -183,6 +227,9 @@ cdef class Jobs(dict):
 
         if self.info.is_null():
             raise RPCError(msg="Failed to get Jobs from slurmdbd")
+
+        tres_alloc_str = cstr.to_unicode()
+        cpu_tres_rec_count 
 
         # TODO: also get trackable resources with slurmdb_tres_get and store
         # it in each job instance. tres_alloc_str and tres_req_str only
@@ -231,7 +278,7 @@ cdef class Job:
         return cstr.to_unicode(self.ptr.admin_comment)
 
     @property
-    def allocated_nodes(self):
+    def alloc_nodes(self):
         return u32_parse(self.ptr.alloc_nodes)
 
     @property
@@ -286,7 +333,8 @@ cdef class Job:
     @property
     def derived_exit_code(self):
         """int: The derived exit code for the Job."""
-        if not WIFEXITED(self.ptr.derived_ec):
+        if (self.ptr.derived_ec == slurm.NO_VAL
+                or not WIFEXITED(self.ptr.derived_ec)):
             return None
 
         return WEXITSTATUS(self.ptr.derived_ec)
@@ -294,7 +342,8 @@ cdef class Job:
     @property
     def derived_exit_code_signal(self):
         """int: Signal for the derived exit code."""
-        if not WIFSIGNALED(self.ptr.derived_ec): 
+        if (self.ptr.derived_ec == slurm.NO_VAL
+                or not WIFSIGNALED(self.ptr.derived_ec)): 
             return None
 
         return WTERMSIG(self.ptr.derived_ec)
@@ -302,6 +351,10 @@ cdef class Job:
     @property
     def comment(self):
         return cstr.to_unicode(self.ptr.derived_es)
+
+    @property
+    def elapsed_time_raw(self):
+        return _raw_time(self.ptr.elapsed)
 
     @property
     def elapsed_time(self):

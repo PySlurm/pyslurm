@@ -50,6 +50,9 @@ cdef class TrackableResources(dict):
 
     @staticmethod
     def find_count_in_str(tres_str, typ):
+        if not tres_str:
+            return None
+
         cdef uint64_t tmp
         tmp = slurmdb_find_tres_count_in_string(tres_str, typ)
         return u64_parse(tmp)
