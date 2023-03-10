@@ -1,0 +1,19 @@
+site_name: pyslurm
+theme:
+  name: "material"
+  logo: pyslurm-docs.png
+plugins:
+- search
+- mkdocstrings:
+    handlers:
+      python:
+        options:
+          filters: ["!^_"]
+          docstring_style: sphinx
+          show_signature: true
+          show_root_heading: true
+extra:
+  version:
+    provider: mike
+extra_css:
+  - stylesheets/extra.css
