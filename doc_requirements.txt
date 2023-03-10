@@ -1,0 +1,6 @@
+cython>=3.0.0b1
+wheel
+setuptools
+mkdocstrings[python]
+mike
+mkdocs-material

@@ -1,5 +1,6 @@
 # Ignore Build Directory #
 build/
+site
 
 # Ignore Docs Directory #
 #doc/
