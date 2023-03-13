@@ -136,12 +136,20 @@ cdef class JobStats:
 
     @property
     def total_cpu_time(self):
+        # uint32_t tot_cpu_sec
+        # uint32_t tot_cpu_usec
         return None
 
     @property
     def user_cpu_time(self):
+        # Only available for Jobs from the Database, not sstat
+        # uint32_t user_cpu_sec
+        # uint32_t user_cpu_usec
         return None
     
     @property
     def system_cpu_time(self):
+        # Only available for Jobs from the Database, not sstat
+        # uint32_t sys_cpu_sec
+        # uint32_t sys_cpu_usec
         return None

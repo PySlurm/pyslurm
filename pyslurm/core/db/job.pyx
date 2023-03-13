@@ -167,7 +167,7 @@ cdef class Job:
         return u32_parse(self.ptr.array_job_id)
 
     @property
-    def array_parallel_tasks(self):
+    def array_tasks_parallel(self):
         return u32_parse(self.ptr.array_max_tasks)
 
     @property
@@ -242,8 +242,16 @@ cdef class Job:
         return secs_to_timestr(self.ptr.elapsed)
 
     @property
+    def eligible_time_raw(self):
+        return _raw_time(self.ptr.eligible)
+
+    @property
     def eligible_time(self):
         return timestamp_to_date(self.ptr.eligible)
+
+    @property
+    def end_time_raw(self):
+        return _raw_time(self.ptr.end)
 
     @property
     def end_time(self):
@@ -256,6 +264,9 @@ cdef class Job:
     # uint32_t flags
 
     def gid(self):
+        return u32_parse(self.ptr.gid, zero_is_noval=False)
+
+    def group(self):
         return gid_to_name(self.ptr.gid)
 
     # uint32_t het_job_id
@@ -288,7 +299,7 @@ cdef class Job:
         return u32_parse(self.ptr.priority, zero_is_noval=False)
 
     @property
-    def quality_of_service(self):
+    def qos(self):
         # Need to convert the raw uint32_t qosid to a name, by calling
         # slurmdb_qos_get. To avoid doing this repeatedly, we'll probably need
         # to also get the qos list when calling slurmdb_jobs_get and store it
@@ -313,15 +324,19 @@ cdef class Job:
     def reservation(self):
         return cstr.to_unicode(self.ptr.resv_name)
 
-    @property
-    def reservation_id(self):
-        return u32_parse(self.ptr.resvid)
+#    @property
+#    def reservation_id(self):
+#        return u32_parse(self.ptr.resvid)
 
     @property
     def script(self):
         return cstr.to_unicode(self.ptr.script)
 
     # uint32_t show_full
+
+    @property
+    def start_time_raw(self):
+        return _raw_time(self.ptr.start)
 
     @property
     def start_time(self):
@@ -342,12 +357,20 @@ cdef class Job:
         return uid_to_name(self.ptr.requid)
 
     @property
+    def submit_time_raw(self):
+        return _raw_time(self.ptr.submit)
+
+    @property
     def submit_time(self):
         return timestamp_to_date(self.ptr.submit)
 
     @property
     def submit_line(self):
         return cstr.to_unicode(self.ptr.submit_line)
+
+    @property
+    def suspended_time_raw(self):
+        return _raw_time(self.ptr.elapsed)
 
     @property
     def suspended_time(self):
@@ -358,27 +381,19 @@ cdef class Job:
         return cstr.to_unicode(self.ptr.system_comment)
 
     @property
-    def system_cpu_time(self):
-        # uint32_t sys_cpu_sec
-        # uint32_t sys_cpu_usec
-        pass
+    def time_limit_raw(self):
+        return _raw_time(self.ptr.timelimit)
 
     @property
     def time_limit(self):
         return mins_to_timestr(self.ptr.timelimit, "PartitionLimit")
 
     @property
-    def cpu_time(self):
-        pass
-
-    @property
-    def total_cpu_time(self):
-        # uint32_t tot_cpu_sec
-        # uint32_t tot_cpu_usec
-        pass
-
-    @property
     def uid(self):
+        return u32_parse(self.ptr.uid, zero_is_noval=False)
+
+    @property
+    def user(self):
         # Theres also a ptr->user
         # https://github.com/SchedMD/slurm/blob/6365a8b7c9480c48678eeedef99864d8d3b6a6b5/src/sacct/print.c#L1946
         return uid_to_name(self.ptr.uid)
@@ -386,27 +401,21 @@ cdef class Job:
     # TODO: used gres
 
     @property
-    def user_cpu_time(self):
-        # uint32_t user_cpu_sec
-        # uint32_t user_cpu_usec
-        pass
-    
-    @property
     def wckey(self):
         return cstr.to_unicode(self.ptr.wckey)
 
-    @property
-    def wckey_id(self):
-        return u32_parse(self.ptr.wckeyid)
+#    @property
+#    def wckey_id(self):
+#        return u32_parse(self.ptr.wckeyid)
 
     @property
     def work_dir(self):
         return cstr.to_unicode(self.ptr.work_dir)
 
-    @property
-    def tres_allocated(self):
-        return TrackableResources.from_str(self.ptr.tres_alloc_str)
+#    @property
+#    def tres_allocated(self):
+#        return TrackableResources.from_str(self.ptr.tres_alloc_str)
 
-    @property
-    def tres_requested(self):
-        return TrackableResources.from_str(self.ptr.tres_req_str)
+#    @property
+#    def tres_requested(self):
+#        return TrackableResources.from_str(self.ptr.tres_req_str)

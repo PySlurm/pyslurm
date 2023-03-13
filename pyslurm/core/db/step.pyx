@@ -153,15 +153,15 @@ cdef class JobStep:
         return None
 
     @property
-    def requested_cpu_freq_min(self):
+    def cpu_freq_min(self):
         return None
 
     @property
-    def requested_cpu_freq_max(self):
+    def cpu_freq_max(self):
         return None
 
     @property
-    def requested_cpu_freq_gov(self):
+    def cpu_freq_gov(self):
         return None
 
     @property
