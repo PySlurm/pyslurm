@@ -24,8 +24,11 @@ from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     try_xmalloc,
     slurmdb_stats_t,
+    slurmdb_job_rec_t,
 )
 
 
 cdef class JobStats:
-    cdef slurmdb_stats_t *ptr
+    cdef:
+        slurmdb_stats_t *ptr
+        slurmdb_job_rec_t *job

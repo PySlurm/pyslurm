@@ -20,7 +20,6 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-
 from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 from pyslurm.core.error import RPCError
 from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
@@ -41,124 +40,6 @@ from pyslurm.core.common import (
 
 # Maybe prefix these classes with something like "DB" to avoid name collision
 # with the other classes from pyslurm/core/job ?
-
-cdef class JobStep:
-
-    def __cinit__(self):
-        self.ptr = NULL
-
-    def __dealloc__(self):
-        slurmdb_destroy_step_rec(self.ptr)
-        self.ptr = NULL
-
-    @staticmethod
-    cdef JobStep from_ptr(slurmdb_step_rec_t *step):
-        cdef JobStep wrap = JobStep.__new__(JobStep)
-        wrap.ptr = step
-        return wrap
-
-    def _xlate_from_id(self, sid):
-        if sid == slurm.SLURM_BATCH_SCRIPT:
-            return "batch"
-        elif sid == slurm.SLURM_EXTERN_CONT:
-            return "extern"
-        elif sid == slurm.SLURM_INTERACTIVE_STEP:
-            return "interactive"
-        elif sid == slurm.SLURM_PENDING_STEP:
-            return "pending"
-        else:
-            return sid
-
-    def _xlate_to_id(self, sid):
-        if sid == "batch":
-            return slurm.SLURM_BATCH_SCRIPT
-        elif sid == "extern":
-            return slurm.SLURM_EXTERN_CONT
-        elif sid == "interactive":
-            return slurm.SLURM_INTERACTIVE_STEP
-        elif sid == "pending":
-            return slurm.SLURM_PENDING_STEP
-        else:
-            return int(sid)
-
-    @property
-    def alloc_cpus(self):
-        return self.requested_cpus
-
-    @property
-    def alloc_nodes(self):
-        nnodes = u32_parse(self.ptr.nnodes)
-        if not nnodes and self.ptr.tres_alloc_str:
-            return TrackableResources.find_count_in_str(
-                    self.ptr.tres_alloc_str, slurm.TRES_NODE)
-        else:
-            return nnodes
-
-    @property
-    def requested_cpus(self):
-        req_cpus = TrackableResources.find_count_in_str(
-                self.ptr.tres_alloc_str, slurm.TRES_CPU)
-
-        if req_cpus == slurm.INFINITE64 and step.job_ptr:
-            tres_alloc_str = cstr.to_unicode(step.job_ptr.tres_alloc_str)
-            req_cpus = TrackableResources.find_count_in_str(tres_alloc_str,
-                                                            slurm.TRES_CPU)
-            if not req_cpus:
-                tres_req_str = cstr.to_unicode(step.job_ptr.tres_req_str)
-                req_cpus = TrackableResources.find_count_in_str(tres_req_str,
-                                                                slurm.TRES_CPU)
-        else:
-            req_cpus = 0
-
-        return req_cpus
-
-    # Only in Parent Job available:
-    # association_id
-    # admin_comment
-
-
-    # ACT_CPUFREQ
-
-    @property
-    def container(self):
-        return cstr.to_unicode(self.ptr.container)
-
-    @property
-    def elapsed_time(self):
-        return secs_to_timestr(self.ptr.elapsed)
-
-    @property
-    def end_time_raw(self):
-        return _raw_time(self.ptr.end)
-
-    @property
-    def end_time(self):
-        return timestamp_to_date(self.ptr.end)
-
-    @property
-    def exit_code(self):
-        return None
-
-    @property
-    def nodes_count(self):
-        return None
-
-    @property
-    def nodes(self):
-        return None
-
-    @property
-    def id(self):
-        return self._xlate_from_id(self.ptr.step_id.step_id)
-
-    @property
-    def job_id(self):
-        return self.ptr.step_id.job_id
-
-    @property
-    def name(self):
-        return cstr.to_unicode(self.ptr.stepname)
-
 
 cdef class JobConditions:
 
@@ -228,8 +109,8 @@ cdef class Jobs(dict):
         if self.info.is_null():
             raise RPCError(msg="Failed to get Jobs from slurmdbd")
 
-        tres_alloc_str = cstr.to_unicode()
-        cpu_tres_rec_count 
+        # tres_alloc_str = cstr.to_unicode()
+        # cpu_tres_rec_count 
 
         # TODO: also get trackable resources with slurmdb_tres_get and store
         # it in each job instance. tres_alloc_str and tres_req_str only
@@ -396,7 +277,7 @@ cdef class Job:
 
     @property
     def nodelist(self):
-        return cstr.to_list(self.ptr.nodes)
+        return cstr.to_unicode(self.ptr.nodes)
 
     @property
     def partition(self):
@@ -425,7 +306,7 @@ cdef class Job:
         return humanize(val, decimals=2)
 
     @property
-    def allocated_cpus(self):
+    def alloc_cpus(self):
         pass
 
     @property

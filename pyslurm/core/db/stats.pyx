@@ -22,6 +22,126 @@
 
 
 cdef class JobStats:
-    pass
 
+    @property
+    def consumed_energy(self):
+        return None
 
+    @property
+    def avg_cpu_time(self):
+        return None
+
+    @property
+    def avg_cpu_freq(self):
+        return None
+
+    @property
+    def cpu_time(self):
+        # Elapsed * alloc_cpus
+        # This is the time the Job has been using the allocated CPUs for.
+        # This is not the actual cpu-usage.
+        return None
+
+    @property
+    def avg_disk_read(self):
+        return None
+
+    @property
+    def avg_disk_write(self):
+        return None
+
+    @property
+    def avg_pages(self):
+        return None
+
+    @property
+    def avg_rss(self):
+        return None
+
+    @property
+    def avg_vmsize(self):
+        return None
+
+    @property
+    def max_disk_read(self):
+        return None
+
+    @property
+    def max_disk_read_node(self):
+        return None
+
+    @property
+    def max_disk_read_task(self):
+        return None
+
+    @property
+    def max_disk_write(self):
+        return None
+
+    @property
+    def max_disk_write_node(self):
+        return None
+
+    @property
+    def max_disk_write_task(self):
+        return None
+
+    @property
+    def max_pages(self):
+        return None
+
+    @property
+    def max_pages_node(self):
+        return None
+
+    @property
+    def max_pages_task(self):
+        return None
+
+    @property
+    def max_rss(self):
+        return None
+
+    @property
+    def max_rss_node(self):
+        return None
+
+    @property
+    def max_rss_task(self):
+        return None
+
+    @property
+    def max_vmsize(self):
+        return None
+
+    @property
+    def max_vmsize_node(self):
+        return None
+
+    @property
+    def max_vmsize_task(self):
+        return None
+
+    @property
+    def min_cpu_time(self):
+        return None
+
+    @property
+    def min_cpu_time_node(self):
+        return None
+
+    @property
+    def min_cpu_time_task(self):
+        return None
+
+    @property
+    def total_cpu_time(self):
+        return None
+
+    @property
+    def user_cpu_time(self):
+        return None
+    
+    @property
+    def system_cpu_time(self):
+        return None

@@ -1,5 +1,5 @@
 #########################################################################
-# job.pxd - pyslurm slurmdbd job api
+# step.pxd - pyslurm slurmdbd step api
 #########################################################################
 # Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -35,31 +35,16 @@ from pyslurm.slurm cimport (
     slurm_job_reason_string,
 )
 from pyslurm.core.db.util cimport SlurmList, SlurmListItem
-from pyslurm.core.db.step cimport JobStep, JobSteps
-from pyslurm.core.db.stats cimport JobStats
 from pyslurm.core.db.connection cimport Connection
 from pyslurm.core.common cimport cstr
 
 
-cdef class JobConditions:
-    cdef slurmdb_job_cond_t *ptr
-
-    cdef public:
-        start_time
-        end_time
-        accounts
-        association_ids
-        clusters
-        constraints
+cdef class JobSteps(dict):
+    pass
 
 
-cdef class Jobs(dict):
-    cdef SlurmList info
-
-
-cdef class Job:
-    cdef slurmdb_job_rec_t *ptr
-    cdef public JobSteps steps
+cdef class JobStep:
+    cdef slurmdb_step_rec_t *ptr
 
     @staticmethod
-    cdef Job from_ptr(slurmdb_job_rec_t *in_ptr)
+    cdef JobStep from_ptr(slurmdb_step_rec_t *step)
