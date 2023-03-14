@@ -9,7 +9,7 @@ plugins:
       python:
         options:
           filters: ["!^_"]
-          docstring_style: sphinx
+          docstring_style: google
           show_signature: true
           show_root_heading: true
 extra:
