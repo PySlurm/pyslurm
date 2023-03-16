@@ -38,58 +38,58 @@ def test_environment():
 #        }
 
 
-def test_cpu_frequency():
+def test_cpu_frequencyuency():
     job = job_desc()
     job._create_job_submit_desc()
 
-    job.cpu_freq = "Performance"
+    job.cpu_frequency = "Performance"
     job._create_job_submit_desc()
 
-    job.cpu_freq = {"governor": "Performance"}
+    job.cpu_frequency = {"governor": "Performance"}
     job._create_job_submit_desc()
 
-    job.cpu_freq = 1000000
+    job.cpu_frequency = 1000000
     job._create_job_submit_desc()
 
-    job.cpu_freq = {"max": 1000000}
+    job.cpu_frequency = {"max": 1000000}
     job._create_job_submit_desc()
 
-    job.cpu_freq = "1000000-3700000"
+    job.cpu_frequency = "1000000-3700000"
     job._create_job_submit_desc()
 
-    job.cpu_freq = {"min": 1000000, "max": 3700000}
+    job.cpu_frequency = {"min": 1000000, "max": 3700000}
     job._create_job_submit_desc()
 
-    job.cpu_freq = "1000000-3700000:Performance"
+    job.cpu_frequency = "1000000-3700000:Performance"
     job._create_job_submit_desc()
 
-    job.cpu_freq = {"min": 1000000, "max": 3700000,
+    job.cpu_frequency = {"min": 1000000, "max": 3700000,
                          "governor": "Performance"}
     job._create_job_submit_desc()
 
     with pytest.raises(ValueError,
-            match=r"Invalid cpu_freq format*"):
-        job.cpu_freq = "Performance:3700000"
+            match=r"Invalid cpu_frequency format*"):
+        job.cpu_frequency = "Performance:3700000"
         job._create_job_submit_desc()
 
     with pytest.raises(ValueError,
             match=r"min cpu-freq*"):
-        job.cpu_freq = "4000000-3700000"
+        job.cpu_frequency = "4000000-3700000"
         job._create_job_submit_desc()
 
     with pytest.raises(ValueError,
             match=r"Invalid cpu freq value*"):
-        job.cpu_freq = "3700000:Performance"
+        job.cpu_frequency = "3700000:Performance"
         job._create_job_submit_desc()
 
     with pytest.raises(ValueError,
             match=r"Setting Governor when specifying*"):
-        job.cpu_freq = {"max": 3700000, "governor": "Performance"}
+        job.cpu_frequency = {"max": 3700000, "governor": "Performance"}
         job._create_job_submit_desc()
 
     with pytest.raises(ValueError,
             match=r"Setting Governor when specifying*"):
-        job.cpu_freq = {"min": 3700000, "governor": "Performance"}
+        job.cpu_frequency = {"min": 3700000, "governor": "Performance"}
         job._create_job_submit_desc()
 
 
@@ -256,10 +256,10 @@ def test_setting_attrs_with_env_vars():
     pyenviron["PYSLURM_JOBDESC_WCKEY"] = "wckey"
     pyenviron["PYSLURM_JOBDESC_CLUSTERS"] = "cluster1,cluster2"
     pyenviron["PYSLURM_JOBDESC_COMMENT"] = "A simple job comment"
-    pyenviron["PYSLURM_JOBDESC_CONTIGUOUS"] = "True"
-    pyenviron["PYSLURM_JOBDESC_WORK_DIR"] = "/work/user1"
+    pyenviron["PYSLURM_JOBDESC_REQUIRES_CONTIGUOUS_NODES"] = "True"
+    pyenviron["PYSLURM_JOBDESC_WORKING_DIRECTORY"] = "/work/user1"
 
-    job = job_desc(work_dir="/work/user2")
+    job = job_desc(working_directory="/work/user2")
     job.load_environment()
 
     assert job.account == "account1"
@@ -267,13 +267,13 @@ def test_setting_attrs_with_env_vars():
     assert job.wckey == "wckey"
     assert job.clusters == "cluster1,cluster2"
     assert job.comment == "A simple job comment"
-    assert job.work_dir == "/work/user2"
-    assert job.contiguous == True
+    assert job.working_directory == "/work/user2"
+    assert job.requires_contiguous_nodes == True
     job._create_job_submit_desc()
 
 
 def test_parsing_sbatch_options_from_script():
-    job = job_desc(work_dir="/work/user2")
+    job = job_desc(working_directory="/work/user2")
 
     fd, path = tempfile.mkstemp()
     try:
@@ -295,7 +295,7 @@ def test_parsing_sbatch_options_from_script():
         job.script = path
         job.load_sbatch_options()
         assert job.time_limit == "20"
-        assert job.mem_per_cpu == "1G"
+        assert job.memory_per_cpu == "1G"
         assert job.gpus == "1"
         assert job.resource_sharing == "no"
         assert job.ntasks == "2"

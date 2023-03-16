@@ -17,7 +17,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: language_level=3
 
@@ -47,7 +46,7 @@ from pyslurm.core.common.ctime import (
 
 
 cdef class JobSteps(dict):
-    """A collection of :obj:`JobStep` objects for a given Job."""
+
     def __dealloc__(self):
         slurm_free_job_step_info_response_msg(self.info)
 
@@ -55,16 +54,6 @@ cdef class JobSteps(dict):
         self.info = NULL
 
     def __init__(self, job):
-        """Initialize a JobSteps collection
-
-        Args:
-            job (Union[Job, int]):
-                A Job for which the Steps should be loaded.
-
-        Raises:
-            RPCError: When getting the Job steps from the slurmctld failed.
-            MemoryError: If malloc fails to allocate memory.
-        """
         cdef Job _job
 
         # Reload the Job in order to have updated information about its state.
@@ -122,31 +111,20 @@ cdef class JobSteps(dict):
         """Loads and returns all the steps in the system.
 
         Returns:
-            dict: A dict where every JobID (key) is mapped with an instance of
-                its JobSteps (value).
+            (dict): A dict where every JobID (key) is mapped with an instance
+                of its JobSteps (value).
         """
         cdef JobSteps steps = JobSteps.__new__(JobSteps)
         return steps._load(slurm.NO_VAL, slurm.SHOW_ALL)
 
 
 cdef class JobStep:
-    """A Slurm Jobstep"""
+
     def __cinit__(self):
         self.ptr = NULL
         self.umsg = NULL
 
     def __init__(self, job=0, step=0, **kwargs):
-        """Initialize the JobStep instance
-
-        Args:
-            job (Union[Job, int]):
-                The Job this Step belongs to.
-            step (Union[int, str]):
-                Step-ID for this JobStep object.
-
-        Raises:
-            MemoryError: If malloc fails to allocate memory.
-        """
         self._alloc_impl()
         self.job_id = job.id if isinstance(job, Job) else job
         self.id = step
@@ -208,8 +186,8 @@ cdef class JobStep:
             MemoryError: If malloc failed to allocate memory.
 
         Returns:
-            JobStep: This function returns the current JobStep-instance object
-                itself.
+            (JobStep): This function returns the current JobStep-instance
+                object itself.
 
         Examples:
             >>> from pyslurm import JobStep
@@ -364,13 +342,12 @@ cdef class JobStep:
         """JobStep information formatted as a dictionary.
 
         Returns:
-            dict: JobStep information as dict
+            (dict): JobStep information as dict
         """
         return instance_to_dict(self)
 
     @property
     def id(self):
-        """Union[str, int]: The id for this step."""
         return self._xlate_from_id(self.ptr.step_id.step_id)
 
     @id.setter
@@ -379,7 +356,6 @@ cdef class JobStep:
 
     @property
     def job_id(self):
-        """int: The id for the Job this step belongs to."""
         return self.ptr.step_id.job_id
 
     @job_id.setter
@@ -388,28 +364,19 @@ cdef class JobStep:
 
     @property
     def name(self):
-        """str: Name of the step."""
         return cstr.to_unicode(self.ptr.name)
 
     @property
-    def uid(self):
-        """int: User ID who owns this step."""
+    def user_id(self):
         return u32_parse(self.ptr.user_id, zero_is_noval=False)
 
     @property
-    def user(self):
-        """str: Name of the User who owns this step."""
+    def user_name(self):
         return uid_to_name(self.ptr.user_id)
 
     @property
-    def time_limit_raw(self):
-        """int: Time limit in Minutes for this step."""
-        return _raw_time(self.ptr.time_limit)
-
-    @property
     def time_limit(self):
-        """str: Time limit for this step. (formatted)"""
-        return mins_to_timestr(self.ptr.time_limit)
+        return _raw_time(self.ptr.time_limit)
 
     @time_limit.setter
     def time_limit(self, val):
@@ -417,114 +384,76 @@ cdef class JobStep:
 
     @property
     def network(self):
-        """str: Network specification for the step."""
         return cstr.to_unicode(self.ptr.network)
 
     @property
-    def cpu_freq_min(self):
-        """Union[str, int]: Minimum CPU-Frequency requested."""
+    def cpu_frequency_min(self):
         return cpufreq_to_str(self.ptr.cpu_freq_min)
 
     @property
-    def cpu_freq_max(self):
-        """Union[str, int]: Maximum CPU-Frequency requested."""
+    def cpu_frequency_max(self):
         return cpufreq_to_str(self.ptr.cpu_freq_max)
 
     @property
-    def cpu_freq_governor(self):
-        """Union[str, int]: CPU-Frequency Governor requested."""
+    def cpu_frequency_governor(self):
         return cpufreq_to_str(self.ptr.cpu_freq_gov)
 
     @property
     def reserved_ports(self):
-        """str: Reserved ports for the step."""
         return cstr.to_unicode(self.ptr.resv_ports)
 
     @property
     def cluster(self):
-        """str: Name of the cluster this step runs on."""
         return cstr.to_unicode(self.ptr.cluster)
     
     @property
     def srun_host(self):
-        """str: Name of the host srun was executed on."""
         return cstr.to_unicode(self.ptr.srun_host)
 
     @property
-    def srun_pid(self):
-        """int: PID of the srun command."""
+    def srun_process_id(self):
         return u32_parse(self.ptr.srun_pid)
 
     @property
     def container(self):
-        """str: Path to the container OCI."""
         return cstr.to_unicode(self.ptr.container)
 
     @property
-    def alloc_nodes(self):
-        """str: Nodes the Job is using.
-
-        This is the formatted string of Nodes as shown by scontrol.
-        For example, it can look like this:
-
-        "node001,node[005-010]"
-
-        If you want to expand this string into a list of nodenames you can
-        use the pyslurm.nodelist_from_range_str function.
-        """
+    def allocated_nodes(self):
         return cstr.to_list(self.ptr.nodes)
 
     @property
-    def start_time_raw(self):
-        """int: Time this step started. (Unix timestamp)"""
+    def start_time(self):
         return _raw_time(self.ptr.start_time)
 
     @property
-    def start_time(self):
-        """str: Time this step started. (formatted)"""
-        return timestamp_to_date(self.ptr.start_time)
-
-    @property
-    def run_time_raw(self):
-        """int: Seconds this step has been running for."""
+    def run_time(self):
         return _raw_time(self.ptr.run_time)
 
     @property
-    def run_time(self):
-        """str: Seconds this step has been running for. (formatted)"""
-        return secs_to_timestr(self.ptr.run_time)
-
-    @property
     def partition(self):
-        """str: Name of the partition this step runs in."""
         return cstr.to_unicode(self.ptr.partition)
 
     @property
     def state(self):
-        """str: State the step is in."""
         return cstr.to_unicode(slurm_job_state_string(self.ptr.state))
 
     @property
     def alloc_cpus(self):
-        """int: Number of CPUs this step uses in total."""
         return u32_parse(self.ptr.num_cpus)
 
     @property
     def ntasks(self):
-        """int: Number of tasks this step uses."""
         return u32_parse(self.ptr.num_tasks)
         
     @property
     def distribution(self):
-        """dict: Task distribution specification for the step."""
         return get_task_dist(self.ptr.task_dist)
 
     @property
     def command(self):
-        """str: Command that was specified with srun."""
         return cstr.to_unicode(self.ptr.submit_line)
 
     @property
-    def protocol_version(self):
-        """int: Slurm protocol version in use."""
+    def slurm_protocol_version(self):
         return u32_parse(self.ptr.start_protocol_ver)

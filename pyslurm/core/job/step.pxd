@@ -17,7 +17,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: language_level=3
 
@@ -44,6 +43,16 @@ from pyslurm.slurm cimport (
 )
 
 cdef class JobSteps(dict):
+    """A collection of :obj:`JobStep` objects for a given Job.
+
+    Args:
+        job (Union[Job, int]):
+            A Job for which the Steps should be loaded.
+
+    Raises:
+        RPCError: When getting the Job steps from the slurmctld failed.
+        MemoryError: If malloc fails to allocate memory.
+    """
 
     cdef:
         job_step_info_response_msg_t *info
@@ -53,6 +62,69 @@ cdef class JobSteps(dict):
         
 
 cdef class JobStep:
+    """A Slurm Jobstep
+
+    Args:
+        job (Union[Job, int]):
+            The Job this Step belongs to.
+        step (Union[int, str]):
+            Step-ID for this JobStep object.
+
+    Raises:
+        MemoryError: If malloc fails to allocate memory.
+
+    Attributes:
+        id (Union[str, int]):
+            The id for this step.
+        job_id (int):
+            The id for the Job this step belongs to.
+        name (str):
+            Name of the step.
+        user_id (int):
+            User ID who owns this step.
+        user_name (str):
+            Name of the User who owns this step.
+        time_limit (int):
+            Time limit in Minutes for this step.
+        network (str):
+            Network specification for the step.
+        cpu_frequency_min (Union[str, int]):
+            Minimum CPU-Frequency requested.
+        cpu_frequency_max (Union[str, int]):
+            Maximum CPU-Frequency requested.
+        cpu_frequency_governor (Union[str, int]):
+            CPU-Frequency Governor requested.
+        reserved_ports (str):
+            Reserved ports for the step.
+        cluster (str):
+            Name of the cluster this step runs on.
+        srun_host (str):
+            Name of the host srun was executed on.
+        srun_process_id (int):
+            Process ID of the srun command.
+        container (str):
+            Path to the container OCI.
+        allocated_nodes (str):
+            Nodes the Job is using.
+        start_time (int):
+            Time this step started, as unix timestamp.
+        run_time (int):
+            Seconds this step has been running for.
+        partition (str):
+            Name of the partition this step runs in.
+        state (str):
+            State the step is in.
+        allocated_cpus (int):
+            Number of CPUs this step uses in total.
+        ntasks (int):
+            Number of tasks this step uses.
+        distribution (dict):
+            Task distribution specification for the step.
+        command (str):
+            Command that was specified with srun.
+        slurm_protocol_version (int):
+            Slurm protocol version in use.
+    """
 
     cdef:
         job_step_info_t *ptr

@@ -34,7 +34,7 @@ def slurm_strerror(errno):
             returned.
 
     Returns:
-        str: String representation of errno.  
+        (str): String representation of errno.  
     """
     return cstr.to_unicode(slurm.slurm_strerror(errno))
 
@@ -43,7 +43,7 @@ def slurm_errno():
     """Get the current slurm errno.
 
     Returns:
-        int: Current slurm errno
+        (int): Current slurm errno
     """
     return slurm_get_errno()
 
@@ -52,7 +52,8 @@ def get_last_slurm_error():
     """Get the last slurm error that occured as a tuple of errno and string.
 
     Returns:
-        tuple: The errno and its string representation -> (errno, str)
+        errno (int): The error number
+        errno_str (str): The errno converted to a String
     """
     errno = slurm_errno()
 

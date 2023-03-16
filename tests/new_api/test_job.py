@@ -32,7 +32,7 @@ def test_reload(submit_job):
     assert job.id == jid
     assert job.ntasks == 2
     assert job.cpus_per_task == 3
-    assert job.time_limit == "1-00:00:00"
+    assert job.time_limit == 1440
 
     with pytest.raises(RPCError):
         Job(99999).reload()
@@ -98,7 +98,7 @@ def test_modify(submit_job):
     job.modify(changes)
     job.reload()
 
-    assert job.time_limit == "2-00:00:00"
+    assert job.time_limit == 2880
     assert job.ntasks == 5
     assert job.cpus_per_task == 4
 

@@ -53,7 +53,7 @@ def test_reload(submit_job):
     assert step.ntasks == 1
     # Job was submitted with a time-limit of 1 day, but it seems this doesn't
     # propagate through for the steps if not set explicitly.
-    assert step.time_limit == "unlimited"
+    assert step.time_limit == None
 
     # Now try to load the first and second Step started by srun
     step_zero = JobStep(job, 0).reload()
@@ -74,14 +74,14 @@ def test_reload(submit_job):
     assert step.name == "step_zero"
     assert step.ntasks == 1
     assert step.alloc_cpus == 2
-    assert step.time_limit == "unlimited"
+    assert step.time_limit == None
 
     step = step_one
     assert step.job_id == job.id
     assert step.name == "step_one"
     assert step.ntasks == 1
     assert step.alloc_cpus == 3
-    assert step.time_limit == "00:10:00"
+    assert step.time_limit == 10
 
 
 def test_collection(submit_job):
@@ -136,13 +136,13 @@ def test_modify(submit_job):
 
     time.sleep(1)
     step = JobStep(job, 0).reload()
-    assert step.time_limit == "00:20:00"
+    assert step.time_limit == 20
 
     step.modify(JobStep(time_limit="00:05:00"))
-    assert step.reload().time_limit == "00:05:00"
+    assert step.reload().time_limit == 5
 
     step.modify(time_limit="00:15:00")
-    assert step.reload().time_limit == "00:15:00"
+    assert step.reload().time_limit == 15
 
 
 def test_send_signal(submit_job):

@@ -17,7 +17,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: language_level=3
 
@@ -55,7 +54,6 @@ from pyslurm.core.common import (
 
 
 cdef class JobSubmitDescription:
-    """Slurm Job Submission"""
     def __cinit__(self):
         self.ptr = NULL
 
@@ -80,7 +78,7 @@ cdef class JobSubmitDescription:
         """Submit a batch job description.
 
         Returns:
-            int: The ID of the submitted Job.
+            (int): The ID of the submitted Job.
 
         Raises:
             RPCError: When the job submission was not successful.
@@ -168,17 +166,16 @@ cdef class JobSubmitDescription:
         cstr.fmalloc(&ptr.batch_features, self.batch_constraints)
         cstr.fmalloc(&ptr.cluster_features, self.cluster_constraints)
         cstr.fmalloc(&ptr.comment, self.comment)
-        cstr.fmalloc(&ptr.work_dir, self.work_dir)
+        cstr.fmalloc(&ptr.work_dir, self.working_directory)
         cstr.fmalloc(&ptr.features, self.constraints)
         cstr.fmalloc(&ptr.mail_user, self.mail_user)
         cstr.fmalloc(&ptr.mcs_label, self.mcs_label)
-        cstr.fmalloc(&ptr.work_dir, self.work_dir)
         cstr.fmalloc(&ptr.network, self.network)
         cstr.fmalloc(&ptr.qos, self.qos)
         cstr.fmalloc(&ptr.container, self.container)
-        cstr.fmalloc(&ptr.std_in, self.stdin)
-        cstr.fmalloc(&ptr.std_out, self.stdout)
-        cstr.fmalloc(&ptr.std_err, self.stderr)
+        cstr.fmalloc(&ptr.std_in, self.standard_in)
+        cstr.fmalloc(&ptr.std_out, self.standard_output)
+        cstr.fmalloc(&ptr.std_err, self.standard_error)
         cstr.fmalloc(&ptr.tres_per_job, cstr.from_gres_dict(self.gpus, "gpu"))
         cstr.fmalloc(&ptr.tres_per_socket,
                      cstr.from_gres_dict(self.gpus_per_socket, "gpu"))
@@ -196,11 +193,11 @@ cdef class JobSubmitDescription:
         cstr.from_list(&ptr.licenses, self.licenses)
         cstr.from_list(&ptr.partition, self.partitions)
         cstr.from_list(&ptr.reservation, self.reservations)
-        cstr.from_dict(&ptr.acctg_freq, self.accounting_gather_freq)
+        cstr.from_dict(&ptr.acctg_freq, self.accounting_gather_frequency)
 
         ptr.deadline = date_to_timestamp(self.deadline)
         ptr.begin_time = date_to_timestamp(self.begin_time)
-        ptr.delay_boot = timestr_to_secs(self.delay_boot)
+        ptr.delay_boot = timestr_to_secs(self.delay_boot_time)
         ptr.time_limit = timestr_to_mins(self.time_limit)
         ptr.time_min = timestr_to_mins(self.time_limit_min)
 
@@ -208,7 +205,7 @@ cdef class JobSubmitDescription:
         ptr.group_id = group_to_gid(self.gid)
         ptr.priority = u32(self.priority, zero_is_noval=False)
         ptr.num_tasks = u32(self.ntasks)
-        ptr.pn_min_tmp_disk = u32(dehumanize(self.tmp_disk_per_node))
+        ptr.pn_min_tmp_disk = u32(dehumanize(self.temporary_disk_per_node))
         ptr.cpus_per_task = u16(self.cpus_per_task)
         ptr.sockets_per_node = u16(self.sockets_per_node)
         ptr.cores_per_socket = u16(self.cores_per_socket)
@@ -217,21 +214,22 @@ cdef class JobSubmitDescription:
         ptr.ntasks_per_node = u16(self.ntasks_per_node)
         ptr.threads_per_core = u16(self.threads_per_core)
         ptr.ntasks_per_core = u16(self.ntasks_per_core)
-        u64_set_bool_flag(&ptr.bitflags, self.spread_job, slurm.SPREAD_JOB)
+        u64_set_bool_flag(&ptr.bitflags, self.spreads_over_nodes,
+                          slurm.SPREAD_JOB)
         u64_set_bool_flag(&ptr.bitflags, self.kill_on_invalid_dependency,
                           slurm.KILL_INV_DEP) 
         u64_set_bool_flag(&ptr.bitflags, self.use_min_nodes,
                           slurm.USE_MIN_NODES)
-        ptr.contiguous = u16_bool(self.contiguous)
+        ptr.contiguous = u16_bool(self.requires_contiguous_nodes)
         ptr.kill_on_node_fail = u16_bool(self.kill_on_node_fail)
         ptr.overcommit = u8_bool(self.overcommit)
-        ptr.reboot = u16_bool(self.reboot_nodes)
+        ptr.reboot = u16_bool(self.requires_node_reboot)
         ptr.requeue = u16_bool(self.is_requeueable)
         ptr.wait_all_nodes = u16_bool(self.wait_all_nodes)
 
-        ptr.mail_type = parse_mail_type(self.mail_type)
+        ptr.mail_type = parse_mail_type(self.mail_types)
         ptr.power_flags = parse_power_type(self.power_options)
-        ptr.profile = parse_acctg_profile(self.profile)
+        ptr.profile = parse_acctg_profile(self.profile_types)
         ptr.shared = parse_shared_type(self.resource_sharing)
 
         self._set_cpu_frequency()
@@ -244,6 +242,7 @@ cdef class JobSubmitDescription:
         self._set_environment()
         self._set_distribution()
         self._set_gpu_binding()
+        self._set_gres_binding()
         self._set_min_cpus()
 
         # TODO
@@ -259,8 +258,8 @@ cdef class JobSubmitDescription:
             self.ntasks = 1
         if not self.cpus_per_task:
             self.cpus_per_task = 1
-        if not self.work_dir:
-            self.work_dir = str(getcwd())
+        if not self.working_directory:
+            self.working_directory = str(getcwd())
         if not self.environment:
             # By default, sbatch also exports everything in the users env.
             self.environment = "ALL"
@@ -269,11 +268,11 @@ cdef class JobSubmitDescription:
         if not self.script:
             raise ValueError("You need to provide a batch script.")
 
-        if (self.mem_per_node and self.mem_per_cpu
-                or self.mem_per_gpu and self.mem_per_cpu
-                or self.mem_per_node and self.mem_per_gpu):
-            raise ValueError("Only one of mem_per_cpu, mem_per_node or "
-                             "mem_per_gpu can be set.")
+        if (self.memory_per_node and self.memory_per_cpu
+                or self.memory_per_gpu and self.memory_per_cpu
+                or self.memory_per_node and self.memory_per_gpu):
+            raise ValueError("Only one of memory_per_cpu, memory_per_node or "
+                             "memory_per_gpu can be set.")
 
         if (self.ntasks_per_gpu and
                 (self.ptr.min_nodes != u32(None) or self.nodes
@@ -300,10 +299,10 @@ cdef class JobSubmitDescription:
             self.ptr.core_spec |= slurm.CORE_SPEC_THREAD
 
     def _set_cpu_frequency(self):
-        if not self.cpu_freq:
+        if not self.cpu_frequency:
             return None
 
-        freq = self.cpu_freq
+        freq = self.cpu_frequency
         have_no_range = False
 
         # Alternatively support sbatch-like --cpu-freq setting.
@@ -318,7 +317,7 @@ cdef class JobSubmitDescription:
             else:
                 if freq_len > 1:
                     raise ValueError(
-                        "Invalid cpu_freq format: {kwargs}."
+                        "Invalid cpu_frequency format: {kwargs}."
                         "Governor must be provided as single element or "
                         "as last element in the form of min-max:governor. "
                     )
@@ -424,12 +423,12 @@ cdef class JobSubmitDescription:
         cstr.fmalloc(&self.ptr.dependency, final)
 
     def _set_memory(self):
-        if self.mem_per_cpu:
-            self.ptr.pn_min_memory = u64(dehumanize(self.mem_per_cpu)) 
+        if self.memory_per_cpu:
+            self.ptr.pn_min_memory = u64(dehumanize(self.memory_per_cpu)) 
             self.ptr.pn_min_memory |= slurm.MEM_PER_CPU
-        elif self.mem_per_node:
-            self.ptr.pn_min_memory = u64(dehumanize(self.mem_per_node)) 
-        elif self.mem_per_gpu:
+        elif self.memory_per_node:
+            self.ptr.pn_min_memory = u64(dehumanize(self.memory_per_node)) 
+        elif self.memory_per_gpu:
             mem_gpu = u64(dehumanize(val))
             cstr.fmalloc(&self.ptr.mem_per_tres, f"gres:gpu:{mem_gpu}")
 
@@ -654,10 +653,10 @@ cdef class JobSubmitDescription:
         u16_set_bool_flag(&self.ptr.warn_flags,
                 allow_resv_overlap, slurm.KILL_JOB_RESV)
 
-    def _set_gres_flags(self):
-        if not self.gres_flags:
+    def _set_gres_binding(self):
+        if not self.gres_binding:
             return None
-        elif self.gres_flags.casefold() == "enforce-binding":
+        elif self.gres_binding.casefold() == "enforce-binding":
             self.ptr.bitflags |= slurm.GRES_ENFORCE_BIND
-        elif self.gres_flags.casefold() == "disable-binding":
+        elif self.gres_binding.casefold() == "disable-binding":
             self.ptr.bitflags |= slurm.GRES_DISABLE_BIND

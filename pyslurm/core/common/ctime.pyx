@@ -202,10 +202,10 @@ def timestamp_to_date(timestamp):
     return ret
 
 
-def _raw_time(time):
+def _raw_time(time, default=None):
    if (time == slurm.NO_VAL or
           time == 0 or
           time == slurm.INFINITE):
-       return None
+       return default
 
    return time

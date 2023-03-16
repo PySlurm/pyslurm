@@ -17,7 +17,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: embedsignature=True
 # cython: c_string_type=unicode, c_string_encoding=utf8
 # cython: language_level=3
 
@@ -99,66 +98,44 @@ cdef class Nodes(dict):
         """Format the information as list of Node objects.
 
         Returns:
-            list: List of Node objects
+            (list): List of Node objects
         """
         return list(self.values())
 
     @property
-    def free_memory_raw(self):
+    def free_memory(self):
         return _sum_prop(self, Node.free_memory)
 
     @property
-    def free_memory(self):
-        return humanize(self.free_memory_raw, 2)
-
-    @property
-    def real_memory_raw(self):
-        """int: Amount of real memory in this node collection. (Mebibytes)"""
+    def real_memory(self):
         return _sum_prop(self, Node.real_memory)
 
     @property
-    def real_memory(self):
-        """str: Humanized amount of real memory in this node collection."""
-        return humanize(self.real_memory_raw, 2)
-
-    @property
-    def alloc_memory_raw(self):
-        """int: Amount of alloc Memory in this node collection. (Mebibytes)"""
-        return _sum_prop(self, Node.alloc_memory)
-
-    @property
-    def alloc_memory(self):
-        """str: Total amount of allocated Memory in this node collection."""
-        return humanize(self.alloc_memory_raw, 2)
+    def allocated_memory(self):
+        return _sum_prop(self, Node.allocated_memory)
 
     @property
     def total_cpus(self):
-        """int: Total amount of CPUs in this node collection."""
         return _sum_prop(self, Node.total_cpus)
 
     @property
     def idle_cpus(self):
-        """int: Total amount of idle CPUs in this node collection."""
         return _sum_prop(self, Node.idle_cpus)
 
     @property
-    def alloc_cpus(self):
-        """int: Total amount of allocated CPUs in this node collection."""
-        return _sum_prop(self, Node.alloc_cpus)
+    def allocated_cpus(self):
+        return _sum_prop(self, Node.allocated_cpus)
     
     @property
     def effective_cpus(self):
-        """int: Total amount of effective CPUs in this node collection."""
         return _sum_prop(self, Node.effective_cpus)
 
     @property
     def current_watts(self):
-        """int: Total amount of Watts consumed in this node collection."""
         return _sum_prop(self, Node.current_watts)
 
     @property
     def average_watts(self):
-        """int: Amount of average watts consumed in this node collection."""
         return _sum_prop(self, Node.average_watts)
 
 
@@ -231,7 +208,7 @@ cdef class Node:
             of an instance. Using the Node object returned is optional.
 
         Returns:
-            Node: This function returns the current Node-instance object
+            (Node): This function returns the current Node-instance object
                 itself.
 
         Raises:
@@ -293,7 +270,7 @@ cdef class Node:
                 are "future" and "cloud". "future" is the default.
 
         Returns:
-            Node: This function returns the current Node-instance object
+            (Node): This function returns the current Node-instance object
                 itself.
 
         Raises:
@@ -375,7 +352,7 @@ cdef class Node:
         """Node information formatted as a dictionary.
 
         Returns:
-            dict: Node information as dict
+            (dict): Node information as dict
         """
         return instance_to_dict(self)
 
@@ -393,7 +370,6 @@ cdef class Node:
 
     @property
     def configured_gres(self):
-        """dict: Generic Resources this Node is configured with."""
         return cstr.to_gres_dict(self.info.gres)
 
     @configured_gres.setter
@@ -403,12 +379,10 @@ cdef class Node:
 
     @property
     def owner(self):
-        """str: User that owns the Node."""
         return uid_to_name(self.info.owner, lookup=self.passwd)
 
     @property
     def address(self):
-        """str: Address of the node."""
         return cstr.to_unicode(self.info.node_addr)
 
     @address.setter
@@ -417,7 +391,6 @@ cdef class Node:
 
     @property
     def hostname(self):
-        """str: Hostname of the node."""
         return cstr.to_unicode(self.info.node_hostname)
 
     @hostname.setter
@@ -426,7 +399,6 @@ cdef class Node:
 
     @property
     def extra(self):
-        """str: Arbitrary string attached to the Node."""
         return cstr.to_unicode(self.info.extra)
 
     @extra.setter
@@ -435,17 +407,14 @@ cdef class Node:
         
     @property
     def reason(self):
-        """str: Reason why this node is in its current state."""
         return cstr.to_unicode(self.info.reason)
 
     @property
     def reason_user(self):
-        """str: Name of the User who set the reason."""
         return uid_to_name(self.info.reason_uid, lookup=self.passwd)
 
     @property
     def comment(self):
-        """str: Arbitrary node comment."""
         return cstr.to_unicode(self.info.comment)
 
     @comment.setter
@@ -454,32 +423,26 @@ cdef class Node:
 
     @property
     def bcast_address(self):
-        """str: Address of the node for sbcast."""
         return cstr.to_unicode(self.info.bcast_address)
 
     @property
     def slurm_version(self):
-        """str: Version of slurm this node is running on."""
         return cstr.to_unicode(self.info.version)
 
     @property
     def operating_system(self):
-        """str: Name of the operating system installed."""
         return cstr.to_unicode(self.info.os)
 
     @property
-    def alloc_gres(self):
-        """dict: Generic Resources currently in use on the node."""
+    def allocated_gres(self):
         return cstr.to_gres_dict(self.info.gres_used)
 
     @property
     def mcs_label(self):
-        """str: MCS label for the node."""
         return cstr.to_unicode(self.info.mcs_label)
 
     @property
-    def alloc_memory_raw(self):
-        """int: Memory allocated on the node. (Mebibytes)"""
+    def allocated_memory(self):
         cdef uint64_t alloc_memory = 0
         if self.info.select_nodeinfo:
             slurm_get_select_nodeinfo(
@@ -490,53 +453,23 @@ cdef class Node:
         return u64_parse(alloc_memory)
 
     @property
-    def alloc_memory(self):
-        """str: Memory allocated on the node."""
-        return humanize(self.alloc_memory_raw, 2)
-
-    @property
-    def real_memory_raw(self):
-        """int: Real Memory configured for this node. (Mebibytes)"""
+    def real_memory(self):
         return u64_parse(self.info.real_memory)
 
     @property
-    def real_memory(self):
-        """str: Humanized Real Memory configured for this node."""
-        return humanize(self.real_memory_raw, 2)
-
-    @property
-    def free_memory_raw(self):
-        """int: Free Memory on the node. (Mebibytes)"""
+    def free_memory(self):
         return u64_parse(self.info.free_mem)
 
     @property
-    def free_memory(self):
-        """str: Humanized Free Memory on the node."""
-        return humanize(self.free_memory_raw, 2)
-
-    @property
-    def memory_reserved_for_system_raw(self):
-        """int: Memory reserved for the System not usable by Jobs."""
+    def memory_reserved_for_system(self):
         return u64_parse(self.info.mem_spec_limit)
 
     @property
-    def memory_reserved_for_system(self):
-        """str: Memory reserved for the System not usable by Jobs."""
-        return humanize(self.memory_reserved_for_system_raw, 2)
-
-    @property
-    def tmp_disk_space_raw(self):
-        """int: Amount of temporary disk space this node has. (Mebibytes)"""
+    def temporary_disk_space(self):
         return u32_parse(self.info.tmp_disk)
 
     @property
-    def tmp_disk_space(self):
-        """str: Amount of temporary disk space this node has."""
-        return humanize(self.tmp_disk_space_raw)
-
-    @property
     def weight(self):
-        """int: Weight of the node in scheduling."""
         return u32_parse(self.info.weight)
 
     @weight.setter
@@ -545,42 +478,34 @@ cdef class Node:
 
     @property
     def effective_cpus(self):
-        """int: Number of effective CPUs the node has."""
         return u16_parse(self.info.cpus_efctv)
 
     @property
     def total_cpus(self):
-        """int: Total amount of CPUs the node has."""
         return u16_parse(self.info.cpus)
 
     @property
     def sockets(self):
-        """int: Number of sockets the node has."""
         return u16_parse(self.info.sockets)
 
     @property
     def cores_reserved_for_system(self):
-        """int: Number of cores reserved for the System not usable by Jobs."""
         return u16_parse(self.info.core_spec_cnt)
 
     @property
     def boards(self):
-        """int: Number of boards the node has."""
         return u16_parse(self.info.boards)
 
     @property
     def cores_per_socket(self):
-        """int: Number of cores per socket configured for the node."""
         return u16_parse(self.info.cores)
 
     @property
     def threads_per_core(self):
-        """int: Number of threads per core configured for the node."""
         return u16_parse(self.info.threads)
 
     @property
     def available_features(self):
-        """list: List of features available on the node."""
         return cstr.to_list(self.info.features)
 
     @available_features.setter
@@ -589,7 +514,6 @@ cdef class Node:
 
     @property
     def active_features(self):
-        """list: List of features on the node."""
         return cstr.to_list(self.info.features_act)
 
     @active_features.setter
@@ -598,48 +522,23 @@ cdef class Node:
 
     @property
     def partitions(self):
-        """list: List of partitions this Node is in."""
         return cstr.to_list(self.info.partitions)
 
     @property
-    def boot_time_raw(self):
-        """int: Time the node has booted. (Unix timestamp)"""
+    def boot_time(self):
         return _raw_time(self.info.boot_time)
 
     @property
-    def boot_time(self):
-        """str: Time the node has booted. (formatted)"""
-        return timestamp_to_date(self.info.boot_time)
-
-    @property
-    def slurmd_start_time_raw(self):
-        """int: Time the slurmd has started on the Node. (Unix timestamp)"""
+    def slurmd_start_time(self):
         return _raw_time(self.info.slurmd_start_time)
 
     @property
-    def slurmd_start_time(self):
-        """str: Time the slurmd has started on the Node. (formatted)"""
-        return timestamp_to_date(self.info.slurmd_start_time)
-
-    @property
-    def last_busy_time_raw(self):
-        """int: Time this node was last busy. (Unix timestamp)"""
+    def last_busy_time(self):
         return _raw_time(self.info.last_busy)
 
     @property
-    def last_busy_time(self):
-        """str: Time this node was last busy. (formatted)"""
-        return timestamp_to_date(self.info.last_busy)
-
-    @property
-    def reason_time_raw(self):
-        """int: Time the reason was set for the node. (Unix timestamp)"""
-        return _raw_time(self.info.reason_time)
-
-    @property
     def reason_time(self):
-        """str: Time the reason was set for the node. (formatted)"""
-        return timestamp_to_date(self.info.reason_time)
+        return _raw_time(self.info.reason_time)
 
 #   @property
 #   def tres_configured(self):
@@ -659,8 +558,7 @@ cdef class Node:
 #       return cstr.to_gres_dict(alloc_tres)
 
     @property
-    def alloc_cpus(self):
-        """int: Number of allocated CPUs on the node."""
+    def allocated_cpus(self):
         cdef uint16_t alloc_cpus = 0
         if self.info.select_nodeinfo:
             slurm_get_select_nodeinfo(
@@ -673,16 +571,14 @@ cdef class Node:
 
     @property
     def idle_cpus(self):
-        """int: Number of idle CPUs."""
         efctv = self.effective_cpus
         if not efctv:
             return None
 
-        return efctv - self.alloc_cpus
+        return efctv - self.allocated_cpus
 
     @property
     def cpu_binding(self):
-        """str: Default CPU-Binding on the node."""
         cdef char cpu_bind[128]
         slurm_sprint_cpu_bind_type(cpu_bind,
                                    <cpu_bind_type_t>self.info.cpu_bind)
@@ -697,35 +593,24 @@ cdef class Node:
 
     @property
     def cap_watts(self):
-        """int: Node cap watts."""
         if not self.info.power:
             return None
         return u32_parse(self.info.power.cap_watts)
 
     @property
     def current_watts(self):
-        """int: Current amount of watts consumed on the node."""
         if not self.info.energy:
             return None
         return u32_parse(self.info.energy.current_watts)
 
     @property
     def average_watts(self):
-        """int: Average amount of watts consumed on the node."""
         if not self.info.energy:
             return None
         return u32_parse(self.info.energy.ave_watts)
 
     @property
     def external_sensors(self):
-        """
-        dict: External Sensor info for the Node.
-
-        The dict returned contains the following information:
-            * joules_total (int)
-            * current_watts (int)
-            * temperature (int)
-        """
         if not self.info.ext_sensors:
             return {}
 
@@ -737,7 +622,6 @@ cdef class Node:
 
     @property
     def state(self):
-        """str: State the node is currently in."""
         cdef char* state = slurm_node_state_string_complete(
                 self.info.node_state)
         state_str = cstr.to_unicode(state)
@@ -746,7 +630,6 @@ cdef class Node:
 
     @property
     def next_state(self):
-        """str: Next state the node will be in."""
         if ((self.info.next_state != slurm.NO_VAL)
                 and (self.info.node_state & slurm.NODE_STATE_REBOOT_REQUESTED
                 or   self.info.node_state & slurm.NODE_STATE_REBOOT_ISSUED)):
@@ -761,13 +644,11 @@ cdef class Node:
 
     @property
     def cpu_load(self):
-        """float: CPU Load on the Node."""
         load = u32_parse(self.info.cpu_load)
         return load / 100.0 if load is not None else None
 
     @property
-    def port(self):
-        """int: Port the slurmd is listening on the node."""
+    def slurmd_port(self):
         return u16_parse(self.info.port)
 
 

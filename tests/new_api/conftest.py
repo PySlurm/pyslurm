@@ -23,8 +23,8 @@ def create_simple_job_desc(script=None, **kwargs):
     job = JobSubmitDescription(**kwargs)
 
     job.name = "test_job"
-    job.stdout = "/tmp/slurm-test-%j.out"
-    job.mem_per_cpu = "1G"
+    job.standard_output = "/tmp/slurm-test-%j.out"
+    job.memory_per_cpu = "1G"
     job.ntasks = 2
     job.cpus_per_task = 3
     job.script = create_job_script() if not script else script

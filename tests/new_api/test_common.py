@@ -80,20 +80,20 @@ class TestTypes:
         input_as_dict = {"key1": "value1", "key2": "value2"}
         input_as_str = "key1=value1,key2=value2"
 
-        js.accounting_gather_freq = input_as_dict
-        assert js.accounting_gather_freq == input_as_dict
+        js.accounting_gather_frequency = input_as_dict
+        assert js.accounting_gather_frequency == input_as_dict
 
-        js.accounting_gather_freq = input_as_str
-        assert js.accounting_gather_freq == input_as_dict
+        js.accounting_gather_frequency = input_as_str
+        assert js.accounting_gather_frequency == input_as_dict
 
-        js.accounting_gather_freq = {}
-        assert js.accounting_gather_freq == {}
+        js.accounting_gather_frequency = {}
+        assert js.accounting_gather_frequency == {}
 
-        js.accounting_gather_freq = ""
-        assert js.accounting_gather_freq == {}
+        js.accounting_gather_frequency = ""
+        assert js.accounting_gather_frequency == {}
 
-        js.accounting_gather_freq = None
-        assert js.accounting_gather_freq == {}
+        js.accounting_gather_frequency = None
+        assert js.accounting_gather_frequency == {}
 
     def _uint_impl(self, func_set, func_get, typ):
         val = func_set(2**typ-2)
@@ -159,7 +159,7 @@ class TestTypes:
         self._uint_bool_impl("overcommit")
 
     def test_u16_bool(self):
-        self._uint_bool_impl("contiguous")
+        self._uint_bool_impl("requires_contiguous_nodes")
 
     def test_u64_bool_flag(self):
         self._uint_bool_impl("kill_on_invalid_dependency")
