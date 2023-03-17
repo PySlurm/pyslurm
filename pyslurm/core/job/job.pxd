@@ -78,15 +78,41 @@ cdef class Jobs(dict):
             Could potentially speed up access to attributes of the Job
             where a UID/GID is translated to a name. If True, the
             information will fetched and stored in each of the Job
-            instances. The default is False.
+            instances.
+        freeze (bool, optional):
+            Decide whether this collection of Jobs should be "frozen".
 
     Raises:
         RPCError: When getting all the Jobs from the slurmctld failed.
         MemoryError: If malloc fails to allocate memory.
+
+    Attributes:
+        memory (int):
+            Total amount of memory for all Jobs in this collection, in
+            Mebibytes
+        cpus (int):
+            Total amount of cpus for all Jobs in this collection.
+        ntasks (int):
+            Total amount of tasks for all Jobs in this collection.
+        cpu_time (int):
+            Total amount of CPU-Time used by all the Jobs in the collection.
+            This is the result of multiplying the run_time with the amount of
+            cpus for each job.
+        freeze (bool):
+            If this is set to True and the reload() method is called, then
+            *ONLY* Jobs that already exist in this collection will be
+            reloaded. New Jobs that are discovered will not be added to this
+            collection, but old Jobs which have already been purged from the
+            Slurm controllers memory will not be removed either.
+            The default is False, so old jobs will be removed, and new Jobs
+            will be added - basically the same behaviour as doing Jobs.get().
     """
     cdef:
         job_info_msg_t *info
         slurm_job_info_t tmp_info
+
+    cdef public:
+        freeze
 
 
 cdef class Job:
@@ -175,8 +201,8 @@ cdef class Job:
             Name of the Host this Job was submitted from.
         batch_host (str):
             Name of the Host where the Batch-Script is executed.
-        min_nodes (int):
-            Minimum amount of Nodes the Job has requested.
+        num_nodes (int):
+            Amount of Nodes the Job has requested or allocated.
         max_nodes (int):
             Maximum amount of Nodes the Job has requested.
         allocated_nodes (str):
@@ -207,9 +233,10 @@ cdef class Job:
             Federation siblings active
         federation_siblings_viable (int):
             Federation siblings viable
-        allocated_cpus (int):
+        cpus (int):
             Total amount of CPUs the Job is using.
-            If the Job is still pending, this will be None.
+            If the Job is still pending, this will be the amount of requested
+            CPUs.
         cpus_per_task (int):
             Number of CPUs per Task used.
         cpus_per_gpu (int):
@@ -318,6 +345,8 @@ cdef class Job:
             Amount of cores reserved for System use only.
         threads_reserved_for_system (int):
             Amount of Threads reserved for System use only.
+        memory (int):
+            Total Amount of Memory this Job has, in Mebibytes
         memory_per_cpu (int):
             Amount of Memory per CPU this Job has, in Mebibytes
         memory_per_node (int):
@@ -340,6 +369,10 @@ cdef class Job:
             Whether this Job is a cronjob.
         cronjob_time (str):
             The time specification for the Cronjob.
+        cpu_time (int):
+            Amount of CPU-Time used by the Job so far.
+            This is the result of multiplying the run_time with the amount of
+            cpus.
     """
     cdef:
         slurm_job_info_t *ptr
@@ -348,6 +381,9 @@ cdef class Job:
 
     cdef alloc(self)
     cdef _calc_run_time(self)
+
+    @staticmethod
+    cdef _swap_data(Job dst, Job src)
 
     @staticmethod
     cdef Job from_ptr(slurm_job_info_t *in_ptr)

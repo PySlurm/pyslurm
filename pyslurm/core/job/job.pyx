@@ -31,39 +31,48 @@ from pyslurm.core.error import (
     verify_rpc,
     slurm_errno,
 )
-from pyslurm.core.common.ctime import (
-    secs_to_timestr,
-    mins_to_timestr,
-    timestamp_to_date,
-    _raw_time,
-)
+from pyslurm.core.common.ctime import _raw_time
 from pyslurm.core.common import (
     uid_to_name,
     gid_to_name,
-    humanize, 
     signal_to_num,
     _getgrall_to_dict,
     _getpwall_to_dict,
-    nodelist_from_range_str,
-    nodelist_to_range_str,
     instance_to_dict,
+    _sum_prop,
 )
 
 
 cdef class Jobs(dict):
 
+    def __cinit__(self):
+        self.info = NULL
+
     def __dealloc__(self):
         slurm_free_job_info_msg(self.info)
 
-    def __init__(self, preload_passwd_info=False):
+    def __init__(self, jobs=None, freeze=False):
+        self.freeze = freeze
+
+        if isinstance(jobs, dict):
+            self.update(jobs)
+        elif jobs is not None:
+            for job in jobs:
+                if isinstance(job, int):
+                    self[job] = Job(job)
+                else:
+                    self[job.id] = job
+
+    @staticmethod
+    def get(preload_passwd_info=False, freeze=False):
         cdef:
             dict passwd = {}
             dict groups = {}
-            int flags   = slurm.SHOW_ALL | slurm.SHOW_DETAIL
+            Jobs jobs = Jobs.__new__(Jobs)
+            int flags = slurm.SHOW_ALL | slurm.SHOW_DETAIL
             Job job
 
-        self.info = NULL
-        verify_rpc(slurm_load_jobs(0, &self.info, flags))
+        verify_rpc(slurm_load_jobs(0, &jobs.info, flags))
 
         # If requested, preload the passwd and groups database to potentially
         # speedup lookups for an attribute in a Job, e.g. user_name or
@@ -73,21 +82,21 @@ cdef class Jobs(dict):
             groups = _getgrall_to_dict()
 
         # zero-out a dummy job_step_info_t
-        memset(&self.tmp_info, 0, sizeof(slurm_job_info_t))
+        memset(&jobs.tmp_info, 0, sizeof(slurm_job_info_t))
 
         # Put each job pointer into its own "Job" instance.
-        for cnt in range(self.info.record_count):
-            job = Job.from_ptr(&self.info.job_array[cnt])
+        for cnt in range(jobs.info.record_count):
+            job = Job.from_ptr(&jobs.info.job_array[cnt])
 
             # Prevent double free if xmalloc fails mid-loop and a MemoryError
             # is raised by replacing it with a zeroed-out slurm_job_info_t.
-            self.info.job_array[cnt] = self.tmp_info
+            jobs.info.job_array[cnt] = jobs.tmp_info
 
             if preload_passwd_info:
                 job.passwd = passwd
                 job.groups = groups
 
-            self[job.id] = job
+            jobs[job.id] = job
 
         # At this point we memcpy'd all the memory for the Jobs. Setting this
         # to 0 will prevent the slurm job free function to deallocate the
@@ -95,7 +104,27 @@ cdef class Jobs(dict):
         # are free'd automatically in __dealloc__ since the lifetime of each
         # job-pointer is tied to the lifetime of its corresponding "Job"
         # instance.
-        self.info.record_count = 0
+        jobs.info.record_count = 0
+
+        jobs.freeze = freeze
+        return jobs
+
+    def reload(self):
+        cdef Jobs reloaded_jobs = Jobs.get()
+
+        for jid in list(self.keys()):
+            if jid in reloaded_jobs:
+                # Put the new data in our instance.
+                Job._swap_data(self[jid], reloaded_jobs[jid])
+            elif not self.freeze:
+                # Remove this instance from the current collection, as the Job
+                # doesn't exist anymore.
+                del self[jid]
+
+        if not self.freeze:
+            for jid in reloaded_jobs:
+                if jid not in self:
+                    self[jid] = reloaded_jobs[jid]
 
     def load_steps(self):
         """Load all Job steps for this collection of Jobs.
@@ -127,8 +156,27 @@ cdef class Jobs(dict):
         """
         return list(self.values())
 
+    @property
+    def memory(self):
+        return _sum_prop(self, Job.memory)
+
+    @property
+    def cpus(self):
+        return _sum_prop(self, Job.cpus)
+
+    @property
+    def ntasks(self):
+        return _sum_prop(self, Job.ntasks)
+
+    @property
+    def cpu_time(self):
+        return _sum_prop(self, Job.cpu_time)
+
 
 cdef class Job:
+
+    def __cinit__(self):
+        self.ptr = NULL
 
     def __init__(self, int job_id):
         self.alloc()
@@ -204,6 +252,13 @@ cdef class Job:
         memcpy(wrap.ptr, in_ptr, sizeof(slurm_job_info_t))
 
         return wrap
+
+    cdef _swap_data(Job dst, Job src):
+        cdef slurm_job_info_t *tmp = NULL
+        if dst.ptr and src.ptr:
+            tmp = dst.ptr 
+            dst.ptr = src.ptr
+            src.ptr = tmp
 
     def as_dict(self):
         """Job information formatted as a dictionary.
@@ -682,7 +737,7 @@ cdef class Job:
         return cstr.to_unicode(self.ptr.batch_host)
 
     @property
-    def min_nodes(self):
+    def num_nodes(self):
         return u32_parse(self.ptr.num_nodes)
 
     @property
@@ -754,7 +809,7 @@ cdef class Job:
         return u64_parse(self.ptr.fed_siblings_viable)
 
     @property
-    def allocated_cpus(self):
+    def cpus(self):
         return u32_parse(self.ptr.num_cpus)
 
     @property
@@ -1037,6 +1092,32 @@ cdef class Job:
                 return self.ptr.core_spec & (~slurm.CORE_SPEC_THREAD)
 
     @property
+    def memory(self):
+        mem_cpu = self.memory_per_cpu
+        if mem_cpu is not None:
+            total_cpus = self.cpus
+            if total_cpus is not None:
+                mem_cpu *= total_cpus
+            return mem_cpu
+
+        mem_node = self.memory_per_node
+        if mem_node is not None:
+            num_nodes = self.min_nodes
+            if num_nodes is not None:
+                mem_node *= num_nodes
+            return mem_cpu
+
+        # TODO
+        #   mem_gpu = self.memory_per_gpu
+        #   if mem_gpu is not None:
+        #       num_nodes = self.min_nodes
+        #       if num_nodes is not None:
+        #           mem_node *= num_nodes
+        #       return mem_cpu
+
+        return None
+
+    @property
     def memory_per_cpu(self):
         if self.ptr.pn_min_memory != slurm.NO_VAL64:
             if self.ptr.pn_min_memory & slurm.MEM_PER_CPU:
@@ -1099,6 +1180,26 @@ cdef class Job:
     @property
     def cronjob_time(self):
         return cstr.to_unicode(self.ptr.cronspec)
+
+    @property
+    def cpu_time(self):
+        run_time = self.run_time
+        if run_time:
+            cpus = self.cpus
+            if cpus is not None:
+                return cpus * run_time
+
+        return 0
+
+    @property
+    def pending_time(self):
+        # TODO
+        return None
+
+    @property
+    def run_time_left(self):
+        # TODO
+        return None
 
     def get_resource_layout_per_node(self):
         """Retrieve the resource layout of this Job on each node.
