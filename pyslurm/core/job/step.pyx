@@ -53,22 +53,30 @@ cdef class JobSteps(dict):
     def __cinit__(self):
         self.info = NULL
 
-    def __init__(self, job):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def load(job):
         cdef Job _job
-
-        # Reload the Job in order to have updated information about its state.
         _job = job.reload() if isinstance(job, Job) else Job(job).reload()
+        return JobSteps._load(_job)
 
-        step_info = self._load(_job.id, slurm.SHOW_ALL)
-        if not step_info and not slurm.IS_JOB_PENDING(_job.ptr):
-            msg = f"Failed to load step info for Job {_job.id}."
+    @staticmethod
+    cdef JobSteps _load(Job job):
+        cdef JobSteps steps = JobSteps.__new__(JobSteps)
+
+        step_info = steps._get_info(job.id, slurm.SHOW_ALL)
+        if not step_info and not slurm.IS_JOB_PENDING(job.ptr):
+            msg = f"Failed to load step info for Job {job.id}."
             raise RPCError(msg=msg)
 
         # No super().__init__() needed? Cython probably already initialized
         # the dict automatically.
-        self.update(step_info[_job.id])
-
-    cdef dict _load(self, uint32_t job_id, int flags):
+        steps.update(step_info[job.id])
+        return steps
+         
+    cdef dict _get_info(self, uint32_t job_id, int flags):
         cdef:
             JobStep step
             JobSteps steps
@@ -108,14 +116,14 @@ cdef class JobSteps(dict):
 
     @staticmethod
     def load_all():
-        """Loads and returns all the steps in the system.
+        """Loads all the steps in the system.
 
         Returns:
             (dict): A dict where every JobID (key) is mapped with an instance
                 of its JobSteps (value).
         """
         cdef JobSteps steps = JobSteps.__new__(JobSteps)
-        return steps._load(slurm.NO_VAL, slurm.SHOW_ALL)
+        return steps._get_info(slurm.NO_VAL, slurm.SHOW_ALL)
 
 
 cdef class JobStep:
@@ -163,8 +171,8 @@ cdef class JobStep:
         self.umsg = NULL
 
     def __setattr__(self, name, val):
-        # When a user wants to set attributes on a Node instance that was
-        # created by calling Nodes(), the "umsg" pointer is not yet allocated.
+        # When a user wants to set attributes on a instance that was created
+        # by calling JobSteps.load(), the "umsg" pointer is not yet allocated.
         # We only allocate memory for it by the time the user actually wants
         # to modify something.
         self._alloc_umsg()

@@ -58,7 +58,10 @@ cdef class JobSteps(dict):
         job_step_info_response_msg_t *info
         job_step_info_t tmp_info
 
-    cdef dict _load(self, uint32_t job_id, int flags)
+    @staticmethod
+    cdef JobSteps _load(Job job)
+
+    cdef dict _get_info(self, uint32_t job_id, int flags)
         
 
 cdef class JobStep:

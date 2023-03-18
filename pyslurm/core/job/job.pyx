@@ -64,7 +64,7 @@ cdef class Jobs(dict):
                     self[job.id] = job
 
     @staticmethod
-    def get(preload_passwd_info=False, freeze=False):
+    def load(preload_passwd_info=False, freeze=False):
         cdef:
             dict passwd = {}
             dict groups = {}
@@ -110,12 +110,12 @@ cdef class Jobs(dict):
         return jobs
 
     def reload(self):
-        cdef Jobs reloaded_jobs = Jobs.get()
+        cdef Jobs reloaded_jobs = Jobs.load()
 
         for jid in list(self.keys()):
             if jid in reloaded_jobs:
-                # Put the new data in our instance.
-                Job._swap_data(self[jid], reloaded_jobs[jid])
+                # Put the new data in.
+                self[jid] = reloaded_jobs[jid]
             elif not self.freeze:
                 # Remove this instance from the current collection, as the Job
                 # doesn't exist anymore.
@@ -129,24 +129,23 @@ cdef class Jobs(dict):
     def load_steps(self):
         """Load all Job steps for this collection of Jobs.
 
+        This function fills in the "steps" attribute for all Jobs in the
+        collection.
+
         Note:
             Pending Jobs will be ignored, since they don't have any Steps yet.
 
         Raises:
             RPCError: When retrieving the Job information for all the Steps
                 failed.
-
-        Returns:
-            (dict): JobSteps information for each JobID.
         """
-        cdef:
-            Job job
-            dict step_info = JobSteps.load_all()
-            dict out
+        cdef dict step_info = JobSteps.load_all()
 
-        # Ignore any Steps from Jobs which do not exist in this collection.
-        out = {jid: step_info[jid] for jid in self if jid in step_info}
-        return out 
+        for jid in self:
+            # Ignore any Steps from Jobs which do not exist in this
+            # collection.
+            if jid in step_info:
+                self[jid].steps = step_info[jid]
 
     def as_list(self):
         """Format the information as list of Job objects.
@@ -183,6 +182,7 @@ cdef class Job:
         self.ptr.job_id = job_id
         self.passwd = {}
         self.groups = {}
+        self.steps = JobSteps.__new__(JobSteps)
 
     cdef alloc(self):
         self.ptr = <slurm_job_info_t*>try_xmalloc(sizeof(slurm_job_info_t))
@@ -236,6 +236,13 @@ cdef class Job:
                 self.alloc()
                 memcpy(self.ptr, &info.job_array[0], sizeof(slurm_job_info_t))
                 info.record_count = 0
+
+                # Just ignore if the steps couldn't be loaded here.
+                try:
+                    if not slurm.IS_JOB_PENDING(self.ptr):
+                        self.steps = JobSteps._load(self)
+                except RPCError:
+                    pass
         except Exception as e:
             raise e
         finally:
@@ -249,6 +256,7 @@ cdef class Job:
         wrap.alloc()
         wrap.passwd = {}
         wrap.groups = {}
+        wrap.steps = JobSteps.__new__(JobSteps)
         memcpy(wrap.ptr, in_ptr, sizeof(slurm_job_info_t))
 
         return wrap

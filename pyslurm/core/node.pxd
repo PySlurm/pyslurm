@@ -51,17 +51,9 @@ from pyslurm.slurm cimport (
 cdef class Nodes(dict):
     """A collection of Node objects.
 
-    By creating a new Nodes instance, all Nodes in the system will be
-    fetched from the slurmctld.
-
     Args:
-        preload_passwd_info (bool): 
-            Decides whether to query passwd and groups information from the
-            system.
-            Could potentially speed up access to attributes of the Node where
-            a UID/GID is translated to a name.
-            If True, the information will fetched and stored in each of the
-            Node instances. The default is False.
+        nodes (Union[list, dict, str], optional):
+            Nodes to initialize this collection with.
 
     Attributes:
         free_memory (int):
@@ -84,7 +76,6 @@ cdef class Nodes(dict):
             Amount of average watts consumed in this node collection.
 
     Raises:
-        RPCError: When getting all the Nodes from the slurmctld failed.
         MemoryError: If malloc fails to allocate memory.
     """
     cdef:
@@ -220,6 +211,9 @@ cdef class Node:
         update_node_msg_t *umsg
         dict passwd
         dict groups
+
+    @staticmethod
+    cdef _swap_data(Node dst, Node src)
 
     @staticmethod
     cdef Node from_ptr(node_info_t *in_ptr)

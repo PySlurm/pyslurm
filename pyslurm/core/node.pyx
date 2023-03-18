@@ -40,6 +40,7 @@ from pyslurm.core.common import (
     cpubind_to_num,
     instance_to_dict,
     _sum_prop,
+    nodelist_from_range_str,
 )
 
 
@@ -49,15 +50,53 @@ cdef class Nodes(dict):
         slurm_free_node_info_msg(self.info)
         slurm_free_partition_info_msg(self.part_info)
 
-    def __init__(self, preload_passwd_info=False):
+    def __cinit__(self):
+        self.info = NULL
+        self.part_info = NULL
+
+    def __init__(self, nodes=None):
+        if isinstance(nodes, dict):
+            self.update(nodes)
+        elif isinstance(nodes, str):
+            nodelist = nodelist_from_range_str(nodes) 
+            self.update({node: Node(node) for node in nodelist})
+        elif nodes is not None:
+            for node in nodes:
+                if isinstance(node, str):
+                    self[node] = Node(node)
+                else:
+                    self[node.name] = node
+
+    @staticmethod
+    def load(preload_passwd_info=False):
+        """Load all nodes in the system.
+
+        Args:
+            preload_passwd_info (bool): 
+                Decides whether to query passwd and groups information from
+                the system.
+                Could potentially speed up access to attributes of the Node
+                where a UID/GID is translated to a name.
+                If True, the information will fetched and stored in each of
+                the Node instances. The default is False.
+
+        Returns:
+            (Nodes): Collection of node objects.
+
+        Raises:
+            RPCError: When getting all the Nodes from the slurmctld failed.
+            MemoryError: If malloc fails to allocate memory.
+        """
         cdef:
             dict passwd = {}
             dict groups = {}
-            int flags   = slurm.SHOW_ALL
+            Nodes nodes = Nodes.__new__(Nodes)
+            int flags = slurm.SHOW_ALL
             Node node
 
-        self.info = NULL
-        self.part_info = NULL
+        verify_rpc(slurm_load_node(0, &nodes.info, flags))
+        verify_rpc(slurm_load_partitions(0, &nodes.part_info, flags))
+        slurm_populate_node_partitions(nodes.info, nodes.part_info)
 
         # If requested, preload the passwd and groups database to potentially
         # speedup lookups for an attribute in a node, e.g "owner".
@@ -65,26 +104,22 @@ cdef class Nodes(dict):
             passwd = _getpwall_to_dict()
             groups = _getgrall_to_dict()
 
-        verify_rpc(slurm_load_node(0, &self.info, slurm.SHOW_ALL))
-        verify_rpc(slurm_load_partitions(0, &self.part_info, slurm.SHOW_ALL))
-        slurm_populate_node_partitions(self.info, self.part_info)
-
         # zero-out a dummy node_info_t
-        memset(&self.tmp_info, 0, sizeof(node_info_t))
+        memset(&nodes.tmp_info, 0, sizeof(node_info_t))
 
         # Put each node pointer into its own "Node" instance.
-        for cnt in range(self.info.record_count):
-            node = Node.from_ptr(&self.info.node_array[cnt])
+        for cnt in range(nodes.info.record_count):
+            node = Node.from_ptr(&nodes.info.node_array[cnt])
 
             # Prevent double free if xmalloc fails mid-loop and a MemoryError
             # is raised by replacing it with a zeroed-out node_info_t.
-            self.info.node_array[cnt] = self.tmp_info
+            nodes.info.node_array[cnt] = nodes.tmp_info
 
             if preload_passwd_info:
                 node.passwd = passwd
                 node.groups = groups
 
-            self[node.name] = node
+            nodes[node.name] = node
 
         # At this point we memcpy'd all the memory for the Nodes. Setting this
         # to 0 will prevent the slurm node free function to deallocate the
@@ -92,7 +127,22 @@ cdef class Nodes(dict):
         # are free'd automatically in __dealloc__ since the lifetime of each
         # node-pointer is tied to the lifetime of its corresponding "Node"
         # instance.
-        self.info.record_count = 0
+        nodes.info.record_count = 0
+
+        return nodes
+
+    def reload(self):
+        cdef Nodes reloaded_nodes
+        our_nodes = list(self.keys())
+
+        if not our_nodes:
+            return None
+
+        reloaded_nodes = Nodes.load()
+        for node in list(self.keys()):
+            if node in reloaded_nodes:
+                # Put the new data in.
+                self[node] = reloaded_nodes[node]
 
     def as_list(self):
         """Format the information as list of Node objects.
@@ -145,7 +195,7 @@ cdef class Node:
         self.info = NULL
         self.umsg = NULL
 
-    def __init__(self, str name=None, **kwargs):
+    def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
         for k, v in kwargs.items():
@@ -197,6 +247,13 @@ cdef class Node:
         wrap.groups = {}
         memcpy(wrap.info, in_ptr, sizeof(node_info_t))
         return wrap
+
+    cdef _swap_data(Node dst, Node src):
+        cdef node_info_t *tmp = NULL
+        if dst.info and src.info:
+            tmp = dst.info 
+            dst.info = src.info
+            src.info = tmp
 
     def reload(self):
         """(Re)load information for a node.

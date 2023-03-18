@@ -9,7 +9,7 @@ from pyslurm import Node, Nodes, RPCError
 
 
 def test_reload():
-    node = Node(Nodes().as_list()[0].name)
+    node = Node(Nodes.load().as_list()[0].name)
 
     # Nothing has been loaded at this point, just make sure everything is
     # on default values.
@@ -40,7 +40,7 @@ def test_create():
 
 
 def test_modify():
-    node = Node(Nodes().as_list()[0].name)
+    node = Node(Nodes.load().as_list()[0].name)
 
     node.modify(weight=10000)
     assert node.reload().weight == 10000
@@ -53,4 +53,4 @@ def test_modify():
 
 
 def test_parse_all():
-    Node(Nodes().as_list()[0].name).reload().as_dict()
+    Node(Nodes.load().as_list()[0].name).reload().as_dict()

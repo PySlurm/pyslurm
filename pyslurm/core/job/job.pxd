@@ -105,7 +105,7 @@ cdef class Jobs(dict):
             collection, but old Jobs which have already been purged from the
             Slurm controllers memory will not be removed either.
             The default is False, so old jobs will be removed, and new Jobs
-            will be added - basically the same behaviour as doing Jobs.get().
+            will be added - basically the same behaviour as doing Jobs.load().
     """
     cdef:
         job_info_msg_t *info
@@ -128,6 +128,11 @@ cdef class Job:
         MemoryError: If malloc fails to allocate memory.
 
     Attributes:
+        steps (JobSteps):
+            Steps this Job has.
+            Before you can access the Steps data for a Job, you have to call
+            the reload() method of a Job instance or the load_steps() method
+            of a Jobs collection.
         name (str):
             Name of the Job
         id (int):
@@ -378,6 +383,8 @@ cdef class Job:
         slurm_job_info_t *ptr
         dict passwd
         dict groups
+
+    cdef public JobSteps steps
 
     cdef alloc(self)
     cdef _calc_run_time(self)

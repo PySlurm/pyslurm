@@ -88,7 +88,7 @@ def test_collection(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
     time.sleep(1)
-    steps = JobSteps(job)
+    steps = JobSteps.load(job)
 
     assert steps != {}
     # We have 3 Steps: batch, 0 and 1
@@ -115,7 +115,7 @@ def test_cancel(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
     time.sleep(1)
-    steps = JobSteps(job)
+    steps = JobSteps.load(job)
     assert len(steps) == 3
     assert ("batch" in steps and
             0 in steps and
@@ -124,7 +124,7 @@ def test_cancel(submit_job):
     steps[0].cancel()
     
     time.sleep(0.5)
-    steps = JobSteps(job)
+    steps = JobSteps.load(job)
     assert len(steps) == 2
     assert ("batch" in steps and
             1 in steps)
