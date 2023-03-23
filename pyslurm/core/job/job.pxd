@@ -66,25 +66,14 @@ from pyslurm.slurm cimport (
 
 
 cdef class Jobs(dict):
-    """A collection of :obj:`Job` objects.
-
-    By creating a new :obj:`Jobs` instance, all Jobs in the system will be
-    fetched from the slurmctld.
+    """A collection of Job objects.
 
     Args:
-        preload_passwd_info (bool, optional): 
-            Decides whether to query passwd and groups information from
-            the system.
-            Could potentially speed up access to attributes of the Job
-            where a UID/GID is translated to a name. If True, the
-            information will fetched and stored in each of the Job
-            instances.
+        nodes (Union[list, dict], optional):
+            Jobs to initialize this collection with.
         freeze (bool, optional):
-            Decide whether this collection of Jobs should be "frozen".
-
-    Raises:
-        RPCError: When getting all the Jobs from the slurmctld failed.
-        MemoryError: If malloc fails to allocate memory.
+            Control whether this collection is "frozen" when reloading Job
+            information.
 
     Attributes:
         memory (int):

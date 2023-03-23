@@ -132,6 +132,15 @@ cdef class Nodes(dict):
         return nodes
 
     def reload(self):
+        """Reload the information for nodes in a collection.
+
+        Note:
+            Only information for nodes which are already in the collection at
+            the time of calling this method will be reloaded.
+
+        Raises:
+            RPCError: When getting the Nodes from the slurmctld failed.
+        """
         cdef Nodes reloaded_nodes
         our_nodes = list(self.keys())
 
@@ -143,6 +152,8 @@ cdef class Nodes(dict):
             if node in reloaded_nodes:
                 # Put the new data in.
                 self[node] = reloaded_nodes[node]
+
+        return self
 
     def as_list(self):
         """Format the information as list of Node objects.

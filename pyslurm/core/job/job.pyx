@@ -65,6 +65,26 @@ cdef class Jobs(dict):
 
     @staticmethod
     def load(preload_passwd_info=False, freeze=False):
+        """Retrieve all Jobs from the Slurm controller
+
+        Args:
+            preload_passwd_info (bool, optional): 
+                Decides whether to query passwd and groups information from
+                the system.
+                Could potentially speed up access to attributes of the Job
+                where a UID/GID is translated to a name. If True, the
+                information will fetched and stored in each of the Job
+                instances.
+            freeze (bool, optional):
+                Decide whether this collection of Jobs should be "frozen".
+
+        Returns:
+            (Jobs): A collection of Job objects.
+
+        Raises:
+            RPCError: When getting all the Jobs from the slurmctld failed.
+            MemoryError: If malloc fails to allocate memory.
+        """
         cdef:
             dict passwd = {}
             dict groups = {}
@@ -110,6 +130,11 @@ cdef class Jobs(dict):
         return jobs
 
     def reload(self):
+        """Reload the information for jobs in a collection.
+
+        Raises:
+            RPCError: When getting the Jobs from the slurmctld failed.
+        """
         cdef Jobs reloaded_jobs = Jobs.load()
 
         for jid in list(self.keys()):
@@ -125,6 +150,8 @@ cdef class Jobs(dict):
             for jid in reloaded_jobs:
                 if jid not in self:
                     self[jid] = reloaded_jobs[jid]
+
+        return self
 
     def load_steps(self):
         """Load all Job steps for this collection of Jobs.
