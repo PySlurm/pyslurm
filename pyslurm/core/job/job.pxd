@@ -178,7 +178,7 @@ cdef class Job:
             Time when a pending Job will be cancelled, as unix timestamp.
         preempt_eligible_time (int):
             Time the Job is eligible for preemption, as unix timestamp.
-        preempt_time_raw (int):
+        preempt_time (int):
             Time the Job was signaled for preemption, as unix timestamp.
         suspend_time (int):
             Last Time the Job was suspended, as unix timestamp.

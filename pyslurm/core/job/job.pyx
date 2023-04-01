@@ -204,7 +204,7 @@ cdef class Job:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, int job_id):
+    def __init__(self, job_id):
         self.alloc()
         self.ptr.job_id = job_id
         self.passwd = {}
@@ -1243,7 +1243,6 @@ cdef class Job:
             * cpus (int)
             * gres (dict)
             * memory (str) - Humanized Memory str
-            * memory_raw (int) - Value in Mebibytes
 
         Returns:
             (dict): Resource layout
