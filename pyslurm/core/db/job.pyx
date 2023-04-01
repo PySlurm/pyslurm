@@ -26,15 +26,11 @@ from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
 from pyslurm.core.common.uint import *
 from pyslurm.core.common.ctime import (
     date_to_timestamp,
-    secs_to_timestr,
-    timestamp_to_date,
-    mins_to_timestr,
     _raw_time,
 )
 from pyslurm.core.common import (
     gid_to_name,
     uid_to_name,
-    humanize,
     instance_to_dict,
 )
 
@@ -81,11 +77,13 @@ cdef class JobConditions:
 
 cdef class Jobs(dict):
 
+    def __dealloc__(self):
+        self.db_conn.close()
+
     def __init__(self, *args, **kwargs):
         cdef:
             Job job
             JobStep step
-            Connection db_conn
             JobConditions job_cond
             SlurmListItem job_ptr
             SlurmListItem step_ptr
@@ -102,8 +100,8 @@ cdef class Jobs(dict):
 
         job_cond._create_job_cond()
         # TODO: Have a single, global DB connection in pyslurm internally?
-        db_conn = Connection()
-        self.info = SlurmList.wrap(slurmdb_jobs_get(db_conn.conn,
+        self.db_conn = Connection()
+        self.info = SlurmList.wrap(slurmdb_jobs_get(self.db_conn.ptr,
                                                     job_cond.ptr))
 
         if self.info.is_null():
@@ -127,13 +125,15 @@ cdef class Jobs(dict):
                 step = JobStep.from_ptr(<slurmdb_step_rec_t*>step_ptr.data)
                 job.steps[step.id] = step
 
+            job._sum_stats_from_steps()
+
         
 cdef class Job:
 
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, int job_id):
+    def __init__(self, job_id):
         pass
 
     def __dealloc__(self):
@@ -145,10 +145,80 @@ cdef class Job:
         cdef Job wrap = Job.__new__(Job)
         wrap.ptr = in_ptr
         wrap.steps = JobSteps.__new__(JobSteps)
+        wrap.stats = JobStats()
         return wrap
 
+    def _sum_stats_from_steps(self):
+        cdef:
+            JobStats job_stats = self.stats
+            JobStats step_stats = None
+
+        for step in self.steps.values():
+            step_stats = step.stats
+
+            job_stats.consumed_energy += step_stats.consumed_energy
+            job_stats.average_cpu_time += step_stats.average_cpu_time
+            job_stats.average_cpu_frequency += step_stats.average_cpu_frequency
+            job_stats.cpu_time += step_stats.cpu_time
+            job_stats.average_disk_read += step_stats.average_disk_read
+            job_stats.average_disk_write += step_stats.average_disk_write
+            job_stats.average_pages += step_stats.average_pages
+            job_stats.average_rss += step_stats.average_rss
+            job_stats.average_vmsize += step_stats.average_vmsize
+
+            if step_stats.max_disk_read >= job_stats.max_disk_read:
+                job_stats.max_disk_read = step_stats.max_disk_read
+                job_stats.max_disk_read_node = step_stats.max_disk_read_node
+                job_stats.max_disk_read_task = step_stats.max_disk_read_task
+
+            if step_stats.max_disk_write >= job_stats.max_disk_write:
+                job_stats.max_disk_write = step_stats.max_disk_write
+                job_stats.max_disk_write_node = step_stats.max_disk_write_node
+                job_stats.max_disk_write_task = step_stats.max_disk_write_task
+
+            if step_stats.max_pages >= job_stats.max_pages:
+                job_stats.max_pages = step_stats.max_pages
+                job_stats.max_pages_node = step_stats.max_pages_node
+                job_stats.max_pages_task = step_stats.max_pages_task
+
+            if step_stats.max_rss >= job_stats.max_rss:
+                job_stats.max_rss = step_stats.max_rss
+                job_stats.max_rss_node = step_stats.max_rss_node
+                job_stats.max_rss_task = step_stats.max_rss_task
+
+            if step_stats.max_vmsize >= job_stats.max_vmsize:
+                job_stats.max_vmsize = step_stats.max_vmsize
+                job_stats.max_vmsize_node = step_stats.max_vmsize_node
+                job_stats.max_vmsize_task = step_stats.max_vmsize_task
+
+            if step_stats.min_cpu_time >= job_stats.min_cpu_time:
+                job_stats.min_cpu_time = step_stats.min_cpu_time
+                job_stats.min_cpu_time_node = step_stats.min_cpu_time_node
+                job_stats.min_cpu_time_task = step_stats.min_cpu_time_task
+
+        if self.ptr.tot_cpu_sec != slurm.NO_VAL64:
+            job_stats.total_cpu_time = self.ptr.tot_cpu_sec
+
+        if self.ptr.user_cpu_sec != slurm.NO_VAL64:
+            job_stats.user_cpu_time = self.ptr.user_cpu_sec
+
+        if self.ptr.sys_cpu_sec != slurm.NO_VAL64:
+            job_stats.system_cpu_time = self.ptr.sys_cpu_sec
+
+        elapsed = self.elapsed_time if self.elapsed_time else 0
+        cpus = self.cpus if self.cpus else 0
+        job_stats.cpu_time = elapsed * cpus
+        job_stats.average_cpu_frequency /= len(self.steps)
+
     def as_dict(self):
-        return instance_to_dict(self)
+        cdef dict out = instance_to_dict(self)
+        out["stats"] = self.stats.as_dict()
+        steps = out.pop("steps", {})
+
+        out["steps"] = {}
+        for step_id, step in steps.items():
+            out["steps"][step_id] = step.as_dict() 
+        return out
 
     @property
     def account(self):
@@ -159,11 +229,21 @@ cdef class Job:
         return cstr.to_unicode(self.ptr.admin_comment)
 
     @property
-    def alloc_nodes(self):
-        return u32_parse(self.ptr.alloc_nodes)
+    def num_nodes(self):
+        val = TrackableResources.find_count_in_str(self.ptr.tres_alloc_str, 
+                                                   slurm.TRES_NODE)
+        if val is not None:
+            # Job is already running and has nodes allocated
+            return val
+        else:
+            # Job is still pending, so we return the number of requested nodes
+            # instead.
+            val = TrackableResources.find_count_in_str(self.ptr.tres_req_str, 
+                                                       slurm.TRES_NODE)
+            return val
 
     @property
-    def array_job_id(self):
+    def array_id(self):
         return u32_parse(self.ptr.array_job_id)
 
     @property
@@ -234,39 +314,28 @@ cdef class Job:
         return cstr.to_unicode(self.ptr.derived_es)
 
     @property
-    def elapsed_time_raw(self):
+    def elapsed_time(self):
         return _raw_time(self.ptr.elapsed)
 
     @property
-    def elapsed_time(self):
-        return secs_to_timestr(self.ptr.elapsed)
-
-    @property
-    def eligible_time_raw(self):
+    def eligible_time(self):
         return _raw_time(self.ptr.eligible)
 
     @property
-    def eligible_time(self):
-        return timestamp_to_date(self.ptr.eligible)
-
-    @property
-    def end_time_raw(self):
+    def end_time(self):
         return _raw_time(self.ptr.end)
 
     @property
-    def end_time(self):
-        return timestamp_to_date(self.ptr.end)
-
-    @property
     def exit_code(self):
-        pass
+        # TODO
+        return None
 
     # uint32_t flags
 
-    def gid(self):
+    def group_id(self):
         return u32_parse(self.ptr.gid, zero_is_noval=False)
 
-    def group(self):
+    def group_name(self):
         return gid_to_name(self.ptr.gid)
 
     # uint32_t het_job_id
@@ -307,18 +376,22 @@ cdef class Job:
         return None
 
     @property
-    def requested_cpus(self):
-        return u32_parse(self.ptr.req_cpus)
+    def cpus(self):
+        val = TrackableResources.find_count_in_str(self.ptr.tres_alloc_str, 
+                                                   slurm.TRES_CPU)
+        if val is not None:
+            # Job is already running and has cpus allocated
+            return val
+        else:
+            # Job is still pending, so we return the number of requested cpus
+            # instead.
+            return u32_parse(self.ptr.req_cpus)
 
     @property
-    def requested_mem(self):
+    def memory(self):
         val = TrackableResources.find_count_in_str(self.ptr.tres_req_str, 
                                                    slurm.TRES_MEM)
-        return humanize(val, decimals=2)
-
-    @property
-    def alloc_cpus(self):
-        pass
+        return val
 
     @property
     def reservation(self):
@@ -335,12 +408,8 @@ cdef class Job:
     # uint32_t show_full
 
     @property
-    def start_time_raw(self):
-        return _raw_time(self.ptr.start)
-
-    @property
     def start_time(self):
-        return timestamp_to_date(self.ptr.start)
+        return _raw_time(self.ptr.start)
 
     @property
     def state(self):
@@ -357,43 +426,35 @@ cdef class Job:
         return uid_to_name(self.ptr.requid)
 
     @property
-    def submit_time_raw(self):
-        return _raw_time(self.ptr.submit)
-
-    @property
     def submit_time(self):
-        return timestamp_to_date(self.ptr.submit)
+        return _raw_time(self.ptr.submit)
 
     @property
     def submit_line(self):
         return cstr.to_unicode(self.ptr.submit_line)
 
     @property
-    def suspended_time_raw(self):
-        return _raw_time(self.ptr.elapsed)
-
-    @property
     def suspended_time(self):
-        return secs_to_timestr(self.ptr.elapsed)
+        # seconds
+        return _raw_time(self.ptr.elapsed)
 
     @property
     def system_comment(self):
         return cstr.to_unicode(self.ptr.system_comment)
 
     @property
-    def time_limit_raw(self):
-        return _raw_time(self.ptr.timelimit)
-
-    @property
     def time_limit(self):
-        return mins_to_timestr(self.ptr.timelimit, "PartitionLimit")
+        # minutes
+        # TODO: Perhaps we should just find out what the actual PartitionLimit
+        # is?
+        return _raw_time(self.ptr.timelimit, "PartitionLimit")
 
     @property
-    def uid(self):
+    def user_id(self):
         return u32_parse(self.ptr.uid, zero_is_noval=False)
 
     @property
-    def user(self):
+    def user_name(self):
         # Theres also a ptr->user
         # https://github.com/SchedMD/slurm/blob/6365a8b7c9480c48678eeedef99864d8d3b6a6b5/src/sacct/print.c#L1946
         return uid_to_name(self.ptr.uid)
@@ -409,7 +470,7 @@ cdef class Job:
 #        return u32_parse(self.ptr.wckeyid)
 
     @property
-    def work_dir(self):
+    def working_directory(self):
         return cstr.to_unicode(self.ptr.work_dir)
 
 #    @property

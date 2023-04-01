@@ -54,12 +54,48 @@ cdef class JobConditions:
 
 
 cdef class Jobs(dict):
-    cdef SlurmList info
+    cdef:
+        SlurmList info
+        Connection db_conn
 
 
 cdef class Job:
+    """A Slurm Database Job.
+
+    All attributes in this class are read-only.
+
+    Args:
+        job_id (int):
+            An Integer representing a Job-ID.
+
+    Raises:
+        MemoryError: If malloc fails to allocate memory.
+
+    Attributes:
+        steps (pyslurm.db.JobSteps):
+            Steps this Job has.
+        account (str):
+            Account of the Job.
+        admin_comment (str):
+            Admin comment for the Job.
+        num_nodes (int):
+            Amount of nodes this Job has allocated (if it is running) or
+            requested (if it is still pending).
+        array_id (int):
+            The master Array-Job ID.
+        array_tasks_parallel (int):
+            Max number of array tasks allowed to run simultaneously.
+        array_task_id (int):
+            Array Task ID of this Job if it is an Array-Job.
+        array_tasks_waiting (str):
+            Array Tasks that are still waiting.
+        name (str):
+            Name of the Job.
+    """
     cdef slurmdb_job_rec_t *ptr
-    cdef public JobSteps steps
+    cdef public:
+        JobSteps steps
+        JobStats stats
 
     @staticmethod
     cdef Job from_ptr(slurmdb_job_rec_t *in_ptr)

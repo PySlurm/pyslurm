@@ -19,7 +19,6 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
-# cython: embedsignature=True
 
 from pyslurm.core.common.uint import *
 
@@ -32,19 +31,20 @@ cdef class TrackableResources(dict):
     @staticmethod
     cdef TrackableResources from_str(char *tres_str):
         cdef:
-            TrackableResources tres
+            TrackableResources tres_collection
+            TrackableResource tres
             str raw_str = cstr.to_unicode(tres_str)
             dict tres_dict
 
-        tres = TrackableResources.__new__(TrackableResources)
+        tres_collection = TrackableResources.__new__(TrackableResources)
         if not raw_str:
-            return tres
+            return tres_collection
 
-        tres.raw_str = raw_str
+        tres_collection.raw_str = raw_str
         tres_dict = cstr.to_dict(tres_str)
         for tres_id, val in tres_dict.items():
-            # TODO: resolve ids to type name
-            pass
+            tres = TrackableResource(tres_id)
+            tres.ptr.count = val
 
         return tres
 
@@ -55,10 +55,48 @@ cdef class TrackableResources(dict):
 
         cdef uint64_t tmp
         tmp = slurmdb_find_tres_count_in_string(tres_str, typ)
-        return u64_parse(tmp)
+        if tmp == slurm.NO_VAL64:
+            return 0
+        else:
+            return tmp
 
 
 cdef class TrackableResource:
 
     def __cinit__(self):
         self.ptr = NULL
+
+    def __init__(self, tres_id):
+        self._alloc()
+        self.ptr.id = tres_id
+
+    def _alloc(self):
+        if not self.ptr:
+            self.ptr = <slurmdb_tres_rec_t*>try_xmalloc(sizeof(slurmdb_tres_rec_t))
+            if not self.ptr:
+                raise MemoryError("xmalloc failed for slurmdb_tres_rec_t")
+
+    @staticmethod
+    cdef TrackableResource from_ptr(slurmdb_tres_rec_t *in_ptr):
+        cdef TrackableResource wrap = TrackableResource.__new__(TrackableResource)
+        wrap.ptr = in_ptr
+        return wrap
+
+    @property
+    def id(self):
+        return self.ptr.id
+
+    @property
+    def name(self):
+        return cstr.to_unicode(self.ptr.name)
+
+    @property
+    def type(self):
+        return cstr.to_unicode(self.ptr.type)
+
+    @property
+    def count(self):
+        return u64_parse(self.ptr.count)
+
+    # rec_count
+    # alloc_secs

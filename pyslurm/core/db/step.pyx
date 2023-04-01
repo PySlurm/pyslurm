@@ -24,19 +24,13 @@ from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 from pyslurm.core.error import RPCError
 from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
 from pyslurm.core.common.uint import *
-from pyslurm.core.common.ctime import (
-    date_to_timestamp,
-    secs_to_timestr,
-    timestamp_to_date,
-    mins_to_timestr,
-    _raw_time,
-)
+from pyslurm.core.common.ctime import _raw_time
 from pyslurm.core.common import (
     gid_to_name,
     uid_to_name,
-    humanize,
     instance_to_dict,
 )
+from pyslurm.core.job.util import cpufreq_to_str
 
 
 cdef class JobStep:
@@ -52,7 +46,13 @@ cdef class JobStep:
     cdef JobStep from_ptr(slurmdb_step_rec_t *step):
         cdef JobStep wrap = JobStep.__new__(JobStep)
         wrap.ptr = step
+        wrap.stats = JobStats.from_step(wrap)
         return wrap
+
+    def as_dict(self):
+        cdef dict out = instance_to_dict(self)
+        out["stats"] = self.stats.as_dict()
+        return out
 
     def _xlate_from_id(self, sid):
         if sid == slurm.SLURM_BATCH_SCRIPT:
@@ -79,11 +79,7 @@ cdef class JobStep:
             return int(sid)
 
     @property
-    def alloc_cpus(self):
-        return self.requested_cpus
-
-    @property
-    def alloc_nodes(self):
+    def num_nodes(self):
         nnodes = u32_parse(self.ptr.nnodes)
         if not nnodes and self.ptr.tres_alloc_str:
             return TrackableResources.find_count_in_str(
@@ -92,22 +88,28 @@ cdef class JobStep:
             return nnodes
 
     @property
-    def requested_cpus(self):
+    def cpus(self):
         req_cpus = TrackableResources.find_count_in_str(
                 self.ptr.tres_alloc_str, slurm.TRES_CPU)
 
-        if req_cpus == slurm.INFINITE64 and step.job_ptr:
-            tres_alloc_str = cstr.to_unicode(step.job_ptr.tres_alloc_str)
-            req_cpus = TrackableResources.find_count_in_str(tres_alloc_str,
-                                                            slurm.TRES_CPU)
-            if not req_cpus:
-                tres_req_str = cstr.to_unicode(step.job_ptr.tres_req_str)
-                req_cpus = TrackableResources.find_count_in_str(tres_req_str,
-                                                                slurm.TRES_CPU)
-        else:
-            req_cpus = 0
+        if req_cpus == slurm.INFINITE64:
+            return 0
 
         return req_cpus
+#       if req_cpus == slurm.INFINITE64 and step.job_ptr:
+#           tres_alloc_str = cstr.to_unicode(step.job_ptr.tres_alloc_str)
+#           req_cpus = TrackableResources.find_count_in_str(tres_alloc_str,
+#                                                           slurm.TRES_CPU)
+#           if not req_cpus:
+#               tres_req_str = cstr.to_unicode(step.job_ptr.tres_req_str)
+#               req_cpus = TrackableResources.find_count_in_str(tres_req_str,
+#                                                                slurm.TRES_CPU)
+
+    @property
+    def memory(self):
+        val = TrackableResources.find_count_in_str(self.ptr.tres_alloc_str, 
+                                                   slurm.TRES_MEM)
+        return val
 
     # Only in Parent Job available:
     # resvcpu?
@@ -118,55 +120,45 @@ cdef class JobStep:
 
     @property
     def elapsed_time(self):
-        return secs_to_timestr(self.ptr.elapsed)
-
-    @property
-    def end_time_raw(self):
-        return _raw_time(self.ptr.end)
+        # seconds
+        return _raw_time(self.ptr.elapsed)
 
     @property
     def end_time(self):
-        return timestamp_to_date(self.ptr.end)
-
-    @property
-    def eligible_time_raw(self):
-        return _raw_time(self.ptr.start)
+        return _raw_time(self.ptr.end)
 
     @property
     def eligible_time(self):
-        return timestamp_to_date(self.ptr.start)
-
-    @property
-    def start_time_raw(self):
         return _raw_time(self.ptr.start)
 
     @property
     def start_time(self):
-        return timestamp_to_date(self.ptr.start)
+        return _raw_time(self.ptr.start)
 
     @property
     def exit_code(self):
+        # TODO
         return None
 
     @property
     def ntasks(self):
-        return None
+        return u32_parse(self.ptr.ntasks)
 
     @property
-    def cpu_freq_min(self):
-        return None
+    def cpu_frequency_min(self):
+        return cpufreq_to_str(self.ptr.req_cpufreq_min)
 
     @property
-    def cpu_freq_max(self):
-        return None
+    def cpu_frequency_max(self):
+        return cpufreq_to_str(self.ptr.req_cpufreq_max)
 
     @property
-    def cpu_freq_gov(self):
-        return None
+    def cpu_frequency_governor(self):
+        return cpufreq_to_str(self.ptr.req_cpufreq_gov)
 
     @property
     def nodelist(self):
-        return None
+        return cstr.to_unicode(self.ptr.nodes)
 
     @property
     def id(self):
@@ -180,10 +172,10 @@ cdef class JobStep:
     def name(self):
         return cstr.to_unicode(self.ptr.stepname)
 
-    @property
-    def distribution(self):
-        # ptr.task_dist
-        pass
+#    @property
+#    def distribution(self):
+#        # ptr.task_dist
+#        pass
 
     @property
     def state(self):
@@ -200,4 +192,5 @@ cdef class JobStep:
 
     @property
     def suspended_time(self):
-        return secs_to_timestr(self.ptr.elapsed)
+        # seconds
+        return _raw_time(self.ptr.elapsed)

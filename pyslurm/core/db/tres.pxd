@@ -27,6 +27,7 @@ from libc.stdint cimport uint64_t
 from pyslurm.slurm cimport (
     slurmdb_tres_rec_t,
     slurmdb_find_tres_count_in_string,
+    try_xmalloc,
 )
 
 
@@ -39,3 +40,6 @@ cdef class TrackableResources(dict):
 
 cdef class TrackableResource:
     cdef slurmdb_tres_rec_t *ptr  
+
+    @staticmethod
+    cdef TrackableResource from_ptr(slurmdb_tres_rec_t *in_ptr)

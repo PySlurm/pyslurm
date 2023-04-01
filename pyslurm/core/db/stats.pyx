@@ -20,136 +20,119 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from pyslurm.core.common import nodelist_from_range_str, instance_to_dict
+
 
 cdef class JobStats:
 
-    @property
-    def consumed_energy(self):
-        return None
+    def __init__(self):
+        for attr, val in instance_to_dict(self).items():
+            setattr(self, attr, 0)
 
-    @property
-    def avg_cpu_time(self):
-        return None
+        self.max_disk_read_node = None
+        self.max_disk_read_task = None
+        self.max_disk_write_node = None
+        self.max_disk_write_task = None
+        self.max_pages_node = None
+        self.max_pages_task = None
+        self.max_rss_node = None
+        self.max_rss_task = None
+        self.max_vmsize_node = None
+        self.max_vmsize_task = None
+        self.min_cpu_time_node = None
+        self.min_cpu_time_task = None
 
-    @property
-    def avg_cpu_freq(self):
-        return None
+    def as_dict(self):
+        return instance_to_dict(self)
 
-    @property
-    def cpu_time(self):
-        # Elapsed * alloc_cpus
-        # This is the time the Job has been using the allocated CPUs for.
-        # This is not the actual cpu-usage.
-        return None
+    @staticmethod
+    cdef JobStats from_step(JobStep step):
+        cdef JobStats wrap = JobStats()
+        if not &step.ptr.stats:
+            return wrap
 
-    @property
-    def avg_disk_read(self):
-        return None
+        cdef:
+            list nodes = nodelist_from_range_str(
+                    cstr.to_unicode(step.ptr.nodes))
+            cpu_time_adj = 1000
+            slurmdb_stats_t *ptr = &step.ptr.stats
 
-    @property
-    def avg_disk_write(self):
-        return None
+        if ptr.consumed_energy != slurm.NO_VAL64:
+            wrap.consumed_energy = ptr.consumed_energy
 
-    @property
-    def avg_pages(self):
-        return None
+        wrap.average_cpu_time = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_ave, slurm.TRES_CPU) / cpu_time_adj
+        # TODO
+        # wrap.cpu_time = elapsed * step_cpu_tres_rec
 
-    @property
-    def avg_rss(self):
-        return None
+        ave_freq = int(ptr.act_cpufreq)
+        if ave_freq != slurm.NO_VAL:
+            wrap.average_cpu_frequency = ptr.act_cpufreq
 
-    @property
-    def avg_vmsize(self):
-        return None
+        # Convert to MiB instead of raw bytes?
+        wrap.average_disk_read = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_ave, slurm.TRES_FS_DISK)
+        wrap.average_disk_write = TrackableResources.find_count_in_str(
+                ptr.tres_usage_out_ave, slurm.TRES_FS_DISK)
+        wrap.average_pages = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_ave, slurm.TRES_PAGES)
+        wrap.average_rss = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_ave, slurm.TRES_MEM)
+        wrap.average_vmsize = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_ave, slurm.TRES_VMEM)
+        
+        wrap.max_disk_read = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max, slurm.TRES_FS_DISK)
+        max_disk_read_nodeid = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max_nodeid, slurm.TRES_FS_DISK)
+        if nodes:
+            wrap.max_disk_read_node = nodes[max_disk_read_nodeid]
+        wrap.max_disk_read_task = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max_taskid, slurm.TRES_FS_DISK)
 
-    @property
-    def max_disk_read(self):
-        return None
+        wrap.max_disk_write = TrackableResources.find_count_in_str(
+                ptr.tres_usage_out_max, slurm.TRES_FS_DISK)
+        max_disk_write_nodeid = TrackableResources.find_count_in_str(
+                ptr.tres_usage_out_max_nodeid, slurm.TRES_FS_DISK)
+        if nodes:
+            wrap.max_disk_write_node = nodes[max_disk_write_nodeid]
+        wrap.max_disk_write_task = TrackableResources.find_count_in_str(
+                ptr.tres_usage_out_max_taskid, slurm.TRES_FS_DISK)
 
-    @property
-    def max_disk_read_node(self):
-        return None
+        wrap.max_rss = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max, slurm.TRES_MEM)
+        max_rss_nodeid = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max_nodeid, slurm.TRES_MEM)
+        if nodes:
+            wrap.max_rss_node = nodes[max_rss_nodeid]
+        wrap.max_rss_task = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max_taskid, slurm.TRES_MEM)
 
-    @property
-    def max_disk_read_task(self):
-        return None
+        wrap.max_vmsize = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max, slurm.TRES_VMEM)
+        max_vmsize_nodeid = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max_nodeid, slurm.TRES_VMEM)
+        if nodes:
+            wrap.max_vmsize_node = nodes[max_vmsize_nodeid]
+        wrap.max_vmsize_task = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_max_taskid, slurm.TRES_VMEM)
 
-    @property
-    def max_disk_write(self):
-        return None
+        wrap.min_cpu_time = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_min, slurm.TRES_CPU) / cpu_time_adj
+        min_cpu_time_nodeid = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_min_nodeid, slurm.TRES_CPU)
+        if nodes:
+            wrap.min_cpu_time_node = nodes[min_cpu_time_nodeid]
+        wrap.min_cpu_time_task = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_min_taskid, slurm.TRES_CPU)
 
-    @property
-    def max_disk_write_node(self):
-        return None
+        wrap.total_cpu_time = TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_tot, slurm.TRES_CPU)
 
-    @property
-    def max_disk_write_task(self):
-        return None
+        if step.ptr.user_cpu_sec != slurm.NO_VAL64:
+            wrap.user_cpu_time = step.ptr.user_cpu_sec 
 
-    @property
-    def max_pages(self):
-        return None
+        if step.ptr.sys_cpu_sec != slurm.NO_VAL64:
+            wrap.system_cpu_time = step.ptr.sys_cpu_sec
 
-    @property
-    def max_pages_node(self):
-        return None
-
-    @property
-    def max_pages_task(self):
-        return None
-
-    @property
-    def max_rss(self):
-        return None
-
-    @property
-    def max_rss_node(self):
-        return None
-
-    @property
-    def max_rss_task(self):
-        return None
-
-    @property
-    def max_vmsize(self):
-        return None
-
-    @property
-    def max_vmsize_node(self):
-        return None
-
-    @property
-    def max_vmsize_task(self):
-        return None
-
-    @property
-    def min_cpu_time(self):
-        return None
-
-    @property
-    def min_cpu_time_node(self):
-        return None
-
-    @property
-    def min_cpu_time_task(self):
-        return None
-
-    @property
-    def total_cpu_time(self):
-        # uint32_t tot_cpu_sec
-        # uint32_t tot_cpu_usec
-        return None
-
-    @property
-    def user_cpu_time(self):
-        # Only available for Jobs from the Database, not sstat
-        # uint32_t user_cpu_sec
-        # uint32_t user_cpu_usec
-        return None
-    
-    @property
-    def system_cpu_time(self):
-        # Only available for Jobs from the Database, not sstat
-        # uint32_t sys_cpu_sec
-        # uint32_t sys_cpu_usec
-        return None
+        return wrap

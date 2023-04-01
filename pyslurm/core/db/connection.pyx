@@ -25,25 +25,28 @@ from pyslurm.core.error import RPCError
 
 
 cdef class Connection:
+
     def __cinit__(self):
-        self.conn = NULL
+        self.ptr = NULL
         self.conn_flags = 0
 
     def __init__(self):
         self.open() 
 
     def open(self):
-        if not self.conn:
-            self.conn = <void*>slurmdb_connection_get(&self.conn_flags)
-            if not self.conn:
+        if not self.ptr:
+            self.ptr = <void*>slurmdb_connection_get(&self.conn_flags)
+            if not self.ptr:
                 raise RPCError(msg="Failed to open Connection to slurmdbd")
 
     def close(self):
-        slurmdb_connection_close(&self.conn)
-        self.conn = NULL
+        if self.is_open:
+            slurmdb_connection_close(&self.ptr)
+            self.ptr = NULL
 
+    @property
     def is_open(self):
-        if self.conn:
+        if self.ptr:
             return True
         else:
             return False

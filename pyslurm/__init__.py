@@ -24,6 +24,7 @@ from pyslurm.core.job import (
     JobSubmitDescription,
 )
 
+from pyslurm.core import db
 from pyslurm.core.node import Node, Nodes
 
 import pyslurm.core.error

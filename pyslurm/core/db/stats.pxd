@@ -26,9 +26,57 @@ from pyslurm.slurm cimport (
     slurmdb_stats_t,
     slurmdb_job_rec_t,
 )
+from pyslurm.core.db.tres cimport TrackableResources
+from pyslurm.core.db.step cimport JobStep
+from pyslurm.core.common cimport cstr
 
 
 cdef class JobStats:
-    cdef:
-        slurmdb_stats_t *ptr
-        slurmdb_job_rec_t *job
+    cdef slurmdb_job_rec_t *job
+    
+    cdef public:
+        consumed_energy
+        average_cpu_time
+        average_cpu_frequency
+        # Elapsed * alloc_cpus
+        # This is the time the Job has been using the allocated CPUs for.
+        # This is not the actual cpu-usage.
+        cpu_time
+        average_disk_read
+        average_disk_write
+        average_pages
+        average_rss
+        average_vmsize
+        max_disk_read
+        max_disk_read_node
+        max_disk_read_task
+        max_disk_write
+        max_disk_write_node
+        max_disk_write_task
+        max_pages
+        max_pages_node
+        max_pages_task
+        max_rss
+        max_rss_node
+        max_rss_task
+        max_vmsize
+        max_vmsize_node
+        max_vmsize_task
+        min_cpu_time
+        min_cpu_time_node
+        min_cpu_time_task
+        # uint32_t tot_cpu_sec
+        # uint32_t tot_cpu_usec
+        total_cpu_time
+        # Only available for Jobs from the Database, not sstat
+        # uint32_t user_cpu_sec
+        # uint32_t user_cpu_usec
+        user_cpu_time
+        # Only available for Jobs from the Database, not sstat
+        # uint32_t sys_cpu_sec
+        # uint32_t sys_cpu_usec
+        system_cpu_time
+
+    @staticmethod
+    cdef JobStats from_step(JobStep step)
+

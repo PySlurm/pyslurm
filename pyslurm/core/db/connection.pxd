@@ -31,5 +31,5 @@ from pyslurm.slurm cimport (
 
 cdef class Connection:
     cdef:
-        void *conn
+        void *ptr
         uint16_t conn_flags

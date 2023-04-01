@@ -37,6 +37,7 @@ from pyslurm.slurm cimport (
 from pyslurm.core.db.util cimport SlurmList, SlurmListItem
 from pyslurm.core.db.connection cimport Connection
 from pyslurm.core.common cimport cstr
+from pyslurm.core.db.stats cimport JobStats
 
 
 cdef class JobSteps(dict):
@@ -45,6 +46,7 @@ cdef class JobSteps(dict):
 
 cdef class JobStep:
     cdef slurmdb_step_rec_t *ptr
+    cdef public JobStats stats
 
     @staticmethod
     cdef JobStep from_ptr(slurmdb_step_rec_t *step)
