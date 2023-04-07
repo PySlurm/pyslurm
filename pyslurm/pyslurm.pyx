@@ -641,8 +641,6 @@ cdef class config:
             Ctl_dict['keep_alive_time'] = slurm.int16orNone(self.__Config_ptr.keepalive_time)
             Ctl_dict['kill_on_bad_exit'] = bool(self.__Config_ptr.kill_on_bad_exit)
             Ctl_dict['kill_wait'] = self.__Config_ptr.kill_wait
-            Ctl_dict['launch_params'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
-            Ctl_dict['launch_type'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
             Ctl_dict['licenses'] = __get_licenses(self.__Config_ptr.licenses)
             Ctl_dict['log_fmt'] = self.__Config_ptr.log_fmt
             Ctl_dict['mail_domain'] = slurm.stringOrNone(self.__Config_ptr.mail_domain, '')
@@ -738,7 +736,6 @@ cdef class config:
             # TODO: slurmctld_host
             Ctl_dict['slurmctld_logfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_logfile, '')
             Ctl_dict['slurmctld_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_pidfile, '')
-            Ctl_dict['slurmctld_plugstack'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_plugstack, '')
             Ctl_dict['slurmctld_port'] = self.__Config_ptr.slurmctld_port
             Ctl_dict['slurmctld_port_count'] = self.__Config_ptr.slurmctld_port_count
             Ctl_dict['slurmctld_primary_off_prog'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_primary_off_prog, '')
@@ -6296,9 +6293,6 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
 
     if (debug_flags & DEBUG_FLAG_DB_WCKEY):
         debugFlags.append('DB_WCKey')
-
-    if (debug_flags & DEBUG_FLAG_ESEARCH):
-        debugFlags.append('Elasticsearch')
 
     if (debug_flags & DEBUG_FLAG_ENERGY):
         debugFlags.append('Energy')

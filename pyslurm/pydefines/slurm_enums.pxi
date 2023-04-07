@@ -52,8 +52,6 @@ WAIT_QOS_THRES                          = slurm.WAIT_QOS_THRES
 WAIT_QOS_JOB_LIMIT                      = slurm.WAIT_QOS_JOB_LIMIT
 WAIT_QOS_RESOURCE_LIMIT                 = slurm.WAIT_QOS_RESOURCE_LIMIT
 WAIT_QOS_TIME_LIMIT                     = slurm.WAIT_QOS_TIME_LIMIT
-WAIT_BLOCK_MAX_ERR                      = slurm.WAIT_BLOCK_MAX_ERR
-WAIT_BLOCK_D_ACTION                     = slurm.WAIT_BLOCK_D_ACTION
 WAIT_CLEANING                           = slurm.WAIT_CLEANING
 WAIT_PROLOG                             = slurm.WAIT_PROLOG
 WAIT_QOS                                = slurm.WAIT_QOS
@@ -260,11 +258,7 @@ SWITCH_PLUGIN_CRAY     = slurm.SWITCH_PLUGIN_CRAY
 
 # enum select_jobdata_type
 
-SELECT_JOBDATA_PAGG_ID  = slurm.SELECT_JOBDATA_PAGG_ID
-SELECT_JOBDATA_PTR      = slurm.SELECT_JOBDATA_PTR
-SELECT_JOBDATA_CLEANING = slurm.SELECT_JOBDATA_CLEANING
 SELECT_JOBDATA_NETWORK  = slurm.SELECT_JOBDATA_NETWORK
-SELECT_JOBDATA_RELEASED = slurm.SELECT_JOBDATA_RELEASED
 
 # end enum select_jobdata_type
 
