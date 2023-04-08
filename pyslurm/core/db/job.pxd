@@ -51,6 +51,10 @@ cdef class JobConditions:
         association_ids
         clusters
         constraints
+        min_cpus
+        max_cpus
+        min_nodes
+        max_nodes
 
 
 cdef class Jobs(dict):

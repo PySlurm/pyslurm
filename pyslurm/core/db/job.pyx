@@ -26,16 +26,16 @@ from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
 from pyslurm.core.common.uint import *
 from pyslurm.core.common.ctime import (
     date_to_timestamp,
+    timestr_to_mins,
     _raw_time,
 )
 from pyslurm.core.common import (
     gid_to_name,
     uid_to_name,
+    nodelist_to_range_str,
     instance_to_dict,
 )
 
-# Maybe prefix these classes with something like "DB" to avoid name collision
-# with the other classes from pyslurm/core/job ?
 
 cdef class JobConditions:
 
@@ -69,10 +69,31 @@ cdef class JobConditions:
         ptr.usage_start = date_to_timestamp(self.start_time)  
         ptr.usage_end = date_to_timestamp(self.end_time)  
         slurmdb_job_cond_def_start_end(ptr)
+
+        ptr.cpus_min = u32(self.min_cpus)
+        ptr.cpus_max = u32(self.max_cpus)
+        ptr.nodes_min = u32(self.min_nodes)
+        ptr.nodes_max = u32(self.max_nodes)
+#        ptr.timelimit_min = 
+#        ptr.timelimit_max = 
+
         SlurmList.to_char_list(&ptr.acct_list, self.accounts)
         SlurmList.to_char_list(&ptr.associd_list, self.association_ids)
         SlurmList.to_char_list(&ptr.cluster_list, self.clusters)
         SlurmList.to_char_list(&ptr.constraint_list, self.constraints)
+        SlurmList.to_char_list(&ptr.jobname_list, self.names)
+        SlurmList.to_char_list(&ptr.used_nodes,
+                               nodelist_to_range_str(self.nodelist))
+
+        # TODO: Need to convert user/group names to their ids...
+        SlurmList.to_char_list(&ptr.groupid_list, self.groups)
+        SlurmList.to_char_list(&ptr.userid_list, self.users)
+
+        SlurmList.to_char_list(&ptr.wckey_list, self.wckeys)
+        SlurmList.to_char_list(&ptr.partition_list, self.partitions)
+
+        # TODO: Need to convert qos names to its id...        
+        SlurmList.to_char_list(&ptr.qos_list, self.qos)
 
 
 cdef class Jobs(dict):

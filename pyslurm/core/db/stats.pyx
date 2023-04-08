@@ -85,8 +85,6 @@ cdef class JobStats:
                 ptr.tres_usage_in_max, slurm.TRES_FS_DISK)
         max_disk_read_nodeid = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_nodeid, slurm.TRES_FS_DISK)
-        if nodes:
-            wrap.max_disk_read_node = nodes[max_disk_read_nodeid]
         wrap.max_disk_read_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_taskid, slurm.TRES_FS_DISK)
 
@@ -94,8 +92,6 @@ cdef class JobStats:
                 ptr.tres_usage_out_max, slurm.TRES_FS_DISK)
         max_disk_write_nodeid = TrackableResources.find_count_in_str(
                 ptr.tres_usage_out_max_nodeid, slurm.TRES_FS_DISK)
-        if nodes:
-            wrap.max_disk_write_node = nodes[max_disk_write_nodeid]
         wrap.max_disk_write_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_out_max_taskid, slurm.TRES_FS_DISK)
 
@@ -103,8 +99,6 @@ cdef class JobStats:
                 ptr.tres_usage_in_max, slurm.TRES_MEM)
         max_rss_nodeid = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_nodeid, slurm.TRES_MEM)
-        if nodes:
-            wrap.max_rss_node = nodes[max_rss_nodeid]
         wrap.max_rss_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_taskid, slurm.TRES_MEM)
 
@@ -112,8 +106,6 @@ cdef class JobStats:
                 ptr.tres_usage_in_max, slurm.TRES_VMEM)
         max_vmsize_nodeid = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_nodeid, slurm.TRES_VMEM)
-        if nodes:
-            wrap.max_vmsize_node = nodes[max_vmsize_nodeid]
         wrap.max_vmsize_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_taskid, slurm.TRES_VMEM)
 
@@ -121,13 +113,18 @@ cdef class JobStats:
                 ptr.tres_usage_in_min, slurm.TRES_CPU) / cpu_time_adj
         min_cpu_time_nodeid = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_min_nodeid, slurm.TRES_CPU)
-        if nodes:
-            wrap.min_cpu_time_node = nodes[min_cpu_time_nodeid]
         wrap.min_cpu_time_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_min_taskid, slurm.TRES_CPU)
 
         wrap.total_cpu_time = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_tot, slurm.TRES_CPU)
+
+        if nodes:
+            wrap.max_disk_write_node = nodes[max_disk_write_nodeid]
+            wrap.max_disk_read_node = nodes[max_disk_read_nodeid]
+            wrap.max_rss_node = nodes[max_rss_nodeid]
+            wrap.max_vmsize_node = nodes[max_vmsize_nodeid]
+            wrap.min_cpu_time_node = nodes[min_cpu_time_nodeid]
 
         if step.ptr.user_cpu_sec != slurm.NO_VAL64:
             wrap.user_cpu_time = step.ptr.user_cpu_sec 
