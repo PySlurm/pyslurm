@@ -19,7 +19,6 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
-# cython: embedsignature=True
 
 from pyslurm.core.error import RPCError
 
@@ -32,6 +31,9 @@ cdef class Connection:
 
     def __init__(self):
         self.open() 
+
+    def __dealloc__(self):
+        self.close()
 
     def open(self):
         if not self.ptr:

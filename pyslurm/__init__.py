@@ -55,6 +55,8 @@ from pyslurm.core.common import (
     nodelist_to_range_str,
 )
 
+from pyslurm.core import slurmctld
+
 # Initialize slurm api
 from pyslurm.api import slurm_init, slurm_fini
 slurm_init()

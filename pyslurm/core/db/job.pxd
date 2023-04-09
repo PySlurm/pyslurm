@@ -29,6 +29,10 @@ from pyslurm.slurm cimport (
     slurmdb_destroy_job_cond,
     slurmdb_destroy_job_rec,
     slurmdb_destroy_step_rec,
+    slurm_destroy_selected_step,
+    slurm_selected_step_t,
+    slurm_list_create,
+    slurm_list_append,
     try_xmalloc,
     slurmdb_job_cond_def_start_end,
     slurm_job_state_string,
@@ -39,6 +43,7 @@ from pyslurm.core.db.step cimport JobStep, JobSteps
 from pyslurm.core.db.stats cimport JobStats
 from pyslurm.core.db.connection cimport Connection
 from pyslurm.core.common cimport cstr
+from pyslurm.core.db.qos cimport QualitiesOfService
 
 
 cdef class JobConditions:
@@ -51,10 +56,22 @@ cdef class JobConditions:
         association_ids
         clusters
         constraints
-        min_cpus
+        cpus
         max_cpus
-        min_nodes
+        nodes
         max_nodes
+        qualities_of_service
+        names
+        partitions
+        groups
+        timelimit
+        max_timelimit
+        users
+        wckeys
+        nodelist
+        with_script
+        with_env
+        ids
 
 
 cdef class Jobs(dict):
@@ -96,7 +113,10 @@ cdef class Job:
         name (str):
             Name of the Job.
     """
-    cdef slurmdb_job_rec_t *ptr
+    cdef:
+        slurmdb_job_rec_t *ptr
+        QualitiesOfService qos_data
+
     cdef public:
         JobSteps steps
         JobStats stats

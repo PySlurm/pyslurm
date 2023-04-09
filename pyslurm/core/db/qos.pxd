@@ -1,5 +1,5 @@
 #########################################################################
-# util.pxd - pyslurm slurmdbd util functions
+# qos.pxd - pyslurm slurmdbd qos api
 #########################################################################
 # Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -20,47 +20,41 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+
 from pyslurm cimport slurm
-from pyslurm.core.common cimport cstr
 from pyslurm.slurm cimport (
-    ListIterator,
-    List,
-    slurm_list_iterator_create,
-    slurm_list_iterator_destroy,
-    slurm_list_iterator_reset,
-    slurm_list_count,
-    slurm_list_next,
-    slurm_list_destroy,
-    slurm_list_create,
-    slurm_list_pop,
-    slurm_list_append,
-    slurm_xfree_ptr,
+    slurmdb_qos_rec_t,
+    slurmdb_qos_cond_t,
+    slurmdb_destroy_qos_rec,
+    slurmdb_destroy_qos_cond,
+    slurmdb_qos_get,
+    try_xmalloc,
 )
+from pyslurm.core.db.util cimport SlurmList, SlurmListItem
+from pyslurm.core.db.connection cimport Connection
+from pyslurm.core.db.qos cimport QualitiesOfService
+from pyslurm.core.common cimport cstr
 
 
-cdef class SlurmListItem:
-    cdef void *data
-
-    @staticmethod
-    cdef SlurmListItem from_ptr(void *item)
-
-
-cdef class SlurmList:
+cdef class QualitiesOfService(dict):
     cdef:
-        List info
-        int cnt
-        ListIterator itr
-        int itr_cnt
-        owned
-    
-    @staticmethod
-    cdef SlurmList wrap(List, owned=*)
+        SlurmList info
+        Connection db_conn
+
+
+cdef class QualityOfServiceConditions:
+   cdef slurmdb_qos_cond_t *ptr
+
+   cdef public:
+       names
+       ids
+       descriptions
+       preempt_mode
+       with_deleted
+
+
+cdef class QualityOfService:
+    cdef slurmdb_qos_rec_t *ptr
 
     @staticmethod
-    cdef SlurmList create(slurm.ListDelF delf)
-
-    @staticmethod
-    cdef to_char_list(List *in_list, vals)
-
-    @staticmethod
-    cdef to_str_pylist(List in_list)
+    cdef QualityOfService from_ptr(slurmdb_qos_rec_t *in_ptr)

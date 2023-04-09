@@ -1,5 +1,5 @@
 #########################################################################
-# util.pxd - pyslurm slurmdbd util functions
+# slurmctld.pyx - pyslurm slurmctld api
 #########################################################################
 # Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -20,47 +20,27 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm cimport slurm
-from pyslurm.core.common cimport cstr
-from pyslurm.slurm cimport (
-    ListIterator,
-    List,
-    slurm_list_iterator_create,
-    slurm_list_iterator_destroy,
-    slurm_list_iterator_reset,
-    slurm_list_count,
-    slurm_list_next,
-    slurm_list_destroy,
-    slurm_list_create,
-    slurm_list_pop,
-    slurm_list_append,
-    slurm_xfree_ptr,
-)
+from pyslurm.core.error import verify_rpc, RPCError
 
 
-cdef class SlurmListItem:
-    cdef void *data
+cdef class Config:
+
+    def __cinit__(self):
+        self.ptr = NULL
+
+    def __init__(self, job_id):
+        raise RuntimeError("Cannot instantiate class directly")
+
+    def __dealloc__(self):
+        slurm_free_ctl_conf(self.ptr)
+        self.ptr = NULL
 
     @staticmethod
-    cdef SlurmListItem from_ptr(void *item)
-
-
-cdef class SlurmList:
-    cdef:
-        List info
-        int cnt
-        ListIterator itr
-        int itr_cnt
-        owned
-    
-    @staticmethod
-    cdef SlurmList wrap(List, owned=*)
-
-    @staticmethod
-    cdef SlurmList create(slurm.ListDelF delf)
-
-    @staticmethod
-    cdef to_char_list(List *in_list, vals)
-
-    @staticmethod
-    cdef to_str_pylist(List in_list)
+    def load():
+        cdef Config conf = Config.__new__(Config)
+        verify_rpc(slurm_load_ctl_conf(0, &conf.ptr))
+        return conf
+        
+    @property
+    def cluster(self):
+        return cstr.to_unicode(self.ptr.cluster_name)

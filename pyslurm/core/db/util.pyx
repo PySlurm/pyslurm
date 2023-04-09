@@ -34,9 +34,7 @@ cdef class SlurmListItem:
 
 
 cdef class SlurmList:
-    """
-    Convenience Wrapper around slurms List type
-    """
+    """Convenience Wrapper around slurms List type"""
     def __cinit__(self):
         self.info = NULL
         self.itr = NULL
@@ -122,8 +120,9 @@ cdef class SlurmList:
             in_list[0] = slurm_list_create(slurm_xfree_ptr)
             for val in vals:
                 if val:
-                    cstr.fmalloc(&entry, val)
-                    slurm.slurm_list_append(in_list[0], entry)
+                    entry = NULL
+                    cstr.fmalloc(&entry, str(val))
+                    slurm_list_append(in_list[0], entry)
 
     def is_null(self):
         if not self.info:

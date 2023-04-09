@@ -23,6 +23,7 @@
 from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 from pyslurm.core.error import RPCError
 from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
+from pyslurm.core import slurmctld
 from pyslurm.core.common.uint import *
 from pyslurm.core.common.ctime import (
     date_to_timestamp,
@@ -31,6 +32,8 @@ from pyslurm.core.common.ctime import (
 )
 from pyslurm.core.common import (
     gid_to_name,
+    group_to_gid,
+    user_to_uid,
     uid_to_name,
     nodelist_to_range_str,
     instance_to_dict,
@@ -62,71 +65,162 @@ cdef class JobConditions:
         self.ptr.db_flags = slurm.SLURMDB_JOB_FLAG_NOTSET
         self.ptr.flags |= slurm.JOBCOND_FLAG_NO_TRUNC
 
-    def _create_job_cond(self):
+    def _parse_qos(self):
+        if not self.qualities_of_service:
+            return None
+
+        qos_id_list = []
+        qos = QualitiesOfService.load()
+        for q in self.qualities_of_service:
+            if isinstance(q, int):
+                qos_id_list.append(q)
+            elif q in qos:
+                qos_id_list.append(str(qos[q].id))
+            else:
+                raise ValueError(f"QoS {q} does not exist")
+
+        return qos_id_list
+
+    def _parse_groups(self):
+        if not self.groups:
+            return None
+
+        gid_list = []
+        for group in self.groups:
+            if isinstance(group, int):
+                gid_list.append(group)
+            else:
+                gid_list.append(group_to_gid(group))
+
+        return gid_list
+
+    def _parse_users(self):
+        if not self.users:
+            return None
+
+        uid_list = []
+        for user in self.users:
+            if isinstance(user, int):
+                uid_list.append(user)
+            else:
+                uid_list.append(user_to_uid(user))
+
+        return uid_list
+
+    def _parse_clusters(self):
+        if not self.clusters:
+            # Get the local cluster name
+            # This is a requirement for some other parameters to function
+            # correctly, like self.nodelist
+            slurm_conf = slurmctld.Config.load()
+            return [slurm_conf.cluster]
+        elif self.clusters == "all":
+            return None
+        else:
+            return self.clusters
+
+    def _parse_state(self):
+        # TODO: implement
+        return None
+            
+    def _create(self):
         self._alloc()
-        cdef slurmdb_job_cond_t *ptr = self.ptr
+        cdef:
+            slurmdb_job_cond_t *ptr = self.ptr
+            slurm_selected_step_t *selected_step
 
         ptr.usage_start = date_to_timestamp(self.start_time)  
         ptr.usage_end = date_to_timestamp(self.end_time)  
         slurmdb_job_cond_def_start_end(ptr)
-
-        ptr.cpus_min = u32(self.min_cpus)
-        ptr.cpus_max = u32(self.max_cpus)
-        ptr.nodes_min = u32(self.min_nodes)
-        ptr.nodes_max = u32(self.max_nodes)
-#        ptr.timelimit_min = 
-#        ptr.timelimit_max = 
-
+        ptr.cpus_min = u32(self.cpus, on_noval=0)
+        ptr.cpus_max = u32(self.max_cpus, on_noval=0)
+        ptr.nodes_min = u32(self.nodes, on_noval=0)
+        ptr.nodes_max = u32(self.max_nodes, on_noval=0)
+        ptr.timelimit_min = u32(timestr_to_mins(self.timelimit), on_noval=0)
+        ptr.timelimit_max = u32(timestr_to_mins(self.max_timelimit),
+                                on_noval=0)
         SlurmList.to_char_list(&ptr.acct_list, self.accounts)
         SlurmList.to_char_list(&ptr.associd_list, self.association_ids)
-        SlurmList.to_char_list(&ptr.cluster_list, self.clusters)
+        SlurmList.to_char_list(&ptr.cluster_list, self._parse_clusters())
         SlurmList.to_char_list(&ptr.constraint_list, self.constraints)
         SlurmList.to_char_list(&ptr.jobname_list, self.names)
-        SlurmList.to_char_list(&ptr.used_nodes,
-                               nodelist_to_range_str(self.nodelist))
-
-        # TODO: Need to convert user/group names to their ids...
-        SlurmList.to_char_list(&ptr.groupid_list, self.groups)
-        SlurmList.to_char_list(&ptr.userid_list, self.users)
-
+        SlurmList.to_char_list(&ptr.groupid_list, self._parse_groups())
+        SlurmList.to_char_list(&ptr.userid_list, self._parse_users())
         SlurmList.to_char_list(&ptr.wckey_list, self.wckeys)
         SlurmList.to_char_list(&ptr.partition_list, self.partitions)
+        SlurmList.to_char_list(&ptr.qos_list, self._parse_qos())
+        SlurmList.to_char_list(&ptr.state_list, self._parse_state())
 
-        # TODO: Need to convert qos names to its id...        
-        SlurmList.to_char_list(&ptr.qos_list, self.qos)
+        if self.nodelist:
+            cstr.fmalloc(&ptr.used_nodes,
+                         nodelist_to_range_str(self.nodelist))
+            
+        if self.ids:
+            # These are only allowed by the slurmdbd when specific jobs are
+            # requested.
+            if self.with_script:
+                ptr.flags |= slurm.JOBCOND_FLAG_SCRIPT
+            elif self.with_env:
+                # TODO: implement a new "envrironment" attribute in the job
+                # class
+                ptr.flags |= slurm.JOBCOND_FLAG_ENV
+
+            ptr.step_list = slurm_list_create(slurm_destroy_selected_step)
+            already_added = []
+            for i in self.ids:
+                job_id = u32(i)
+
+                selected_step = NULL
+                selected_step = <slurm_selected_step_t*>try_xmalloc(
+                        sizeof(slurm_selected_step_t))
+                if not selected_step:
+                    raise MemoryError("xmalloc failed for slurm_selected_step_t")
+
+                selected_step.array_task_id = slurm.NO_VAL
+                selected_step.het_job_offset = slurm.NO_VAL
+                selected_step.step_id.step_id = slurm.NO_VAL
+                selected_step.step_id.job_id = job_id
+
+                if not job_id in already_added:
+                    slurm_list_append(ptr.step_list, selected_step)
 
 
 cdef class Jobs(dict):
 
-    def __dealloc__(self):
-        self.db_conn.close()
-
     def __init__(self, *args, **kwargs):
+        # TODO: ability to initialize with existing job objects
+        pass
+
+    @staticmethod
+    def load(*args, **kwargs):
         cdef:
+            Jobs jobs = Jobs()
             Job job
             JobStep step
-            JobConditions job_cond
+            JobConditions cond
             SlurmListItem job_ptr
             SlurmListItem step_ptr
             SlurmList step_list
+            QualitiesOfService qos_data
             int cpu_tres_rec_count = 0
             int step_cpu_tres_rec_count = 0
 
         # Allow the user to both specify search conditions via a JobConditions
         # instance or **kwargs.
         if args and isinstance(args[0], JobConditions):
-            job_cond = <JobConditions>args[0]
+            cond = <JobConditions>args[0]
         else:
-            job_cond = JobConditions(**kwargs)
+            cond = JobConditions(**kwargs)
 
-        job_cond._create_job_cond()
-        # TODO: Have a single, global DB connection in pyslurm internally?
-        self.db_conn = Connection()
-        self.info = SlurmList.wrap(slurmdb_jobs_get(self.db_conn.ptr,
-                                                    job_cond.ptr))
-
-        if self.info.is_null():
+        cond._create()
+        jobs.db_conn = Connection()
+        jobs.info = SlurmList.wrap(slurmdb_jobs_get(jobs.db_conn.ptr,
+                                                    cond.ptr))
+        if jobs.info.is_null():
             raise RPCError(msg="Failed to get Jobs from slurmdbd")
+
+        qos_data = QualitiesOfService.load(name_is_key=False,
+                                           db_connection=jobs.db_conn)
 
         # tres_alloc_str = cstr.to_unicode()
         # cpu_tres_rec_count 
@@ -137,9 +231,10 @@ cdef class Jobs(dict):
         # convert them to its type name for the user in advance.
 
         # TODO: For multi-cluster support, remove duplicate federation jobs
-        for job_ptr in SlurmList.iter_and_pop(self.info):
+        for job_ptr in SlurmList.iter_and_pop(jobs.info):
             job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
-            self[job.id] = job
+            job.qos_data = qos_data
+            jobs[job.id] = job
 
             step_list = SlurmList.wrap(job.ptr.steps, owned=False) 
             for step_ptr in SlurmList.iter_and_pop(step_list):
@@ -148,18 +243,28 @@ cdef class Jobs(dict):
 
             job._sum_stats_from_steps()
 
-        
+        return jobs
+
+
 cdef class Job:
 
     def __cinit__(self):
         self.ptr = NULL
 
     def __init__(self, job_id):
-        pass
+        self._alloc()
+        self.ptr.jobid = int(job_id)
 
     def __dealloc__(self):
         slurmdb_destroy_job_rec(self.ptr)
         self.ptr = NULL
+
+    def _alloc(self):
+        if not self.ptr:
+            self.ptr = <slurmdb_job_rec_t*>try_xmalloc(
+                    sizeof(slurmdb_job_rec_t))
+            if not self.ptr:
+                raise MemoryError("xmalloc failed for slurmdb_job_rec_t")
 
     @staticmethod
     cdef Job from_ptr(slurmdb_job_rec_t *in_ptr):
@@ -390,11 +495,11 @@ cdef class Job:
 
     @property
     def qos(self):
-        # Need to convert the raw uint32_t qosid to a name, by calling
-        # slurmdb_qos_get. To avoid doing this repeatedly, we'll probably need
-        # to also get the qos list when calling slurmdb_jobs_get and store it
-        # in each job instance.
-        return None
+        _qos = self.qos_data.get(self.ptr.qosid, None)
+        if _qos:
+            return _qos.name
+        else:
+            return None
 
     @property
     def cpus(self):
@@ -425,8 +530,6 @@ cdef class Job:
     @property
     def script(self):
         return cstr.to_unicode(self.ptr.script)
-
-    # uint32_t show_full
 
     @property
     def start_time(self):
