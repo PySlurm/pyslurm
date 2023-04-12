@@ -272,11 +272,11 @@ ctypedef struct config_key_pair_t:
 #
 
 
-def get_controllers() -> tuple:
+def get_controllers():
     """Get information about slurm controllers.
 
     Returns:
-        Name of primary controller, Name of backup controllers
+        (tuple): Name of primary controller, Name of backup controllers
     """
     cdef:
         slurm.slurm_conf_t *slurm_ctl_conf_ptr = NULL
@@ -303,14 +303,14 @@ def get_controllers() -> tuple:
     return control_machs
 
 
-def is_controller(Host=None) -> str:
+def is_controller(Host=None):
     """Return slurm controller status for host.
 
     Args:
         Host (str): Name of host to check
 
     Returns:
-        None, "primary" or "backup"
+        (str): None, "primary" or "backup"
     """
     control_machs = get_controllers()
     if not Host:
@@ -325,11 +325,11 @@ def is_controller(Host=None) -> str:
         return 'backup'
 
 
-def slurm_api_version() -> tuple:
+def slurm_api_version():
     """Return the slurm API version number.
 
     Returns:
-        A tuple of version_major, version_minor, version_micro
+        (tuple): A tuple of version_major, version_minor, version_micro
     """
     cdef long version = slurm.SLURM_VERSION_NUMBER
 
@@ -338,11 +338,11 @@ def slurm_api_version() -> tuple:
             SLURM_VERSION_MICRO(version))
 
 
-def slurm_load_slurmd_status() -> str:
+def slurm_load_slurmd_status():
     """Issue RPC to get and load the status of Slurmd daemon.
 
     Returns:
-        Slurmd information
+        (str): Slurmd information
     """
     cdef:
         dict Status = {}, Status_dict = {}
@@ -397,11 +397,11 @@ def slurm_fini():
 # Slurm Config Class
 #
 
-def get_private_data_list(data) -> list:
+def get_private_data_list(data):
     """Retrieve the enciphered Private Data configuration.
 
     Returns:
-        Private data
+        (list): Private data
     """
 
     result = []
@@ -436,30 +436,30 @@ cdef class config:
     def __dealloc__(self):
         self.__free()
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Get the time (epoch seconds) the retrieved data was updated.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastUpdate
 
-    def ids(self) -> dict:
+    def ids(self):
         """Return the config IDs from retrieved data.
 
         Returns:
-            Dictionary of config key IDs
+            (dict): Dictionary of config key IDs
         """
         return self.__ConfigDict.keys()
 
-    def find_id(self, char *keyID='') -> dict:
+    def find_id(self, char *keyID=''):
         """Retrieve config ID data.
 
         Args:
             keyID (str): Config key string to search
 
         Returns:
-            Dictionary of values for given config key
+            (dict): Dictionary of values for given config key
         """
         return self.__ConfigDict.get(keyID, {})
 
@@ -494,11 +494,11 @@ cdef class config:
         self.__Config_ptr = slurm_ctl_conf_ptr
         return errCode
 
-    def key_pairs(self) -> dict:
+    def key_pairs(self):
         """Return a dict of the slurm control data as key pairs.
 
         Returns:
-            Dictionary of slurm key-pair values
+            (dict): Dictionary of slurm key-pair values
         """
         cdef:
             void *ret_list = NULL
@@ -533,11 +533,11 @@ cdef class config:
 
         return keyDict
 
-    def get(self) -> dict:
+    def get(self):
         """Return the slurm control configuration information.
 
         Returns:
-            Configuration data
+            (dict): Configuration data
         """
         self.__load()
         self.__get()
@@ -831,19 +831,19 @@ cdef class partition:
     def __dealloc__(self):
         pass
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Return time (epoch seconds) the partition data was updated.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastUpdate
 
-    def ids(self) -> dict:
+    def ids(self):
         """Return the partition IDs from retrieved data.
 
         Returns:
-            Dictionary of partition IDs
+            (dict): Dictionary of partition IDs
         """
         cdef:
             int rc
@@ -867,18 +867,18 @@ cdef class partition:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def find_id(self, partID) -> dict:
+    def find_id(self, partID):
         """Get partition information for a given partition.
 
         Args:
             partID (str): Partition key string to search
 
         Returns:
-            Dictionary of values for given partition
+            (dict): Dictionary of values for given partition
         """
         return self.get().get(partID)
 
-    def find(self, name='', val='') -> list:
+    def find(self, name='', val=''):
         """Search for a property and associated value in the retrieved partition data.
 
         Args:
@@ -886,7 +886,7 @@ cdef class partition:
           val (str): value string to match
 
         Returns:
-          List of IDs that match
+          (list): List of IDs that match
         """
         cdef:
             list retList = []
@@ -924,14 +924,15 @@ cdef class partition:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def delete(self, PartID) -> int:
+    def delete(self, PartID):
         """Delete a give slurm partition.
 
         Args:
             PartID (str): Name of slurm partition
 
         Returns:
-            0 for success else set the slurm error code as appropriately.
+            (int): 0 for success else set the slurm error code as
+                appropriately.
         """
         cdef:
             slurm.delete_part_msg_t part_msg
@@ -949,11 +950,11 @@ cdef class partition:
 
         return errCode
 
-    def get(self) -> dict:
+    def get(self):
         """Get all slurm partition information
 
         Returns:
-            Dictionary of dictionaries whose key is the partition name.
+            (dict): Dictionary of dictionaries whose key is the partition name.
         """
         cdef:
             int rc
@@ -1127,7 +1128,7 @@ cdef class partition:
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
 
-    def update(self, dict Partition_dict) -> int:
+    def update(self, dict Partition_dict):
         """Update a slurm partition.
 
         Args:
@@ -1135,13 +1136,13 @@ cdef class partition:
                 one is created by create_partition_dict
 
         Returns:
-          0 for success, -1 for error, and the slurm error code is set
+          (int): 0 for success, -1 for error, and the slurm error code is set
               appropriately.
         """
         cdef int errCode = slurm_update_partition(Partition_dict)
         return errCode
 
-    def create(self, dict Partition_dict) -> int:
+    def create(self, dict Partition_dict):
         """Create a slurm partition.
 
         Args:
@@ -1149,19 +1150,19 @@ cdef class partition:
                 one can be created by create_partition_dict
 
         Returns:
-            0 for success or -1 for error, and the slurm error code is set
-                appropriately.
+            (int): 0 for success or -1 for error, and the slurm error code is
+                set appropriately.
         """
         cdef int errCode = slurm_create_partition(Partition_dict)
         return errCode
 
 
-def create_partition_dict() -> dict:
+def create_partition_dict():
     """Returns a dictionary that can be populated by the user
     and used for the update_partition and create_partition calls.
 
     Returns:
-      Empty reservation dictionary
+      (dict): Empty reservation dictionary
     """
     return {
         'Alternate': None,
@@ -1182,7 +1183,7 @@ def create_partition_dict() -> dict:
     }
 
 
-def slurm_create_partition(dict partition_dict) -> int:
+def slurm_create_partition(dict partition_dict):
     """Create a slurm partition.
 
     Args:
@@ -1190,7 +1191,7 @@ def slurm_create_partition(dict partition_dict) -> int:
             can be created by create_partition_dict
 
     Returns:
-        0 for success or -1 for error, and the slurm error code is set
+        (int): 0 for success or -1 for error, and the slurm error code is set
             appropriately.
     """
     cdef:
@@ -1215,7 +1216,7 @@ def slurm_create_partition(dict partition_dict) -> int:
     return errCode
 
 
-def slurm_update_partition(dict partition_dict) -> int:
+def slurm_update_partition(dict partition_dict):
     """Update a slurm partition.
 
     Args:
@@ -1223,7 +1224,7 @@ def slurm_update_partition(dict partition_dict) -> int:
             is created by create_partition_dict
 
     Returns:
-      0 for success, -1 for error, and the slurm error code is set
+      (int): 0 for success, -1 for error, and the slurm error code is set
           appropriately.
     """
     cdef:
@@ -1282,14 +1283,14 @@ def slurm_update_partition(dict partition_dict) -> int:
     return errCode
 
 
-def slurm_delete_partition(PartID) -> int:
+def slurm_delete_partition(PartID):
     """Delete a slurm partition.
 
     Args:
         PartID (str): Name of slurm partition
 
     Returns:
-        0 for success else set the slurm error code as appropriately.
+        (int): 0 for success else set the slurm error code as appropriately.
     """
     cdef:
         slurm.delete_part_msg_t part_msg
@@ -1761,27 +1762,27 @@ cdef class job:
     def __dealloc__(self):
         pass
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Get the time (epoch seconds) the job data was updated.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastUpdate
 
-    def lastBackfill(self) -> int:
+    def lastBackfill(self):
         """Get the time (epoch seconds) of last backfilling run.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastBackfill
 
-    def ids(self) -> dict:
+    def ids(self):
         """Return the job IDs from retrieved data.
 
         Returns:
-            Dictionary of job IDs
+            (dict): Dictionary of job IDs
         """
         cdef:
             int rc
@@ -1802,7 +1803,7 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def find(self, name='', val='') -> list:
+    def find(self, name='', val=''):
         """Search for a property and associated value in the retrieved job data.
 
         Args:
@@ -1810,7 +1811,7 @@ cdef class job:
             val (str): value string to match
 
         Returns:
-            List of IDs that match
+            (list): List of IDs that match
         """
         cdef:
             list retList = []
@@ -1857,7 +1858,7 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def find_id(self, jobid) -> list:
+    def find_id(self, jobid):
         """Retrieve job ID data.
         
         This method accepts both string and integer formats of the jobid.
@@ -1869,12 +1870,12 @@ cdef class job:
             jobid (str): Job id key string to search
 
         Returns:
-            List of dictionary of values for given job id
+            (list): List of dictionary of values for given job id
         """
         self._load_single_job(jobid)
         return list(self.get_job_ptr().values())
 
-    def find_user(self, user) -> dict:
+    def find_user(self, user):
         """Retrieve a user's job data.
         
         This method calls slurm_load_job_user to get all job_table records
@@ -1884,7 +1885,7 @@ cdef class job:
             user (str): User string to search
 
         Returns:
-            Dictionary of values for all user's jobs
+            (dict): Dictionary of values for all user's jobs
         """
         cdef:
             int apiError
@@ -1907,15 +1908,15 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def get(self) -> dict:
+    def get(self):
         """Get all slurm jobs information.
 
         This method calls slurm_load_jobs to get job_table records for all
         jobs
 
         Returns:
-            Data where key is the job name, each entry contains a dictionary
-                of job attributes 
+            (dict): Data where key is the job name, each entry contains a
+                dictionary of job attributes 
         """
         cdef:
             int apiError
@@ -2321,14 +2322,14 @@ cdef class job:
 
         return cpus_list
 
-    def __unrange(self, bit_str) -> list:
+    def __unrange(self, bit_str):
         """converts a string describing a bitmap (from slurm_job_cpus_allocated_str_on_node()) to a list.
 
         Args:
             bit_str (str): string describing a bitmap (e.g. "0-30,45,50-60")
 
         Returns:
-            List referring to bitmap (empty if not succesful)
+            (list): List referring to bitmap (empty if not succesful)
         """
         r_list = []
 
@@ -2372,7 +2373,7 @@ cdef class job:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def slurm_job_batch_script(self, jobid) -> str:
+    def slurm_job_batch_script(self, jobid):
         """Return the contents of the batch-script for a Job.
         
         The string returned also includes all the "\\n" characters (new-line).
@@ -2382,7 +2383,7 @@ cdef class job:
                 be retrieved.
 
         Returns:
-            The content of the batch script.
+            (str): The content of the batch script.
         """
         # This reimplements the slurm_job_batch_script API call. Otherwise we
         # would have to parse the FILE* ptr we get from it back into a
@@ -2852,7 +2853,7 @@ cdef class job:
                 req.wait_all_nodes = <uint16_t>slurm.NO_VAL
         return rc
 
-    def submit_batch_job(self, job_opts) -> int:
+    def submit_batch_job(self, job_opts):
         """Submit batch job.
 
         Make sure options match sbatch command line opts and not struct member
@@ -2862,7 +2863,7 @@ cdef class job:
             job_opts (dict): Job information. 
 
         Returns:
-            The job id of the submitted job.
+            (int): The job id of the submitted job.
         """
         cdef:
             slurm.job_desc_msg_t desc
@@ -3021,7 +3022,7 @@ cdef class job:
         #return "Submitted batch job %s" % job_id
         return job_id
 
-    def wait_finished(self, jobid) -> int:
+    def wait_finished(self, jobid):
         """Block until the job given by the jobid finishes.
 
         This works for single jobs, as well as job arrays.
@@ -3032,7 +3033,7 @@ cdef class job:
                 jobid (the same as given by squeue)
 
         Returns:
-            The exit code of the slurm job.
+            (int): The exit code of the slurm job.
         """
         exit_status = -9999
         complete = False
@@ -3162,25 +3163,25 @@ class SlurmError(Exception):
 #
 
 
-def slurm_get_errno() -> int:
+def slurm_get_errno():
     """Return the slurm error as set by a slurm API call.
 
     Returns:
-        Current slurm error number
+        (int): Current slurm error number
     """
     cdef int errNum = slurm.slurm_get_errno()
 
     return errNum
 
 
-def slurm_strerror(int Errno=0) -> str:
+def slurm_strerror(int Errno=0):
     """Return slurm error message represented by a given slurm error number.
 
     Args:
         Errno (int): slurm error number.
 
     Returns:
-        slurm error string
+        (str): slurm error string
     """
     cdef char* errMsg = slurm.slurm_strerror(Errno)
 
@@ -3233,19 +3234,19 @@ cdef class node:
     def __dealloc__(self):
         pass
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Return last time (epoch seconds) the node data was updated.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastUpdate
 
-    def ids(self) -> dict:
+    def ids(self):
         """Return the node IDs from retrieved data.
 
         Returns:
-            Dictionary of node IDs
+            (dict): Dictionary of node IDs
         """
         cdef:
             int rc
@@ -3266,22 +3267,22 @@ cdef class node:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def find_id(self, nodeID) -> dict:
+    def find_id(self, nodeID):
         """Get node information for a given node.
 
         Args:
             nodeID (str): Node key string to search
 
         Returns:
-            Dictionary of values for given node
+            (dict): Dictionary of values for given node
         """
         return list(self.get_node(nodeID).values())[0]
 
-    def get(self) -> dict:
+    def get(self):
         """Get all slurm node information.
 
         Returns:
-            Dictionary of dictionaries whose key is the node name.
+            (dict): Dictionary of dictionaries whose key is the node name.
         """
         return self.get_node(None)
 
@@ -3289,14 +3290,14 @@ cdef class node:
         if gres_str:
             return re.split(r',(?![^(]*\))', gres_str)
 
-    def get_node(self, nodeID) -> dict:
+    def get_node(self, nodeID):
         """Get single slurm node information.
 
         Args:
             nodeID (str): Node key string to search. Default NULL.
 
         Returns:
-            Dictionary of node info data.
+            (dict): Dictionary of node info data.
         """
         cdef:
             int rc
@@ -3519,7 +3520,7 @@ cdef class node:
         return self._NodeDict
 
 
-    def update(self, dict node_dict) -> int:
+    def update(self, dict node_dict):
         """Update slurm node information.
 
         Args:
@@ -3527,8 +3528,8 @@ cdef class node:
                 created by create_node_dict
             
         Returns:
-            0 for success or -1 for error, and the slurm error code is set
-                appropriately.
+            (int): 0 for success or -1 for error, and the slurm error code is
+                set appropriately.
         """
         return slurm_update_node(node_dict)
 
@@ -3554,7 +3555,7 @@ cdef class node:
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
 
-def slurm_update_node(dict node_dict) -> int:
+def slurm_update_node(dict node_dict):
     """Update slurm node information.
 
     Args:
@@ -3562,7 +3563,7 @@ def slurm_update_node(dict node_dict) -> int:
             by create_node_dict
 
     Returns:
-        0 for success or -1 for error, and the slurm error code is set
+        (int): 0 for success or -1 for error, and the slurm error code is set
             appropriately.
     """
     cdef:
@@ -3608,14 +3609,14 @@ def slurm_update_node(dict node_dict) -> int:
     return errCode
 
 
-def create_node_dict() -> dict:
+def create_node_dict():
     """Return a an update_node dictionary
     
     This dictionary can be populated by the user and used for the update_node
     call.
 
     Returns:
-        Empty node dictionary
+        (dict): Empty node dictionary
     """
     return {
         'node_names': None,
@@ -3657,11 +3658,11 @@ cdef class jobstep:
         self._ShowFlags = 0
         self._JobStepDict = {}
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Get the time (epoch seconds) the jobstep data was updated.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastUpdate
 
@@ -3689,11 +3690,11 @@ cdef class jobstep:
 
         return retDict
 
-    def get(self) -> dict:
+    def get(self):
         """Get slurm jobstep information.
 
         Returns:
-            Data whose key is the jobstep ID.
+            (dict): Data whose key is the jobstep ID.
         """
         self.__get()
 
@@ -3821,7 +3822,7 @@ cdef class jobstep:
 
         self._JobStepDict = Steps
 
-    def layout(self, uint32_t JobID=0, uint32_t StepID=0) -> list:
+    def layout(self, uint32_t JobID=0, uint32_t StepID=0):
         """Get the slurm job step layout from a given job and step id.
 
         Args:
@@ -3829,7 +3830,7 @@ cdef class jobstep:
             StepID (int): The id of the job step.
 
         Returns:
-            List of job step layout.
+            (list): List of job step layout.
         """
         cdef:
             slurm.slurm_step_id_t step_id
@@ -3912,14 +3913,14 @@ cdef class hostlist:
     def count(self):
         return slurm.slurm_hostlist_count(self.hl)
 
-    def get_list(self) -> list:
+    def get_list(self):
         """Get the list of hostnames composing the hostlist.
 
         For example with a hostlist created with "tux[1-3]" -> [ 'tux1',
         tux2', 'tux3' ].
 
         Returns:
-            The list of hostnames in case of success or None on error.
+            (list): The list of hostnames in case of success or None on error.
         """
         cdef:
             slurm.hostlist_t hlist = NULL
@@ -4004,15 +4005,15 @@ cdef class hostlist:
 
 cdef class trigger:
 
-    def set(self, dict trigger_dict) -> int:
+    def set(self, dict trigger_dict):
         """Set or create a slurm trigger.
 
         Args:
             trigger_dict (dict): A populated dictionary of trigger information
 
         Returns:
-            0 for success or -1 for error, and the slurm error code is set
-                appropriately.
+            (int): 0 for success or -1 for error, and the slurm error code is
+                set appropriately.
         """
         cdef:
             slurm.trigger_info_t trigger_set
@@ -4083,11 +4084,11 @@ cdef class trigger:
 
         return 0
 
-    def get(self) -> dict:
+    def get(self):
         """Get the information on slurm triggers.
 
         Returns:
-            Dictionary, where keys are the trigger IDs
+            (dict): Dictionary, where keys are the trigger IDs
         """
         cdef:
             slurm.trigger_info_msg_t *trigger_get = NULL
@@ -4114,7 +4115,7 @@ cdef class trigger:
 
         return Triggers
 
-    def clear(self, TriggerID=0, UserID=slurm.NO_VAL, ID=0) -> int:
+    def clear(self, TriggerID=0, UserID=slurm.NO_VAL, ID=0):
         """Clear or remove a slurm trigger.
 
         Args:
@@ -4123,7 +4124,7 @@ cdef class trigger:
             ID (str): Job Identifier
 
         Returns:
-            0 for success or a slurm error code
+            (int): 0 for success or a slurm error code
         """
         cdef:
             slurm.trigger_info_t trigger_clear
@@ -4171,34 +4172,34 @@ cdef class reservation:
     def __dealloc__(self):
         self.__free()
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Get the time (epoch seconds) the reservation data was updated.
 
         Returns:
-            epoch seconds
+            (int): epoch seconds
         """
         return self._lastUpdate
 
-    def ids(self) -> dict:
+    def ids(self):
         """Return a list of reservation IDs from retrieved data.
 
         Returns:
-            Dictionary of reservation IDs
+            (dict): Dictionary of reservation IDs
         """
         return self._ResDict.keys()
 
-    def find_id(self, resID) -> dict:
+    def find_id(self, resID):
         """Retrieve reservation ID data.
 
         Args:
             resID (str): Reservation key string to search
 
         Returns:
-            Dictionary of values for given reservation key
+            (dict): Dictionary of values for given reservation key
         """
         return self._ResDict.get(resID, {})
 
-    def find(self, name='', val='') -> list:
+    def find(self, name='', val=''):
         """Search for property and associated value in reservation data.
 
         Args:
@@ -4206,7 +4207,7 @@ cdef class reservation:
             val (str): value string to match
 
         Returns:
-            List of IDs that match
+            (list): List of IDs that match
         """
 
         # [ key for key, value in self._ResDict.items() if self._ResDict[key]['state'] == 'error']
@@ -4256,11 +4257,11 @@ cdef class reservation:
         if self._Res_ptr is not NULL:
             slurm.slurm_free_reservation_info_msg(self._Res_ptr)
 
-    def get(self) -> dict:
+    def get(self):
         """Get slurm reservation information.
 
         Returns:
-            Data whose key is the Reservation ID
+            (dict): Data whose key is the Reservation ID
         """
         self.load()
         self.__get()
@@ -4300,36 +4301,36 @@ cdef class reservation:
 
         self._ResDict = Reservations
 
-    def create(self, dict reservation_dict={}) -> int:
+    def create(self, dict reservation_dict={}):
         """Create slurm reservation.
 
         Args:
             reservation_dict (dict): Reservation information
 
         Returns:
-            0 for success or a slurm error code
+            (int): 0 for success or a slurm error code
         """
         return slurm_create_reservation(reservation_dict)
 
-    def delete(self, ResID) -> int:
+    def delete(self, ResID):
         """Delete slurm reservation.
 
         Args:
             ResID (int): ID of the reservation to delete
 
         Returns:
-            0 for success or a slurm error code
+            (int): 0 for success or a slurm error code
         """
         return slurm_delete_reservation(ResID)
 
-    def update(self, dict reservation_dict={}) -> int:
+    def update(self, dict reservation_dict={}):
         """Update a slurm reservation attributes.
 
         Args:
             reservation_dict (dict): Reservation information
 
         Returns:
-            0 for success or -1 for error and slurm error code is set
+            (int): 0 for success or -1 for error and slurm error code is set
         """
         return slurm_update_reservation(reservation_dict)
 
@@ -4348,7 +4349,7 @@ cdef class reservation:
 #
 
 
-def slurm_create_reservation(dict reservation_dict={}) -> str:
+def slurm_create_reservation(dict reservation_dict={}):
     """Create a slurm reservation.
 
     Args:
@@ -4356,7 +4357,7 @@ def slurm_create_reservation(dict reservation_dict={}) -> str:
             one is created by create_reservation_dict
 
     Returns:
-        The name of the reservation created.
+        (str): The name of the reservation created.
     """
     cdef:
         slurm.resv_desc_msg_t resv_msg
@@ -4449,7 +4450,7 @@ def slurm_create_reservation(dict reservation_dict={}) -> str:
 
     return resID
 
-def slurm_update_reservation(dict reservation_dict={}) -> int:
+def slurm_update_reservation(dict reservation_dict={}):
     """Update a slurm reservation.
 
     Args:
@@ -4457,7 +4458,7 @@ def slurm_update_reservation(dict reservation_dict={}) -> int:
             one is created by create_reservation_dict
 
     Returns:
-        0 for success or -1 for error, and the slurm error code is set
+        (int): 0 for success or -1 for error, and the slurm error code is set
             appropriately.
     """
     cdef:
@@ -4545,14 +4546,14 @@ def slurm_update_reservation(dict reservation_dict={}) -> int:
     return errCode
 
 
-def slurm_delete_reservation(ResID) -> int:
+def slurm_delete_reservation(ResID):
     """Delete a slurm reservation.
 
     Args:
         ResID (str): Reservation Identifier
 
     Returns:
-        0 for success or -1 for error, and the slurm error code is set
+        (int): 0 for success or -1 for error, and the slurm error code is set
             appropriately.
     """
     cdef slurm.reservation_name_msg_t resv_msg
@@ -4573,14 +4574,14 @@ def slurm_delete_reservation(ResID) -> int:
     return errCode
 
 
-def create_reservation_dict() -> dict:
+def create_reservation_dict():
     """Create and empty dict for use with create_reservation method.
     
     Returns a dictionary that can be populated by the user an used for
     the update_reservation and create_reservation calls.
 
     Returns:
-        Empty Reservation dictionary
+        (dict): Empty Reservation dictionary
     """
     return {
         'start_time': 0,
@@ -4616,11 +4617,11 @@ cdef class topology:
     def __dealloc__(self):
         self.__free()
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Get the time (epoch seconds) the retrieved data was updated.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastUpdate
 
@@ -4649,11 +4650,11 @@ cdef class topology:
 
         return errCode
 
-    def get(self) -> dict:
+    def get(self):
         """Get slurm topology information.
 
         Returns:
-            Dictionary whose key is the Topology ID
+            (dict): Dictionary whose key is the Topology ID
         """
         self.__load()
         self.__get()
@@ -4717,11 +4718,11 @@ cdef class statistics:
     def __dealloc__(self):
         pass
 
-    def get(self) -> dict:
+    def get(self):
         """Get slurm statistics information.
 
         Returns:
-            Slurm Controller statistics
+            (dict): Slurm Controller statistics
         """
         cdef:
             int errCode
@@ -4817,11 +4818,10 @@ cdef class statistics:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def reset(self) -> int:
-        """
-        Reset scheduling statistics
+    def reset(self):
+        """Reset scheduling statistics
 
-        This method required root privileges.
+        This method requires root privileges.
         """
         cdef:
             int apiError
@@ -5145,27 +5145,27 @@ cdef class front_end:
 
         return errCode
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Return last time (sepoch seconds) the node data was updated.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastUpdate
 
-    def ids(self) -> dict:
+    def ids(self):
         """Return the node IDs from retrieved data.
 
         Returns:
-            Dictionary of node IDs
+            (dict): Dictionary of node IDs
         """
         return list(self._FrontEndDict.keys())
 
-    def get(self) -> dict:
+    def get(self):
         """Get front end node information.
 
         Returns:
-            Dictionary whose key is the Topology ID
+            (dict): Dictionary whose key is the Topology ID
         """
         self.__load()
         self.__get()
@@ -5255,19 +5255,19 @@ cdef class qos:
         """
         return self._lastUpdate
 
-    def ids(self) -> dict:
+    def ids(self):
         """Return the QOS IDs from retrieved data.
 
         Returns:
-            Dictionary of QOS IDs
+            (dict): Dictionary of QOS IDs
         """
         return self._QOSDict.keys()
 
-    def get(self) -> dict:
+    def get(self):
         """Get slurm QOS information.
 
         Returns:
-            Dictionary whose key is the QOS ID
+            (dict): Dictionary whose key is the QOS ID
         """
         self.__load()
         self.__get()
@@ -5361,7 +5361,7 @@ cdef class slurmdb_jobs:
         slurm.slurmdb_connection_close(&self.db_conn)
 
     def get(self, jobids=[], userids=[], starttime=0, endtime=0, flags = None,
-            db_flags = None, clusters = []) -> dict:
+            db_flags = None, clusters = []):
         """Get Slurmdb information about some jobs.
         
         Input formats for start and end times:
@@ -5388,7 +5388,7 @@ cdef class slurmdb_jobs:
             clusters (list): List of clusters
 
         Returns:
-            Dictionary whose key is the JOBS ID
+            (dict): Dictionary whose key is the JOBS ID
         """
         cdef:
             int i = 0
@@ -5642,11 +5642,11 @@ cdef class slurmdb_reservations:
         else:
             raise MemoryError()
 
-    def get(self) -> dict:
+    def get(self):
         """Get slurm reservations information.
 
         Returns:
-            Dictionary whose keys are the reservations ids
+            (dict): Dictionary whose keys are the reservations ids
         """
         cdef:
             slurm.List reservation_list
@@ -5751,11 +5751,11 @@ cdef class slurmdb_clusters:
         else:
             raise MemoryError()
 
-    def get(self) -> dict:
+    def get(self):
         """Get slurm clusters information.
 
         Returns:
-            Dictionary whose keys are the clusters ids
+            (dict): Dictionary whose keys are the clusters ids
         """
         cdef:
             slurm.List clusters_list
@@ -5862,11 +5862,11 @@ cdef class slurmdb_events:
         else:
             raise MemoryError()
 
-    def get(self) -> dict:
+    def get(self):
         """Get slurm events information.
 
         Returns:
-            Dictionary whose keys are the events ids
+            (dict): Dictionary whose keys are the events ids
         """
         cdef:
             slurm.List event_list
@@ -5924,7 +5924,7 @@ cdef class slurmdb_reports:
         slurm.slurmdb_destroy_assoc_cond(self.assoc_cond)
 
     def report_cluster_account_by_user(self, starttime=None,
-                                       endtime=None) -> dict:
+                                       endtime=None):
         """sreport cluster AccountUtilizationByUser
 
         Args:
@@ -5932,7 +5932,7 @@ cdef class slurmdb_reports:
             endtime (Union[str, int]): Start time
 
         Returns:
-            sreport information.
+            (dict): sreport information.
         """
         cdef:
             slurm.List slurmdb_report_cluster_list = NULL
@@ -6022,11 +6022,11 @@ cdef class slurmdb_reports:
 #
 
 
-def get_last_slurm_error() -> int:
+def get_last_slurm_error():
     """Get and return the last error from a slurm API call.
 
     Returns:
-        Slurm error number and the associated error string
+        (int): Slurm error number and the associated error string
     """
     rc = slurm.slurm_get_errno()
 
@@ -6077,7 +6077,7 @@ def get_node_use(inx):
     return slurm.slurm_node_state_string(inx)
 
 
-def get_trigger_res_type(uint16_t inx) -> str:
+def get_trigger_res_type(uint16_t inx):
     """Returns a string that represents the slurm trigger res type.
 
     Args:
@@ -6091,7 +6091,7 @@ def get_trigger_res_type(uint16_t inx) -> str:
             * TRIGGER_RES_TYPE_OTHER      7
 
     Returns:
-        Trigger reservation state string
+        (str): Trigger reservation state string
     """
     return __get_trigger_res_type(inx)
 
@@ -6116,7 +6116,7 @@ cdef inline object __get_trigger_res_type(uint16_t ResType):
     return "%s" % rtype
 
 
-def get_trigger_type(uint32_t inx) -> str:
+def get_trigger_type(uint32_t inx):
     """Returns a string that represents the state of the slurm trigger.
 
     Args:
@@ -6143,7 +6143,7 @@ def get_trigger_type(uint32_t inx) -> str:
             * TRIGGER_TYPE_BURST_BUFFER       0x00100000
 
     Returns:
-        Trigger state string
+        (str): Trigger state string
     """
     return __get_trigger_type(inx)
 
@@ -6226,14 +6226,14 @@ cdef inline object __get_trigger_type(uint32_t TriggerType):
 #        pass
 
 
-def get_debug_flags(uint64_t inx) -> str:
+def get_debug_flags(uint64_t inx):
     """Returns a string that represents the slurm debug flags.
 
     Args:
         flags (int): Slurm debug flags
 
     Returns:
-        Debug flag string
+        (str): Debug flag string
     """
     return debug_flags2str(inx)
 
@@ -6390,14 +6390,14 @@ def get_node_state(uint32_t inx):
     return slurm.slurm_node_state_string(inx)
 
 
-def get_rm_partition_state(int inx) -> str:
+def get_rm_partition_state(int inx):
     """Returns a string that represents the partition state.
 
     Args:
         inx (int): Slurm partition state
 
     Returns:
-        Partition state string
+        (str): Partition state string
     """
     return __get_rm_partition_state(inx)
 
@@ -6439,7 +6439,7 @@ def get_preempt_mode(uint16_t inx):
     return slurm.slurm_preempt_mode_string(inx)
 
 
-def get_partition_state(uint16_t inx) -> str:
+def get_partition_state(uint16_t inx):
     """Returns a string that represents the state of the slurm partition.
 
     Args:
@@ -6450,7 +6450,7 @@ def get_partition_state(uint16_t inx) -> str:
             * PARTITION_INACTIVE  0x00
 
     Returns:
-        Partition state string
+        (str): Partition state string
     """
     state = ""
     if inx:
@@ -6526,7 +6526,7 @@ cdef inline object __get_partition_state(int inx, int extended=0):
     return "%s" % state
 
 
-def get_partition_mode(uint16_t flags=0, uint16_t max_share=0) -> str:
+def get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
     """Returns a string represents the state of the partition mode.
 
     Args:
@@ -6534,7 +6534,7 @@ def get_partition_mode(uint16_t flags=0, uint16_t max_share=0) -> str:
         max_share (int): Max share
 
     Returns:
-        Partition mode string
+        (dict): Partition mode dict
     """
     return __get_partition_mode(flags, max_share)
 
@@ -6586,7 +6586,7 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
     return mode
 
 
-def get_job_state(inx) -> str:
+def get_job_state(inx):
     """Return the state of the slurm job state.
 
     Args:
@@ -6606,7 +6606,7 @@ def get_job_state(inx) -> str:
             * JOB_END
 
     Returns:
-        Job state string
+        (str): Job state string
     """
     try:
         job_state = slurm.stringOrNone(slurm.slurm_job_state_string(inx), '')
@@ -6615,27 +6615,27 @@ def get_job_state(inx) -> str:
         pass
 
 
-def get_job_state_reason(inx) -> str:
+def get_job_state_reason(inx):
     """Returns a reason why the slurm job is in a provided state.
 
     Args:
         inx (int): Slurm job state reason
 
     Returns:
-        Reason string
+        (str): Reason string
     """
     job_reason = slurm.stringOrNone(slurm.slurm_job_reason_string(inx), '')
     return job_reason
 
 
-def epoch2date(epochSecs) -> str:
+def epoch2date(epochSecs):
     """Convert epoch secs to a python time string.
 
     Args:
         epochSecs (int): Seconds since epoch
 
     Returns:
-        Date str
+        (str): Date str
     """
     try:
         dateTime = p_time.gmtime(epochSecs)
@@ -6688,15 +6688,15 @@ cdef class licenses:
         """Free the memory allocated by load licenses method."""
         pass
 
-    def lastUpdate(self) -> int:
+    def lastUpdate(self):
         """Return last time (epoch seconds) license data was updated.
 
         Returns:
-            Epoch seconds
+            (int): Epoch seconds
         """
         return self._lastUpdate
 
-    def ids(self) -> dict:
+    def ids(self):
         """Return the current license names from retrieved license data.
         
         This method calls slurm_load_licenses to retrieve license information
@@ -6704,7 +6704,7 @@ cdef class licenses:
         license message buffer.
 
         Returns:
-            Dictionary of licenses
+            (dict): Dictionary of licenses
         """
         cdef:
             int rc
@@ -6728,7 +6728,7 @@ cdef class licenses:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    def get(self) -> dict:
+    def get(self):
         """Get full license information from the slurm controller.
 
         This method calls slurm_load_licenses to retrieve license information
@@ -6736,7 +6736,7 @@ cdef class licenses:
         license message buffer.
 
         Returns:
-            Dictionary whose key is the license name
+            (dict): Dictionary whose key is the license name
         """
         cdef:
             int rc
