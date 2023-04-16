@@ -133,3 +133,67 @@ cdef class JobStats:
             wrap.system_cpu_time = step.ptr.sys_cpu_sec
 
         return wrap
+
+    @staticmethod
+    def _sum_step_stats_for_job(Job job, JobSteps steps):
+        cdef:
+            JobStats job_stats = job.stats
+            JobStats step_stats = None
+
+        for step in steps.values():
+            step_stats = step.stats
+
+            job_stats.consumed_energy += step_stats.consumed_energy
+            job_stats.average_cpu_time += step_stats.average_cpu_time
+            job_stats.average_cpu_frequency += step_stats.average_cpu_frequency
+            job_stats.cpu_time += step_stats.cpu_time
+            job_stats.average_disk_read += step_stats.average_disk_read
+            job_stats.average_disk_write += step_stats.average_disk_write
+            job_stats.average_pages += step_stats.average_pages
+
+            if step_stats.max_disk_read >= job_stats.max_disk_read:
+                job_stats.max_disk_read = step_stats.max_disk_read
+                job_stats.max_disk_read_node = step_stats.max_disk_read_node
+                job_stats.max_disk_read_task = step_stats.max_disk_read_task
+
+            if step_stats.max_disk_write >= job_stats.max_disk_write:
+                job_stats.max_disk_write = step_stats.max_disk_write
+                job_stats.max_disk_write_node = step_stats.max_disk_write_node
+                job_stats.max_disk_write_task = step_stats.max_disk_write_task
+
+            if step_stats.max_pages >= job_stats.max_pages:
+                job_stats.max_pages = step_stats.max_pages
+                job_stats.max_pages_node = step_stats.max_pages_node
+                job_stats.max_pages_task = step_stats.max_pages_task
+
+            if step_stats.max_rss >= job_stats.max_rss:
+                job_stats.max_rss = step_stats.max_rss
+                job_stats.max_rss_node = step_stats.max_rss_node
+                job_stats.max_rss_task = step_stats.max_rss_task
+                job_stats.average_rss = job_stats.max_rss
+
+            if step_stats.max_vmsize >= job_stats.max_vmsize:
+                job_stats.max_vmsize = step_stats.max_vmsize
+                job_stats.max_vmsize_node = step_stats.max_vmsize_node
+                job_stats.max_vmsize_task = step_stats.max_vmsize_task
+                job_stats.average_vmsize = job_stats.max_vmsize
+
+            if step_stats.min_cpu_time >= job_stats.min_cpu_time:
+                job_stats.min_cpu_time = step_stats.min_cpu_time
+                job_stats.min_cpu_time_node = step_stats.min_cpu_time_node
+                job_stats.min_cpu_time_task = step_stats.min_cpu_time_task
+
+        if job.ptr.tot_cpu_sec != slurm.NO_VAL64:
+            job_stats.total_cpu_time = job.ptr.tot_cpu_sec
+
+        if job.ptr.user_cpu_sec != slurm.NO_VAL64:
+            job_stats.user_cpu_time = job.ptr.user_cpu_sec
+
+        if job.ptr.sys_cpu_sec != slurm.NO_VAL64:
+            job_stats.system_cpu_time = job.ptr.sys_cpu_sec
+
+        elapsed = job.elapsed_time if job.elapsed_time else 0
+        cpus = job.cpus if job.cpus else 0
+        job_stats.cpu_time = elapsed * cpus
+        job_stats.average_cpu_frequency /= len(steps)
+

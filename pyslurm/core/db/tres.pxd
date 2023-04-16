@@ -26,6 +26,7 @@ from pyslurm.core.common cimport cstr
 from libc.stdint cimport uint64_t
 from pyslurm.slurm cimport (
     slurmdb_tres_rec_t,
+    slurmdb_destroy_tres_rec,
     slurmdb_find_tres_count_in_string,
     try_xmalloc,
 )

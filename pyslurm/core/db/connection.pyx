@@ -24,24 +24,36 @@ from pyslurm.core.error import RPCError
 
 
 cdef class Connection:
-
     def __cinit__(self):
         self.ptr = NULL
-        self.conn_flags = 0
+        self.flags = 0
 
     def __init__(self):
-        self.open() 
+        raise RuntimeError("A new connection should be created through "
+                           "calling Connection.open()")
 
     def __dealloc__(self):
         self.close()
 
-    def open(self):
-        if not self.ptr:
-            self.ptr = <void*>slurmdb_connection_get(&self.conn_flags)
-            if not self.ptr:
-                raise RPCError(msg="Failed to open Connection to slurmdbd")
+    @staticmethod
+    def open():
+        """Open a new connection to the slurmdbd
+
+        Raises:
+            RPCError: When opening the connection fails
+
+        Returns:
+            (Connection): Connection to slurmdbd
+        """
+        cdef Connection conn = Connection.__new__(Connection)
+        conn.ptr = <void*>slurmdb_connection_get(&conn.flags)
+        if not conn.ptr:
+            raise RPCError(msg="Failed to open onnection to slurmdbd")
+
+        return conn
 
     def close(self):
+        """Close the current connection."""
         if self.is_open:
             slurmdb_connection_close(&self.ptr)
             self.ptr = NULL

@@ -38,6 +38,9 @@ cdef class JobStep:
     def __cinit__(self):
         self.ptr = NULL
 
+    def __init__(self):
+        raise RuntimeError("You can not instantiate this class directly")
+
     def __dealloc__(self):
         slurmdb_destroy_step_rec(self.ptr)
         self.ptr = NULL
@@ -179,7 +182,6 @@ cdef class JobStep:
 
     @property
     def state(self):
-        """str: State this Job step is in."""
         return cstr.to_unicode(slurm_job_state_string(self.ptr.state))
 
     @property
@@ -187,10 +189,9 @@ cdef class JobStep:
         return uid_to_name(self.ptr.requid)
 
     @property
-    def submit_line(self):
+    def submit_command(self):
         return cstr.to_unicode(self.ptr.submit_line)
 
     @property
     def suspended_time(self):
-        # seconds
         return _raw_time(self.ptr.elapsed)

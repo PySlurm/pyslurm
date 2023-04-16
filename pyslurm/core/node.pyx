@@ -365,7 +365,7 @@ cdef class Node:
         Implements the slurm_update_node RPC.
 
         Args:
-            node (JobStep):
+            node (pyslurm.Node):
                 Another Node object which contains all the changes that
                 should be applied to this instance.
             **kwargs:

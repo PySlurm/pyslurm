@@ -55,7 +55,7 @@ cdef class TrackableResources(dict):
 
         cdef uint64_t tmp
         tmp = slurmdb_find_tres_count_in_string(tres_str, typ)
-        if tmp == slurm.NO_VAL64:
+        if tmp == slurm.INFINITE64 or tmp == slurm.NO_VAL64:
             return 0
         else:
             return tmp
@@ -67,14 +67,22 @@ cdef class TrackableResource:
         self.ptr = NULL
 
     def __init__(self, tres_id):
-        self._alloc()
+        self._alloc_impl()
         self.ptr.id = tres_id
 
-    def _alloc(self):
+    def __dealloc__(self):
+        self._dealloc_impl()
+
+    def _alloc_impl(self):
         if not self.ptr:
-            self.ptr = <slurmdb_tres_rec_t*>try_xmalloc(sizeof(slurmdb_tres_rec_t))
+            self.ptr = <slurmdb_tres_rec_t*>try_xmalloc(
+                    sizeof(slurmdb_tres_rec_t))
             if not self.ptr:
                 raise MemoryError("xmalloc failed for slurmdb_tres_rec_t")
+
+    def _dealloc_impl(self):
+        slurmdb_destroy_tres_rec(self.ptr)
+        self.ptr = NULL
 
     @staticmethod
     cdef TrackableResource from_ptr(slurmdb_tres_rec_t *in_ptr):

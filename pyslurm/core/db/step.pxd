@@ -45,6 +45,50 @@ cdef class JobSteps(dict):
 
 
 cdef class JobStep:
+    """A Slurm Database Job-step.
+
+    Attributes:
+        num_nodes (int):
+            Amount of nodes this Step has allocated
+        cpus (int):
+            Amount of CPUs the Step has/had allocated
+        memory (int):
+            Amount of memory the Step requested
+        container (str):
+            Path to OCI Container bundle
+        elapsed_time (int):
+            Amount of seconds elapsed for the Step
+        end_time (int):
+            When the Step ended, as a unix timestamp
+        eligible_time (int):
+            When the Step became eligible to run, as a unix timestamp
+        start_time (int):
+            Time when the Step started, as a unix timestamp
+        exit_code (int):
+            Exit code of the step
+        ntasks (int):
+            Number of tasks the Step uses
+        cpu_frequency_min (str):
+            Minimum CPU-Frequency requested for the Step
+        cpu_frequency_max (str):
+            Maximum CPU-Frequency requested for the Step
+        cpu_frequency_governor (str):
+            CPU-Frequency Governor requested for the Step
+        nodelist (str):
+            Nodes this Step is using
+        id (Union[str, int]):
+            ID of the Step
+        job_id (int):
+            ID of the Job this Step is a part of
+        state (str):
+            State of the Step
+        cancelled_by (str):
+            Name of the User who cancelled this Step
+        submit_command (str):
+            Full command issued to start the Step
+        suspended_time (int):
+            Amount of seconds the Step was suspended
+    """
     cdef slurmdb_step_rec_t *ptr
     cdef public JobStats stats
 

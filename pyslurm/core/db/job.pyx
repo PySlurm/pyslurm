@@ -1,7 +1,7 @@
 #########################################################################
 # job.pyx - pyslurm slurmdbd job api
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ from pyslurm.core.common import (
 )
 
 
-cdef class JobConditions:
+cdef class JobSearchFilter:
 
     def __cinit__(self):
         self.ptr = NULL
@@ -158,6 +158,10 @@ cdef class JobConditions:
         if self.ids:
             # These are only allowed by the slurmdbd when specific jobs are
             # requested.
+            if self.with_script and self.with_env:
+                raise ValueError("with_script and with_env are mutually "
+                                 "exclusive")
+
             if self.with_script:
                 ptr.flags |= slurm.JOBCOND_FLAG_SCRIPT
             elif self.with_env:
@@ -192,28 +196,36 @@ cdef class Jobs(dict):
         pass
 
     @staticmethod
-    def load(*args, **kwargs):
+    def load(search_filter=None):
+        """Load Jobs from the Slurm Database
+
+        Implements the slurmdb_jobs_get RPC.
+
+        Args:
+            search_filter (pyslurm.db.JobSearchFilter):
+                A search filter that the slurmdbd will apply when retrieving
+                Jobs from the database.
+
+        Raises:
+            RPCError: When getting the Jobs from the Database was not
+                sucessful
+        """
         cdef:
             Jobs jobs = Jobs()
             Job job
-            JobStep step
-            JobConditions cond
+            JobSearchFilter cond
             SlurmListItem job_ptr
-            SlurmListItem step_ptr
-            SlurmList step_list
             QualitiesOfService qos_data
             int cpu_tres_rec_count = 0
             int step_cpu_tres_rec_count = 0
 
-        # Allow the user to both specify search conditions via a JobConditions
-        # instance or **kwargs.
-        if args and isinstance(args[0], JobConditions):
-            cond = <JobConditions>args[0]
+        if search_filter:
+            cond = <JobSearchFilter>search_filter
         else:
-            cond = JobConditions(**kwargs)
+            cond = JobSearchFilter()
 
         cond._create()
-        jobs.db_conn = Connection()
+        jobs.db_conn = Connection.open()
         jobs.info = SlurmList.wrap(slurmdb_jobs_get(jobs.db_conn.ptr,
                                                     cond.ptr))
         if jobs.info.is_null():
@@ -231,17 +243,14 @@ cdef class Jobs(dict):
         # convert them to its type name for the user in advance.
 
         # TODO: For multi-cluster support, remove duplicate federation jobs
+        # TODO: How to handle the possibility of duplicate job ids that could
+        # appear if IDs on a cluster are resetted?
         for job_ptr in SlurmList.iter_and_pop(jobs.info):
             job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
             job.qos_data = qos_data
+            job._create_steps()
+            JobStats._sum_step_stats_for_job(job, job.steps)
             jobs[job.id] = job
-
-            step_list = SlurmList.wrap(job.ptr.steps, owned=False) 
-            for step_ptr in SlurmList.iter_and_pop(step_list):
-                step = JobStep.from_ptr(<slurmdb_step_rec_t*>step_ptr.data)
-                job.steps[step.id] = step
-
-            job._sum_stats_from_steps()
 
         return jobs
 
@@ -252,14 +261,17 @@ cdef class Job:
         self.ptr = NULL
 
     def __init__(self, job_id):
-        self._alloc()
+        self._alloc_impl()
         self.ptr.jobid = int(job_id)
 
     def __dealloc__(self):
+        self._dealloc_impl()
+
+    def _dealloc_impl(self):
         slurmdb_destroy_job_rec(self.ptr)
         self.ptr = NULL
 
-    def _alloc(self):
+    def _alloc_impl(self):
         if not self.ptr:
             self.ptr = <slurmdb_job_rec_t*>try_xmalloc(
                     sizeof(slurmdb_job_rec_t))
@@ -274,69 +286,51 @@ cdef class Job:
         wrap.stats = JobStats()
         return wrap
 
-    def _sum_stats_from_steps(self):
+    def reload(self):
+        """(Re)load the information for this Database Job.
+
+        Note:
+            You can call this function repeatedly to refresh the information
+            of an instance. Using the object returned is optional.
+
+        Returns:
+            (pyslurm.db.Job): Returns the current Job-instance itself
+
+        Raises:
+            RPCError: If requesting the information for the database Job was
+                not sucessful.
+        """
+        cdef Job job
+        jobs = Jobs.load(ids=[self.id])
+        if not jobs or self.id not in jobs:
+            raise RPCError(msg=f"Job {self.id} does not exist")
+
+        job = jobs[self.id]
+        self._dealloc_impl()
+        self.ptr = job.ptr
+        self.steps = job.steps
+        self.stats = job.stats
+        job.ptr = NULL
+
+        return self
+
+    def _create_steps(self):
         cdef:
-            JobStats job_stats = self.stats
-            JobStats step_stats = None
+            JobStep step
+            SlurmList step_list
+            SlurmListItem step_ptr
 
-        for step in self.steps.values():
-            step_stats = step.stats
-
-            job_stats.consumed_energy += step_stats.consumed_energy
-            job_stats.average_cpu_time += step_stats.average_cpu_time
-            job_stats.average_cpu_frequency += step_stats.average_cpu_frequency
-            job_stats.cpu_time += step_stats.cpu_time
-            job_stats.average_disk_read += step_stats.average_disk_read
-            job_stats.average_disk_write += step_stats.average_disk_write
-            job_stats.average_pages += step_stats.average_pages
-            job_stats.average_rss += step_stats.average_rss
-            job_stats.average_vmsize += step_stats.average_vmsize
-
-            if step_stats.max_disk_read >= job_stats.max_disk_read:
-                job_stats.max_disk_read = step_stats.max_disk_read
-                job_stats.max_disk_read_node = step_stats.max_disk_read_node
-                job_stats.max_disk_read_task = step_stats.max_disk_read_task
-
-            if step_stats.max_disk_write >= job_stats.max_disk_write:
-                job_stats.max_disk_write = step_stats.max_disk_write
-                job_stats.max_disk_write_node = step_stats.max_disk_write_node
-                job_stats.max_disk_write_task = step_stats.max_disk_write_task
-
-            if step_stats.max_pages >= job_stats.max_pages:
-                job_stats.max_pages = step_stats.max_pages
-                job_stats.max_pages_node = step_stats.max_pages_node
-                job_stats.max_pages_task = step_stats.max_pages_task
-
-            if step_stats.max_rss >= job_stats.max_rss:
-                job_stats.max_rss = step_stats.max_rss
-                job_stats.max_rss_node = step_stats.max_rss_node
-                job_stats.max_rss_task = step_stats.max_rss_task
-
-            if step_stats.max_vmsize >= job_stats.max_vmsize:
-                job_stats.max_vmsize = step_stats.max_vmsize
-                job_stats.max_vmsize_node = step_stats.max_vmsize_node
-                job_stats.max_vmsize_task = step_stats.max_vmsize_task
-
-            if step_stats.min_cpu_time >= job_stats.min_cpu_time:
-                job_stats.min_cpu_time = step_stats.min_cpu_time
-                job_stats.min_cpu_time_node = step_stats.min_cpu_time_node
-                job_stats.min_cpu_time_task = step_stats.min_cpu_time_task
-
-        if self.ptr.tot_cpu_sec != slurm.NO_VAL64:
-            job_stats.total_cpu_time = self.ptr.tot_cpu_sec
-
-        if self.ptr.user_cpu_sec != slurm.NO_VAL64:
-            job_stats.user_cpu_time = self.ptr.user_cpu_sec
-
-        if self.ptr.sys_cpu_sec != slurm.NO_VAL64:
-            job_stats.system_cpu_time = self.ptr.sys_cpu_sec
-
-        elapsed = self.elapsed_time if self.elapsed_time else 0
-        cpus = self.cpus if self.cpus else 0
-        job_stats.cpu_time = elapsed * cpus
-        job_stats.average_cpu_frequency /= len(self.steps)
+        step_list = SlurmList.wrap(self.ptr.steps, owned=False) 
+        for step_ptr in SlurmList.iter_and_pop(step_list):
+            step = JobStep.from_ptr(<slurmdb_step_rec_t*>step_ptr.data)
+            self.steps[step.id] = step
 
     def as_dict(self):
+        """Database Job information formatted as a dictionary.
+
+        Returns:
+            (dict): Database Job information as dict
+        """
         cdef dict out = instance_to_dict(self)
         out["stats"] = self.stats.as_dict()
         steps = out.pop("steps", {})
@@ -419,7 +413,6 @@ cdef class Job:
 
     @property
     def derived_exit_code(self):
-        """int: The derived exit code for the Job."""
         if (self.ptr.derived_ec == slurm.NO_VAL
                 or not WIFEXITED(self.ptr.derived_ec)):
             return None
@@ -428,7 +421,6 @@ cdef class Job:
 
     @property
     def derived_exit_code_signal(self):
-        """int: Signal for the derived exit code."""
         if (self.ptr.derived_ec == slurm.NO_VAL
                 or not WIFSIGNALED(self.ptr.derived_ec)): 
             return None
@@ -454,7 +446,12 @@ cdef class Job:
     @property
     def exit_code(self):
         # TODO
-        return None
+        return 0
+
+    @property
+    def exit_code_signal(self):
+        # TODO
+        return 0
 
     # uint32_t flags
 
@@ -494,7 +491,7 @@ cdef class Job:
         return u32_parse(self.ptr.priority, zero_is_noval=False)
 
     @property
-    def qos(self):
+    def quality_of_service(self):
         _qos = self.qos_data.get(self.ptr.qosid, None)
         if _qos:
             return _qos.name
@@ -537,7 +534,6 @@ cdef class Job:
 
     @property
     def state(self):
-        """str: State this Job is in."""
         return cstr.to_unicode(slurm_job_state_string(self.ptr.state))
 
     @property
@@ -554,12 +550,11 @@ cdef class Job:
         return _raw_time(self.ptr.submit)
 
     @property
-    def submit_line(self):
+    def submit_command(self):
         return cstr.to_unicode(self.ptr.submit_line)
 
     @property
     def suspended_time(self):
-        # seconds
         return _raw_time(self.ptr.elapsed)
 
     @property
@@ -568,7 +563,6 @@ cdef class Job:
 
     @property
     def time_limit(self):
-        # minutes
         # TODO: Perhaps we should just find out what the actual PartitionLimit
         # is?
         return _raw_time(self.ptr.timelimit, "PartitionLimit")

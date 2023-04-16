@@ -212,6 +212,7 @@ cdef extern void slurm_env_array_free(char **env_array)
 #
 
 cdef extern char *slurm_preempt_mode_string (uint16_t preempt_mode)
+cdef extern uint16_t slurm_preempt_mode_num (const char *preempt_mode)
 cdef extern char *slurm_node_state_string (uint32_t inx)
 cdef extern char *slurm_step_layout_type_name (task_dist_states_t task_dist)
 cdef extern char *slurm_reservation_flags_string (reserve_info_t *resv_ptr)

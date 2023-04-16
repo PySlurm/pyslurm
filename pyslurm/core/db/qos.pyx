@@ -1,7 +1,7 @@
 #########################################################################
 # qos.pyx - pyslurm slurmdbd qos api
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,25 +29,25 @@ cdef class QualitiesOfService(dict):
         pass
 
     @staticmethod
-    def load(*args, name_is_key=True, db_connection=None, **kwargs):
+    def load(search_filter=None, name_is_key=True, db_connection=None):
         cdef:
             QualitiesOfService qos_dict = QualitiesOfService()
             QualityOfService qos
-            QualityOfServiceConditions cond
+            QualityOfServiceSearchFilter cond
             SlurmListItem qos_ptr
             Connection conn = <Connection>db_connection
 
-        if args and isinstance(args[0], QualityOfServiceConditions):
-            cond = <QualityOfServiceConditions>args[0]
+        if search_filter:
+            cond = <QualityOfServiceSearchFilter>search_filter
         else:
-            cond = QualityOfServiceConditions(**kwargs)
+            cond = QualityOfServiceSearchFilter()
 
         cond._create()
-        qos_dict.db_conn = Connection() if not conn else conn
+        qos_dict.db_conn = Connection.open() if not conn else conn
         qos_dict.info = SlurmList.wrap(slurmdb_qos_get(qos_dict.db_conn.ptr,
                                                        cond.ptr))
         if qos_dict.info.is_null():
-            raise RPCError(msg="Failed to get QoS from slurmdbd")
+            raise RPCError(msg="Failed to get QoS data from slurmdbd")
 
         for qos_ptr in SlurmList.iter_and_pop(qos_dict.info):
             qos = QualityOfService.from_ptr(<slurmdb_qos_rec_t*>qos_ptr.data)
@@ -59,7 +59,7 @@ cdef class QualitiesOfService(dict):
         return qos_dict
 
 
-cdef class QualityOfServiceConditions:
+cdef class QualityOfServiceSearchFilter:
 
     def __cinit__(self):
         self.ptr = NULL
@@ -81,22 +81,59 @@ cdef class QualityOfServiceConditions:
         if not self.ptr:
             raise MemoryError("xmalloc failed for slurmdb_qos_cond_t")
 
+    def _parse_preempt_modes(self):
+        if not self.preempt_modes:
+            return 0
+
+        if not isinstance(self.preempt_modes, list):
+            return int(self.preempt_modes)
+        
+        out = 0
+        for mode in self.preempt_modes:
+            _mode = slurm_preempt_mode_num(mode)
+            if _mode == slurm.NO_VAL16:
+                raise ValueError(f"Unknown preempt mode: {mode}")
+
+            if _mode == slurm.PREEMPT_MODE_OFF:
+                _mode = slurm.PREEMPT_MODE_COND_OFF
+
+            out |= _mode
+
+        return out
+
     def _create(self):
         self._alloc()
         cdef slurmdb_qos_cond_t *ptr = self.ptr
 
+        SlurmList.to_char_list(&ptr.name_list, self.names)
+        SlurmList.to_char_list(&ptr.id_list, self.ids)
+        SlurmList.to_char_list(&ptr.description_list, self.descriptions)
+        ptr.preempt_mode = self._parse_preempt_modes()
+        ptr.with_deleted = 1 if bool(self.with_deleted) else 0
+        
 
 cdef class QualityOfService:
 
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, qos_id):
-        pass
+    def __init__(self, name=None):
+        self._alloc_impl()
+        self.name = name
 
     def __dealloc__(self):
+        self._dealloc_impl()
+
+    def _dealloc_impl(self):
         slurmdb_destroy_qos_rec(self.ptr)
         self.ptr = NULL
+
+    def _alloc_impl(self):
+        if not self.ptr:
+            self.ptr = <slurmdb_qos_rec_t*>try_xmalloc(
+                    sizeof(slurmdb_qos_rec_t))
+            if not self.ptr:
+                raise MemoryError("xmalloc failed for slurmdb_qos_rec_t")
 
     @staticmethod
     cdef QualityOfService from_ptr(slurmdb_qos_rec_t *in_ptr):
@@ -104,9 +141,40 @@ cdef class QualityOfService:
         wrap.ptr = in_ptr
         return wrap
 
+    def reload(self):
+        """(Re)load the information for this Quality of Service.
+
+        Note:
+            You can call this function repeatedly to refresh the information
+            of an instance. Using the object returned is optional.
+
+        Returns:
+            (pyslurm.db.QualityOfService): Returns the current
+                QualityOfService-instance itself.
+
+        Raises:
+            RPCError: If requesting the information from the database was not
+                sucessful.
+        """
+        cdef QualityOfService qos
+        qos_data = QualitiesOfService.load(names=[self.name])
+        if not qos_data or self.name not in qos_data:
+            raise RPCError(msg=f"QualityOfService {self.name} does not exist")
+
+        qos = qos_data[self.name]
+        self._dealloc_impl()
+        self.ptr = qos.ptr
+        qos.ptr = NULL
+
+        return self
+
     @property
     def name(self):
         return cstr.to_unicode(self.ptr.name)
+
+    @name.setter
+    def name(self, val):
+        cstr.fmalloc(&self.ptr.name, val)
 
     @property
     def description(self):

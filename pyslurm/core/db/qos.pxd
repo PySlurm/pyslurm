@@ -1,7 +1,7 @@
 #########################################################################
 # qos.pxd - pyslurm slurmdbd qos api
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     slurmdb_qos_rec_t,
@@ -28,11 +27,11 @@ from pyslurm.slurm cimport (
     slurmdb_destroy_qos_rec,
     slurmdb_destroy_qos_cond,
     slurmdb_qos_get,
+    slurm_preempt_mode_num,
     try_xmalloc,
 )
 from pyslurm.core.db.util cimport SlurmList, SlurmListItem
 from pyslurm.core.db.connection cimport Connection
-from pyslurm.core.db.qos cimport QualitiesOfService
 from pyslurm.core.common cimport cstr
 
 
@@ -42,14 +41,14 @@ cdef class QualitiesOfService(dict):
         Connection db_conn
 
 
-cdef class QualityOfServiceConditions:
+cdef class QualityOfServiceSearchFilter:
    cdef slurmdb_qos_cond_t *ptr
 
    cdef public:
        names
        ids
        descriptions
-       preempt_mode
+       preempt_modes
        with_deleted
 
 

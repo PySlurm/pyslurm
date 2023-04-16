@@ -30,6 +30,12 @@ from pyslurm.slurm cimport (
 
 
 cdef class Connection:
+    """A connection to the slurmdbd.
+
+    Attributes:
+        is_open (bool):
+            Whether the connection is open or closed.
+    """
     cdef:
         void *ptr
-        uint16_t conn_flags
+        uint16_t flags
