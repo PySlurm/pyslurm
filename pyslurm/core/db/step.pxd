@@ -48,6 +48,8 @@ cdef class JobStep:
     """A Slurm Database Job-step.
 
     Attributes:
+        stats (pyslurm.db.JobStats):
+            Utilization statistics for this Step
         num_nodes (int):
             Amount of nodes this Step has allocated
         cpus (int):

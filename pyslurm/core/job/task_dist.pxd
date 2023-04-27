@@ -1,7 +1,7 @@
 #########################################################################
-# connection.pyx - pyslurm slurmdbd database connection
+# task_dist.pxd - job task distribution
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,24 +19,21 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
-# cython: embedsignature=True
 
 from pyslurm cimport slurm
-from libc.stdint cimport uint16_t
+from pyslurm.core.common.uint cimport u16
 from pyslurm.slurm cimport (
-    slurmdb_connection_get,
-    slurmdb_connection_close,
-    slurmdb_connection_commit,
+    task_dist_states_t,
 )
 
 
-cdef class Connection:
-    """A connection to the slurmdbd.
+cdef class TaskDistribution:
 
-    Attributes:
-        is_open (bool):
-            Whether the connection is open or closed.
-    """
-    cdef:
-        void *ptr
-        uint16_t flags
+    cdef public:
+        str nodes
+        str sockets
+        str cores
+        plane
+        pack
+
+    cdef task_dist_states_t state

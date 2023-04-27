@@ -1,7 +1,7 @@
 #########################################################################
 # common/cstr.pyx - pyslurm string functions
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
 import re
@@ -40,7 +40,7 @@ cdef char *from_unicode(s):
     return _s
 
 
-cdef inline to_unicode(char *_str, default=None):
+cdef to_unicode(char *_str, default=None):
     """Convert a char* to Python3 str (unicode)"""
     if _str and _str[0] != NULL_BYTE:
         if _str == NONE_BYTE:
@@ -105,7 +105,7 @@ cdef fmalloc(char **old, val):
         old[0] = NULL
 
 
-cdef list to_list(char *str_list):
+cpdef list to_list(char *str_list):
     """Convert C-String to a list."""
     cdef str ret = to_unicode(str_list)
 
@@ -115,14 +115,18 @@ cdef list to_list(char *str_list):
     return ret.split(",")
 
 
-cdef from_list(char **old, vals, delim=","):
+def list_to_str(vals, delim=","):
     """Convert list to a C-String."""
     cdef object final = vals
 
     if vals and not isinstance(vals, str):
         final = delim.join(vals)
 
-    fmalloc(old, final)
+    return final
+
+
+cdef from_list(char **old, vals, delim=","):
+    fmalloc(old, list_to_str(vals, delim))
 
 
 cdef from_list2(char **p1, char **p2, vals, delim=","):
@@ -130,7 +134,7 @@ cdef from_list2(char **p1, char **p2, vals, delim=","):
     from_list(p2, vals, delim)
 
 
-cdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
+cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
     """Convert a char* key=value pair to dict.
 
     With a char* Slurm represents key-values pairs usually in the form of:
@@ -142,7 +146,7 @@ cdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
         str key, val
         dict out = {}
 
-    if not _str_dict:
+    if not _str_dict or delim1 not in _str_dict:
         return out
 
     for kv in _str_dict.split(delim1):
@@ -153,7 +157,23 @@ cdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
     return out
 
 
-cdef dict from_dict(char **old, vals, prepend=None, str delim1=",", str delim2="="):
+def validate_str_key_value_format(val, delim1=",", delim2="="):
+    cdef dict out = {}
+
+    for kv in val.split(delim1):
+        if delim2 in kv:
+            k, v = kv.split(delim2)
+            out[k] = v
+        else:
+            raise ValueError(
+                f"Invalid format for key-value pair {kv}. "
+                f"Expected {delim2} as seperator."
+            )
+
+    return out
+
+
+def dict_to_str(vals, prepend=None, delim1=",", delim2="="):
     """Convert a dict (or str) to Slurm Key-Value pair.
 
     Slurm predominantly uses a format of:
@@ -165,22 +185,16 @@ cdef dict from_dict(char **old, vals, prepend=None, str delim1=",", str delim2="
     format of this string will the be validated.
     """
     cdef:
-        out = {} if not vals else vals
+        tmp_dict = {} if not vals else vals
         list tmp = []
 
-    if vals and isinstance(vals, str):
-        out = {}
-        for kv in vals.split(delim1):
-            if delim2 in kv:
-                k, v = kv.split(delim2)
-                out[k] = v
-            else:
-                raise ValueError(
-                    f"Invalid format for key-value pair {kv}. "
-                    f"Expected {delim2} as seperator."
-                )
+    if not vals:
+        return None
+
+    if isinstance(vals, str):
+        tmp_dict = validate_str_key_value_format(vals, delim1, delim2)
     
-    for k, v in out.items():
+    for k, v in tmp_dict.items():
         if ((delim1 in k or delim2 in k) or
                 delim1 in v or delim2 in v):    
             raise ValueError(
@@ -190,12 +204,15 @@ cdef dict from_dict(char **old, vals, prepend=None, str delim1=",", str delim2="
 
         tmp.append(f"{'' if not prepend else prepend}{k}{delim2}{v}")
 
-    fmalloc(old, delim1.join(tmp))
-
-    return out
+    return delim1.join(tmp)
 
 
-cdef to_gres_dict(char *gres):
+cdef from_dict(char **old, vals, prepend=None,
+                    str delim1=",", str delim2="="):
+    fmalloc(old, dict_to_str(vals, prepend, delim1, delim2))
+
+
+cpdef dict to_gres_dict(char *gres):
     """Parse a GRES string."""
     cdef:
         dict output = {}
@@ -242,33 +259,32 @@ cdef to_gres_dict(char *gres):
     return output
 
 
-cdef from_gres_dict(vals, typ=""):
+def from_gres_dict(vals, typ=""):
     final = []
-    gres_dict = vals
+    gres_dict = {} if not vals else vals
 
     if not vals:
         return None
 
     if isinstance(vals, str) and not vals.isdigit():
         gres_dict = {}
-
         gres_list = vals.replace("gres:", "")
         for gres_str in gres_list.split(","):
             gres_and_type, cnt = gres_str.rsplit(":", 1)
             gres_dict.update({gres_and_type: int(cnt)})
-    elif isinstance(vals, dict):
-        for gres_and_type, cnt in gres_dict.items():
-            # Error immediately on specifications that contain more than one
-            # semicolon, as it is wrong.
-            if len(gres_and_type.split(":")) > 2:
-                raise ValueError(f"Invalid specifier: '{gres_and_type}'")
-
-            if typ not in gres_and_type:
-                gres_and_type = f"{gres_and_type}:{typ}"
-
-            final.append(f"gres:{gres_and_type}:{int(cnt)}")
-    else:
+    elif not isinstance(vals, dict):
         return f"gres:{typ}:{int(vals)}"
+
+    for gres_and_type, cnt in gres_dict.items():
+        # Error immediately on specifications that contain more than one
+        # semicolon, as it is wrong.
+        if len(gres_and_type.split(":")) > 2:
+            raise ValueError(f"Invalid specifier: '{gres_and_type}'")
+
+        if typ not in gres_and_type:
+            gres_and_type = f"{gres_and_type}:{typ}"
+
+        final.append(f"gres:{gres_and_type}:{int(cnt)}")
 
     return ",".join(final)
 

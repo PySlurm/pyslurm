@@ -1,7 +1,7 @@
 #########################################################################
 # common/cstr.pxd - slurm string functions
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
 from pyslurm cimport slurm
@@ -29,10 +29,9 @@ cdef to_unicode(char *s, default=*)
 cdef fmalloc(char **old, val)
 cdef fmalloc2(char **p1, char **p2, val)
 cdef free_array(char **arr, count)
-cdef list to_list(char *str_list)
+cpdef list to_list(char *str_list)
 cdef from_list(char **old, vals, delim=*)
 cdef from_list2(char **p1, char **p2, vals, delim=*)
-cdef dict to_dict(char *str_dict, str delim1=*, str delim2=*)
-cdef dict from_dict(char **old, vals, prepend=*, str delim1=*, str delim2=*)
-cdef to_gres_dict(char *gres)
-cdef from_gres_dict(vals, typ=*)
+cpdef dict to_dict(char *str_dict, str delim1=*, str delim2=*)
+cdef from_dict(char **old, vals, prepend=*, str delim1=*, str delim2=*)
+cpdef dict to_gres_dict(char *gres)

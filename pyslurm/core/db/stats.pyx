@@ -1,7 +1,7 @@
 #########################################################################
 # stats.pyx - pyslurm slurmdbd job stats
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,12 +33,12 @@ cdef class JobStats:
         self.max_disk_read_task = None
         self.max_disk_write_node = None
         self.max_disk_write_task = None
-        self.max_pages_node = None
-        self.max_pages_task = None
-        self.max_rss_node = None
-        self.max_rss_task = None
-        self.max_vmsize_node = None
-        self.max_vmsize_task = None
+        self.max_page_faults_node = None
+        self.max_page_faults_task = None
+        self.max_resident_memory_node = None
+        self.max_resident_memory_task = None
+        self.max_virtual_memory_node = None
+        self.max_virtual_memory_task = None
         self.min_cpu_time_node = None
         self.min_cpu_time_task = None
 
@@ -60,25 +60,27 @@ cdef class JobStats:
         if ptr.consumed_energy != slurm.NO_VAL64:
             wrap.consumed_energy = ptr.consumed_energy
 
-        wrap.average_cpu_time = TrackableResources.find_count_in_str(
+        wrap.avg_cpu_time = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_ave, slurm.TRES_CPU) / cpu_time_adj
-        # TODO
-        # wrap.cpu_time = elapsed * step_cpu_tres_rec
+
+        elapsed = step.elapsed_time if step.elapsed_time else 0
+        cpus = step.cpus if step.cpus else 0
+        wrap.elapsed_cpu_time = elapsed * cpus
 
         ave_freq = int(ptr.act_cpufreq)
         if ave_freq != slurm.NO_VAL:
-            wrap.average_cpu_frequency = ptr.act_cpufreq
+            wrap.avg_cpu_frequency = ptr.act_cpufreq
 
         # Convert to MiB instead of raw bytes?
-        wrap.average_disk_read = TrackableResources.find_count_in_str(
+        wrap.avg_disk_read = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_ave, slurm.TRES_FS_DISK)
-        wrap.average_disk_write = TrackableResources.find_count_in_str(
+        wrap.avg_disk_write = TrackableResources.find_count_in_str(
                 ptr.tres_usage_out_ave, slurm.TRES_FS_DISK)
-        wrap.average_pages = TrackableResources.find_count_in_str(
+        wrap.avg_page_faults = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_ave, slurm.TRES_PAGES)
-        wrap.average_rss = TrackableResources.find_count_in_str(
+        wrap.avg_resident_memory = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_ave, slurm.TRES_MEM)
-        wrap.average_vmsize = TrackableResources.find_count_in_str(
+        wrap.avg_virtual_memory = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_ave, slurm.TRES_VMEM)
         
         wrap.max_disk_read = TrackableResources.find_count_in_str(
@@ -95,18 +97,18 @@ cdef class JobStats:
         wrap.max_disk_write_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_out_max_taskid, slurm.TRES_FS_DISK)
 
-        wrap.max_rss = TrackableResources.find_count_in_str(
+        wrap.max_resident_memory = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max, slurm.TRES_MEM)
-        max_rss_nodeid = TrackableResources.find_count_in_str(
+        max_resident_memory_nodeid = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_nodeid, slurm.TRES_MEM)
-        wrap.max_rss_task = TrackableResources.find_count_in_str(
+        wrap.max_resident_memory_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_taskid, slurm.TRES_MEM)
 
-        wrap.max_vmsize = TrackableResources.find_count_in_str(
+        wrap.max_virtual_memory = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max, slurm.TRES_VMEM)
-        max_vmsize_nodeid = TrackableResources.find_count_in_str(
+        max_virtual_memory_nodeid = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_nodeid, slurm.TRES_VMEM)
-        wrap.max_vmsize_task = TrackableResources.find_count_in_str(
+        wrap.max_virtual_memory_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_taskid, slurm.TRES_VMEM)
 
         wrap.min_cpu_time = TrackableResources.find_count_in_str(
@@ -122,8 +124,8 @@ cdef class JobStats:
         if nodes:
             wrap.max_disk_write_node = nodes[max_disk_write_nodeid]
             wrap.max_disk_read_node = nodes[max_disk_read_nodeid]
-            wrap.max_rss_node = nodes[max_rss_nodeid]
-            wrap.max_vmsize_node = nodes[max_vmsize_nodeid]
+            wrap.max_resident_memory_node = nodes[max_resident_memory_nodeid]
+            wrap.max_virtual_memory_node = nodes[max_virtual_memory_nodeid]
             wrap.min_cpu_time_node = nodes[min_cpu_time_nodeid]
 
         if step.ptr.user_cpu_sec != slurm.NO_VAL64:
@@ -144,12 +146,11 @@ cdef class JobStats:
             step_stats = step.stats
 
             job_stats.consumed_energy += step_stats.consumed_energy
-            job_stats.average_cpu_time += step_stats.average_cpu_time
-            job_stats.average_cpu_frequency += step_stats.average_cpu_frequency
-            job_stats.cpu_time += step_stats.cpu_time
-            job_stats.average_disk_read += step_stats.average_disk_read
-            job_stats.average_disk_write += step_stats.average_disk_write
-            job_stats.average_pages += step_stats.average_pages
+            job_stats.avg_cpu_time += step_stats.avg_cpu_time
+            job_stats.avg_cpu_frequency += step_stats.avg_cpu_frequency
+            job_stats.avg_disk_read += step_stats.avg_disk_read
+            job_stats.avg_disk_write += step_stats.avg_disk_write
+            job_stats.avg_page_faults += step_stats.avg_page_faults
 
             if step_stats.max_disk_read >= job_stats.max_disk_read:
                 job_stats.max_disk_read = step_stats.max_disk_read
@@ -161,22 +162,22 @@ cdef class JobStats:
                 job_stats.max_disk_write_node = step_stats.max_disk_write_node
                 job_stats.max_disk_write_task = step_stats.max_disk_write_task
 
-            if step_stats.max_pages >= job_stats.max_pages:
-                job_stats.max_pages = step_stats.max_pages
-                job_stats.max_pages_node = step_stats.max_pages_node
-                job_stats.max_pages_task = step_stats.max_pages_task
+            if step_stats.max_page_faults >= job_stats.max_page_faults:
+                job_stats.max_page_faults = step_stats.max_page_faults
+                job_stats.max_page_faults_node = step_stats.max_page_faults_node
+                job_stats.max_page_faults_task = step_stats.max_page_faults_task
 
-            if step_stats.max_rss >= job_stats.max_rss:
-                job_stats.max_rss = step_stats.max_rss
-                job_stats.max_rss_node = step_stats.max_rss_node
-                job_stats.max_rss_task = step_stats.max_rss_task
-                job_stats.average_rss = job_stats.max_rss
+            if step_stats.max_resident_memory >= job_stats.max_resident_memory:
+                job_stats.max_resident_memory = step_stats.max_resident_memory
+                job_stats.max_resident_memory_node = step_stats.max_resident_memory_node
+                job_stats.max_resident_memory_task = step_stats.max_resident_memory_task
+                job_stats.avg_resident_memory = job_stats.max_resident_memory
 
-            if step_stats.max_vmsize >= job_stats.max_vmsize:
-                job_stats.max_vmsize = step_stats.max_vmsize
-                job_stats.max_vmsize_node = step_stats.max_vmsize_node
-                job_stats.max_vmsize_task = step_stats.max_vmsize_task
-                job_stats.average_vmsize = job_stats.max_vmsize
+            if step_stats.max_virtual_memory >= job_stats.max_virtual_memory:
+                job_stats.max_virtual_memory = step_stats.max_virtual_memory
+                job_stats.max_virtual_memory_node = step_stats.max_virtual_memory_node
+                job_stats.max_virtual_memory_task = step_stats.max_virtual_memory_task
+                job_stats.avg_virtual_memory = job_stats.max_virtual_memory
 
             if step_stats.min_cpu_time >= job_stats.min_cpu_time:
                 job_stats.min_cpu_time = step_stats.min_cpu_time
@@ -194,6 +195,6 @@ cdef class JobStats:
 
         elapsed = job.elapsed_time if job.elapsed_time else 0
         cpus = job.cpus if job.cpus else 0
-        job_stats.cpu_time = elapsed * cpus
-        job_stats.average_cpu_frequency /= len(steps)
+        job_stats.elapsed_cpu_time = elapsed * cpus
+        job_stats.avg_cpu_frequency /= len(steps)
 

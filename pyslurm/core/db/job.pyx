@@ -286,33 +286,26 @@ cdef class Job:
         wrap.stats = JobStats()
         return wrap
 
-    def reload(self):
-        """(Re)load the information for this Database Job.
+    @staticmethod
+    def load(job_id):
+        """Load the information for a specific Job from the Database.
 
-        Note:
-            You can call this function repeatedly to refresh the information
-            of an instance. Using the object returned is optional.
+        Args:
+            job_id (int):
+                ID of the Job to be loaded.
 
         Returns:
-            (pyslurm.db.Job): Returns the current Job-instance itself
+            (pyslurm.db.Job): Returns a new Job instance
 
         Raises:
             RPCError: If requesting the information for the database Job was
                 not sucessful.
         """
-        cdef Job job
-        jobs = Jobs.load(ids=[self.id])
-        if not jobs or self.id not in jobs:
-            raise RPCError(msg=f"Job {self.id} does not exist")
+        jobs = Jobs.load(ids=[int(job_id)])
+        if not jobs or job_idid not in jobs:
+            raise RPCError(msg=f"Job {job_id} does not exist")
 
-        job = jobs[self.id]
-        self._dealloc_impl()
-        self.ptr = job.ptr
-        self.steps = job.steps
-        self.stats = job.stats
-        job.ptr = NULL
-
-        return self
+        return jobs[job_id]
 
     def _create_steps(self):
         cdef:

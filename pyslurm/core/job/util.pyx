@@ -1,7 +1,7 @@
 #########################################################################
-# parse_types.pyx - utility functions used to parse various job flags
+# util.pyx - utility functions used to parse various job flags
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
@@ -25,8 +25,10 @@ from pyslurm cimport slurm
 from pyslurm.core.common.uint import *
 from pyslurm.core.common.uint cimport *
 
+# Note: Maybe consider using libslurmfull again to avoid having to reimplement
+# some of these functions and keeping track for changes in new releases.
 
-def parse_mail_type(mail_types):
+def mail_type_list_to_int(mail_types):
     """Convert a str or list of mail types to a uint16_t."""
     cdef uint16_t flags = 0
     types = mail_types
@@ -85,7 +87,7 @@ def parse_mail_type(mail_types):
     return flags
 
 
-def get_mail_type(uint16_t typ):
+def mail_type_int_to_list(uint16_t typ):
     """Convert uint16_t to a list of mail types."""
     types = []
 
@@ -128,7 +130,7 @@ def get_mail_type(uint16_t typ):
     return types
 
 
-def parse_acctg_profile(acctg_profiles):
+def acctg_profile_list_to_int(acctg_profiles):
     """Convert a str or list of accounting gather profiles to uin32_t."""
     cdef uint32_t profile = 0
     profiles = acctg_profiles
@@ -156,17 +158,17 @@ def parse_acctg_profile(acctg_profiles):
     return profile
 
 
-def get_acctg_profile(flags):
+def acctg_profile_int_to_list(flags):
     """Convert uin32_t accounting gather profiles to a list of strings."""
     profiles = []
 
     if flags == 0 or flags == slurm.NO_VAL:
-        return ["none"]
+        return []
 
     if flags == slurm.ACCT_GATHER_PROFILE_ALL:
         return ["all"]
     elif flags == slurm.ACCT_GATHER_PROFILE_NONE:
-        return ["none"]
+        return []
 
     if flags & slurm.ACCT_GATHER_PROFILE_ENERGY:
         profiles.append("energy")
@@ -183,7 +185,7 @@ def get_acctg_profile(flags):
     return profiles
 
 
-def parse_power_type(power_types):
+def power_type_list_to_int(power_types):
     """Convert a str or list of str with power types to uint8_t."""
     cdef uint8_t flags = 0
 
@@ -194,7 +196,7 @@ def parse_power_type(power_types):
         flags |= slurm.SLURM_POWER_FLAGS_LEVEL
 
 
-def get_power_type(flags):
+def power_type_int_to_list(flags):
     """Convert uint8_t power type flags to a list of strings."""
     types = []
 
@@ -204,7 +206,7 @@ def get_power_type(flags):
     return types
 
 
-def parse_shared_type(typ):
+def shared_type_str_to_int(typ):
     """Convert a job-sharing type str to its numerical representation."""
     if not typ:
         return slurm.NO_VAL16
@@ -222,289 +224,7 @@ def parse_shared_type(typ):
         raise ValueError(f"Invalid resource_sharing type: {typ}.")
 
 
-# https://github.com/SchedMD/slurm/blob/510ba4f17dfa559b579aa054cb8a415dcc224abc/src/common/proc_args.c#L319
-def get_task_dist(dist):
-    """Get the task distribution of a step as a dictionary."""
-    out = {
-        "nodes": None,
-        "sockets": None,
-        "cores": None,
-        "plane": None,
-        "pack": None,
-    }
-
-    if int(dist) <= 0 or dist == slurm.SLURM_DIST_UNKNOWN:
-        return None
-
-    if (dist & slurm.SLURM_DIST_STATE_BASE) != slurm.SLURM_DIST_UNKNOWN:
-        state = dist & slurm.SLURM_DIST_STATE_BASE
-
-        if state == slurm.SLURM_DIST_BLOCK:
-            out["nodes"] = "block"
-        elif state == slurm.SLURM_DIST_CYCLIC:
-            out["nodes"] = "cyclic"
-        elif state == slurm.SLURM_DIST_PLANE:
-            pass
-        elif state == slurm.SLURM_DIST_ARBITRARY:
-            out["nodes"] = "arbitrary"
-        elif state == slurm.SLURM_DIST_CYCLIC_CYCLIC:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "cyclic"
-        elif state == slurm.SLURM_DIST_CYCLIC_BLOCK:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "block"
-        elif state == slurm.SLURM_DIST_CYCLIC_CFULL:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "fcyclic"
-        elif state == slurm.SLURM_DIST_BLOCK_CYCLIC:
-            out["nodes"] = "block"
-            out["sockets"] = "cyclic"
-        elif state == slurm.SLURM_DIST_BLOCK_BLOCK:
-            out["nodes"] = "block"
-            out["sockets"] = "block"
-        elif state == slurm.SLURM_DIST_BLOCK_CFULL:
-            out["nodes"] = "block"
-            out["sockets"] = "fcyclic"
-        elif state == slurm.SLURM_DIST_CYCLIC_CYCLIC_CYCLIC:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "cyclic"
-            out["cores"] = "cyclic"
-        elif state == slurm.SLURM_DIST_CYCLIC_CYCLIC_BLOCK:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "cyclic"
-            out["cores"] = "block"
-        elif state == slurm.SLURM_DIST_CYCLIC_CYCLIC_CFULL:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "cyclic"
-            out["cores"] = "fcyclic"
-        elif state == slurm.SLURM_DIST_CYCLIC_BLOCK_CYCLIC:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "block"
-            out["cores"] = "cyclic"
-        elif state == slurm.SLURM_DIST_CYCLIC_BLOCK_CYCLIC:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "block"
-            out["cores"] = "cyclic"
-        elif state == slurm.SLURM_DIST_CYCLIC_BLOCK_BLOCK:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "block"
-            out["cores"] = "block"
-        elif state == slurm.SLURM_DIST_CYCLIC_BLOCK_CFULL:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "block"
-            out["cores"] = "fcyclic"
-        elif state == slurm.SLURM_DIST_CYCLIC_CFULL_CYCLIC:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "fcyclic"
-            out["cores"] = "cyclic"
-        elif state == slurm.SLURM_DIST_CYCLIC_CFULL_BLOCK:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "fcyclic"
-            out["cores"] = "block"
-        elif state == slurm.SLURM_DIST_CYCLIC_CFULL_CFULL:
-            out["nodes"] = "cyclic"
-            out["sockets"] = "fcyclic"
-            out["cores"] = "fcyclic"
-        elif state == slurm.SLURM_DIST_BLOCK_CYCLIC_CYCLIC:
-            out["nodes"] = "block"
-            out["sockets"] = "cyclic"
-            out["cores"] = "cyclic"
-        elif state == slurm.SLURM_DIST_BLOCK_CYCLIC_BLOCK:
-            out["nodes"] = "block"
-            out["sockets"] = "cyclic"
-            out["cores"] = "block"
-        elif state == slurm.SLURM_DIST_BLOCK_CYCLIC_CFULL:
-            out["nodes"] = "block"
-            out["sockets"] = "cyclic"
-            out["cores"] = "fcyclic"
-        elif state == slurm.SLURM_DIST_BLOCK_BLOCK_CYCLIC:
-            out["nodes"] = "block"
-            out["sockets"] = "block"
-            out["cores"] = "cyclic"
-        elif state == slurm.SLURM_DIST_BLOCK_BLOCK_BLOCK:
-            out["nodes"] = "block"
-            out["sockets"] = "block"
-            out["cores"] = "block"
-        elif state == slurm.SLURM_DIST_BLOCK_BLOCK_CFULL:
-            out["nodes"] = "block"
-            out["sockets"] = "block"
-            out["cores"] = "fcyclic"
-        elif state == slurm.SLURM_DIST_BLOCK_CFULL_CYCLIC:
-            out["nodes"] = "block"
-            out["sockets"] = "fcyclic"
-            out["cores"] = "cyclic"
-        elif state == slurm.SLURM_DIST_BLOCK_CFULL_BLOCK:
-            out["nodes"] = "block"
-            out["sockets"] = "fcyclic"
-            out["cores"] = "block"
-        elif state == slurm.SLURM_DIST_BLOCK_CFULL_CFULL:
-            out["nodes"] = "block"
-            out["sockets"] = "fcyclic"
-            out["cores"] = "fcyclic"
-        else:
-            out = None
-
-    if out is not None:
-        dist_flag = dist & slurm.SLURM_DIST_STATE_FLAGS
-        if dist_flag == slurm.SLURM_DIST_PACK_NODES:
-            out["pack"] = True
-        elif dist_flag == slurm.SLURM_DIST_NO_PACK_NODES:
-            out["pack"] = False
-        
-    return out
-
-
-def parse_task_dist(dist):
-    """Parse a distribution str or dict to its numerical representation."""
-    cdef slurm.task_dist_states_t dist_state = slurm.SLURM_DIST_UNKNOWN
-
-    if not dist:
-        return dist_state, None
-
-    # Assume the user meant to specify the plane size.
-    if isinstance(dist, int):
-        return None, u16(dist)
-
-    # Support sbatch-style string input.
-    # Parse the string and fill in the dist_dict above.
-    if isinstance(dist, str):
-        dist_str = dist
-
-        # Plane method - return early because nothing else can be
-        # specified when this is set.
-        if "plane" in dist_str:
-            return None, u16(dist_str.split("=", 1)[1])
-
-        dist = {
-            "nodes": None,
-            "sockets": None,
-            "cores": None,
-            "plane": None,
-            "pack": None,
-        }
-
-        # [0] = distribution method for nodes:sockets:cores
-        # [1] = pack/nopack specification (true or false)
-        dist_items = dist_str.split(",", 1)
-
-        # Parse the different methods and fill in the dist_dict.
-        dist_methods = dist_items[0].split(":")
-        if len(dist_methods) and dist_methods[0] != "*":
-            dist["nodes"] = dist_methods[0]
-
-        if len(dist_methods) > 2 and dist_methods[1] != "*":
-            dist["sockets"] = dist_methods[1]
-
-        if len(dist_methods) >= 3:
-            if dist_methods[2] == "*":
-                dist["cores"] = dist_dict["sockets"]
-            else:
-                dist["cores"] = dist_methods[2]
-        
-        if len(dist_items) > 1:
-            if dist_items[1].casefold() == "pack":
-                dist["pack"] = True
-            elif dist_items[1].casefold() == "nopack":
-                dist["pack"] = False
-
-    # Plane method - return early because nothing else can be
-    # specified when this is set.
-    if dist.get("plane") is not None:
-        return None, u16(dist['plane'])
-
-    dist_str = ""
-    sockets_dist = None
-
-    # Join the dist_dict distribution methods into a dist_str
-    # for easier comparison to check which distribution state
-    # is needed (see below).
-    nodes = dist.get("nodes")
-    if nodes is not None and nodes != "*":
-        dist_str = f"{nodes}"
-    else:
-        dist_str = "block"
-
-    sockets = dist.get("sockets")
-    if sockets is not None and sockets != "*":
-        dist_str = f"{dist_str}:{sockets}"
-    else:
-        dist_str = f"{dist_str}:cyclic"
-
-    cores = dist.get("cores")
-    if cores is not None and cores != "*":
-        dist_str = f"{dist_str}:{cores}"
-    else:
-        dist_str = f"{dist_str}:{sockets}"
-
-    # Select the correct distribution method according to dist_str.
-    if dist_str == "cyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC
-    elif dist_str == "block":
-        dist_state = slurm.SLURM_DIST_BLOCK
-    elif dist_str == "arbitrary" or dist_str == "hostfile":
-        dist_state = slurm.SLURM_DIST_ARBITRARY
-    elif dist_str == "cyclic:cyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC_CYCLIC
-    elif dist_str == "cyclic:block":
-        dist_state = slurm.SLURM_DIST_CYCLIC_BLOCK
-    elif dist_str == "block:block":
-        dist_state = slurm,SLURM_DIST_BLOCK_BLOCK
-    elif dist_str == "block:cyclic":
-        dist_state = slurm.SLURM_DIST_BLOCK_CYCLIC
-    elif dist_str == "block:fcyclic":
-        dist_state = slurm.SLURM_DIST_BLOCK_CFULL
-    elif dist_str == "cyclic:fcyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC_CFULL
-    elif dist_str == "cyclic:cyclic:cyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC_CYCLIC_CYCLIC
-    elif dist_str == "cyclic:cyclic:block":
-        dist_state = slurm.SLURM_DIST_CYCLIC_CYCLIC_BLOCK
-    elif dist_str == "cyclic:cyclic:fcyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC_CYCLIC_CFULL
-    elif dist_str == "cyclic:block:cyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC_BLOCK_CYCLIC
-    elif dist_str == "cyclic:block:block":
-        dist_state = slurm.SLURM_DIST_CYCLIC_BLOCK_BLOCK
-    elif dist_str == "cyclic:block:fcyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC_BLOCK_CFULL
-    elif dist_str == "cyclic:fcyclic:cyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC_CFULL_CYCLIC
-    elif dist_str == "cyclic:fcyclic:block":
-        dist_state = slurm.SLURM_DIST_CYCLIC_CFULL_BLOCK
-    elif dist_str == "cyclic:fcyclic:fcyclic":
-        dist_state = slurm.SLURM_DIST_CYCLIC_CFULL_CFULL
-    elif dist_str == "block:cyclic:cyclic":
-        dist_state = slurm.SLURM_DIST_BLOCK_CYCLIC_CYCLIC
-    elif dist_str == "block:cyclic:block":
-        dist_state = slurm.SLURM_DIST_BLOCK_CYCLIC_BLOCK
-    elif dist_str == "block:cyclic:fcyclic":
-        dist_state = slurm.SLURM_DIST_BLOCK_CYCLIC_CFULL
-    elif dist_str == "block:block:cyclic":
-        dist_state = slurm.SLURM_DIST_BLOCK_BLOCK_CYCLIC
-    elif dist_str == "block:block:block":
-        dist_state = slurm.SLURM_DIST_BLOCK_BLOCK_BLOCK
-    elif dist_str == "block:block:fcyclic":
-        dist_state = slurm.SLURM_DIST_BLOCK_BLOCK_CFULL
-    elif dist_str == "block:fcyclic:cyclic":
-        dist_state = slurm.SLURM_DIST_BLOCK_CFULL_CYCLIC
-    elif dist_str == "block:fcyclic:block":
-        dist_state = slurm.SLURM_DIST_BLOCK_CFULL_BLOCK
-    elif dist_str == "block:fcyclic:fcyclic":
-        dist_state = slurm.SLURM_DIST_BLOCK_CFULL_CFULL
-    else:
-        raise ValueError(f"Invalid distribution specification: {dist}")
-
-    # Check for Pack/NoPack
-    # Don't do anything if dist["pack"] is None
-    if dist["pack"]:
-        dist_state = <slurm.task_dist_states_t>(dist_state | slurm.SLURM_DIST_PACK_NODES)
-    elif dist["pack"] is not None and not dist["pack"]:
-        dist_state = <slurm.task_dist_states_t>(dist_state | slurm.SLURM_DIST_NO_PACK_NODES)
-
-    return dist_state, None
-
-
-def parse_cpu_gov(gov): 
+def cpu_gov_str_to_int(gov): 
     """Convert a cpu governor str to is numerical representation."""
     if not gov:
         return u32(None)
@@ -530,7 +250,7 @@ def parse_cpu_gov(gov):
     return rc | slurm.CPU_FREQ_RANGE_FLAG
 
 
-def parse_cpufreq(freq):
+def cpu_freq_str_to_int(freq):
     """Convert a cpu-frequency str to its numerical representation."""
     if not freq:
         return u32(None)
@@ -554,7 +274,8 @@ def parse_cpufreq(freq):
     raise ValueError(f"Invalid cpu freq value: {freq}.")
 
 
-def cpufreq_to_str(freq):
+# https://github.com/SchedMD/slurm/blob/fec3d2648cfdcfa8b4efb1b59e70ebfaac98d9c3/src/common/cpu_frequency.c#L1359
+def cpu_freq_int_to_str(freq):
     """Convert a numerical cpufreq value to its string representation."""
     if freq == slurm.CPU_FREQ_LOW:
         return "Low"
@@ -585,3 +306,39 @@ def cpufreq_to_str(freq):
         return freq
 
 
+def dependency_str_to_dict(dep):
+    if not dep:
+        return None
+
+    out = {
+        "after": [],
+        "afterany": [],
+        "afterburstbuffer": [],
+        "aftercorr": [],
+        "afternotok": [],
+        "afterok": [],
+        "singleton": False,
+        "satisfy": "all",
+    }
+
+    delim = ","
+    if "?" in dep:
+        delim = "?"
+        out["satisfy"] = "any"
+
+    for item in dep.split(delim):
+        if item == "singleton":
+            out["singleton"] = True
+
+        dep_and_job = item.split(":", 1)
+        if len(dep_and_job) != 2:
+            continue
+
+        dep_name, jobs = dep_and_job[0], dep_and_job[1].split(":")
+        if dep_name not in out:
+            continue
+
+        for job in jobs:
+            out[dep_name].append(int(job) if job.isdigit() else job)
+
+    return out

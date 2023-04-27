@@ -30,7 +30,8 @@ from pyslurm.core.common import (
     uid_to_name,
     instance_to_dict,
 )
-from pyslurm.core.job.util import cpufreq_to_str
+from pyslurm.core.job.util import cpu_freq_int_to_str
+from pyslurm.core.job.step import humanize_step_id
 
 
 cdef class JobStep:
@@ -56,30 +57,6 @@ cdef class JobStep:
         cdef dict out = instance_to_dict(self)
         out["stats"] = self.stats.as_dict()
         return out
-
-    def _xlate_from_id(self, sid):
-        if sid == slurm.SLURM_BATCH_SCRIPT:
-            return "batch"
-        elif sid == slurm.SLURM_EXTERN_CONT:
-            return "extern"
-        elif sid == slurm.SLURM_INTERACTIVE_STEP:
-            return "interactive"
-        elif sid == slurm.SLURM_PENDING_STEP:
-            return "pending"
-        else:
-            return sid
-
-    def _xlate_to_id(self, sid):
-        if sid == "batch":
-            return slurm.SLURM_BATCH_SCRIPT
-        elif sid == "extern":
-            return slurm.SLURM_EXTERN_CONT
-        elif sid == "interactive":
-            return slurm.SLURM_INTERACTIVE_STEP
-        elif sid == "pending":
-            return slurm.SLURM_PENDING_STEP
-        else:
-            return int(sid)
 
     @property
     def num_nodes(self):
@@ -149,15 +126,15 @@ cdef class JobStep:
 
     @property
     def cpu_frequency_min(self):
-        return cpufreq_to_str(self.ptr.req_cpufreq_min)
+        return cpu_freq_int_to_str(self.ptr.req_cpufreq_min)
 
     @property
     def cpu_frequency_max(self):
-        return cpufreq_to_str(self.ptr.req_cpufreq_max)
+        return cpu_freq_int_to_str(self.ptr.req_cpufreq_max)
 
     @property
     def cpu_frequency_governor(self):
-        return cpufreq_to_str(self.ptr.req_cpufreq_gov)
+        return cpu_freq_int_to_str(self.ptr.req_cpufreq_gov)
 
     @property
     def nodelist(self):
@@ -165,7 +142,7 @@ cdef class JobStep:
 
     @property
     def id(self):
-        return self._xlate_from_id(self.ptr.step_id.step_id)
+        return humanize_step_id(self.ptr.step_id.step_id)
 
     @property
     def job_id(self):

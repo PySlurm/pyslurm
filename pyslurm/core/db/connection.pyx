@@ -24,6 +24,7 @@ from pyslurm.core.error import RPCError
 
 
 cdef class Connection:
+
     def __cinit__(self):
         self.ptr = NULL
         self.flags = 0
@@ -57,6 +58,16 @@ cdef class Connection:
         if self.is_open:
             slurmdb_connection_close(&self.ptr)
             self.ptr = NULL
+
+    def commit(self):
+        """Commit recent changes."""
+        if slurmdb_connection_commit(self.ptr, 1) == slurm.SLURM_ERROR:
+            raise RPCError("Failed to commit database changes.")
+
+    def rollback(self):
+        """Rollback recent changes."""
+        if slurmdb_connection_commit(self.ptr, 0) == slurm.SLURM_ERROR:
+            raise RPCError("Failed to rollback database changes.")
 
     @property
     def is_open(self):

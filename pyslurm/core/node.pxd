@@ -72,7 +72,7 @@ cdef class Nodes(dict):
             Total amount of effective CPUs in this node collection.
         current_watts (int):
             Total amount of Watts consumed in this node collection.
-        average_watts (int):
+        avg_watts (int):
             Amount of average watts consumed in this node collection.
 
     Raises:
@@ -186,7 +186,7 @@ cdef class Node:
             Node cap watts.
         current_watts (int):
             Current amount of watts consumed on the node.
-        average_watts (int):
+        avg_watts (int):
             Average amount of watts consumed on the node.
         external_sensors (dict):
             External Sensor info for the Node.

@@ -1,7 +1,7 @@
 #########################################################################
 # node.pyx - interface to work with nodes in slurm
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
 from pyslurm.slurm cimport xfree, try_xmalloc
@@ -196,8 +196,8 @@ cdef class Nodes(dict):
         return _sum_prop(self, Node.current_watts)
 
     @property
-    def average_watts(self):
-        return _sum_prop(self, Node.average_watts)
+    def avg_watts(self):
+        return _sum_prop(self, Node.avg_watts)
 
 
 cdef class Node:
@@ -266,18 +266,14 @@ cdef class Node:
             dst.info = src.info
             src.info = tmp
 
-    def reload(self):
-        """(Re)load information for a node.
+    @staticmethod
+    def load(name):
+        """Load information for a specific node.
 
         Implements the slurm_load_node_single RPC.
 
-        Note:
-            You can call this function repeatedly to refresh the information
-            of an instance. Using the Node object returned is optional.
-
         Returns:
-            (Node): This function returns the current Node-instance object
-                itself.
+            (pyslurm.Node): Returns a new Node instance.
 
         Raises:
             RPCError: If requesting the Node information from the slurmctld
@@ -285,47 +281,34 @@ cdef class Node:
             MemoryError: If malloc failed to allocate memory.
 
         Examples:
-            >>> from pyslurm import Node
-            >>> node = Node("localhost")
-            >>> node.reload()
-            >>> 
-            >>> # You can also write this in one-line:
-            >>> node = Node("localhost").reload()
+            >>> import pyslurm
+            >>> node = pyslurm.Node.load("localhost")
         """
         cdef:
             node_info_msg_t      *node_info = NULL
             partition_info_msg_t *part_info = NULL
-
-        if not self.name:
-            raise ValueError("You need to set a node name first")
+            Node wrap = Node.__new__(Node)
 
         try:
             verify_rpc(slurm_load_node_single(&node_info,
-                                              self.name, slurm.SHOW_ALL))
+                                              name, slurm.SHOW_ALL))
             verify_rpc(slurm_load_partitions(0, &part_info, slurm.SHOW_ALL))
             slurm_populate_node_partitions(node_info, part_info)
 
-            save_name = self.name
             if node_info and node_info.record_count:
-                # Cleanup the old info.
-                self._dealloc_impl()
-                # Copy new info
-                self._alloc_impl()
-                memcpy(self.info, &node_info.node_array[0], sizeof(node_info_t))
+                # Copy info
+                wrap._alloc_impl()
+                memcpy(wrap.info, &node_info.node_array[0], sizeof(node_info_t))
                 node_info.record_count = 0
-
-                # Need to do this, because while testing even when specifying
-                # a node name that doesn't exist, it still returned the
-                # "localhost" node in my Test-setup. Why?
-                if self.name != save_name:
-                    raise RPCError(msg=f"Node '{save_name}' does not exist")
+            else:
+                raise RPCError(msg=f"Node '{name}' does not exist")
         except Exception as e:
             raise e
         finally:
             slurm_free_node_info_msg(node_info)
             slurm_free_partition_info_msg(part_info)
 
-        return self
+        return wrap
 
     def create(self, state="future"):
         """Create a node.
@@ -672,7 +655,7 @@ cdef class Node:
         return u32_parse(self.info.energy.current_watts)
 
     @property
-    def average_watts(self):
+    def avg_watts(self):
         if not self.info.energy:
             return None
         return u32_parse(self.info.energy.ave_watts)

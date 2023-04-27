@@ -113,7 +113,7 @@ cpdef u64_parse(uint64_t val, on_inf="unlimited", on_noval=None, noval=slurm.NO_
         return val
 
 
-cdef u8_bool(val):
+cpdef u8_bool(val):
     if val is None:
         return slurm.NO_VAL8
     elif val:
@@ -122,7 +122,7 @@ cdef u8_bool(val):
         return 0
 
 
-cdef u16_bool(val):
+cpdef u16_bool(val):
     if val is None:
         return slurm.NO_VAL16
     elif val:

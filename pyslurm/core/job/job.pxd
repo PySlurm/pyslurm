@@ -1,7 +1,7 @@
 #########################################################################
 # job.pyx - interface to retrieve slurm job informations
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
 from pyslurm.core.common cimport cstr, ctime
@@ -69,7 +69,7 @@ cdef class Jobs(dict):
     """A collection of Job objects.
 
     Args:
-        nodes (Union[list, dict], optional):
+        jobs (Union[list, dict], optional):
             Jobs to initialize this collection with.
         freeze (bool, optional):
             Control whether this collection is "frozen" when reloading Job
@@ -375,7 +375,6 @@ cdef class Job:
 
     cdef public JobSteps steps
 
-    cdef alloc(self)
     cdef _calc_run_time(self)
 
     @staticmethod

@@ -141,32 +141,27 @@ cdef class QualityOfService:
         wrap.ptr = in_ptr
         return wrap
 
-    def reload(self):
-        """(Re)load the information for this Quality of Service.
+    @staticmethod
+    def load(name):
+        """Load the information for a specific Quality of Service.
 
-        Note:
-            You can call this function repeatedly to refresh the information
-            of an instance. Using the object returned is optional.
+        Args:
+            name (str):
+                Name of the Quality of Service to be loaded.
 
         Returns:
-            (pyslurm.db.QualityOfService): Returns the current
-                QualityOfService-instance itself.
+            (pyslurm.db.QualityOfService): Returns a new QualityOfService
+                instance.
 
         Raises:
             RPCError: If requesting the information from the database was not
                 sucessful.
         """
-        cdef QualityOfService qos
-        qos_data = QualitiesOfService.load(names=[self.name])
-        if not qos_data or self.name not in qos_data:
-            raise RPCError(msg=f"QualityOfService {self.name} does not exist")
+        qos_data = QualitiesOfService.load(names=[name])
+        if not qos_data or name not in qos_data:
+            raise RPCError(msg=f"QualityOfService {name} does not exist")
 
-        qos = qos_data[self.name]
-        self._dealloc_impl()
-        self.ptr = qos.ptr
-        qos.ptr = NULL
-
-        return self
+        return qos_data[name]
 
     @property
     def name(self):

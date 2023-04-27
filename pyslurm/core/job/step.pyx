@@ -1,7 +1,7 @@
 #########################################################################
 # job/step.pyx - interface to retrieve slurm job step informations
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,10 +32,9 @@ from pyslurm.core.common import (
     instance_to_dict, 
     uid_to_name,
 )
-from pyslurm.core.job.util import (
-    cpufreq_to_str,
-    get_task_dist,
-)
+from pyslurm.core.job.util import cpu_freq_int_to_str
+from pyslurm.core.job.task_dist cimport TaskDistribution
+
 from pyslurm.core.common.ctime import (
     secs_to_timestr,
     mins_to_timestr,
@@ -59,7 +58,7 @@ cdef class JobSteps(dict):
     @staticmethod
     def load(job):
         cdef Job _job
-        _job = job.reload() if isinstance(job, Job) else Job(job).reload()
+        _job = Job.load(job.id) if isinstance(job, Job) else Job.load(job)
         return JobSteps._load(_job)
 
     @staticmethod
@@ -132,10 +131,10 @@ cdef class JobStep:
         self.ptr = NULL
         self.umsg = NULL
 
-    def __init__(self, job=0, step=0, **kwargs):
+    def __init__(self, job_id=0, step_id=0, **kwargs):
         self._alloc_impl()
-        self.job_id = job.id if isinstance(job, Job) else job
-        self.id = step
+        self.job_id = job_id.id if isinstance(job_id, Job) else job_id
+        self.id = step_id
 
         # Initialize attributes, if any were provided
         for k, v in kwargs.items():
@@ -179,58 +178,51 @@ cdef class JobStep:
         # Call descriptors __set__ directly
         JobStep.__dict__[name].__set__(self, val)
 
-    def reload(self):
-        """(Re)load information for a specific job step.
+    @staticmethod
+    def load(job_id, step_id):
+        """Load information for a specific job step.
 
         Implements the slurm_get_job_steps RPC.
 
-        Note:
-            You can call this function repeatedly to refresh the information
-            of an instance. Using the JobStep object returned is optional.
+        Args:
+            job_id (Union[Job, int]):
+                ID of the Job the Step belongs to.
+            step_id (Union[int, str]):
+                Step-ID for the Step to be loaded.
+
+        Returns:
+            (pyslurm.JobStep): Returns a new JobStep instance
 
         Raises:
             RPCError: When retrieving Step information from the slurmctld was
                 not successful.
             MemoryError: If malloc failed to allocate memory.
 
-        Returns:
-            (JobStep): This function returns the current JobStep-instance
-                object itself.
-
         Examples:
-            >>> from pyslurm import JobStep
-            >>> jobstep = JobStep(9999, 1)
-            >>> jobstep.reload()
-            >>> 
-            >>> # You can also write this in one-line:
-            >>> jobstep = JobStep(9999, 1).reload()
+            >>> import pyslurm
+            >>> jobstep = pyslurm.JobStep.load(9999, 1)
         """
         cdef:
             job_step_info_response_msg_t *info = NULL
-            uint32_t save_jid = self.job_id
-            uint32_t save_sid = self.ptr.step_id.step_id
+            JobStep wrap = JobStep.__new__(JobStep)
 
-        rc = slurm_get_job_steps(<time_t>0, save_jid, save_sid,
+        job_id = job_id.id if isinstance(job_id, Job) else job_id
+        rc = slurm_get_job_steps(<time_t>0, job_id, dehumanize_step_id(step_id),
                                        &info, slurm.SHOW_ALL)
         verify_rpc(rc)
 
-        if info.job_step_count == 1:
-            # Cleanup the old info.
-            self._dealloc_impl()
-
+        if info and info.job_step_count == 1:
             # Copy new info
-            self._alloc_impl()
-            memcpy(self.ptr, &info.job_steps[0], sizeof(job_step_info_t))
+            wrap._alloc_impl()
+            memcpy(wrap.ptr, &info.job_steps[0], sizeof(job_step_info_t))
             info.job_step_count = 0
             slurm_free_job_step_info_response_msg(info)
         else:
             slurm_free_job_step_info_response_msg(info)
-
-            sid = self._xlate_from_id(save_sid)
-            msg = f"Step {sid} of Job {save_jid} not found."
+            msg = f"Step {step_id} of Job {job_id} not found."
             raise RPCError(msg=msg)
 
-        return self
+        return wrap
 
     @staticmethod
     cdef JobStep from_ptr(job_step_info_t *in_ptr):
@@ -322,29 +314,6 @@ cdef class JobStep:
         js.umsg.job_id = self.ptr.step_id.job_id
         verify_rpc(slurm_update_step(js.umsg))
 
-    def _xlate_from_id(self, sid):
-        if sid == slurm.SLURM_BATCH_SCRIPT:
-            return "batch"
-        elif sid == slurm.SLURM_EXTERN_CONT:
-            return "extern"
-        elif sid == slurm.SLURM_INTERACTIVE_STEP:
-            return "interactive"
-        elif sid == slurm.SLURM_PENDING_STEP:
-            return "pending"
-        else:
-            return sid
-
-    def _xlate_to_id(self, sid):
-        if sid == "batch":
-            return slurm.SLURM_BATCH_SCRIPT
-        elif sid == "extern":
-            return slurm.SLURM_EXTERN_CONT
-        elif sid == "interactive":
-            return slurm.SLURM_INTERACTIVE_STEP
-        elif sid == "pending":
-            return slurm.SLURM_PENDING_STEP
-        else:
-            return int(sid)
 
     def as_dict(self):
         """JobStep information formatted as a dictionary.
@@ -356,11 +325,11 @@ cdef class JobStep:
 
     @property
     def id(self):
-        return self._xlate_from_id(self.ptr.step_id.step_id)
+        return humanize_step_id(self.ptr.step_id.step_id)
 
     @id.setter
     def id(self, val):
-        self.ptr.step_id.step_id = self._xlate_to_id(val)
+        self.ptr.step_id.step_id = dehumanize_step_id(val)
 
     @property
     def job_id(self):
@@ -396,15 +365,15 @@ cdef class JobStep:
 
     @property
     def cpu_frequency_min(self):
-        return cpufreq_to_str(self.ptr.cpu_freq_min)
+        return cpu_freq_int_to_str(self.ptr.cpu_freq_min)
 
     @property
     def cpu_frequency_max(self):
-        return cpufreq_to_str(self.ptr.cpu_freq_max)
+        return cpu_freq_int_to_str(self.ptr.cpu_freq_max)
 
     @property
     def cpu_frequency_governor(self):
-        return cpufreq_to_str(self.ptr.cpu_freq_gov)
+        return cpu_freq_int_to_str(self.ptr.cpu_freq_gov)
 
     @property
     def reserved_ports(self):
@@ -456,7 +425,7 @@ cdef class JobStep:
         
     @property
     def distribution(self):
-        return get_task_dist(self.ptr.task_dist)
+        return TaskDistribution.from_int(self.ptr.task_dist)
 
     @property
     def command(self):
@@ -465,3 +434,28 @@ cdef class JobStep:
     @property
     def slurm_protocol_version(self):
         return u32_parse(self.ptr.start_protocol_ver)
+
+
+def humanize_step_id(sid):
+    if sid == slurm.SLURM_BATCH_SCRIPT:
+        return "batch"
+    elif sid == slurm.SLURM_EXTERN_CONT:
+        return "extern"
+    elif sid == slurm.SLURM_INTERACTIVE_STEP:
+        return "interactive"
+    elif sid == slurm.SLURM_PENDING_STEP:
+        return "pending"
+    else:
+        return sid
+
+def dehumanize_step_id(sid):
+    if sid == "batch":
+        return slurm.SLURM_BATCH_SCRIPT
+    elif sid == "extern":
+        return slurm.SLURM_EXTERN_CONT
+    elif sid == "interactive":
+        return slurm.SLURM_INTERACTIVE_STEP
+    elif sid == "pending":
+        return slurm.SLURM_PENDING_STEP
+    else:
+        return int(sid)

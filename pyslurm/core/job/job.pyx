@@ -1,7 +1,7 @@
 #########################################################################
 # job.pyx - interface to retrieve slurm job informations
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -205,36 +205,44 @@ cdef class Job:
         self.ptr = NULL
 
     def __init__(self, job_id):
-        self.alloc()
+        self._alloc_impl()
         self.ptr.job_id = job_id
         self.passwd = {}
         self.groups = {}
         self.steps = JobSteps.__new__(JobSteps)
 
-    cdef alloc(self):
-        self.ptr = <slurm_job_info_t*>try_xmalloc(sizeof(slurm_job_info_t))
+    def _alloc_impl(self):
         if not self.ptr:
-            raise MemoryError("xmalloc failed for job_info_t")
+            self.ptr = <slurm_job_info_t*>try_xmalloc(sizeof(slurm_job_info_t))
+            if not self.ptr:
+                raise MemoryError("xmalloc failed for job_info_t")
 
-    def __dealloc__(self):
+    def _dealloc_impl(self):
         slurm_free_job_info(self.ptr)
         self.ptr = NULL
+
+    def __dealloc__(self):
+        self._dealloc_impl()
 
     def __eq__(self, other):
         return isinstance(other, Job) and self.id == other.id
 
-    def reload(self):
-        """(Re)load information for a job.
+    @staticmethod
+    def load(job_id):
+        """Load information for a specific Job.
 
         Implements the slurm_load_job RPC.
 
         Note:
-            You can call this function repeatedly to refresh the information
-            of an instance. Using the Job object returned is optional.
+            If the Job is not pending, the related Job steps will also be
+            loaded.
+
+        Args:
+            job_id (int):
+                An Integer representing a Job-ID.
 
         Returns:
-            (Job): This function returns the current Job-instance object
-                itself.
+            (pyslurm.Job): Returns a new Job instance
 
         Raises:
             RPCError: If requesting the Job information from the slurmctld was
@@ -242,45 +250,42 @@ cdef class Job:
             MemoryError: If malloc failed to allocate memory.
 
         Examples:
-            >>> from pyslurm import Job
-            >>> job = Job(9999)
-            >>> job.reload()
-            >>> 
-            >>> # You can also write this in one-line:
-            >>> job = Job(9999).reload()
+            >>> import pyslurm
+            >>> job = pyslurm.Job.load(9999)
         """
         cdef:
             job_info_msg_t *info = NULL
+            Job wrap = Job.__new__(Job)
 
         try: 
-            verify_rpc(slurm_load_job(&info, self.id, slurm.SHOW_DETAIL))
+            verify_rpc(slurm_load_job(&info, job_id, slurm.SHOW_DETAIL))
 
             if info and info.record_count:
-                # Cleanup the old info
-                slurm_free_job_info(self.ptr)
-
-                # Copy new info
-                self.alloc()
-                memcpy(self.ptr, &info.job_array[0], sizeof(slurm_job_info_t))
+                # Copy info
+                wrap._alloc_impl()
+                memcpy(wrap.ptr, &info.job_array[0], sizeof(slurm_job_info_t))
                 info.record_count = 0
 
-                # Just ignore if the steps couldn't be loaded here.
-                try:
-                    if not slurm.IS_JOB_PENDING(self.ptr):
-                        self.steps = JobSteps._load(self)
-                except RPCError:
-                    pass
+                if not slurm.IS_JOB_PENDING(wrap.ptr):
+                    # Just ignore if the steps couldn't be loaded here.
+                    try:
+                        wrap.steps = JobSteps._load(wrap)
+                    except RPCError:
+                        pass
+            else:
+                raise RPCError(msg=f"RPC was successful but got no job data, "
+                               "this should never happen")
         except Exception as e:
             raise e
         finally:
             slurm_free_job_info_msg(info)
 
-        return self
+        return wrap
 
     @staticmethod
     cdef Job from_ptr(slurm_job_info_t *in_ptr):
         cdef Job wrap = Job.__new__(Job)
-        wrap.alloc()
+        wrap._alloc_impl()
         wrap.passwd = {}
         wrap.groups = {}
         wrap.steps = JobSteps.__new__(JobSteps)
@@ -666,42 +671,7 @@ cdef class Job:
 
     @property
     def dependencies(self):
-        dep = cstr.to_unicode(self.ptr.dependency, default=[])
-        if not dep:
-            return None
-
-        out = {
-            "after": [],
-            "afterany": [],
-            "afterburstbuffer": [],
-            "aftercorr": [],
-            "afternotok": [],
-            "afterok": [],
-            "singleton": False,
-            "satisfy": "all",
-        }
-
-        delim = ","
-        if "?" in dep:
-            delim = "?"
-            out["satisfy"] = "any"
-
-        for item in dep.split(delim):
-            if item == "singleton":
-                out["singleton"] = True
-
-            dep_and_job = item.split(":", 1)
-            if len(dep_and_job) != 2:
-                continue
-
-            dep_name, jobs = dep_and_job[0], dep_and_job[1].split(":")
-            if dep_name not in out:
-                continue
-
-            for job in jobs:
-                out[dep_name].append(int(job) if job.isdigit() else job)
-
-        return out
+        return dependency_str_to_dict(cstr.to_unicode(self.ptr.dependency))
 
     @property
     def time_limit(self):
@@ -845,7 +815,7 @@ cdef class Job:
 
     @property
     def cpus(self):
-        return u32_parse(self.ptr.num_cpus)
+        return u32_parse(self.ptr.num_cpus, on_noval=1)
 
     @property
     def cpus_per_task(self):
@@ -1005,15 +975,15 @@ cdef class Job:
 
     @property
     def cpu_frequency_min(self):
-        return cpufreq_to_str(self.ptr.cpu_freq_min)
+        return cpu_freq_int_to_str(self.ptr.cpu_freq_min)
 
     @property
     def cpu_frequency_max(self):
-        return cpufreq_to_str(self.ptr.cpu_freq_max)
+        return cpu_freq_int_to_str(self.ptr.cpu_freq_max)
 
     @property
     def cpu_frequency_governor(self):
-        return cpufreq_to_str(self.ptr.cpu_freq_gov)
+        return cpu_freq_int_to_str(self.ptr.cpu_freq_gov)
 
     #   @property
     #   def tres_bindings(self):
@@ -1037,7 +1007,7 @@ cdef class Job:
 
     @property
     def mail_types(self):
-        return get_mail_type(self.ptr.mail_type)
+        return mail_type_int_to_list(self.ptr.mail_type)
 
     @property
     def heterogeneous_id(self):
@@ -1091,8 +1061,8 @@ cdef class Job:
         cdef time_t rtime
         cdef time_t etime
 
-        if slurm.IS_JOB_PENDING(self.ptr):
-            return None
+        if slurm.IS_JOB_PENDING(self.ptr) or not self.ptr.start_time:
+            return 0
         elif slurm.IS_JOB_SUSPENDED(self.ptr):
             return self.pre_suspension_time
         else:
@@ -1102,17 +1072,16 @@ cdef class Job:
                 etime = self.ptr.end_time
 
             if self.ptr.suspend_time:
-                rtime = <time_t>ctime.difftime(
-                    etime,
-                    self.ptr.suspend_time + self.ptr.pre_sus_time)
+                rtime = <time_t>ctime.difftime(etime, self.ptr.suspend_time)
+                rtime += self.ptr.pre_sus_time
             else:
                 rtime = <time_t>ctime.difftime(etime, self.ptr.start_time)
 
-        return u64_parse(rtime)
+        return u64_parse(rtime, on_noval=0)
 
     @property
     def run_time(self):
-        return _raw_time(self._calc_run_time())
+        return self._calc_run_time()
 
     @property
     def cores_reserved_for_system(self):
@@ -1185,7 +1154,7 @@ cdef class Job:
 
     @property
     def profile_types(self):
-        return get_acctg_profile(self.ptr.profile)
+        return acctg_profile_int_to_list(self.ptr.profile)
 
     @property
     def gres_binding(self):
@@ -1206,7 +1175,7 @@ cdef class Job:
 
     @property
     def power_options(self):
-        return get_power_type(self.ptr.power_flags)
+        return power_type_int_to_list(self.ptr.power_flags)
 
     @property
     def is_cronjob(self):
@@ -1218,13 +1187,7 @@ cdef class Job:
 
     @property
     def cpu_time(self):
-        run_time = self.run_time
-        if run_time:
-            cpus = self.cpus
-            if cpus is not None:
-                return cpus * run_time
-
-        return 0
+        return self.cpus * self.run_time
 
     @property
     def pending_time(self):
@@ -1242,7 +1205,7 @@ cdef class Job:
         This contains the following information:
             * cpus (int)
             * gres (dict)
-            * memory (str) - Humanized Memory str
+            * memory (int)
 
         Returns:
             (dict): Resource layout

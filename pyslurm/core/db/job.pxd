@@ -160,9 +160,9 @@ cdef class Job:
 
     Attributes:
         steps (pyslurm.db.JobSteps):
-            Steps this Job has.
+            Steps this Job has
         stats (pyslurm.db.JobStats):
-            General Statistics of this Job
+            Utilization statistics of this Job
         account (str):
             Account of the Job.
         admin_comment (str):

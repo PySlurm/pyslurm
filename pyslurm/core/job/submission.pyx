@@ -1,7 +1,7 @@
 #########################################################################
 # submission.pyx - interface for submitting slurm jobs
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # Pyslurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
 from os import getcwd
@@ -27,6 +27,7 @@ import typing
 import shlex
 from pathlib import Path
 from pyslurm.core.common cimport cstr, ctime
+from pyslurm.core.common import cstr
 from pyslurm.core.common.uint cimport *
 from pyslurm.core.common.uint import *
 from pyslurm.core.common.ctime cimport time_t
@@ -41,6 +42,7 @@ from pyslurm.core.common.ctime import (
     timestamp_to_date,
     date_to_timestamp,
 )
+from pyslurm.core.job.task_dist cimport TaskDistribution
 
 from pyslurm.core.common import (
     humanize,
@@ -227,10 +229,10 @@ cdef class JobSubmitDescription:
         ptr.requeue = u16_bool(self.is_requeueable)
         ptr.wait_all_nodes = u16_bool(self.wait_all_nodes)
 
-        ptr.mail_type = parse_mail_type(self.mail_types)
-        ptr.power_flags = parse_power_type(self.power_options)
-        ptr.profile = parse_acctg_profile(self.profile_types)
-        ptr.shared = parse_shared_type(self.resource_sharing)
+        ptr.mail_type = mail_type_list_to_int(self.mail_types)
+        ptr.power_flags = power_type_list_to_int(self.power_options)
+        ptr.profile = acctg_profile_list_to_int(self.profile_types)
+        ptr.shared = shared_type_str_to_int(self.resource_sharing)
 
         self._set_cpu_frequency()
         self._set_nodes()
@@ -330,9 +332,9 @@ cdef class JobSubmitDescription:
             if freq_len == 3:
                 freq["governor"] = freq_splitted[2]
 
-        freq_min = parse_cpufreq(freq.get("min"))
-        freq_max = parse_cpufreq(freq.get("max"))
-        freq_gov = parse_cpu_gov(freq.get("governor"))
+        freq_min = cpu_freq_str_to_int(freq.get("min"))
+        freq_max = cpu_freq_str_to_int(freq.get("max"))
+        freq_gov = cpu_gov_str_to_int(freq.get("governor"))
 
         if freq_min != u32(None):
             if freq_max == u32(None):
@@ -571,12 +573,25 @@ cdef class JobSubmitDescription:
             self.ptr.env_size+=1
 
     def _set_distribution(self):
-        dist, plane = parse_task_dist(self.distribution)
+        dist=plane = None
+
+        if not self.distribution:
+            self.ptr.task_dist = slurm.SLURM_DIST_UNKNOWN
+            return None
+
+        if isinstance(self.distribution, int):
+            # Assume the user meant to specify the plane size only.
+            plane = u16(self.distribution) 
+        elif isinstance(self.distribution, str):
+            # Support sbatch style string input
+            dist = TaskDistribution.from_str(self.distribution)
+            plane = dist.plane if isinstance(dist.plane, int) else 0
+
         if plane:
             self.ptr.plane_size = plane
             self.ptr.task_dist = slurm.SLURM_DIST_PLANE
-        elif self.distribution is not None:
-            self.ptr.task_dist = <slurm.task_dist_states_t>dist
+        elif dist is not None:
+            self.ptr.task_dist = dist.as_int()
 
     def _set_gpu_binding(self):
         binding = self.gpu_binding
