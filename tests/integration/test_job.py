@@ -1,13 +1,10 @@
-"""test_job.py - Test the job api functions."""
+"""test_job.py - Integration test job api functionalities."""
 
-import sys
 import time
 import pytest
 import pyslurm
-import tempfile
-import os
-from os import environ as pyenviron
-from conftest import create_simple_job_desc
+import util
+from util import create_simple_job_desc
 from pyslurm import (
     Job,
     Jobs,
@@ -16,7 +13,14 @@ from pyslurm import (
 )
 
 
-def test_reload(submit_job):
+def test_parse_all(submit_job):
+    job = submit_job()
+    # Use the as_dict() function to test if parsing works for all
+    # properties on a simple Job without error.
+    Job.load(job.id).as_dict()
+
+
+def test_load(submit_job):
     job = submit_job()
     jid = job.id
 
@@ -27,7 +31,7 @@ def test_reload(submit_job):
     assert job.time_limit == None
 
     # Now load the job info
-    job.reload()
+    job = Job.load(jid)
 
     assert job.id == jid
     assert job.ntasks == 2
@@ -35,59 +39,49 @@ def test_reload(submit_job):
     assert job.time_limit == 1440
 
     with pytest.raises(RPCError):
-        Job(99999).reload()
+        Job.load(99999)
 
 
 def test_cancel(submit_job):
     job = submit_job()
-
     job.cancel()
-
     # make sure the job is actually cancelled
-    time.sleep(0.5)
-    assert job.reload().state == "CANCELLED"
-
-
-def test_parse_all(submit_job):
-    job = submit_job()
-
-    # Use the as_dict() function to test if parsing works for all
-    # properties on a simple Job without error.
-    job.reload().as_dict()
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    assert Job.load(job.id).state == "CANCELLED"
 
 
 def test_send_signal(submit_job):
     job = submit_job()
 
-    time.sleep(1)
-    assert job.reload().state == "RUNNING"
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    assert Job.load(job.id).state == "RUNNING"
 
     # Send a SIGKILL (basically cancelling the Job)
     job.send_signal(9)
 
     # make sure the job is actually cancelled
-    time.sleep(1)
-    assert job.reload().state == "CANCELLED"
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    assert Job.load(job.id).state == "CANCELLED"
 
 
 def test_suspend_unsuspend(submit_job):
     job = submit_job()
 
-    time.sleep(1)
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
     job.suspend()
-    assert job.reload().state == "SUSPENDED"
+    assert Job.load(job.id).state == "SUSPENDED"
 
     job.unsuspend()
     # make sure the job is actually running again
-    time.sleep(1)
-    assert job.reload().state == "RUNNING"
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    assert Job.load(job.id).state == "RUNNING"
 
 
 # Don't need to test hold/resume, since it uses just job.modify() to set
 # priority to 0/INFINITE.
 def test_modify(submit_job):
     job = submit_job(priority=0)
-    job = job.reload()
+    job = Job(job.id)
 
     changes = JobSubmitDescription(
         time_limit = "2-00:00:00",
@@ -96,7 +90,7 @@ def test_modify(submit_job):
     )
 
     job.modify(changes)
-    job.reload()
+    job = Job.load(job.id)
 
     assert job.time_limit == 2880
     assert job.ntasks == 5
@@ -105,20 +99,20 @@ def test_modify(submit_job):
 
 def test_requeue(submit_job):
     job = submit_job()
-    job.reload()
+    job = Job.load(job.id)
 
     assert job.requeue_count == 0
 
-    time.sleep(1.5)
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
     job.requeue()
-    job.reload()
+    job = Job.load(job.id)
 
     assert job.requeue_count == 1
 
 
 def test_notify(submit_job):
     job = submit_job()
-    time.sleep(1)
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
 
     # Could check the logfile, but we just assume for now
     # that when this function raises no Exception, everything worked.
@@ -141,3 +135,8 @@ def test_get_job_queue(submit_job):
         # Check to see if all the Jobs we submitted exist
         assert job.id in jobs
         assert isinstance(jobs[job.id], Job)
+
+
+def test_get_resource_layout_per_node(submit_job):
+    # TODO
+    assert True

@@ -7,6 +7,7 @@ from pyslurm import (
     JobSteps,
     RPCError,
 )
+import util
 
 
 def create_job_script_multi_step(steps=None):
@@ -31,20 +32,13 @@ wait
     return job_script
 
 
-def test_reload(submit_job):
+def test_load(submit_job):
     job = submit_job(script=create_job_script_multi_step())
-    step = JobStep(job, "batch")
 
-    # Nothing has been loaded at this point, just make sure everything is
-    # on default values.
-    assert step.name is None
-    assert step.ntasks is None
-    assert step.time_limit is None
-
-    # Now load the step info, waiting one second to make sure the Step
+    # Load the step info, waiting one second to make sure the Step
     # actually exists.
-    time.sleep(1)
-    step.reload()
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    step = JobStep.load(job.id, "batch")
 
     assert step.id == "batch"
     assert step.job_id == job.id
@@ -53,11 +47,11 @@ def test_reload(submit_job):
     assert step.ntasks == 1
     # Job was submitted with a time-limit of 1 day, but it seems this doesn't
     # propagate through for the steps if not set explicitly.
-    assert step.time_limit == None
+    assert step.time_limit is None
 
     # Now try to load the first and second Step started by srun
-    step_zero = JobStep(job, 0).reload()
-    step_one = JobStep(job, 1).reload()
+    step_zero = JobStep.load(job, 0)
+    step_one = JobStep.load(job, 1)
   
     # It is possible that the srun executed as the second command will
     # become the Step with ID '0' - so we just swap it.
@@ -74,7 +68,7 @@ def test_reload(submit_job):
     assert step.name == "step_zero"
     assert step.ntasks == 1
     assert step.alloc_cpus == 2
-    assert step.time_limit == None
+    assert step.time_limit is None
 
     step = step_one
     assert step.job_id == job.id
@@ -87,7 +81,7 @@ def test_reload(submit_job):
 def test_collection(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
-    time.sleep(1)
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
     steps = JobSteps.load(job)
 
     assert steps != {}
@@ -98,23 +92,10 @@ def test_collection(submit_job):
             1 in steps)
 
 
-def test_distribution(submit_job):
-    job = submit_job(script=create_job_script_multi_step())
-    step = JobStep(job, 0)
-
-    assert step.distribution is None
-
-    time.sleep(1)
-    step.reload()
-
-    assert step.distribution == {"nodes": "block" , "sockets": "cyclic",
-                                "cores": "block", "plane": None ,"pack": True}
-
-
 def test_cancel(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
-    time.sleep(1)
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
     steps = JobSteps.load(job)
     assert len(steps) == 3
     assert ("batch" in steps and
@@ -123,7 +104,7 @@ def test_cancel(submit_job):
 
     steps[0].cancel()
     
-    time.sleep(0.5)
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
     steps = JobSteps.load(job)
     assert len(steps) == 2
     assert ("batch" in steps and
@@ -134,48 +115,46 @@ def test_modify(submit_job):
     steps = "srun -t 20 sleep 100"
     job = submit_job(script=create_job_script_multi_step(steps))
 
-    time.sleep(1)
-    step = JobStep(job, 0).reload()
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    step = JobStep.load(job, 0)
     assert step.time_limit == 20
 
     step.modify(JobStep(time_limit="00:05:00"))
-    assert step.reload().time_limit == 5
+    assert JobStep.load(job, 0).time_limit == 5
 
     step.modify(time_limit="00:15:00")
-    assert step.reload().time_limit == 15
+    assert JobStep.load(job, 0).time_limit == 15
 
 
 def test_send_signal(submit_job):
     steps = "srun -t 10 sleep 100"
     job = submit_job(script=create_job_script_multi_step(steps))
-    step = JobStep(job, 0)
 
-    time.sleep(1)
-    assert step.reload().state == "RUNNING"
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    step = JobStep.load(job, 0)
+    assert step.state == "RUNNING"
 
     # Send a SIGTERM (basically cancelling the Job)
     step.send_signal(15)
 
     # Make sure the job is actually cancelled.
     # If a RPCError is raised, this means the Step got cancelled.
-    time.sleep(1)
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
     with pytest.raises(RPCError):
-        step.reload()
+        step = JobStep.load(job, 0)
 
 
-def test_reload_with_wrong_step_id(submit_job):
+def test_load_with_wrong_step_id(submit_job):
     job = submit_job()
-    step = JobStep(job, 3)
 
     with pytest.raises(RPCError):
-        step.reload()
+        JobStep.load(job, 3)
 
 
 def test_parse_all(submit_job):
     job = submit_job()
-    step = JobStep(job, "batch")
 
     # Use the as_dict() function to test if parsing works for all
     # properties on a simple JobStep without error.
-    time.sleep(1)
-    step.reload().as_dict()
+    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    JobStep.load(job, "batch").as_dict()

@@ -7,7 +7,7 @@ import pyslurm
 import tempfile
 import os
 from os import environ as pyenviron
-from conftest import create_simple_job_desc, create_job_script
+from util import create_simple_job_desc, create_job_script
 from pyslurm import (
     Job,
     Jobs,
@@ -227,26 +227,6 @@ def test_signal():
     job._create_job_submit_desc()
 
     job.signal = "RB:8@180"
-    job._create_job_submit_desc()
-
-
-def test_distribution():
-    job = job_desc()
-    job._create_job_submit_desc()
-
-    job.distribution = "cyclic:cyclic:cyclic"
-    job._create_job_submit_desc()
-
-    job.distribution = {"nodes": "cyclic", "sockets": "block", "pack": True}
-    job._create_job_submit_desc()
-    
-    job.distribution = "*:*:fcyclic,NoPack"
-    job._create_job_submit_desc()
-
-    job.distribution = 10
-    job._create_job_submit_desc()
-
-    job.distribution = {"plane": 20}
     job._create_job_submit_desc()
 
 

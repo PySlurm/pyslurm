@@ -8,22 +8,18 @@ import os
 from pyslurm import Node, Nodes, RPCError
 
 
-def test_reload():
-    node = Node(Nodes.load().as_list()[0].name)
+def test_load():
+    name = Nodes.load().as_list()[0].name
 
-    # Nothing has been loaded at this point, just make sure everything is
-    # on default values.
-    assert node.weight is None
-    assert node.slurm_version is None
     # Now load the node info
-    node.reload()
-    assert node.name == "localhost"
+    node = Node.load(name)
+    assert node.name == name
     assert node.weight is not None
     assert node.slurm_version is not None
 
     with pytest.raises(RPCError,
                        match=f"Node 'nonexistent' does not exist"):
-        Node("nonexistent").reload()
+        Node.load("nonexistent")
 
 
 def test_create():
@@ -43,14 +39,14 @@ def test_modify():
     node = Node(Nodes.load().as_list()[0].name)
 
     node.modify(weight=10000)
-    assert node.reload().weight == 10000
+    assert Node.load(node.name).weight == 10000
 
     node.modify(Node(weight=20000))
-    assert node.reload().weight == 20000
+    assert Node.load(node.name).weight == 20000
 
     node.modify(Node(weight=5000))
-    assert node.reload().weight == 5000
+    assert Node.load(node.name).weight == 5000
 
 
 def test_parse_all():
-    Node(Nodes.load().as_list()[0].name).reload().as_dict()
+    Node.load(Nodes.load().as_list()[0].name).as_dict()

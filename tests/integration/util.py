@@ -4,6 +4,12 @@ from pyslurm import (
     JobSubmitDescription,
 )
 
+# Horrendous, but works for now, because when testing against a real slurmctld
+# we need to wait a bit for state changes (i.e. we cancel a job and
+# immediately check after if the state is really "CANCELLED", but the state
+# hasn't changed yet, so we need to wait a bit)
+WAIT_SECS_SLURMCTLD = 3
+
 
 def create_job_script():
     job_script = """\
@@ -31,20 +37,3 @@ def create_simple_job_desc(script=None, **kwargs):
     job.time_limit = "1-00:00:00"
 
     return job
-
-
-@pytest.fixture
-def submit_job():
-
-    jobs = []
-    def _job(script=None, **kwargs):
-        job_desc = create_simple_job_desc(script, **kwargs)
-        job = Job(job_desc.submit())
-
-        jobs.append(job)
-        return job
-
-    yield _job
-
-    for j in jobs:
-        j.cancel()
