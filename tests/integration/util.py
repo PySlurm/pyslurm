@@ -3,12 +3,17 @@ from pyslurm import (
     Job,
     JobSubmitDescription,
 )
+import time
 
 # Horrendous, but works for now, because when testing against a real slurmctld
 # we need to wait a bit for state changes (i.e. we cancel a job and
 # immediately check after if the state is really "CANCELLED", but the state
 # hasn't changed yet, so we need to wait a bit)
 WAIT_SECS_SLURMCTLD = 3
+
+
+def wait(secs=WAIT_SECS_SLURMCTLD):
+    time.sleep(secs)
 
 
 def create_job_script():

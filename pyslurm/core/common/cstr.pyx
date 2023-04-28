@@ -151,7 +151,7 @@ cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
 
     for kv in _str_dict.split(delim1):
         if delim2 in kv:
-            key, val = kv.split(delim2)
+            key, val = kv.split(delim2, 1)
             out[key] = val
 
     return out

@@ -38,7 +38,11 @@ from pyslurm.slurm cimport (
     slurm_job_state_string,
     slurm_job_reason_string,
 )
-from pyslurm.core.db.util cimport SlurmList, SlurmListItem
+from pyslurm.core.db.util cimport (
+    SlurmList,
+    SlurmListItem,
+    make_char_list,
+)
 from pyslurm.core.db.step cimport JobStep, JobSteps
 from pyslurm.core.db.stats cimport JobStats
 from pyslurm.core.db.connection cimport Connection

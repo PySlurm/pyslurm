@@ -46,7 +46,7 @@ cdef class QualitiesOfService(dict):
         qos_dict.db_conn = Connection.open() if not conn else conn
         qos_dict.info = SlurmList.wrap(slurmdb_qos_get(qos_dict.db_conn.ptr,
                                                        cond.ptr))
-        if qos_dict.info.is_null():
+        if qos_dict.info.is_null:
             raise RPCError(msg="Failed to get QoS data from slurmdbd")
 
         for qos_ptr in SlurmList.iter_and_pop(qos_dict.info):
@@ -105,9 +105,9 @@ cdef class QualityOfServiceSearchFilter:
         self._alloc()
         cdef slurmdb_qos_cond_t *ptr = self.ptr
 
-        SlurmList.to_char_list(&ptr.name_list, self.names)
-        SlurmList.to_char_list(&ptr.id_list, self.ids)
-        SlurmList.to_char_list(&ptr.description_list, self.descriptions)
+        make_char_list(&ptr.name_list, self.names)
+        make_char_list(&ptr.id_list, self.ids)
+        make_char_list(&ptr.description_list, self.descriptions)
         ptr.preempt_mode = self._parse_preempt_modes()
         ptr.with_deleted = 1 if bool(self.with_deleted) else 0
         

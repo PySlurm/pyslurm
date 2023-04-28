@@ -139,17 +139,17 @@ cdef class JobSearchFilter:
         ptr.timelimit_min = u32(timestr_to_mins(self.timelimit), on_noval=0)
         ptr.timelimit_max = u32(timestr_to_mins(self.max_timelimit),
                                 on_noval=0)
-        SlurmList.to_char_list(&ptr.acct_list, self.accounts)
-        SlurmList.to_char_list(&ptr.associd_list, self.association_ids)
-        SlurmList.to_char_list(&ptr.cluster_list, self._parse_clusters())
-        SlurmList.to_char_list(&ptr.constraint_list, self.constraints)
-        SlurmList.to_char_list(&ptr.jobname_list, self.names)
-        SlurmList.to_char_list(&ptr.groupid_list, self._parse_groups())
-        SlurmList.to_char_list(&ptr.userid_list, self._parse_users())
-        SlurmList.to_char_list(&ptr.wckey_list, self.wckeys)
-        SlurmList.to_char_list(&ptr.partition_list, self.partitions)
-        SlurmList.to_char_list(&ptr.qos_list, self._parse_qos())
-        SlurmList.to_char_list(&ptr.state_list, self._parse_state())
+        make_char_list(&ptr.acct_list, self.accounts)
+        make_char_list(&ptr.associd_list, self.association_ids)
+        make_char_list(&ptr.cluster_list, self._parse_clusters())
+        make_char_list(&ptr.constraint_list, self.constraints)
+        make_char_list(&ptr.jobname_list, self.names)
+        make_char_list(&ptr.groupid_list, self._parse_groups())
+        make_char_list(&ptr.userid_list, self._parse_users())
+        make_char_list(&ptr.wckey_list, self.wckeys)
+        make_char_list(&ptr.partition_list, self.partitions)
+        make_char_list(&ptr.qos_list, self._parse_qos())
+        make_char_list(&ptr.state_list, self._parse_state())
 
         if self.nodelist:
             cstr.fmalloc(&ptr.used_nodes,
@@ -228,7 +228,7 @@ cdef class Jobs(dict):
         jobs.db_conn = Connection.open()
         jobs.info = SlurmList.wrap(slurmdb_jobs_get(jobs.db_conn.ptr,
                                                     cond.ptr))
-        if jobs.info.is_null():
+        if jobs.info.is_null:
             raise RPCError(msg="Failed to get Jobs from slurmdbd")
 
         qos_data = QualitiesOfService.load(name_is_key=False,
@@ -287,7 +287,7 @@ cdef class Job:
         return wrap
 
     @staticmethod
-    def load(job_id):
+    def load(job_id, with_script=False, with_env=False):
         """Load the information for a specific Job from the Database.
 
         Args:
@@ -301,8 +301,10 @@ cdef class Job:
             RPCError: If requesting the information for the database Job was
                 not sucessful.
         """
-        jobs = Jobs.load(ids=[int(job_id)])
-        if not jobs or job_idid not in jobs:
+        jfilter = JobSearchFilter(ids=[int(job_id)],
+                                  with_script=with_script, with_env=with_env)
+        jobs = Jobs.load(jfilter)
+        if not jobs or job_id not in jobs:
             raise RPCError(msg=f"Job {job_id} does not exist")
 
         return jobs[job_id]
@@ -325,12 +327,15 @@ cdef class Job:
             (dict): Database Job information as dict
         """
         cdef dict out = instance_to_dict(self)
-        out["stats"] = self.stats.as_dict()
-        steps = out.pop("steps", {})
 
+        if self.stats:
+            out["stats"] = self.stats.as_dict()
+
+        steps = out.pop("steps", {})
         out["steps"] = {}
         for step_id, step in steps.items():
             out["steps"][step_id] = step.as_dict() 
+
         return out
 
     @property
@@ -520,6 +525,10 @@ cdef class Job:
     @property
     def script(self):
         return cstr.to_unicode(self.ptr.script)
+
+    @property
+    def environment(self):
+        return cstr.to_dict(self.ptr.env, delim1="\n", delim2="=")
 
     @property
     def start_time(self):

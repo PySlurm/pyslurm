@@ -21,6 +21,25 @@
 # cython: language_level=3
 
 
+cdef make_char_list(List *in_list, vals):
+    if not in_list[0]:
+        return None
+
+    # Make a new SlurmList wrapper with the values
+    cdef SlurmList slist = SlurmList(vals)
+
+    # Make sure the previous list is deallocated
+    slurm_list_destroy(in_list[0])
+
+    # Assign the pointer from slist to in_list, and give up ownership of slist
+    in_list[0] = slist.info
+    slist.owned = False
+
+
+cdef slurm_list_to_pylist(List in_list):
+    return SlurmList.wrap(in_list, owned=False).to_pylist()
+
+
 cdef class SlurmListItem:
     
     def __cinit__(self):
@@ -32,6 +51,13 @@ cdef class SlurmListItem:
         wrap.data = item
         return wrap
 
+    @property
+    def has_data(self):
+        if self.data:
+            return True
+        else:
+            return False
+
 
 cdef class SlurmList:
     """Convenience Wrapper around slurms List type"""
@@ -42,15 +68,29 @@ cdef class SlurmList:
         self.cnt = 0
         self.owned = True
 
-    def __dealloc__(self):
-        if self.owned:
-            if self.itr:
-                slurm_list_iterator_destroy(self.itr)
+    def __init__(self, vals=None):
+        self.info = slurm_list_create(slurm_xfree_ptr)
+        self.append(vals)
 
-            if self.info:
-                slurm_list_destroy(self.info)
+    def __dealloc__(self):
+        self._dealloc_itr()
+        self._dealloc_list()
+
+    def _dealloc_list(self):
+        if self.info is not NULL and self.owned:
+            slurm_list_destroy(self.info)
+            self.cnt = 0
+            self.info = NULL
+
+    def _dealloc_itr(self):
+        if self.itr:
+            slurm_list_iterator_destroy(self.itr)
+            self.itr_cnt = 0
+            self.itr = NULL
 
     def __iter__(self):
+        self._dealloc_itr()
+        self.itr = slurm_list_iterator_create(self.info)
         return self
 
     def __next__(self):
@@ -58,72 +98,75 @@ cdef class SlurmList:
             self.itr_cnt += 1
             return SlurmListItem.from_ptr(slurm_list_next(self.itr))
 
-        slurm_list_iterator_reset(self.itr)
-        self.itr_cnt = 0
+        self._dealloc_itr()
         raise StopIteration
 
     @staticmethod
     def iter_and_pop(SlurmList li):
-        cnt = 0
-        while cnt < li.cnt:
+        while li.cnt > 0:
             yield SlurmListItem.from_ptr(slurm_list_pop(li.info))
-            cnt += 1
+            li.cnt -= 1
 
     @staticmethod
-    cdef SlurmList create(slurm.ListDelF delfunc):
+    cdef SlurmList create(slurm.ListDelF delfunc, owned=True):
         cdef SlurmList wrapper = SlurmList.__new__(SlurmList)
         wrapper.info = slurm_list_create(delfunc)
-        wrapper.itr = slurm_list_iterator_create(wrapper.info)
-        return wrapper
-
-    @staticmethod
-    cdef SlurmList wrap(List li, owned=True):
-        if not li:
-            raise ValueError("List is NULL")
-
-        cdef SlurmList wrapper = SlurmList.__new__(SlurmList)
-        wrapper.info = li
-        wrapper.cnt = slurm_list_count(li)
-        wrapper.itr = slurm_list_iterator_create(wrapper.info)
         wrapper.owned = owned
         return wrapper
 
     @staticmethod
-    cdef to_str_pylist(List in_list):
+    cdef SlurmList wrap(List li, owned=True):
+        cdef SlurmList wrapper = SlurmList.__new__(SlurmList)
+        if not li:
+            return wrapper
+
+        wrapper.info = li
+        wrapper.cnt = slurm_list_count(li)
+        wrapper.owned = owned
+        return wrapper
+
+    def to_pylist(self):
         cdef:
-            ListIterator itr = slurm_list_iterator_create(in_list)
-            char* entry = NULL
+            SlurmListItem item
             list out = []
 
-        for i in range(slurm_list_count(in_list)):
-            entry = <char*>slurm_list_next(itr)
-            pystr = cstr.to_unicode(entry)
-            if pystr:
-                out.append(pystr)
+        for item in self:
+            if not item.has_data:
+                continue
 
-        slurm_list_iterator_destroy(itr)
+            pystr = cstr.to_unicode(<char*>item.data)
+            if pystr:
+                out.append(int(pystr) if pystr.isdigit() else pystr)
+
         return out
 
-    @staticmethod
-    cdef to_char_list(List *in_list, vals):
-        cdef:
-            List li = in_list[0]
-            char *entry = NULL
-
-        if in_list[0]:
-            slurm_list_destroy(li)
-            in_list[0] = NULL
+    def append(self, vals):
+        cdef char *entry = NULL
 
         if not vals:
-            in_list[0] = NULL
-        else:
-            in_list[0] = slurm_list_create(slurm_xfree_ptr)
-            for val in vals:
-                if val:
-                    entry = NULL
-                    cstr.fmalloc(&entry, str(val))
-                    slurm_list_append(in_list[0], entry)
+            return None
 
+        to_add = vals
+        if not isinstance(vals, list):
+            # If it is not a list, then anything that can't be casted to str
+            # will error below anyways
+            to_add = [vals]
+
+        for val in to_add:
+            if val:
+                entry = NULL
+                cstr.fmalloc(&entry, str(val))
+                slurm_list_append(self.info, entry)
+                self.cnt += 1
+
+    @property
+    def is_itr_null(self):
+        if not self.itr:
+            return True
+        else:
+            return False
+
+    @property
     def is_null(self):
         if not self.info:
             return True

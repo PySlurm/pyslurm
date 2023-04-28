@@ -37,6 +37,9 @@ from pyslurm.slurm cimport (
     slurm_xfree_ptr,
 )
 
+cdef slurm_list_to_pylist(List in_list)
+cdef make_char_list(List *in_list, vals)
+
 
 cdef class SlurmListItem:
     cdef void *data
@@ -48,19 +51,15 @@ cdef class SlurmListItem:
 cdef class SlurmList:
     cdef:
         List info
-        int cnt
         ListIterator itr
-        int itr_cnt
+
+    cdef readonly:
         owned
+        int itr_cnt
+        int cnt
     
     @staticmethod
     cdef SlurmList wrap(List, owned=*)
 
     @staticmethod
-    cdef SlurmList create(slurm.ListDelF delf)
-
-    @staticmethod
-    cdef to_char_list(List *in_list, vals)
-
-    @staticmethod
-    cdef to_str_pylist(List in_list)
+    cdef SlurmList create(slurm.ListDelF delf, owned=*)

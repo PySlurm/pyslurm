@@ -1,10 +1,13 @@
 """test_job.py - Unit test basic job functionalities."""
 
-import time
 import pytest
 import pyslurm
 from pyslurm import Job
 from pyslurm.core.job.util import *
+
+def test_create_instance():
+    job = Job(9999)
+    assert job.id == 9999
 
 
 def test_parse_all():
