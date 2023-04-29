@@ -1,20 +1,22 @@
 #########################################################################
 # step.pyx - pyslurm slurmdbd step api
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
-# Pyslurm is free software; you can redistribute it and/or modify
+# This file is part of PySlurm
+#
+# PySlurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
-# Pyslurm is distributed in the hope that it will be useful,
+# PySlurm is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
+# with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # cython: c_string_type=unicode, c_string_encoding=default
@@ -40,7 +42,8 @@ cdef class JobStep:
         self.ptr = NULL
 
     def __init__(self):
-        raise RuntimeError("You can not instantiate this class directly")
+        raise RuntimeError("You can not instantiate this class directly "
+                           " at the moment")
 
     def __dealloc__(self):
         slurmdb_destroy_step_rec(self.ptr)

@@ -3,24 +3,29 @@
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
-# Pyslurm is free software; you can redistribute it and/or modify
+# This file is part of PySlurm
+#
+# PySlurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
-# Pyslurm is distributed in the hope that it will be useful,
+# PySlurm is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
+# with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.common import nodelist_from_range_str, instance_to_dict
+from pyslurm.core.common import (
+    nodelist_from_range_str,
+    instance_to_dict,
+)
 
 
 cdef class JobStats:
@@ -71,7 +76,6 @@ cdef class JobStats:
         if ave_freq != slurm.NO_VAL:
             wrap.avg_cpu_frequency = ptr.act_cpufreq
 
-        # Convert to MiB instead of raw bytes?
         wrap.avg_disk_read = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_ave, slurm.TRES_FS_DISK)
         wrap.avg_disk_write = TrackableResources.find_count_in_str(
@@ -196,5 +200,8 @@ cdef class JobStats:
         elapsed = job.elapsed_time if job.elapsed_time else 0
         cpus = job.cpus if job.cpus else 0
         job_stats.elapsed_cpu_time = elapsed * cpus
-        job_stats.avg_cpu_frequency /= len(steps)
+
+        step_count = len(steps)
+        if step_count:
+            job_stats.avg_cpu_frequency /= step_count
 

@@ -3,24 +3,29 @@
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
-# Pyslurm is free software; you can redistribute it and/or modify
+# This file is part of PySlurm
+#
+# PySlurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
-# Pyslurm is distributed in the hope that it will be useful,
+# PySlurm is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
+# with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
 from pyslurm.core.error import RPCError
+from pyslurm.core.common import (
+    instance_to_dict,
+)
 
 
 cdef class QualitiesOfService(dict):
@@ -85,8 +90,8 @@ cdef class QualityOfServiceSearchFilter:
         if not self.preempt_modes:
             return 0
 
-        if not isinstance(self.preempt_modes, list):
-            return int(self.preempt_modes)
+        if isinstance(self.preempt_modes, int):
+            return self.preempt_modes
         
         out = 0
         for mode in self.preempt_modes:
@@ -141,6 +146,14 @@ cdef class QualityOfService:
         wrap.ptr = in_ptr
         return wrap
 
+    def as_dict(self):
+        """Database QualityOfService information formatted as a dictionary.
+
+        Returns:
+            (dict): Database QualityOfService information as dict
+        """
+        return instance_to_dict(self)
+
     @staticmethod
     def load(name):
         """Load the information for a specific Quality of Service.
@@ -157,7 +170,8 @@ cdef class QualityOfService:
             RPCError: If requesting the information from the database was not
                 sucessful.
         """
-        qos_data = QualitiesOfService.load(names=[name])
+        qfilter = QualityOfServiceSearchFilter(names=[name])
+        qos_data = QualitiesOfService.load(qfilter)
         if not qos_data or name not in qos_data:
             raise RPCError(msg=f"QualityOfService {name} does not exist")
 

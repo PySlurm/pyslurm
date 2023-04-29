@@ -1,14 +1,16 @@
 #########################################################################
-# connection.pyx - pyslurm slurmdbd database connection
+# connection.pxd - pyslurm slurmdbd database connection
 #########################################################################
-# Copyright (C) 2022 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
-# Pyslurm is free software; you can redistribute it and/or modify
+# This file is part of PySlurm
+#
+# PySlurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
-# Pyslurm is distributed in the hope that it will be useful,
+# PySlurm is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -19,7 +21,6 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
-# cython: embedsignature=True
 
 from pyslurm cimport slurm
 from libc.stdint cimport uint16_t

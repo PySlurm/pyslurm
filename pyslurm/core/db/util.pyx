@@ -1,20 +1,22 @@
 #########################################################################
-# util.pxd - pyslurm slurmdbd util functions
+# util.pyx - pyslurm slurmdbd util functions
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
-# Pyslurm is free software; you can redistribute it and/or modify
+# This file is part of PySlurm
+#
+# PySlurm is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
-# Pyslurm is distributed in the hope that it will be useful,
+# PySlurm is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
+# with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # cython: c_string_type=unicode, c_string_encoding=default
@@ -22,14 +24,15 @@
 
 
 cdef make_char_list(List *in_list, vals):
-    if not in_list[0]:
+    if not vals:
         return None
 
     # Make a new SlurmList wrapper with the values
     cdef SlurmList slist = SlurmList(vals)
 
     # Make sure the previous list is deallocated
-    slurm_list_destroy(in_list[0])
+    if in_list[0]:
+        slurm_list_destroy(in_list[0])
 
     # Assign the pointer from slist to in_list, and give up ownership of slist
     in_list[0] = slist.info
@@ -57,6 +60,10 @@ cdef class SlurmListItem:
             return True
         else:
             return False
+
+    def to_str(self):
+        cdef char* entry = <char*>self.data
+        return cstr.to_unicode(entry)
 
 
 cdef class SlurmList:
@@ -90,10 +97,15 @@ cdef class SlurmList:
 
     def __iter__(self):
         self._dealloc_itr()
-        self.itr = slurm_list_iterator_create(self.info)
+        if not self.is_null:
+            self.itr = slurm_list_iterator_create(self.info)
+
         return self
 
     def __next__(self):
+        if self.is_null or self.is_itr_null:
+            raise StopIteration
+
         if self.itr_cnt < self.cnt:
             self.itr_cnt += 1
             return SlurmListItem.from_ptr(slurm_list_next(self.itr))
