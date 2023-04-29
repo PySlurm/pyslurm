@@ -1,5 +1,5 @@
 #########################################################################
-# test_node.py - node unit tests
+# test_db_job.py - database job unit tests
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -18,27 +18,35 @@
 # You should have received a copy of the GNU General Public License along
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-"""test_node.py - Unit Test basic functionality of the Node class."""
+"""test_db_job.py - Unit test basic database job functionalities."""
 
 import pytest
 import pyslurm
-from pyslurm import Node, Nodes
+
+
+def test_search_filter():
+    job_filter = pyslurm.db.JobSearchFilter()
+
+    job_filter.clusters = ["test1"]
+    job_filter.partitions = ["partition1", "partition2"]
+    job_filter._create()
+
+    job_filter.ids = [1000, 1001]
+    job_filter._create()
+
+    job_filter.with_script = True
+    job_filter._create()
+
+    job_filter.with_env = True
+    with pytest.raises(ValueError):
+        job_filter._create()
+
+
+def test_collection_init():
+    # TODO
+    assert True
 
 
 def test_create_instance():
-    node = Node("localhost")
-    assert node.name == "localhost"
-
-
-def test_parse_all():
-    Node("localhost").as_dict()
-
-
-def test_create_nodes_collection():
-    # TODO
-    assert True
-
-
-def test_setting_attributes():
-    # TODO
-    assert True
+    job = pyslurm.db.Job(9999)
+    assert job.id == 9999

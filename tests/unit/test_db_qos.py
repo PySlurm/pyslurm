@@ -1,5 +1,5 @@
 #########################################################################
-# test_node.py - node unit tests
+# test_db_qos.py - database qos unit tests
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -18,27 +18,32 @@
 # You should have received a copy of the GNU General Public License along
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-"""test_node.py - Unit Test basic functionality of the Node class."""
+"""test_db_qos.py - Unit test basic database qos functionalities."""
 
 import pytest
 import pyslurm
-from pyslurm import Node, Nodes
+
+
+def test_search_filter():
+    qos_filter = pyslurm.db.QualityOfServiceSearchFilter()
+    qos_filter._create()
+
+    qos_filter.ids = [1, 2]
+    qos_filter._create()
+
+    qos_filter.preempt_modes = ["cluster"]
+    qos_filter._create()
+
+    with pytest.raises(ValueError):
+        qos_filter.preempt_modes = ["invalid_preempt_mode"]
+        qos_filter._create()
+
+
+def test_create_collection_instance():
+    # TODO
+    assert True
 
 
 def test_create_instance():
-    node = Node("localhost")
-    assert node.name == "localhost"
-
-
-def test_parse_all():
-    Node("localhost").as_dict()
-
-
-def test_create_nodes_collection():
-    # TODO
-    assert True
-
-
-def test_setting_attributes():
-    # TODO
-    assert True
+    qos = pyslurm.db.QualityOfService("test")
+    assert qos.name == "test"

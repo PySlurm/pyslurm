@@ -1,4 +1,24 @@
-"""test_slurm_List.py - Unit test basic Slurm list functionalities."""
+#########################################################################
+# test_db_slurm_list.py - Slurm list tests
+#########################################################################
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+#
+# This file is part of PySlurm
+#
+# PySlurm is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# PySlurm is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with PySlurm; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+"""test_db_slurm_List.py - Unit test basic Slurm list functionalities."""
 
 import pytest
 import pyslurm
@@ -51,6 +71,7 @@ def test_iter():
     slist = SlurmList(input_list)
     assert slist.itr_cnt == 0
     assert slist.is_itr_null
+    assert not slist.is_null
     assert slist.cnt == 3
 
     for idx, slurm_item in enumerate(slist):
@@ -60,6 +81,14 @@ def test_iter():
 
     assert slist.itr_cnt == 0
     assert slist.is_itr_null
+
+    slist._dealloc_list()
+    assert slist.is_null
+    assert slist.cnt == 0
+
+    for item in slist:
+        # Should not be possible to get here
+        assert False
 
 
 def test_iter_and_pop():
@@ -82,9 +111,24 @@ def test_iter_and_pop():
     assert slist.itr_cnt == 0
     assert slist.cnt == 2
 
-    for idx, slurm_item in enumerate(SlurmList.iter_and_pop(slist)):
+    for slurm_item in SlurmList.iter_and_pop(slist):
         assert slurm_item.has_data
 
     assert slist.cnt == 0
     assert slist.itr_cnt == 0
     assert slist.is_itr_null
+
+
+def test_iter_and_pop_on_null_list():
+    input_list = ["user1", "user2", "user3"]
+    slist = SlurmList(input_list)
+    assert not slist.is_null
+    assert slist.cnt == 3
+
+    slist._dealloc_list()
+    assert slist.is_null
+    assert slist.cnt == 0
+
+    for slurm_item in SlurmList.iter_and_pop(slist):
+        # Should not be possible to get here
+        assert False

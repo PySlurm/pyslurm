@@ -1,5 +1,5 @@
 #########################################################################
-# test_node.py - node unit tests
+# test_db_connection.py - database connection api integration tests
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -18,27 +18,39 @@
 # You should have received a copy of the GNU General Public License along
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-"""test_node.py - Unit Test basic functionality of the Node class."""
+"""test_db_connection.py - Test database connectin api functionalities."""
 
 import pytest
 import pyslurm
-from pyslurm import Node, Nodes
 
 
 def test_create_instance():
-    node = Node("localhost")
-    assert node.name == "localhost"
+    with pytest.raises(RuntimeError):
+        pyslurm.db.Connection()
 
 
-def test_parse_all():
-    Node("localhost").as_dict()
+def test_open():
+    conn = pyslurm.db.Connection.open() 
+    assert conn.is_open
 
 
-def test_create_nodes_collection():
-    # TODO
-    assert True
+def test_close():
+    conn = pyslurm.db.Connection.open() 
+    assert conn.is_open
+
+    conn.close()
+    assert not conn.is_open
+    # no-op
+    conn.close()
 
 
-def test_setting_attributes():
-    # TODO
-    assert True
+def test_commit():
+    conn = pyslurm.db.Connection.open() 
+    assert conn.is_open
+    conn.commit()
+
+
+def test_rollback():
+    conn = pyslurm.db.Connection.open() 
+    assert conn.is_open
+    conn.rollback()
