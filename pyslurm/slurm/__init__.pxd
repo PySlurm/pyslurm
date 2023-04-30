@@ -23,24 +23,29 @@ from libc.string cimport (
     memcpy,
 )
 
+
 cdef extern from '<netinet/in.h>' nogil:
     ctypedef struct sockaddr_storage:
         pass
 
+
 cdef extern from '<stdio.h>' nogil:
     ctypedef struct FILE
     cdef FILE *stdout
+
 
 cdef extern from '<time.h>' nogil:
     ctypedef long time_t
     double difftime(time_t time1, time_t time2)
     time_t time(time_t *t)
 
+
 cdef extern from '<Python.h>' nogil:
     cdef FILE *PyFile_AsFile(object file)
     char *__FILE__
     cdef int __LINE__
     char *__FUNCTION__
+
 
 cdef extern from '<pthread.h>' nogil:
     ctypedef struct pthread_mutex_t:
@@ -51,6 +56,7 @@ cdef extern from '<pthread.h>' nogil:
 
     ctypedef struct pthread_t:
         pass
+
 
 cdef extern from *:
     ctypedef struct slurm_job_credential
@@ -67,8 +73,12 @@ cdef extern from *:
     ctypedef struct slurm_step_ctx_struct
     ctypedef struct slurm_ctl_conf_t
 
-# Header definitions combined from slurm.h, slurmdb.h and slurm_errno.h
-include "header.pxi"
+
+# Header definitions
+include "slurm_version.h.pxi"
+include "slurm_errno.h.pxi"
+include "slurm.h.pxi"
+include "slurmdb.h.pxi"
 
 # Any other definitions which are not directly in
 # the header files, but exported in libslurm.so
