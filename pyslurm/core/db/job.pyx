@@ -102,9 +102,9 @@ cdef class JobSearchFilter:
 
         uid_list = []
         for user in self.users:
-            if isinstance(user, int):
-                uid_list.append(user)
-            else:
+            if not isinstance(user, list):
+                uid_list.append(int(user))
+            elif user:
                 uid_list.append(user_to_uid(user))
 
         return uid_list

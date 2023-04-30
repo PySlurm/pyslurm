@@ -3,6 +3,12 @@
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
+# Note: Some functions in this File are annotated with additional Copyright
+# notices. These functions are:
+#
+# - get_batch_script
+# - get_resource_layout_per_node
+#
 # This file is part of PySlurm
 #
 # PySlurm is free software; you can redistribute it and/or modify
@@ -552,10 +558,29 @@ cdef class Job:
             >>> from pyslurm import Job
             >>> script = Job(9999).get_batch_script()
         """
-        # This reimplements the slurm_job_batch_script API call. Otherwise we
-        # would have to parse back the FILE* ptr we get from it back into a
-        # char* which would be a bit silly.
-        # Source: https://github.com/SchedMD/slurm/blob/7162f15af8deaf02c3bbf940d59e818cdeb5c69d/src/api/job_info.c#L1319
+        # The code for this function was taken from here:
+        # https://github.com/SchedMD/slurm/blob/7162f15af8deaf02c3bbf940d59e818cdeb5c69d/src/api/job_info.c#L1319
+        # and therefore reimplements the slurm_job_batch_script API call, with
+        # slight modifications (e.g. Cython syntax). Otherwise we would have
+        # to parse the FILE* ptr we get from it back into a char* which
+        # would be a bit silly.
+        #
+        # The copyright notices for the file this function was taken from is
+        # included below:
+        # 
+        # Portions Copyright (C) 2010-2017 SchedMD LLC <https://www.schedmd.com>.
+        # Copyright (C) 2002-2007 The Regents of the University of California.
+        # Copyright (C) 2008-2010 Lawrence Livermore National Security.
+        # Produced at Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+        # Written by Morris Jette <jette1@llnl.gov> et. al.
+        # CODE-OCEC-09-009. All rights reserved.
+        #
+        # Slurm is licensed under the GNU General Public License. For the full
+        # text of Slurm's License, please see here:
+        # pyslurm/slurm/SLURM_LICENSE
+        #
+        # Please, as mentioned above, also have a look at Slurm's DISCLAIMER
+        # under pyslurm/slurm/SLURM_DISCLAIMER
         cdef:
             job_id_msg_t msg
             slurm_msg_t req
@@ -1212,6 +1237,26 @@ cdef class Job:
         Returns:
             (dict): Resource layout
         """
+        # The code for this function is a modified reimplementation from here:
+        # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L739
+        #
+        # The copyright notices for the file that contains the original code
+        # is below:
+        # 
+        # Portions Copyright (C) 2010-2017 SchedMD LLC <https://www.schedmd.com>.
+        # Copyright (C) 2002-2007 The Regents of the University of California.
+        # Copyright (C) 2008-2010 Lawrence Livermore National Security.
+        # Produced at Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+        # Written by Morris Jette <jette1@llnl.gov> et. al.
+        # CODE-OCEC-09-009. All rights reserved. 
+        #
+        # Slurm is licensed under the GNU General Public License. For the full
+        # text of Slurm's License, please see here:
+        # pyslurm/slurm/SLURM_LICENSE
+        #
+        # Please, as mentioned above, also have a look at Slurm's DISCLAIMER
+        # under pyslurm/slurm/SLURM_DISCLAIMER
+        # 
         # TODO: Explain the structure of the return value a bit more.
         cdef:
             slurm.job_resources *resources = <slurm.job_resources*>self.ptr.job_resrcs

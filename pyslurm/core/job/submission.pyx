@@ -163,6 +163,11 @@ cdef class JobSubmitDescription:
         if self.site_factor:
             ptr.site_factor = slurm.NICE_OFFSET + int(self.site_factor)
 
+        if self.uid is not None:
+            ptr.user_id = user_to_uid(self.uid)
+        if self.gid is not None:
+            ptr.group_id = group_to_gid(self.gid)
+
         cstr.fmalloc(&ptr.name, self.name)
         cstr.fmalloc(&ptr.account, self.account)
         cstr.fmalloc(&ptr.wckey, self.wckey)
@@ -205,8 +210,6 @@ cdef class JobSubmitDescription:
         ptr.time_limit = timestr_to_mins(self.time_limit)
         ptr.time_min = timestr_to_mins(self.time_limit_min)
 
-        ptr.user_id = user_to_uid(self.uid)
-        ptr.group_id = group_to_gid(self.gid)
         ptr.priority = u32(self.priority, zero_is_noval=False)
         ptr.num_tasks = u32(self.ntasks)
         ptr.pn_min_tmp_disk = u32(dehumanize(self.temporary_disk_per_node))
