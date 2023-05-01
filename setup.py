@@ -33,7 +33,6 @@ metadata = dict(
     url="https://github.com/PySlurm/pyslurm",
     platforms=["Linux"],
     keywords=["HPC", "Batch Scheduler", "Resource Manager", "Slurm", "Cython"],
-    packages=["pyslurm"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",

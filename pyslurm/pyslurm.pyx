@@ -373,26 +373,6 @@ def slurm_load_slurmd_status():
 
     return Status
 
-def slurm_init(conf_file=None):
-    """Initialize the Slurm API internal structures.
-
-    This function MUST be called before any internal API calls to ensure
-    Slurm's internal configuration structures have been populated.
-
-    Args:
-        conf_file (str, optional): Absolute path to the configuration file. If
-            None (default value), libslurm automatically locates its own
-            configuration.
-    """
-    if conf_file:
-        slurm.slurm_init(conf_file.encode('UTF-8'))
-    else:
-        slurm.slurm_init(NULL)
-
-def slurm_fini():
-    """Cleanup Slurm internal configuration structures."""
-    slurm.slurm_fini()
-
 #
 # Slurm Config Class
 #
@@ -6764,6 +6744,3 @@ cdef class licenses:
         else:
             apiError = slurm.slurm_get_errno()
             raise ValueError(slurm.stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-# Automatically load Slurm configuration data structure at pyslurm module load
-slurm_init()
