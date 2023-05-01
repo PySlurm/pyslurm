@@ -503,7 +503,7 @@ cdef class Node:
                 slurm.SELECT_NODEDATA_MEM_ALLOC,
                 slurm.NODE_STATE_ALLOCATED,
                 &alloc_memory)
-        return u64_parse(alloc_memory)
+        return alloc_memory
 
     @property
     def real_memory(self):
@@ -535,11 +535,11 @@ cdef class Node:
 
     @property
     def total_cpus(self):
-        return u16_parse(self.info.cpus)
+        return u16_parse(self.info.cpus, on_noval=0)
 
     @property
     def sockets(self):
-        return u16_parse(self.info.sockets)
+        return u16_parse(self.info.sockets, on_noval=0)
 
     @property
     def cores_reserved_for_system(self):
@@ -647,20 +647,20 @@ cdef class Node:
     @property
     def cap_watts(self):
         if not self.info.power:
-            return None
-        return u32_parse(self.info.power.cap_watts)
+            return 0
+        return u32_parse(self.info.power.cap_watts, on_noval=0)
 
     @property
     def current_watts(self):
         if not self.info.energy:
-            return None
-        return u32_parse(self.info.energy.current_watts)
+            return 0
+        return u32_parse(self.info.energy.current_watts, on_noval=0)
 
     @property
     def avg_watts(self):
         if not self.info.energy:
-            return None
-        return u32_parse(self.info.energy.ave_watts)
+            return 0
+        return u32_parse(self.info.energy.ave_watts, on_noval=0)
 
     @property
     def external_sensors(self):
@@ -698,7 +698,7 @@ cdef class Node:
     @property
     def cpu_load(self):
         load = u32_parse(self.info.cpu_load)
-        return load / 100.0 if load is not None else None
+        return load / 100.0 if load is not None else 0.0
 
     @property
     def slurmd_port(self):

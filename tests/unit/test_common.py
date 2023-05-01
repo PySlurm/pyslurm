@@ -368,7 +368,7 @@ class TestMiscUtil:
         nodelist = ["node001", "node007", "node008", "node009"]
         nodelist_str = ",".join(nodelist)
         assert nodelist == nodelist_from_range_str("node[001,007-009]")
-        assert nodelist_from_range_str("node[001,007:009]") is None
+        assert nodelist_from_range_str("node[001,007:009]") == []
 
     def test_nodelist_to_range_str(self):
         nodelist = ["node001", "node007", "node008", "node009"]

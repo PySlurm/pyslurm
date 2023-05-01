@@ -178,7 +178,7 @@ def nodelist_from_range_str(nodelist):
 
     hl = slurm.slurm_hostlist_create(nl)
     if not hl:
-        return None
+        return []
 
     hl_unranged = slurm.slurm_hostlist_deranged_string_malloc(hl)
     out = cstr.to_list(hl_unranged)

@@ -1230,7 +1230,7 @@ cdef class Job:
         """Retrieve the resource layout of this Job on each node.
 
         This contains the following information:
-            * cpus (int)
+            * cpu_ids (str)
             * gres (dict)
             * memory (int)
 
@@ -1329,9 +1329,9 @@ cdef class Job:
 
             if nodename:
                 output[nodename] = {
-                    "cpus":   cpu_ids,
-                    "gres":   cstr.to_gres_dict(gres),
-                    "memory": mem,
+                    "cpu_ids": cpu_ids,
+                    "gres":    cstr.to_gres_dict(gres),
+                    "memory":  mem,
                 }
 
             free(host)

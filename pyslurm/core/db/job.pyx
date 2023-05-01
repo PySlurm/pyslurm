@@ -173,6 +173,8 @@ cdef class JobSearchFilter:
             already_added = []
             for i in self.ids:
                 job_id = u32(i)
+                if job_id in already_added:
+                    continue
 
                 selected_step = NULL
                 selected_step = <slurm_selected_step_t*>try_xmalloc(
@@ -184,9 +186,8 @@ cdef class JobSearchFilter:
                 selected_step.het_job_offset = slurm.NO_VAL
                 selected_step.step_id.step_id = slurm.NO_VAL
                 selected_step.step_id.job_id = job_id
-
-                if not job_id in already_added:
-                    slurm_list_append(ptr.step_list, selected_step)
+                slurm_list_append(ptr.step_list, selected_step)
+                already_added.append(job_id)
 
 
 cdef class Jobs(dict):

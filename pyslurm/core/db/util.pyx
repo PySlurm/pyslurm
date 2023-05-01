@@ -62,6 +62,8 @@ cdef class SlurmListItem:
             return False
 
     def to_str(self):
+        # Mostly for debugging purposes. Can only be used "safely" if we have
+        # a char* list
         cdef char* entry = <char*>self.data
         return cstr.to_unicode(entry)
 

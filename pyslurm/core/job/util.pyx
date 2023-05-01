@@ -276,7 +276,6 @@ def cpu_freq_str_to_int(freq):
     raise ValueError(f"Invalid cpu freq value: {freq}.")
 
 
-# https://github.com/SchedMD/slurm/blob/fec3d2648cfdcfa8b4efb1b59e70ebfaac98d9c3/src/common/cpu_frequency.c#L1359
 def cpu_freq_int_to_str(freq):
     """Convert a numerical cpufreq value to its string representation."""
     if freq == slurm.CPU_FREQ_LOW:

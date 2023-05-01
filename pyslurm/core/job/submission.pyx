@@ -163,10 +163,10 @@ cdef class JobSubmitDescription:
         if self.site_factor:
             ptr.site_factor = slurm.NICE_OFFSET + int(self.site_factor)
 
-        if self.uid is not None:
-            ptr.user_id = user_to_uid(self.uid)
-        if self.gid is not None:
-            ptr.group_id = group_to_gid(self.gid)
+        if self.user_id is not None:
+            ptr.user_id = user_to_uid(self.user_id)
+        if self.group_id is not None:
+            ptr.group_id = group_to_gid(self.group_id)
 
         cstr.fmalloc(&ptr.name, self.name)
         cstr.fmalloc(&ptr.account, self.account)

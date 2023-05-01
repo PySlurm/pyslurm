@@ -62,18 +62,7 @@ cdef fmalloc2(char **p1, char **p2, val):
 cdef fmalloc(char **old, val):
     """Try to free first and then create xmalloc'ed char* from str.
 
-    Also see:
-    https://github.com/SchedMD/slurm/blob/master/src/common/xstring.c#L454
-
-    This function is essentially like xstrdup from Slurm, but also tries to free
-    the previous allocation if needed.
-
-    Uses Slurm's try_xmalloc for routine for allocating memory. try_xmalloc will
-    return NULL if the allocation failed. We can check this and raise a
-    MemoryError.
-
-    Just using the normal xmalloc would call abort() if allocation failed (for
-    example when OOM).
+    Note: Uses Slurm's memory allocator.
     """
     # TODO: Consider doing some size checks on the input by having an extra
     # argument like "max_size" which is configurable. Otherwise infinitely huge

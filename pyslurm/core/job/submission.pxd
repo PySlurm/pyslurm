@@ -48,11 +48,11 @@ cdef class JobSubmitDescription:
             Name of the Job, same as -J/--job-name from sbatch.
         account (str):
             Account of the job, same as -A/--account from sbatch. 
-        uid (Union[str, int]):
+        user_id (Union[str, int]):
             Run the job as a different User, same as --uid from sbatch.
             This requires root privileges.
             You can both specify the name or numeric uid of the User. 
-        gid (Union[str, int]):
+        group_id (Union[str, int]):
             Run the job as a different Group, same as --gid from sbatch.
             This requires root privileges.
             You can both specify the name or numeric gid of the User. 
@@ -537,8 +537,8 @@ cdef class JobSubmitDescription:
     cdef public:
         name
         account
-        uid
-        gid
+        user_id
+        group_id
         priority
         site_factor
         wckey
