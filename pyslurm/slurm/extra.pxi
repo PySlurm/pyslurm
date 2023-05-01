@@ -1,3 +1,11 @@
+#
+# Structs that are not in the Slurm headers, which need to be redefined
+# in order to implement certain features.
+#
+# For example: to communicate with the slurmctld directly in order
+# to retrieve the actual batch-script as a string.
+#
+# https://github.com/SchedMD/slurm/blob/26abe9188ea8712ba1eab4a8eb6322851f06a108/src/common/slurm_persist_conn.h#L51
 ctypedef enum persist_conn_type_t:
     PERSIST_TYPE_NONE = 0
     PERSIST_TYPE_DBD
@@ -6,7 +14,7 @@ ctypedef enum persist_conn_type_t:
     PERSIST_TYPE_HA_DBD
     PERSIST_TYPE_ACCT_UPDATE
 
-# https://github.com/SchedMD/slurm/blob/master/src/common/slurm_persist_conn.h
+# https://github.com/SchedMD/slurm/blob/26abe9188ea8712ba1eab4a8eb6322851f06a108/src/common/slurm_persist_conn.h#L59
 ctypedef struct persist_msg_t:
     void *conn
     void *data
@@ -17,6 +25,7 @@ ctypedef int (*_slurm_persist_conn_t_callback_proc) (void *arg, persist_msg_t *m
 
 ctypedef void (*_slurm_persist_conn_t_callback_fini)(void *arg)
 
+# https://github.com/SchedMD/slurm/blob/26abe9188ea8712ba1eab4a8eb6322851f06a108/src/common/slurm_persist_conn.h#L66
 ctypedef struct slurm_persist_conn_t:
     void *auth_cred
     _slurm_persist_conn_t_callback_proc callback_proc
@@ -37,7 +46,7 @@ ctypedef struct slurm_persist_conn_t:
     slurm_trigger_callbacks_t trigger_callbacks;
     uint16_t version
 
-# https://github.com/SchedMD/slurm/blob/master/src/common/pack.h#L68
+# https://github.com/SchedMD/slurm/blob/20e2b354168aeb0f76d67f80122d80925c2ef32b/src/common/pack.h#L68
 ctypedef struct buf_t:
     uint32_t magic
     char *head
@@ -45,20 +54,24 @@ ctypedef struct buf_t:
     uint32_t processed
     bool mmaped
 
-# https://github.com/SchedMD/slurm/blob/master/src/common/slurm_protocol_defs.h
+# https://github.com/SchedMD/slurm/blob/20e2b354168aeb0f76d67f80122d80925c2ef32b/src/common/pack.h#L68
 ctypedef struct return_code_msg_t:
     uint32_t return_code
 
+# https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.h#L650
 ctypedef struct job_id_msg_t:
     uint32_t job_id
     uint16_t show_flags
 
+# https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.h#L216
+# Only partially defined - not everything needed at the moment.
 ctypedef enum slurm_msg_type_t:
     REQUEST_SHARE_INFO    = 2022
     REQUEST_BATCH_SCRIPT  = 2051
     RESPONSE_BATCH_SCRIPT = 2052
     RESPONSE_SLURM_RC     = 8001
 
+# https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.h#L469
 ctypedef struct forward_t:
     uint16_t cnt
     uint16_t init
@@ -66,6 +79,7 @@ ctypedef struct forward_t:
     uint32_t timeout
     uint16_t tree_width
 
+# https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.h#L491
 ctypedef struct forward_struct_t:
     char *buf
     int buf_len
@@ -75,6 +89,7 @@ ctypedef struct forward_struct_t:
     List ret_list
     uint32_t timeout
 
+# https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.h#L514
 ctypedef struct slurm_msg_t:
     slurm_addr_t address
     void *auth_cred
@@ -98,12 +113,15 @@ ctypedef struct slurm_msg_t:
     slurm_addr_t orig_addr
     List ret_list
 
-# Slurm Protocol stuff
+# https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.c#L865
 cdef extern void slurm_free_return_code_msg(return_code_msg_t *msg)
+
+# https://github.com/SchedMD/slurm/blob/2d2e83674b59410a7ed8ab6fc8d8acfcfa8beaf9/src/common/slurm_protocol_api.c#L2401
 cdef extern int slurm_send_recv_controller_msg(slurm_msg_t *request_msg,
                                         slurm_msg_t *response_msg,
                                         slurmdb_cluster_rec_t *working_cluster_rec)
 
+# https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.c#L168
 cdef extern void slurm_msg_t_init(slurm_msg_t *msg)
 
 # https://github.com/SchedMD/slurm/blob/master/src/common/job_resources.h
