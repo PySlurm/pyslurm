@@ -5,7 +5,6 @@
 # For example: to communicate with the slurmctld directly in order
 # to retrieve the actual batch-script as a string.
 #
-
 # https://github.com/SchedMD/slurm/blob/26abe9188ea8712ba1eab4a8eb6322851f06a108/src/common/slurm_persist_conn.h#L51
 ctypedef enum persist_conn_type_t:
     PERSIST_TYPE_NONE = 0
@@ -23,6 +22,7 @@ ctypedef struct persist_msg_t:
     uint16_t msg_type
 
 ctypedef int (*_slurm_persist_conn_t_callback_proc) (void *arg, persist_msg_t *msg, buf_t **out_buffer, uint32_t *uid)
+
 ctypedef void (*_slurm_persist_conn_t_callback_fini)(void *arg)
 
 # https://github.com/SchedMD/slurm/blob/26abe9188ea8712ba1eab4a8eb6322851f06a108/src/common/slurm_persist_conn.h#L66
@@ -116,7 +116,7 @@ ctypedef struct slurm_msg_t:
 # https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.c#L865
 cdef extern void slurm_free_return_code_msg(return_code_msg_t *msg)
 
-# https://github.com/SchedMD/slurm/blob/2d2e83674b59410a7ed8ab6fc8d8acfcfa8beaf9/src/common/slurm_protocol_api.c#L2401 
+# https://github.com/SchedMD/slurm/blob/2d2e83674b59410a7ed8ab6fc8d8acfcfa8beaf9/src/common/slurm_protocol_api.c#L2401
 cdef extern int slurm_send_recv_controller_msg(slurm_msg_t *request_msg,
                                         slurm_msg_t *response_msg,
                                         slurmdb_cluster_rec_t *working_cluster_rec)
@@ -124,29 +124,58 @@ cdef extern int slurm_send_recv_controller_msg(slurm_msg_t *request_msg,
 # https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.c#L168
 cdef extern void slurm_msg_t_init(slurm_msg_t *msg)
 
+# https://github.com/SchedMD/slurm/blob/master/src/common/job_resources.h
+ctypedef struct job_resources:
+    bitstr_t *core_bitmap
+    bitstr_t *core_bitmap_used
+    uint32_t  cpu_array_cnt
+    uint16_t *cpu_array_value
+    uint32_t *cpu_array_reps
+    uint16_t *cpus
+    uint16_t *cpus_used
+    uint16_t *cores_per_socket
+    uint16_t  cr_type
+    uint64_t *memory_allocated
+    uint64_t *memory_used
+    uint32_t  nhosts
+    bitstr_t *node_bitmap
+    uint32_t  node_req
+    char	 *nodes
+    uint32_t  ncpus
+    uint32_t *sock_core_rep_count
+    uint16_t *sockets_per_node
+    uint16_t *tasks_per_node
+    uint16_t  threads_per_core
+    uint8_t   whole_node
+
+#
+# TRES
+#
+ctypedef enum tres_types_t:
+    TRES_CPU = 1
+    TRES_MEM
+    TRES_ENERGY
+    TRES_NODE
+    TRES_BILLING
+    TRES_FS_DISK
+    TRES_VMEM
+    TRES_PAGES
+    TRES_STATIC_CNT
 
 # Global Environment
-
 cdef extern char **environ
 
 #
 # Slurm Memory routines
+# We simply use the macros from xmalloc.h - more convenient
 #
 
-cdef extern void slurm_xfree (void **)
-cdef extern void *slurm_xcalloc(size_t, size_t, bool, bool, const char *, int, const char *)
+cdef extern from "pyslurm/slurm/xmalloc.h" nogil:
+    void xfree(void *__p)
+    void *xmalloc(size_t __sz)
+    void *try_xmalloc(size_t __sz) 
 
-cdef inline xfree(void *__p):
-    slurm_xfree(<void**>&__p)
-
-cdef inline void *xmalloc(size_t __sz):
-    return slurm_xcalloc(1, __sz, True, False, __FILE__, __LINE__, __FUNCTION__)
-
-cdef inline void *try_xmalloc(size_t __sz):
-    return slurm_xcalloc(1, __sz, True, True, __FILE__, __LINE__, __FUNCTION__)
-
-cdef inline void xfree_ptr(void *__p):
-    slurm_xfree(<void**>&__p)
+cdef extern void slurm_xfree_ptr(void *)
 
 #
 # Slurm xstring functions
@@ -177,6 +206,16 @@ cdef extern void slurm_free_job_step_info_members(job_step_info_t *msg)
 cdef extern char *slurm_job_state_string(uint16_t inx)
 cdef extern char *slurm_job_reason_string(int inx)
 cdef extern char *slurm_job_share_string(uint16_t shared)
+cdef extern void slurm_free_update_step_msg(step_update_request_msg_t *msg)
+
+#
+# Slurm Node functions
+#
+
+cdef extern int slurm_get_select_nodeinfo(dynamic_plugin_data_t *nodeinfo, select_nodedata_type data_type, node_states state, void *data)
+cdef extern char *slurm_node_state_string_complete(uint32_t inx)
+cdef extern void slurm_free_update_node_msg(update_node_msg_t *msg)
+cdef extern void slurm_free_node_info_members(node_info_t *node)
 
 #
 # Slurm environment functions
@@ -191,6 +230,7 @@ cdef extern void slurm_env_array_free(char **env_array)
 #
 
 cdef extern char *slurm_preempt_mode_string (uint16_t preempt_mode)
+cdef extern uint16_t slurm_preempt_mode_num (const char *preempt_mode)
 cdef extern char *slurm_node_state_string (uint32_t inx)
 cdef extern char *slurm_step_layout_type_name (task_dist_states_t task_dist)
 cdef extern char *slurm_reservation_flags_string (reserve_info_t *resv_ptr)
@@ -199,3 +239,35 @@ cdef extern int slurm_addto_char_list_with_case(List char_list, char *names, boo
 cdef extern int slurm_addto_step_list(List step_list, char *names)
 cdef extern int slurmdb_report_set_start_end_time(time_t *start, time_t *end)
 cdef extern uint16_t slurm_get_track_wckey()
+cdef extern void slurm_sprint_cpu_bind_type(char *str, cpu_bind_type_t cpu_bind_type)
+
+# Slurm bit functions
+
+cdef extern bitstr_t *slurm_bit_alloc(bitoff_t nbits)
+cdef extern void slurm_bit_set(bitstr_t *b, bitoff_t bit)
+cdef extern int slurm_bit_test(bitstr_t *b, bitoff_t bit)
+cdef extern char *slurm_bit_fmt(char *str, int32_t len, bitstr_t *b)
+cdef extern void slurm_bit_free(bitstr_t **b)
+
+
+cdef extern from *:
+    """
+    #define bit_free(__b) slurm_bit_free((bitstr_t **)&(__b))
+    #define FREE_NULL_BITMAP(_X)    \
+    do {                            \
+        if (_X)                     \
+                bit_free(_X);       \
+        _X = NULL;                  \
+    } while(0)                      \
+    """
+    void bit_free(bitstr_t *_X)
+    void FREE_NULL_BITMAP(bitstr_t *_X)
+
+cdef extern char *slurm_hostlist_deranged_string_malloc(hostlist_t hl)
+
+#
+# Slurmdbd functions
+#
+
+cdef extern void slurmdb_job_cond_def_start_end(slurmdb_job_cond_t *job_cond)
+cdef extern uint64_t slurmdb_find_tres_count_in_string(char *tres_str_in, int id)
