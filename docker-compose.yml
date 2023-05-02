@@ -9,6 +9,7 @@ services:
     tty: true
     working_dir: /pyslurm
     environment:
-      PYTHON: "3.9"
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     volumes:
       - ${PWD}:/pyslurm

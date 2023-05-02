@@ -1,0 +1,46 @@
+name: Docs
+on:
+  push:
+    branches:
+      - main
+      - sphinx
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - name: Start Slurm Container
+        uses: sudo-bot/action-docker-compose@latest
+        with:
+          cli-args: "-f docker-compose-github.yml up -d"
+        env:
+          PYTHON: "3.9"
+
+      - name: Build PySlurm
+        run: |
+          docker exec slurmctl python3.9 -m pip install Cython
+          docker exec slurmctl python3.9 setup.py build
+          docker exec slurmctl python3.9 setup.py install
+
+      - name: Install Sphinx
+        run: |
+
+      - name: Build Docs
+        run: |
+          docker exec slurmctl python3.9 -m pip install sphinx pydata_sphinx_theme
+          docker exec slurmctl make -C docs html
+
+#      - name: Build Docs and Commit
+#        uses: sphinx-notes/pages@master
+#        with:
+#          documentation_path: docs/source
+
+#      - name: Push changes
+#        uses: ad-m/github-push-action@master
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          branch: gh-pages
