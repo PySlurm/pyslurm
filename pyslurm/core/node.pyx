@@ -275,7 +275,7 @@ cdef class Node:
         Implements the slurm_load_node_single RPC.
 
         Returns:
-            (pyslurm.Node): Returns a new Node instance.
+            (Node): Returns a new Node instance.
 
         Raises:
             RPCError: If requesting the Node information from the slurmctld
@@ -318,13 +318,13 @@ cdef class Node:
         Implements the slurm_create_node RPC.
 
         Args:
-            future (str, optional): 
+            state (str, optional): 
                 An optional state the created Node should have. Allowed values
                 are "future" and "cloud". "future" is the default.
 
         Returns:
-            (Node): This function returns the current Node-instance object
-                itself.
+            (Node): This function returns the current Node-instance
+                object itself.
 
         Raises:
             RPCError: If creating the Node was not successful.
@@ -344,43 +344,28 @@ cdef class Node:
 
         return self
 
-    def modify(self, node=None, **kwargs):
+    def modify(self, changes):
         """Modify a node.
 
         Implements the slurm_update_node RPC.
 
         Args:
-            node (pyslurm.Node):
+            changes (pyslurm.Node):
                 Another Node object which contains all the changes that
                 should be applied to this instance.
-            **kwargs:
-                You can also specify all the changes as keyword arguments.
-                Allowed values are only attributes which can actually be set
-                on a Node instance. If a node is explicitly specified as
-                parameter, all **kwargs will be ignored.
 
         Raises:
             RPCError: When updating the Node was not successful.
 
         Examples:
-            >>> from pyslurm import Node
-            >>> 
-            >>> # Setting a new weight for the Node
-            >>> changes = Node(weight=100)
-            >>> Node("localhost").modify(changes)
+            >>> import pyslurm
             >>>
-            >>> # Or by specifying the changes directly to the modify function
-            >>> Node("localhost").modify(weight=100)
+            >>> mynode = pyslurm.Node("localhost")
+            >>> changes = pyslurm.Node(weight=100)
+            >>> # Setting the weight to 100 for the "localhost" node
+            >>> mynode.modify(changes)
         """
-        cdef Node n = self
-
-        # Allow the user to both specify changes via a Node instance or
-        # **kwargs.
-        if node and isinstance(node, Node):
-            n = <Node>node
-        elif kwargs:
-            n = Node(**kwargs)
-
+        cdef Node n = <Node>changes
         n._alloc_umsg()
         cstr.fmalloc(&n.umsg.node_names, self.name)
         verify_rpc(slurm_update_node(n.umsg))

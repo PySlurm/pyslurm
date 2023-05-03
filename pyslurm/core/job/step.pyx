@@ -275,21 +275,15 @@ cdef class JobStep:
         step_id = self.ptr.step_id.step_id
         verify_rpc(slurm_kill_job_step(self.job_id, step_id, 9))
 
-    def modify(self, step=None, **kwargs):
+    def modify(self, changes):
         """Modify a job step.
 
         Implements the slurm_update_step RPC.
 
         Args:
-            step (JobStep):
+            changes (JobStep):
                 Another JobStep object which contains all the changes that
                 should be applied to this instance.
-            **kwargs:
-                You can also specify all the changes as keyword arguments.
-                Allowed values are only attributes which can actually be set
-                on a JobStep instance. If a step is explicitly specified as
-                parameter, all **kwargs will be ignored.
-
         Raises:
             RPCError: When updating the JobStep was not successful.
 
@@ -299,23 +293,12 @@ cdef class JobStep:
             >>> # Setting the new time-limit to 20 days
             >>> changes = JobStep(time_limit="20-00:00:00")
             >>> JobStep(9999, 1).modify(changes)
-            >>>
-            >>> # Or by specifying the changes directly to the modify function
-            >>> JobStep(9999, 1).modify(time_limit="20-00:00:00")
         """
-        cdef JobStep js = self
-
-        # Allow the user to both specify changes via object and **kwargs.
-        if step and isinstance(step, JobStep):
-            js = <JobStep>step
-        elif kwargs:
-            js = JobStep(**kwargs)
-
+        cdef JobStep js = <JobStep>changes
         js._alloc_umsg()
         js.umsg.step_id = self.ptr.step_id.step_id
         js.umsg.job_id = self.ptr.step_id.job_id
         verify_rpc(slurm_update_step(js.umsg))
-
 
     def as_dict(self):
         """JobStep information formatted as a dictionary.

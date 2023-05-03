@@ -90,21 +90,30 @@ cdef class Node:
     """A Slurm node.
 
     Args:
-        name (str):
+        name (str, optional):
             Name of a node
-        **kwargs:
-            Any writable property. Writable attributes include:
-                * name
-                * configured_gres
-                * address
-                * hostname
-                * extra
-                * comment
-                * weight
-                * available_features
-                * active_features
-                * cpu_binding
-                * state
+
+    Other Parameters:
+        configured_gres (dict):
+            Configured GRES for the node 
+        address (str):
+            Address of the node
+        hostname (str):
+            Hostname of the node
+        extra (str):
+            Arbitrary extra string
+        comment (str):
+            Comment for the node
+        weight (int):
+            Weight associated to the node
+        available_features (list):
+            Available features for the node
+        active_features (list):
+            Active features for the node
+        cpu_binding (str):
+            Default CPU-Binding for the node
+        state (str):
+            State of the node
 
     Attributes:
         name (str):

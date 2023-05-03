@@ -70,9 +70,9 @@ cdef class JobStep:
     """A Slurm Jobstep
 
     Args:
-        job (Union[Job, int]):
+        job (Union[Job, int], optional):
             The Job this Step belongs to.
-        step (Union[int, str]):
+        step (Union[int, str], optional):
             Step-ID for this JobStep object.
 
     Raises:
