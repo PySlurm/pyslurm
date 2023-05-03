@@ -1,10 +1,6 @@
-"""
-PySlurm: Python bindings for the Slurm C API
-============================================
+"""pyslurm package
 
-PySlurm is a Cython wrapper around Slurm C API functions.
-
-More information about Slurm can be found at https://slurm.schedmd.com.
+pyslurm is a wrapper around the Slurm C-API.
 """
 from __future__ import absolute_import
 
@@ -24,10 +20,10 @@ from pyslurm.core.job import (
     JobSubmitDescription,
 )
 
-from pyslurm.core import db
+from pyslurm import db
 from pyslurm.core.node import Node, Nodes
 
-import pyslurm.core.error
+from pyslurm.core import error
 from pyslurm.core.error import (
     RPCError,
 )
