@@ -24,9 +24,11 @@
 
 from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 from pyslurm.core.error import RPCError
+from typing import Union
 from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
 from pyslurm.core.common.uint import *
 from pyslurm.core.common.ctime import _raw_time
+from pyslurm.core.db.stats import JobStats
 from pyslurm.core.common import (
     gid_to_name,
     uid_to_name,

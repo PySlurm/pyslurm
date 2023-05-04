@@ -25,6 +25,7 @@ from pyslurm.core.node import Node, Nodes
 
 from pyslurm.core import error
 from pyslurm.core.error import (
+    PyslurmError,
     RPCError,
 )
 

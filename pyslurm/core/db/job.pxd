@@ -56,7 +56,7 @@ cdef class JobSearchFilter:
     """Search conditions for Slurm database Jobs.
 
     Args:
-        **kwargs:
+        **kwargs (Any, optional=None):
             Any valid attribute of the object.
 
     Attributes:
@@ -148,7 +148,7 @@ cdef class JobSearchFilter:
 
 
 cdef class Jobs(dict):
-    """A collection of Database Jobs."""
+    """A collection of [`pyslurm.db.Job`][] objects."""
     cdef:
         SlurmList info
         Connection db_conn
@@ -158,7 +158,7 @@ cdef class Job:
     """A Slurm Database Job.
 
     Args:
-        job_id (int):
+        job_id (int, optional=0):
             An Integer representing a Job-ID.
 
     Raises:

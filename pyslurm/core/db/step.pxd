@@ -43,14 +43,15 @@ from pyslurm.core.db.stats cimport JobStats
 
 
 cdef class JobSteps(dict):
+    """A collection of [`pyslurm.db.JobStep`][] objects"""
     pass
 
 
 cdef class JobStep:
-    """A Slurm Database Job-step.
+    """A Slurm Database JobStep.
 
     Attributes:
-        stats (pyslurm.db.JobStats):
+        stats (JobStats):
             Utilization statistics for this Step
         num_nodes (int):
             Amount of nodes this Step has allocated

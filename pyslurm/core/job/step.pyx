@@ -23,6 +23,7 @@
 # cython: language_level=3
 
 from libc.string cimport memcpy, memset
+from typing import Union
 from pyslurm.core.common cimport cstr, ctime
 from pyslurm.core.common import cstr, ctime
 from pyslurm.core.common.uint cimport *
@@ -59,6 +60,15 @@ cdef class JobSteps(dict):
 
     @staticmethod
     def load(job):
+        """Load the Steps for a specific Job
+
+        Args:
+            job (Union[Job, int]):
+                The Job for which the Steps should be loaded
+
+        Returns:
+            (pyslurm.JobSteps): JobSteps of the Job
+        """
         cdef Job _job
         _job = Job.load(job.id) if isinstance(job, Job) else Job.load(job)
         return JobSteps._load(_job)
@@ -187,7 +197,7 @@ cdef class JobStep:
         Implements the slurm_get_job_steps RPC.
 
         Args:
-            job_id (Union[Job, int]):
+            job_id (Union[pyslurm.Job, int]):
                 ID of the Job the Step belongs to.
             step_id (Union[int, str]):
                 Step-ID for the Step to be loaded.
@@ -249,12 +259,12 @@ cdef class JobStep:
         Examples:
             Specifying the signal as a string:
 
-            >>> from pyslurm import JobStep
-            >>> JobStep(9999, 1).send_signal("SIGUSR1")
+            >>> import pyslurm
+            >>> pyslurm.JobStep(9999, 1).send_signal("SIGUSR1")
 
             or passing in a numeric signal:
 
-            >>> JobStep(9999, 1).send_signal(9)
+            >>> pyslurm.JobStep(9999, 1).send_signal(9)
         """
         step_id = self.ptr.step_id.step_id
         sig = signal_to_num(signal)
@@ -269,8 +279,8 @@ cdef class JobStep:
             RPCError: When cancelling the Job was not successful.
 
         Examples:
-            >>> from pyslurm import JobStep
-            >>> JobStep(9999, 1).cancel()
+            >>> import pyslurm
+            >>> pyslurm.JobStep(9999, 1).cancel()
         """
         step_id = self.ptr.step_id.step_id
         verify_rpc(slurm_kill_job_step(self.job_id, step_id, 9))
@@ -281,18 +291,18 @@ cdef class JobStep:
         Implements the slurm_update_step RPC.
 
         Args:
-            changes (JobStep):
+            changes (pyslurm.JobStep):
                 Another JobStep object which contains all the changes that
                 should be applied to this instance.
         Raises:
             RPCError: When updating the JobStep was not successful.
 
         Examples:
-            >>> from pyslurm import JobStep
+            >>> import pyslurm
             >>> 
             >>> # Setting the new time-limit to 20 days
-            >>> changes = JobStep(time_limit="20-00:00:00")
-            >>> JobStep(9999, 1).modify(changes)
+            >>> changes = pyslurm.JobStep(time_limit="20-00:00:00")
+            >>> pyslurm.JobStep(9999, 1).modify(changes)
         """
         cdef JobStep js = <JobStep>changes
         js._alloc_umsg()
@@ -432,6 +442,7 @@ def humanize_step_id(sid):
         return "pending"
     else:
         return sid
+
 
 def dehumanize_step_id(sid):
     if sid == "batch":

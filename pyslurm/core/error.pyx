@@ -65,7 +65,11 @@ def get_last_slurm_error():
         return (errno, slurm_strerror(errno))
 
 
-class RPCError(Exception):
+class PyslurmError(Exception):
+    """The base Exception for all Pyslurm errors."""
+
+
+class RPCError(PyslurmError):
     """Exception for handling Slurm RPC errors.
 
     Args:
@@ -75,6 +79,13 @@ class RPCError(Exception):
         msg (str):
             An optional, custom error description. If this is set, the errno
             will not be translated to its string representation.
+
+    Examples:
+        >>> import pyslurm
+        ... try:
+        ...     myjob = pyslurm.Job.load(9999)
+        ... except pyslurm.RPCError as e:
+        ...     print("Loading the Job failed")
     """
     def __init__(self, errno=slurm.SLURM_ERROR, msg=None):
         self.msg = msg

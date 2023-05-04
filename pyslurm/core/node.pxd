@@ -54,7 +54,7 @@ cdef class Nodes(dict):
     """A collection of Node objects.
 
     Args:
-        nodes (Union[list, dict, str], optional):
+        nodes (Union[list, dict, str], optional=None):
             Nodes to initialize this collection with.
 
     Attributes:
@@ -90,7 +90,7 @@ cdef class Node:
     """A Slurm node.
 
     Args:
-        name (str, optional):
+        name (str, optional=None):
             Name of a node
 
     Other Parameters:

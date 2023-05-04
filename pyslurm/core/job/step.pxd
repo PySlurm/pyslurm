@@ -45,7 +45,7 @@ from pyslurm.slurm cimport (
 )
 
 cdef class JobSteps(dict):
-    """A collection of :obj:`JobStep` objects for a given Job.
+    """A collection of [`pyslurm.JobStep`][] objects for a given Job.
 
     Args:
         job (Union[Job, int]):
@@ -70,10 +70,14 @@ cdef class JobStep:
     """A Slurm Jobstep
 
     Args:
-        job (Union[Job, int], optional):
+        job_id (Union[Job, int], optional=0):
             The Job this Step belongs to.
-        step (Union[int, str], optional):
+        step_id (Union[int, str], optional=0):
             Step-ID for this JobStep object.
+
+    Other Parameters:
+        time_limit (int):
+            Time limit in Minutes for this step.
 
     Raises:
         MemoryError: If malloc fails to allocate memory.

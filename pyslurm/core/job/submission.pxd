@@ -43,6 +43,10 @@ from pyslurm.slurm cimport (
 cdef class JobSubmitDescription:
     """Description of a Slurm Job.
 
+    Args:
+        **kwargs (Any, optional=None):
+            Any valid Attribute this object has
+
     Attributes:
         name (str):
             Name of the Job, same as -J/--job-name from sbatch.

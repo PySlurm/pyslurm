@@ -163,7 +163,7 @@ cdef class QualityOfService:
                 Name of the Quality of Service to be loaded.
 
         Returns:
-            (pyslurm.db.QualityOfService): Returns a new QualityOfService
+            (QualityOfService): Returns a new QualityOfService
                 instance.
 
         Raises:

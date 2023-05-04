@@ -23,9 +23,11 @@
 # cython: language_level=3
 
 from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
+from typing import Union
 from pyslurm.core.error import RPCError
 from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
 from pyslurm.core import slurmctld
+from typing import Any
 from pyslurm.core.common.uint import *
 from pyslurm.core.common.ctime import (
     date_to_timestamp,
@@ -192,7 +194,7 @@ cdef class JobSearchFilter:
 
 cdef class Jobs(dict):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         # TODO: ability to initialize with existing job objects
         pass
 
@@ -210,6 +212,21 @@ cdef class Jobs(dict):
         Raises:
             RPCError: When getting the Jobs from the Database was not
                 sucessful
+
+        Examples:
+            Without a Filter the default behaviour applies, which is
+            simply retrieving all Jobs from the same day:
+
+            >>> import pyslurm
+            >>> db_jobs = pyslurm.db.Jobs.load()
+
+            Now with a Job Filter, so only Jobs that have specific Accounts
+            are returned:
+
+            >>> import pyslurm
+            >>> accounts = ["acc1", "acc2"]
+            >>> search_filter = pyslurm.db.JobSearchFilter(accounts=accounts)
+            >>> db_jobs = pyslurm.db.Jobs.load(search_filter)
         """
         cdef:
             Jobs jobs = Jobs()
@@ -256,7 +273,7 @@ cdef class Job:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, job_id):
+    def __init__(self, job_id=0):
         self._alloc_impl()
         self.ptr.jobid = int(job_id)
 
@@ -291,11 +308,24 @@ cdef class Job:
                 ID of the Job to be loaded.
 
         Returns:
-            (pyslurm.db.Job): Returns a new Job instance
+            (pyslurm.Job): Returns a new Database Job instance
 
         Raises:
             RPCError: If requesting the information for the database Job was
                 not sucessful.
+
+        Examples:
+            >>> import pyslurm
+            >>> db_job = pyslurm.db.Job.load(10000)
+
+            In the above example, attribute like "script" and "environment"
+            are not populated. You must explicitly request one of them to be
+            loaded:
+
+            >>> import pyslurm
+            >>> db_job = pyslurm.db.Job.load(10000, with_script=True)
+            >>> print(db_job.script)
+
         """
         jfilter = JobSearchFilter(ids=[int(job_id)],
                                   with_script=with_script, with_env=with_env)
@@ -321,6 +351,11 @@ cdef class Job:
 
         Returns:
             (dict): Database Job information as dict
+
+        Examples:
+            >>> import pyslurm
+            >>> myjob = pyslurm.db.Job.load(10000)
+            >>> myjob_dict = myjob.as_dict()
         """
         cdef dict out = instance_to_dict(self)
 

@@ -46,7 +46,11 @@ cdef class Connection:
             RPCError: When opening the connection fails
 
         Returns:
-            (Connection): Connection to slurmdbd
+            (pyslurm.db.Connection): Connection to slurmdbd
+
+        Examples:
+            >>> import pyslurm
+            >>> connection = pyslurm.db.Connection.open()
         """
         cdef Connection conn = Connection.__new__(Connection)
         conn.ptr = <void*>slurmdb_connection_get(&conn.flags)
@@ -56,7 +60,14 @@ cdef class Connection:
         return conn
 
     def close(self):
-        """Close the current connection."""
+        """Close the current connection.
+
+        Examples:
+            >>> import pyslurm
+            >>> connection = pyslurm.db.Connection.open()
+            >>> ...
+            >>> connection.close()
+        """
         if self.is_open:
             slurmdb_connection_close(&self.ptr)
             self.ptr = NULL

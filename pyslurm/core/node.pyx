@@ -24,6 +24,7 @@
 
 from pyslurm.slurm cimport xfree, try_xmalloc
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
+from typing import Union
 from pyslurm.core.common cimport cstr
 from pyslurm.core.common import cstr
 from pyslurm.core.common cimport ctime
@@ -83,7 +84,7 @@ cdef class Nodes(dict):
                 the Node instances. The default is False.
 
         Returns:
-            (Nodes): Collection of node objects.
+            (pyslurm.Nodes): Collection of node objects.
 
         Raises:
             RPCError: When getting all the Nodes from the slurmctld failed.
@@ -136,8 +137,7 @@ cdef class Nodes(dict):
     def reload(self):
         """Reload the information for nodes in a collection.
 
-        Note:
-            Only information for nodes which are already in the collection at
+        Note: Only information for nodes which are already in the collection at
             the time of calling this method will be reloaded.
 
         Raises:
@@ -275,7 +275,7 @@ cdef class Node:
         Implements the slurm_load_node_single RPC.
 
         Returns:
-            (Node): Returns a new Node instance.
+            (pyslurm.Node): Returns a new Node instance.
 
         Raises:
             RPCError: If requesting the Node information from the slurmctld
@@ -323,7 +323,7 @@ cdef class Node:
                 are "future" and "cloud". "future" is the default.
 
         Returns:
-            (Node): This function returns the current Node-instance
+            (pyslurm.Node): This function returns the current Node-instance
                 object itself.
 
         Raises:
@@ -331,8 +331,8 @@ cdef class Node:
             MemoryError: If malloc failed to allocate memory.
 
         Examples:
-            >>> from pyslurm import Node
-            >>> node = Node("testnode").create()
+            >>> import pyslurm
+            >>> node = pyslurm.Node("testnode").create()
         """
         if not self.name:
             raise ValueError("You need to set a node name first.")
@@ -380,8 +380,8 @@ cdef class Node:
             MemoryError: If malloc failed to allocate memory.
 
         Examples:
-            >>> from pyslurm import Node
-            >>> Node("localhost").delete()
+            >>> import pyslurm
+            >>> pyslurm.Node("localhost").delete()
         """
         self._alloc_umsg()
         verify_rpc(slurm_delete_node(self.umsg))
@@ -391,6 +391,11 @@ cdef class Node:
 
         Returns:
             (dict): Node information as dict
+
+        Examples:
+            >>> import pyslurm
+            >>> mynode = pyslurm.Node.load("mynode")
+            >>> mynode_dict = mynode.as_dict()
         """
         return instance_to_dict(self)
 

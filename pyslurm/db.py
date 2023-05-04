@@ -20,7 +20,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from pyslurm.core.db.connection import Connection
-from pyslurm.core.db.step import JobStep
+from pyslurm.core.db.step import JobStep, JobSteps
 from pyslurm.core.db.stats import JobStats
 from pyslurm.core.db.job import (
     Job,

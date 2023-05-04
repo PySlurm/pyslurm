@@ -25,7 +25,7 @@
 from os import getcwd
 from os import environ as pyenviron
 import re
-import typing
+from typing import Union, Any
 import shlex
 from pathlib import Path
 from pyslurm.core.common cimport cstr, ctime
@@ -124,6 +124,8 @@ cdef class JobSubmitDescription:
                 If set to True, the value from an option found in the in the
                 batch script will override its current value. Default is False
         """
+        if not self.script:
+            raise ValueError("You need to set the 'script' attribute first.")
         _parse_opts_from_batch_script(self, self.script, overwrite)
 
     def _parse_env(self, overwrite=False):
