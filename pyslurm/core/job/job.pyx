@@ -167,8 +167,9 @@ cdef class Jobs(dict):
         This function fills in the "steps" attribute for all Jobs in the
         collection.
 
-        Note: Pending Jobs will be ignored, since they don't have any Steps
-            yet.
+        !!! note
+
+            Pending Jobs will be ignored, since they don't have any Steps yet.
 
         Raises:
             RPCError: When retrieving the Job information for all the Steps
@@ -241,7 +242,8 @@ cdef class Job:
 
         Implements the slurm_load_job RPC.
 
-        Note:
+        !!! note
+
             If the Job is not pending, the related Job steps will also be
             loaded.
 
@@ -454,8 +456,6 @@ cdef class Job:
                 release the Job again. If you specify the mode as "user", the
                 User will also be able to release the job.
 
-        Note: Uses the modify() function to set the Job's priority to 0.
-
         Raises:
             RPCError: When holding the Job was not successful.
 
@@ -477,9 +477,6 @@ cdef class Job:
 
     def release(self):
         """Release a currently held Job, allowing it to be scheduled again.
-
-        Note: Uses the modify() function to reset the priority back to
-            be controlled by the slurmctld's priority calculation routine.
 
         Raises:
             RPCError: When releasing a held Job was not successful.
@@ -1223,14 +1220,13 @@ cdef class Job:
     def get_resource_layout_per_node(self):
         """Retrieve the resource layout of this Job on each node.
 
-        The dict returned contains the following information for each node:
-            * cpu_ids (str)
-            * gres (dict)
-            * memory (int)
+        !!! warning
+        
+            Return type may still be subject to change in the future
 
         Returns:
             (dict): Resource layout, where the key is the name of the name and
-                its value another dict with the components described above.
+                its value another dict with the CPU-ids, memory and gres.
         """
         # The code for this function is a modified reimplementation from here:
         # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L739

@@ -312,8 +312,8 @@ cdef class JobSubmitDescription:
 
             * "no" or "exclusive"
                 No sharing of resources is allowed. (--exclusive from sbatch)
-        distribution (Union[dict, str]):
-            TODO
+        distribution (str):
+            Task distribution for the Job, same as --distribution from sbatch
         time_limit (str):
             The time limit for the job.
             This is the same as -t/--time from sbatch.

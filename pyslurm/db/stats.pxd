@@ -37,7 +37,8 @@ from pyslurm.utils cimport cstr
 cdef class JobStatistics:
     """Statistics for a Slurm Job or Step.
 
-    Note:
+    !!! note
+
         For more information also see the sacct manpage.
 
     Attributes:
