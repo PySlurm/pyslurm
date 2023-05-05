@@ -58,7 +58,7 @@ def test_create():
 def test_modify():
     node = Node(Nodes.load().as_list()[0].name)
 
-    node.modify(weight=10000)
+    node.modify(Node(weight=10000))
     assert Node.load(node.name).weight == 10000
 
     node.modify(Node(weight=20000))

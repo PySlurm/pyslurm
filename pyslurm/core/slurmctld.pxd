@@ -29,9 +29,9 @@ from pyslurm.slurm cimport (
     slurm_free_ctl_conf,
     try_xmalloc,
 )
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
-from pyslurm.core.common.uint cimport *
+from pyslurm.utils.uint cimport *
 
 
 cdef class Config:

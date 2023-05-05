@@ -24,6 +24,7 @@
 
 from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from pyslurm.slurm cimport (
     node_info_t,
     node_info_msg_t,
@@ -47,14 +48,20 @@ from pyslurm.slurm cimport (
     slurm_node_state_string_complete,
     slurm_node_state_string,
     cpu_bind_type_t,
+    xfree,
+    try_xmalloc,
 )
+from pyslurm.utils cimport cstr
+from pyslurm.utils cimport ctime
+from pyslurm.utils.ctime cimport time_t
+from pyslurm.utils.uint cimport *
 
 
 cdef class Nodes(dict):
     """A collection of Node objects.
 
     Args:
-        nodes (Union[list, dict, str], optional):
+        nodes (Union[list, dict, str], optional=None):
             Nodes to initialize this collection with.
 
     Attributes:
@@ -90,21 +97,30 @@ cdef class Node:
     """A Slurm node.
 
     Args:
-        name (str):
+        name (str, optional=None):
             Name of a node
-        **kwargs:
-            Any writable property. Writable attributes include:
-                * name
-                * configured_gres
-                * address
-                * hostname
-                * extra
-                * comment
-                * weight
-                * available_features
-                * active_features
-                * cpu_binding
-                * state
+
+    Other Parameters:
+        configured_gres (dict):
+            Configured GRES for the node 
+        address (str):
+            Address of the node
+        hostname (str):
+            Hostname of the node
+        extra (str):
+            Arbitrary extra string
+        comment (str):
+            Comment for the node
+        weight (int):
+            Weight associated to the node
+        available_features (list):
+            Available features for the node
+        active_features (list):
+            Active features for the node
+        cpu_binding (str):
+            Default CPU-Binding for the node
+        state (str):
+            State of the node
 
     Attributes:
         name (str):

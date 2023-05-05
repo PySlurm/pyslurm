@@ -22,9 +22,9 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.common cimport cstr, ctime
-from pyslurm.core.common.uint cimport *
-from pyslurm.core.common.ctime cimport time_t
+from pyslurm.utils cimport cstr, ctime
+from pyslurm.utils.uint cimport *
+from pyslurm.utils.ctime cimport time_t
 
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
@@ -71,9 +71,9 @@ cdef class Jobs(dict):
     """A collection of Job objects.
 
     Args:
-        jobs (Union[list, dict], optional):
+        jobs (Union[list, dict], optional=None):
             Jobs to initialize this collection with.
-        freeze (bool, optional):
+        frozen (bool, optional=False):
             Control whether this collection is "frozen" when reloading Job
             information.
 
@@ -89,7 +89,7 @@ cdef class Jobs(dict):
             Total amount of CPU-Time used by all the Jobs in the collection.
             This is the result of multiplying the run_time with the amount of
             cpus for each job.
-        freeze (bool):
+        frozen (bool):
             If this is set to True and the reload() method is called, then
             *ONLY* Jobs that already exist in this collection will be
             reloaded. New Jobs that are discovered will not be added to this
@@ -103,7 +103,7 @@ cdef class Jobs(dict):
         slurm_job_info_t tmp_info
 
     cdef public:
-        freeze
+        frozen
 
 
 cdef class Job:

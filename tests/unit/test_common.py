@@ -24,7 +24,7 @@ import pyslurm
 import pytest
 import datetime
 from pyslurm import Job, JobSubmitDescription, Node
-from pyslurm.core.common.ctime import (
+from pyslurm.utils.ctime import (
     timestr_to_mins,
     timestr_to_secs,
     mins_to_timestr,
@@ -32,7 +32,7 @@ from pyslurm.core.common.ctime import (
     date_to_timestamp,
     timestamp_to_date,
 )
-from pyslurm.core.common.uint import (
+from pyslurm.utils.uint import (
     u8,
     u16,
     u32,
@@ -42,7 +42,7 @@ from pyslurm.core.common.uint import (
     u32_parse,
     u64_parse,
 )
-from pyslurm.core.common import (
+from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
     user_to_uid,
@@ -56,7 +56,7 @@ from pyslurm.core.common import (
     nodelist_to_range_str,
     _sum_prop,
 )
-from pyslurm.core.common import cstr
+from pyslurm.utils import cstr
 
 
 class TestTypes:

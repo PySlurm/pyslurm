@@ -25,18 +25,15 @@
 from os import getcwd
 from os import environ as pyenviron
 import re
-import typing
+from typing import Union, Any
 import shlex
 from pathlib import Path
-from pyslurm.core.common cimport cstr, ctime
-from pyslurm.core.common import cstr
-from pyslurm.core.common.uint cimport *
-from pyslurm.core.common.uint import *
-from pyslurm.core.common.ctime cimport time_t
+from pyslurm.utils import cstr
+from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.core.job.sbatch_opts import _parse_opts_from_batch_script
-from pyslurm.core.common.ctime import (
+from pyslurm.utils.ctime import (
     secs_to_timestr,
     timestr_to_secs,
     mins_to_timestr,
@@ -44,9 +41,7 @@ from pyslurm.core.common.ctime import (
     timestamp_to_date,
     date_to_timestamp,
 )
-from pyslurm.core.job.task_dist cimport TaskDistribution
-
-from pyslurm.core.common import (
+from pyslurm.utils.helpers import (
     humanize,
     dehumanize, 
     signal_to_num,
@@ -89,10 +84,11 @@ cdef class JobSubmitDescription:
             MemoryError: If malloc failed to allocate enough memory.
 
         Examples:
-            >>> desc = JobSubmitDescription(
-            >>>     name="test-job",
-            >>>     cpus_per_task=1,
-            >>>     time_limit="10-00:00:00")
+            >>> import pyslurm
+            >>> desc = pyslurm.JobSubmitDescription(
+            ...     name="test-job",
+            ...     cpus_per_task=1,
+            ...     time_limit="10-00:00:00")
             >>> 
             >>> job_id = desc.submit()
         """
@@ -112,7 +108,8 @@ cdef class JobSubmitDescription:
         Args:
             overwrite (bool): 
                 If set to True, the value from an option found in the
-                environment will override its current value. Default is False
+                environment will override the current value of the attribute
+                in this instance. Default is False
         """
         self._parse_env(overwrite)
 
@@ -122,8 +119,11 @@ cdef class JobSubmitDescription:
         Args:
             overwrite (bool):
                 If set to True, the value from an option found in the in the
-                batch script will override its current value. Default is False
+                batch script will override the current value of the attribute
+                in this instance. Default is False
         """
+        if not self.script:
+            raise ValueError("You need to set the 'script' attribute first.")
         _parse_opts_from_batch_script(self, self.script, overwrite)
 
     def _parse_env(self, overwrite=False):
