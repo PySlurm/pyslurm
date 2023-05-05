@@ -142,7 +142,7 @@ def expand_range_str(range_str):
             "1,2,3-10,11,15-20"
 
     Returns:
-        list: List of unique values
+        (list): List of unique values
     """
     ret = []
     for mrange in range_str.split(","):
@@ -166,7 +166,7 @@ def nodelist_from_range_str(nodelist):
             and ranges.
 
     Returns:
-        list: List of all nodenames or None on failure
+        (list): List of all nodenames or None on failure
     """
     if isinstance(nodelist, list):
         nodelist = ",".join(nodelist)
@@ -197,7 +197,7 @@ def nodelist_to_range_str(nodelist):
             Comma-seperated str or list with unique, unbracketed nodenames.
 
     Returns:
-        str: Bracketed, ranged nodelist or None on failure.
+        (str): Bracketed, ranged nodelist or None on failure.
     """
     if isinstance(nodelist, list):
         nodelist = ",".join(nodelist)
@@ -233,7 +233,7 @@ def humanize(num, decimals=1):
             Amount of decimals the humanized string should have.
 
     Returns:
-        str: Humanized number with appropriate suffix.
+        (str): Humanized number with appropriate suffix.
     """
     if num is None or num == "unlimited":
         return num
@@ -260,7 +260,7 @@ def dehumanize(humanized_str, target="M", decimals=0):
             Amount of decimal places the result should have. Default is 0
 
     Returns:
-        int: Dehumanized value
+        (int): Dehumanized value
     """
     if not humanized_str:
         return None

@@ -33,7 +33,7 @@ def timestr_to_secs(timestr):
             A Timestring compatible with Slurms time functions.
 
     Returns:
-        int: Amount of time in seconds
+        (int): Amount of time in seconds
     """
     cdef:
         char *tmp = NULL
@@ -64,7 +64,7 @@ def timestr_to_mins(timestr):
             A Timestring compatible with Slurms time functions.
 
     Returns:
-        int: Amount of time in minutes
+        (int): Amount of time in minutes
     """
     cdef:
         char *tmp = NULL
@@ -92,7 +92,7 @@ def secs_to_timestr(secs, default=None):
             Amount of seconds to convert 
 
     Returns:
-        str: A Slurm timestring
+        (str): A Slurm timestring
     """
     cdef char time_line[32]
 
@@ -122,7 +122,7 @@ def mins_to_timestr(mins, default=None):
             Amount of minutes to convert
 
     Returns:
-        str: A Slurm timestring
+        (str): A Slurm timestring
     """
     cdef char time_line[32]
 
@@ -152,7 +152,7 @@ def date_to_timestamp(date, on_nodate=0):
             A date to convert to a Unix timestamp.
 
     Returns:
-        int: A unix timestamp
+        (int): A unix timestamp
     """
     cdef:
         time_t tmp_time
@@ -185,7 +185,7 @@ def timestamp_to_date(timestamp):
             A Unix timestamp that should be converted.
 
     Returns:
-        str: A Slurm date timestring
+        (str): A Slurm date timestring
     """
     cdef:
         char time_str[32]
