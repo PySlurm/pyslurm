@@ -39,7 +39,7 @@ from pyslurm.slurm cimport (
 from pyslurm.db.util cimport SlurmList, SlurmListItem
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
-from pyslurm.db.stats cimport JobStats
+from pyslurm.db.stats cimport JobStatistics
 from pyslurm.db.tres cimport TrackableResources, TrackableResource
 
 
@@ -52,7 +52,7 @@ cdef class JobStep:
     """A Slurm Database JobStep.
 
     Attributes:
-        stats (JobStats):
+        stats (pyslurm.db.JobStatistics):
             Utilization statistics for this Step
         num_nodes (int):
             Amount of nodes this Step has allocated
@@ -96,7 +96,7 @@ cdef class JobStep:
             Amount of seconds the Step was suspended
     """
     cdef slurmdb_step_rec_t *ptr
-    cdef public JobStats stats
+    cdef public JobStatistics stats
 
     @staticmethod
     cdef JobStep from_ptr(slurmdb_step_rec_t *step)

@@ -261,7 +261,7 @@ cdef class Jobs(dict):
             job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
             job.qos_data = qos_data
             job._create_steps()
-            JobStats._sum_step_stats_for_job(job, job.steps)
+            JobStatistics._sum_step_stats_for_job(job, job.steps)
             jobs[job.id] = job
 
         return jobs
@@ -295,7 +295,7 @@ cdef class Job:
         cdef Job wrap = Job.__new__(Job)
         wrap.ptr = in_ptr
         wrap.steps = JobSteps.__new__(JobSteps)
-        wrap.stats = JobStats()
+        wrap.stats = JobStatistics()
         return wrap
 
     @staticmethod

@@ -28,7 +28,7 @@ from pyslurm.utils.helpers import (
 )
 
 
-cdef class JobStats:
+cdef class JobStatistics:
 
     def __init__(self):
         for attr, val in instance_to_dict(self).items():
@@ -51,8 +51,8 @@ cdef class JobStats:
         return instance_to_dict(self)
 
     @staticmethod
-    cdef JobStats from_step(JobStep step):
-        cdef JobStats wrap = JobStats()
+    cdef JobStatistics from_step(JobStep step):
+        cdef JobStatistics wrap = JobStatistics()
         if not &step.ptr.stats:
             return wrap
 
@@ -143,8 +143,8 @@ cdef class JobStats:
     @staticmethod
     def _sum_step_stats_for_job(Job job, JobSteps steps):
         cdef:
-            JobStats job_stats = job.stats
-            JobStats step_stats = None
+            JobStatistics job_stats = job.stats
+            JobStatistics step_stats = None
 
         for step in steps.values():
             step_stats = step.stats

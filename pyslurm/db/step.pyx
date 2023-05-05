@@ -27,7 +27,6 @@ from pyslurm.core.error import RPCError
 from typing import Union
 from pyslurm.utils.uint import *
 from pyslurm.utils.ctime import _raw_time
-from pyslurm.db.stats import JobStats
 from pyslurm.utils.helpers import (
     gid_to_name,
     uid_to_name,
@@ -54,7 +53,7 @@ cdef class JobStep:
     cdef JobStep from_ptr(slurmdb_step_rec_t *step):
         cdef JobStep wrap = JobStep.__new__(JobStep)
         wrap.ptr = step
-        wrap.stats = JobStats.from_step(wrap)
+        wrap.stats = JobStatistics.from_step(wrap)
         return wrap
 
     def as_dict(self):

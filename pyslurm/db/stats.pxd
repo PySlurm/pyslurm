@@ -34,7 +34,7 @@ from pyslurm.db.job cimport Job
 from pyslurm.utils cimport cstr
 
 
-cdef class JobStats:
+cdef class JobStatistics:
     """Statistics for a Slurm Job or Step.
 
     Note:
@@ -139,5 +139,5 @@ cdef class JobStats:
         system_cpu_time
 
     @staticmethod
-    cdef JobStats from_step(JobStep step)
+    cdef JobStatistics from_step(JobStep step)
 

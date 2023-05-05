@@ -21,7 +21,7 @@
 
 from .connection import Connection
 from .step import JobStep, JobSteps
-from .stats import JobStats
+from .stats import JobStatistics
 from .job import (
     Job,
     Jobs,

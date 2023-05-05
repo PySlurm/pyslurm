@@ -46,7 +46,7 @@ from pyslurm.db.util cimport (
     make_char_list,
 )
 from pyslurm.db.step cimport JobStep, JobSteps
-from pyslurm.db.stats cimport JobStats
+from pyslurm.db.stats cimport JobStatistics
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.db.qos cimport QualitiesOfService
@@ -168,7 +168,7 @@ cdef class Job:
     Attributes:
         steps (pyslurm.db.JobSteps):
             Steps this Job has
-        stats (pyslurm.db.JobStats):
+        stats (pyslurm.db.JobStatistics):
             Utilization statistics of this Job
         account (str):
             Account of the Job.
@@ -274,7 +274,7 @@ cdef class Job:
 
     cdef public:
         JobSteps steps
-        JobStats stats
+        JobStatistics stats
 
     @staticmethod
     cdef Job from_ptr(slurmdb_job_rec_t *in_ptr)
