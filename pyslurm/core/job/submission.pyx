@@ -105,11 +105,35 @@ cdef class JobSubmitDescription:
     def load_environment(self, overwrite=False):
         """Load values of attributes provided through the environment.
 
+        !!! note
+
+            Instead of `SBATCH_`, pyslurm uses `PYSLURM_JOBDESC_` as a prefix to
+            identify environment variables which should be used to set
+            attributes. 
+
         Args:
             overwrite (bool): 
                 If set to True, the value from an option found in the
                 environment will override the current value of the attribute
                 in this instance. Default is False
+
+        Examples:
+            Lets consider you want to set the name of the Job and its
+            Account name. Therefore, you will need to have set these two
+            environment variables:
+
+            ```bash
+            export PYSLURM_JOBDESC_ACCOUNT="myaccount"
+            export PYSLURM_JOBDESC_NAME="myjobname"
+            ```
+
+            In python, you can do this now:
+
+            >>> import pyslurm
+            >>> desc = pyslurm.JobSubmitDescription(...other args...)
+            >>> desc.load_environment()
+            >>> print(desc.name, desc.account)
+            myjobname, myaccount
         """
         self._parse_env(overwrite)
 
