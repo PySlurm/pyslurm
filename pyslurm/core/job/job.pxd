@@ -68,7 +68,7 @@ from pyslurm.slurm cimport (
 
 
 cdef class Jobs(dict):
-    """A collection of Job objects.
+    """A collection of [pyslurm.Job][] objects.
 
     Args:
         jobs (Union[list, dict], optional=None):

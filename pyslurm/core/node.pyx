@@ -131,7 +131,9 @@ cdef class Nodes(dict):
     def reload(self):
         """Reload the information for nodes in a collection.
 
-        Note: Only information for nodes which are already in the collection at
+        !!! note
+
+            Only information for nodes which are already in the collection at
             the time of calling this method will be reloaded.
 
         Raises:

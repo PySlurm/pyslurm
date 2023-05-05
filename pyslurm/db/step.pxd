@@ -44,7 +44,7 @@ from pyslurm.db.tres cimport TrackableResources, TrackableResource
 
 
 cdef class JobSteps(dict):
-    """A collection of [`pyslurm.db.JobStep`][] objects"""
+    """A collection of [pyslurm.db.JobStep][] objects"""
     pass
 
 

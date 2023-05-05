@@ -50,7 +50,7 @@ from pyslurm.core.job.task_dist cimport TaskDistribution
 
 
 cdef class JobSteps(dict):
-    """A collection of [`pyslurm.JobStep`][] objects for a given Job.
+    """A collection of [pyslurm.JobStep][] objects for a given Job.
 
     Args:
         job (Union[Job, int]):
