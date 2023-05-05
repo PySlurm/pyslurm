@@ -26,7 +26,6 @@ from pyslurm.utils.helpers import (
     nodelist_from_range_str,
     instance_to_dict,
 )
-from pyslurm.core.db.job import Job
 
 
 cdef class JobStats:

@@ -32,12 +32,12 @@ from pyslurm.slurm cimport (
     slurm_preempt_mode_num,
     try_xmalloc,
 )
-from pyslurm.core.db.util cimport (
+from pyslurm.db.util cimport (
     SlurmList,
     SlurmListItem,
     make_char_list,
 )
-from pyslurm.core.db.connection cimport Connection
+from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 
 

@@ -40,17 +40,17 @@ from pyslurm.slurm cimport (
     slurm_job_state_string,
     slurm_job_reason_string,
 )
-from pyslurm.core.db.util cimport (
+from pyslurm.db.util cimport (
     SlurmList,
     SlurmListItem,
     make_char_list,
 )
-from pyslurm.core.db.step cimport JobStep, JobSteps
-from pyslurm.core.db.stats cimport JobStats
-from pyslurm.core.db.connection cimport Connection
+from pyslurm.db.step cimport JobStep, JobSteps
+from pyslurm.db.stats cimport JobStats
+from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
-from pyslurm.core.db.qos cimport QualitiesOfService
-from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
+from pyslurm.db.qos cimport QualitiesOfService
+from pyslurm.db.tres cimport TrackableResources, TrackableResource
 
 
 cdef class JobSearchFilter:

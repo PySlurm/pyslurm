@@ -36,11 +36,11 @@ from pyslurm.slurm cimport (
     slurm_job_state_string,
     slurm_job_reason_string,
 )
-from pyslurm.core.db.util cimport SlurmList, SlurmListItem
-from pyslurm.core.db.connection cimport Connection
+from pyslurm.db.util cimport SlurmList, SlurmListItem
+from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
-from pyslurm.core.db.stats cimport JobStats
-from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
+from pyslurm.db.stats cimport JobStats
+from pyslurm.db.tres cimport TrackableResources, TrackableResource
 
 
 cdef class JobSteps(dict):

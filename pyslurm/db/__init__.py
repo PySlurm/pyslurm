@@ -1,5 +1,5 @@
 #########################################################################
-# db.py - pyslurm database api
+# db/__init__.py - pyslurm database api
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -19,19 +19,19 @@
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from pyslurm.core.db.connection import Connection
-from pyslurm.core.db.step import JobStep, JobSteps
-from pyslurm.core.db.stats import JobStats
-from pyslurm.core.db.job import (
+from .connection import Connection
+from .step import JobStep, JobSteps
+from .stats import JobStats
+from .job import (
     Job,
     Jobs,
     JobSearchFilter,
 )
-from pyslurm.core.db.tres import (
+from .tres import (
     TrackableResource,
     TrackableResources,
 )
-from pyslurm.core.db.qos import (
+from .qos import (
     QualitiesOfService,
     QualityOfService,
     QualityOfServiceSearchFilter,

@@ -28,9 +28,9 @@ from pyslurm.slurm cimport (
     slurmdb_stats_t,
     slurmdb_job_rec_t,
 )
-from pyslurm.core.db.tres cimport TrackableResources
-from pyslurm.core.db.step cimport JobStep, JobSteps
-from pyslurm.core.db.job cimport Job
+from pyslurm.db.tres cimport TrackableResources
+from pyslurm.db.step cimport JobStep, JobSteps
+from pyslurm.db.job cimport Job
 from pyslurm.utils cimport cstr
 
 

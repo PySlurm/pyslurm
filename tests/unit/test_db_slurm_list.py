@@ -22,7 +22,7 @@
 
 import pytest
 import pyslurm
-from pyslurm.core.db.util import SlurmList
+from pyslurm.db.util import SlurmList
 
 
 def test_create_and_destroy_list():

@@ -27,7 +27,7 @@ from pyslurm.core.error import RPCError
 from typing import Union
 from pyslurm.utils.uint import *
 from pyslurm.utils.ctime import _raw_time
-from pyslurm.core.db.stats import JobStats
+from pyslurm.db.stats import JobStats
 from pyslurm.utils.helpers import (
     gid_to_name,
     uid_to_name,
