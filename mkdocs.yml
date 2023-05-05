@@ -25,6 +25,7 @@ theme:
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      accent: lime
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -35,6 +36,7 @@ theme:
 plugins:
   - search
   - awesome-pages
+  - autorefs
   - mike
   - mkdocstrings:
       handlers:
@@ -51,6 +53,13 @@ markdown_extensions:
   - admonition
   - pymdownx.snippets:
       check_paths: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.details
 
 extra:
   version:

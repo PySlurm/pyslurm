@@ -58,7 +58,7 @@ from pyslurm.utils.uint cimport *
 
 
 cdef class Nodes(dict):
-    """A collection of Node objects.
+    """A collection of [pyslurm.Node][] objects.
 
     Args:
         nodes (Union[list, dict, str], optional=None):
