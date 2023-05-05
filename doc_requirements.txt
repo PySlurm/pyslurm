@@ -4,3 +4,4 @@ setuptools
 mkdocstrings[python]
 mike
 mkdocs-material
+mkdocs-awesome-pages-plugin

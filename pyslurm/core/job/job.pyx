@@ -31,16 +31,16 @@
 from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 import re
 from typing import Union
-from pyslurm.core.common import cstr, ctime
-from pyslurm.core.common.uint import *
+from pyslurm.utils import cstr, ctime
+from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
 from pyslurm.core.error import (
     RPCError,
     verify_rpc,
     slurm_errno,
 )
-from pyslurm.core.common.ctime import _raw_time
-from pyslurm.core.common import (
+from pyslurm.utils.ctime import _raw_time
+from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
     signal_to_num,
@@ -59,8 +59,8 @@ cdef class Jobs(dict):
     def __dealloc__(self):
         slurm_free_job_info_msg(self.info)
 
-    def __init__(self, jobs=None, freeze=False):
-        self.freeze = freeze
+    def __init__(self, jobs=None, frozen=False):
+        self.frozen = frozen
 
         if isinstance(jobs, dict):
             self.update(jobs)
@@ -72,7 +72,7 @@ cdef class Jobs(dict):
                     self[job.id] = job
 
     @staticmethod
-    def load(preload_passwd_info=False, freeze=False):
+    def load(preload_passwd_info=False, frozen=False):
         """Retrieve all Jobs from the Slurm controller
 
         Args:
@@ -83,11 +83,11 @@ cdef class Jobs(dict):
                 where a UID/GID is translated to a name. If True, the
                 information will fetched and stored in each of the Job
                 instances.
-            freeze (bool, optional):
-                Decide whether this collection of Jobs should be "frozen".
+            frozen (bool, optional):
+                Decide whether this collection of Jobs should be frozen.
 
         Returns:
-            (Jobs): A collection of Job objects.
+            (pyslurm.Jobs): A collection of Job objects.
 
         Raises:
             RPCError: When getting all the Jobs from the slurmctld failed.
@@ -134,7 +134,7 @@ cdef class Jobs(dict):
         # instance.
         jobs.info.record_count = 0
 
-        jobs.freeze = freeze
+        jobs.frozen = frozen
         return jobs
 
     def reload(self):
@@ -149,12 +149,12 @@ cdef class Jobs(dict):
             if jid in reloaded_jobs:
                 # Put the new data in.
                 self[jid] = reloaded_jobs[jid]
-            elif not self.freeze:
+            elif not self.frozen:
                 # Remove this instance from the current collection, as the Job
                 # doesn't exist anymore.
                 del self[jid]
 
-        if not self.freeze:
+        if not self.frozen:
             for jid in reloaded_jobs:
                 if jid not in self:
                     self[jid] = reloaded_jobs[jid]
@@ -167,8 +167,8 @@ cdef class Jobs(dict):
         This function fills in the "steps" attribute for all Jobs in the
         collection.
 
-        Note:
-            Pending Jobs will be ignored, since they don't have any Steps yet.
+        Note: Pending Jobs will be ignored, since they don't have any Steps
+            yet.
 
         Raises:
             RPCError: When retrieving the Job information for all the Steps
@@ -380,8 +380,8 @@ cdef class Job:
             RPCError: When cancelling the Job was not successful.
 
         Examples:
-            >>> from pyslurm import Job
-            >>> Job(9999).cancel()
+            >>> import pyslurm
+            >>> pyslurm.Job(9999).cancel()
         """
         self.send_signal(9)
 
@@ -394,8 +394,8 @@ cdef class Job:
             RPCError: When suspending the Job was not successful.
 
         Examples:
-            >>> from pyslurm import Job
-            >>> Job(9999).suspend()
+            >>> import pyslurm
+            >>> pyslurm.Job(9999).suspend()
         """
         # TODO: Report as a misbehaviour to schedmd that slurm_suspend is not
         # correctly returning error code when it cannot find the job in
@@ -413,8 +413,8 @@ cdef class Job:
             RPCError: When unsuspending the Job was not successful.
 
         Examples:
-            >>> from pyslurm import Jobs
-            >>> Job(9999).unsuspend()
+            >>> import pyslurm
+            >>> pyslurm.Job(9999).unsuspend()
         """
         # Same problem as described in suspend()
         verify_rpc(slurm_resume(self.id))
@@ -425,7 +425,7 @@ cdef class Job:
         Implements the slurm_update_job RPC.
 
         Args:
-            changes (JobSubmitDescription):
+            changes (pyslurm.JobSubmitDescription):
                 A JobSubmitDescription object which contains all the
                 modifications that should be done on the Job.
 
@@ -433,11 +433,11 @@ cdef class Job:
             RPCError: When updating the Job was not successful.
 
         Examples:
-            >>> from pyslurm import Job, JobSubmitDescription
+            >>> import pyslurm
             >>> 
             >>> # Setting the new time-limit to 20 days
-            >>> changes = JobSubmitDescription(time_limit="20-00:00:00")
-            >>> Job(9999).modify(changes)
+            >>> changes = pyslurm.JobSubmitDescription(time_limit="20-00:00:00")
+            >>> pyslurm.Job(9999).modify(changes)
         """
         changes._create_job_submit_desc(is_update=True)
         changes.ptr.job_id = self.id
@@ -454,20 +454,19 @@ cdef class Job:
                 release the Job again. If you specify the mode as "user", the
                 User will also be able to release the job.
 
-        Note:
-            Uses the modify() function to set the Job's priority to 0.
+        Note: Uses the modify() function to set the Job's priority to 0.
 
         Raises:
             RPCError: When holding the Job was not successful.
 
         Examples:
-            >>> from pyslurm import Job
+            >>> import pyslurm
             >>> 
             >>> # Holding a Job (in "admin" mode by default)
-            >>> Job(9999).hold()
+            >>> pyslurm.Job(9999).hold()
             >>> 
             >>> # Holding a Job in "user" mode
-            >>> Job(9999).hold(mode="user")
+            >>> pyslurm.Job(9999).hold(mode="user")
         """
         cdef JobSubmitDescription job_sub = JobSubmitDescription(priority=0)
 
@@ -479,16 +478,15 @@ cdef class Job:
     def release(self):
         """Release a currently held Job, allowing it to be scheduled again.
 
-        Note:
-            Uses the modify() function to reset the priority back to
+        Note: Uses the modify() function to reset the priority back to
             be controlled by the slurmctld's priority calculation routine.
 
         Raises:
             RPCError: When releasing a held Job was not successful.
 
         Examples:
-            >>> from pyslurm import Job
-            >>> Job(9999).release()
+            >>> import pyslurm
+            >>> pyslurm.Job(9999).release()
         """
         self.modify(JobSubmitDescription(priority=slurm.INFINITE))
 
@@ -498,7 +496,7 @@ cdef class Job:
         Implements the slurm_requeue RPC.
 
         Args:
-            hold (bool):
+            hold (bool, optional):
                 Controls whether the Job should be put in a held state or not.
                 Default for this is 'False', so it will not be held.
 
@@ -506,14 +504,14 @@ cdef class Job:
             RPCError: When requeing the Job was not successful.
 
         Examples:
-            >>> from pyslurm import Job
+            >>> import pyslurm
             >>> 
             >>> # Requeing a Job while allowing it to be
             >>> # scheduled again immediately
-            >>> Job(9999).requeue()
+            >>> pyslurm.Job(9999).requeue()
             >>> 
             >>> # Requeing a Job while putting it in a held state
-            >>> Job(9999).requeue(hold=True)
+            >>> pyslurm.Job(9999).requeue(hold=True)
         """
         cdef uint32_t flags = 0
 
@@ -535,28 +533,24 @@ cdef class Job:
             RPCError: When sending the message to the Job was not successful.
                 
         Examples:
-            >>> from pyslurm import Job
-            >>> Job(9999).notify("Hello Friends!")
+            >>> import pyslurm
+            >>> pyslurm.Job(9999).notify("Hello Friends!")
         """
         verify_rpc(slurm_notify_job(self.id, msg))
 
     def get_batch_script(self):
         """Return the content of the script for a Batch-Job.
 
-        Note:
-            The string returned also includes all the "\n" characters
-                (new-line).
-
         Returns:
             (str): The content of the batch script.
 
         Raises:
             RPCError: When retrieving the Batch-Script for the Job was not
-            successful.
+                successful.
 
         Examples:
-            >>> from pyslurm import Job
-            >>> script = Job(9999).get_batch_script()
+            >>> import pyslurm
+            >>> script = pyslurm.Job(9999).get_batch_script()
         """
         # The code for this function was taken from here:
         # https://github.com/SchedMD/slurm/blob/7162f15af8deaf02c3bbf940d59e818cdeb5c69d/src/api/job_info.c#L1319
@@ -1229,13 +1223,14 @@ cdef class Job:
     def get_resource_layout_per_node(self):
         """Retrieve the resource layout of this Job on each node.
 
-        This contains the following information:
+        The dict returned contains the following information for each node:
             * cpu_ids (str)
             * gres (dict)
             * memory (int)
 
         Returns:
-            (dict): Resource layout
+            (dict): Resource layout, where the key is the name of the name and
+                its value another dict with the components described above.
         """
         # The code for this function is a modified reimplementation from here:
         # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L739

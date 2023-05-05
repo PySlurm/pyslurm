@@ -24,7 +24,7 @@
 
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from .job cimport Job
-
+from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     job_step_info_t,
@@ -43,9 +43,14 @@ from pyslurm.slurm cimport (
     xfree,
     try_xmalloc,
 )
+from pyslurm.utils cimport cstr, ctime
+from pyslurm.utils.uint cimport *
+from pyslurm.utils.ctime cimport time_t
+from pyslurm.core.job.task_dist cimport TaskDistribution
+
 
 cdef class JobSteps(dict):
-    """A collection of :obj:`JobStep` objects for a given Job.
+    """A collection of [`pyslurm.JobStep`][] objects for a given Job.
 
     Args:
         job (Union[Job, int]):
@@ -70,10 +75,14 @@ cdef class JobStep:
     """A Slurm Jobstep
 
     Args:
-        job (Union[Job, int]):
+        job_id (Union[Job, int], optional=0):
             The Job this Step belongs to.
-        step (Union[int, str]):
+        step_id (Union[int, str], optional=0):
             Step-ID for this JobStep object.
+
+    Other Parameters:
+        time_limit (int):
+            Time limit in Minutes for this step.
 
     Raises:
         MemoryError: If malloc fails to allocate memory.

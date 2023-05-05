@@ -23,7 +23,7 @@
 # cython: language_level=3
 
 from pyslurm cimport slurm
-from pyslurm.core.common.uint cimport u16
+from pyslurm.utils.uint cimport u16
 from pyslurm.slurm cimport (
     task_dist_states_t,
 )

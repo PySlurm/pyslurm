@@ -23,4 +23,4 @@
 # cython: language_level=3
 
 from pyslurm cimport slurm
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr

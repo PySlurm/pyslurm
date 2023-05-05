@@ -22,18 +22,13 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.slurm cimport xfree, try_xmalloc
-from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
-from pyslurm.core.common cimport cstr
-from pyslurm.core.common import cstr
-from pyslurm.core.common cimport ctime
-from pyslurm.core.common import ctime
-from pyslurm.core.common.ctime cimport time_t
-from pyslurm.core.common.uint cimport *
-from pyslurm.core.common.uint import *
+from typing import Union
+from pyslurm.utils import cstr
+from pyslurm.utils import ctime
+from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
-from pyslurm.core.common.ctime import timestamp_to_date, _raw_time
-from pyslurm.core.common import (
+from pyslurm.utils.ctime import timestamp_to_date, _raw_time
+from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
     humanize, 
@@ -83,7 +78,7 @@ cdef class Nodes(dict):
                 the Node instances. The default is False.
 
         Returns:
-            (Nodes): Collection of node objects.
+            (pyslurm.Nodes): Collection of node objects.
 
         Raises:
             RPCError: When getting all the Nodes from the slurmctld failed.
@@ -136,8 +131,7 @@ cdef class Nodes(dict):
     def reload(self):
         """Reload the information for nodes in a collection.
 
-        Note:
-            Only information for nodes which are already in the collection at
+        Note: Only information for nodes which are already in the collection at
             the time of calling this method will be reloaded.
 
         Raises:
@@ -318,21 +312,21 @@ cdef class Node:
         Implements the slurm_create_node RPC.
 
         Args:
-            future (str, optional): 
+            state (str, optional): 
                 An optional state the created Node should have. Allowed values
                 are "future" and "cloud". "future" is the default.
 
         Returns:
-            (Node): This function returns the current Node-instance object
-                itself.
+            (pyslurm.Node): This function returns the current Node-instance
+                object itself.
 
         Raises:
             RPCError: If creating the Node was not successful.
             MemoryError: If malloc failed to allocate memory.
 
         Examples:
-            >>> from pyslurm import Node
-            >>> node = Node("testnode").create()
+            >>> import pyslurm
+            >>> node = pyslurm.Node("testnode").create()
         """
         if not self.name:
             raise ValueError("You need to set a node name first.")
@@ -344,43 +338,28 @@ cdef class Node:
 
         return self
 
-    def modify(self, node=None, **kwargs):
+    def modify(self, changes):
         """Modify a node.
 
         Implements the slurm_update_node RPC.
 
         Args:
-            node (pyslurm.Node):
+            changes (pyslurm.Node):
                 Another Node object which contains all the changes that
                 should be applied to this instance.
-            **kwargs:
-                You can also specify all the changes as keyword arguments.
-                Allowed values are only attributes which can actually be set
-                on a Node instance. If a node is explicitly specified as
-                parameter, all **kwargs will be ignored.
 
         Raises:
             RPCError: When updating the Node was not successful.
 
         Examples:
-            >>> from pyslurm import Node
-            >>> 
-            >>> # Setting a new weight for the Node
-            >>> changes = Node(weight=100)
-            >>> Node("localhost").modify(changes)
+            >>> import pyslurm
             >>>
-            >>> # Or by specifying the changes directly to the modify function
-            >>> Node("localhost").modify(weight=100)
+            >>> mynode = pyslurm.Node("localhost")
+            >>> changes = pyslurm.Node(weight=100)
+            >>> # Setting the weight to 100 for the "localhost" node
+            >>> mynode.modify(changes)
         """
-        cdef Node n = self
-
-        # Allow the user to both specify changes via a Node instance or
-        # **kwargs.
-        if node and isinstance(node, Node):
-            n = <Node>node
-        elif kwargs:
-            n = Node(**kwargs)
-
+        cdef Node n = <Node>changes
         n._alloc_umsg()
         cstr.fmalloc(&n.umsg.node_names, self.name)
         verify_rpc(slurm_update_node(n.umsg))
@@ -395,8 +374,8 @@ cdef class Node:
             MemoryError: If malloc failed to allocate memory.
 
         Examples:
-            >>> from pyslurm import Node
-            >>> Node("localhost").delete()
+            >>> import pyslurm
+            >>> pyslurm.Node("localhost").delete()
         """
         self._alloc_umsg()
         verify_rpc(slurm_delete_node(self.umsg))
@@ -406,6 +385,11 @@ cdef class Node:
 
         Returns:
             (dict): Node information as dict
+
+        Examples:
+            >>> import pyslurm
+            >>> mynode = pyslurm.Node.load("mynode")
+            >>> mynode_dict = mynode.as_dict()
         """
         return instance_to_dict(self)
 
