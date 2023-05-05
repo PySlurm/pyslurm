@@ -184,8 +184,8 @@ def _find_opt(opt):
 def _parse_opts_from_batch_script(desc, script, overwrite):
     flags_and_vals = {}
 
-    if not script or not Path(script).is_file():
-        return None
+    if not Path(script).is_file():
+        raise ValueError("The script path you provided is not valid.")
 
     script = Path(script).read_text()
     for line in script.splitlines():

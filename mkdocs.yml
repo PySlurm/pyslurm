@@ -1,17 +1,57 @@
-site_name: pyslurm
+site_dir: "site"
+site_name: "pyslurm"
+site_url: "https://pyslurm.github.io"
+repo_url: "https://github.com/PySlurm/pyslurm"
+repo_name: "PySlurm/pyslurm"
+copyright: Copyright &copy; 2023 The PySlurm Authors
+
 theme:
   name: "material"
-  logo: pyslurm-docs.png
+  logo: logo.png
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  palette: 
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      accent: purple
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+
 plugins:
-- search
-- mkdocstrings:
-    handlers:
-      python:
-        options:
-          filters: ["!^_"]
-          docstring_style: google
-          show_signature: true
-          show_root_heading: true
+  - search
+  - awesome-pages
+  - mike
+  - mkdocstrings:
+      handlers:
+        python:
+          import:
+            - https://docs.python.org/3/objects.inv
+          options:
+            filters: ["!^_"]
+            docstring_style: google
+            show_signature: true
+            show_root_heading: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.snippets:
+      check_paths: true
+
 extra:
   version:
     provider: mike

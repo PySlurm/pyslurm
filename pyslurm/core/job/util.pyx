@@ -24,8 +24,8 @@
 
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from pyslurm cimport slurm
-from pyslurm.core.common.uint import *
-from pyslurm.core.common.uint cimport *
+from pyslurm.utils.uint import *
+from pyslurm.utils.uint cimport *
 
 # Note: Maybe consider using libslurmfull again to avoid having to reimplement
 # some of these functions and keeping track for changes in new releases.

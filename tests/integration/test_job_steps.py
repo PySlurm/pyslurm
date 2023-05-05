@@ -142,7 +142,7 @@ def test_modify(submit_job):
     step.modify(JobStep(time_limit="00:05:00"))
     assert JobStep.load(job, 0).time_limit == 5
 
-    step.modify(time_limit="00:15:00")
+    step.modify(JobStep(time_limit="00:15:00"))
     assert JobStep.load(job, 0).time_limit == 15
 
 

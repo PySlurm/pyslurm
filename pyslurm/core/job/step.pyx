@@ -22,22 +22,17 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from libc.string cimport memcpy, memset
-from pyslurm.core.common cimport cstr, ctime
-from pyslurm.core.common import cstr, ctime
-from pyslurm.core.common.uint cimport *
-from pyslurm.core.common.uint import *
-from pyslurm.core.common.ctime cimport time_t
+from typing import Union
+from pyslurm.utils import cstr, ctime
+from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
-from pyslurm.core.common import (
+from pyslurm.utils.helpers import (
     signal_to_num,
     instance_to_dict, 
     uid_to_name,
 )
 from pyslurm.core.job.util import cpu_freq_int_to_str
-from pyslurm.core.job.task_dist cimport TaskDistribution
-
-from pyslurm.core.common.ctime import (
+from pyslurm.utils.ctime import (
     secs_to_timestr,
     mins_to_timestr,
     timestr_to_mins,
@@ -59,6 +54,15 @@ cdef class JobSteps(dict):
 
     @staticmethod
     def load(job):
+        """Load the Steps for a specific Job
+
+        Args:
+            job (Union[Job, int]):
+                The Job for which the Steps should be loaded
+
+        Returns:
+            (pyslurm.JobSteps): JobSteps of the Job
+        """
         cdef Job _job
         _job = Job.load(job.id) if isinstance(job, Job) else Job.load(job)
         return JobSteps._load(_job)
@@ -187,7 +191,7 @@ cdef class JobStep:
         Implements the slurm_get_job_steps RPC.
 
         Args:
-            job_id (Union[Job, int]):
+            job_id (Union[pyslurm.Job, int]):
                 ID of the Job the Step belongs to.
             step_id (Union[int, str]):
                 Step-ID for the Step to be loaded.
@@ -249,12 +253,12 @@ cdef class JobStep:
         Examples:
             Specifying the signal as a string:
 
-            >>> from pyslurm import JobStep
-            >>> JobStep(9999, 1).send_signal("SIGUSR1")
+            >>> import pyslurm
+            >>> pyslurm.JobStep(9999, 1).send_signal("SIGUSR1")
 
             or passing in a numeric signal:
 
-            >>> JobStep(9999, 1).send_signal(9)
+            >>> pyslurm.JobStep(9999, 1).send_signal(9)
         """
         step_id = self.ptr.step_id.step_id
         sig = signal_to_num(signal)
@@ -269,53 +273,36 @@ cdef class JobStep:
             RPCError: When cancelling the Job was not successful.
 
         Examples:
-            >>> from pyslurm import JobStep
-            >>> JobStep(9999, 1).cancel()
+            >>> import pyslurm
+            >>> pyslurm.JobStep(9999, 1).cancel()
         """
         step_id = self.ptr.step_id.step_id
         verify_rpc(slurm_kill_job_step(self.job_id, step_id, 9))
 
-    def modify(self, step=None, **kwargs):
+    def modify(self, changes):
         """Modify a job step.
 
         Implements the slurm_update_step RPC.
 
         Args:
-            step (JobStep):
+            changes (pyslurm.JobStep):
                 Another JobStep object which contains all the changes that
                 should be applied to this instance.
-            **kwargs:
-                You can also specify all the changes as keyword arguments.
-                Allowed values are only attributes which can actually be set
-                on a JobStep instance. If a step is explicitly specified as
-                parameter, all **kwargs will be ignored.
-
         Raises:
             RPCError: When updating the JobStep was not successful.
 
         Examples:
-            >>> from pyslurm import JobStep
+            >>> import pyslurm
             >>> 
             >>> # Setting the new time-limit to 20 days
-            >>> changes = JobStep(time_limit="20-00:00:00")
-            >>> JobStep(9999, 1).modify(changes)
-            >>>
-            >>> # Or by specifying the changes directly to the modify function
-            >>> JobStep(9999, 1).modify(time_limit="20-00:00:00")
+            >>> changes = pyslurm.JobStep(time_limit="20-00:00:00")
+            >>> pyslurm.JobStep(9999, 1).modify(changes)
         """
-        cdef JobStep js = self
-
-        # Allow the user to both specify changes via object and **kwargs.
-        if step and isinstance(step, JobStep):
-            js = <JobStep>step
-        elif kwargs:
-            js = JobStep(**kwargs)
-
+        cdef JobStep js = <JobStep>changes
         js._alloc_umsg()
         js.umsg.step_id = self.ptr.step_id.step_id
         js.umsg.job_id = self.ptr.step_id.job_id
         verify_rpc(slurm_update_step(js.umsg))
-
 
     def as_dict(self):
         """JobStep information formatted as a dictionary.
@@ -449,6 +436,7 @@ def humanize_step_id(sid):
         return "pending"
     else:
         return sid
+
 
 def dehumanize_step_id(sid):
     if sid == "batch":
