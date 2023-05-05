@@ -45,7 +45,7 @@ from pyslurm.core.job.task_dist cimport TaskDistribution
 
 
 cdef class JobSubmitDescription:
-    """Description of a Slurm Job.
+    """Submit Description for a Slurm Job.
 
     Args:
         **kwargs (Any, optional=None):

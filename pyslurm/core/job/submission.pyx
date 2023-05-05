@@ -84,10 +84,11 @@ cdef class JobSubmitDescription:
             MemoryError: If malloc failed to allocate enough memory.
 
         Examples:
-            >>> desc = JobSubmitDescription(
-            >>>     name="test-job",
-            >>>     cpus_per_task=1,
-            >>>     time_limit="10-00:00:00")
+            >>> import pyslurm
+            >>> desc = pyslurm.JobSubmitDescription(
+            ...     name="test-job",
+            ...     cpus_per_task=1,
+            ...     time_limit="10-00:00:00")
             >>> 
             >>> job_id = desc.submit()
         """
@@ -107,7 +108,8 @@ cdef class JobSubmitDescription:
         Args:
             overwrite (bool): 
                 If set to True, the value from an option found in the
-                environment will override its current value. Default is False
+                environment will override the current value of the attribute
+                in this instance. Default is False
         """
         self._parse_env(overwrite)
 
@@ -117,7 +119,8 @@ cdef class JobSubmitDescription:
         Args:
             overwrite (bool):
                 If set to True, the value from an option found in the in the
-                batch script will override its current value. Default is False
+                batch script will override the current value of the attribute
+                in this instance. Default is False
         """
         if not self.script:
             raise ValueError("You need to set the 'script' attribute first.")
