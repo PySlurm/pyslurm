@@ -1,6 +1,6 @@
 ---
-title: JobStats
+title: JobStatistics
 ---
 
-::: pyslurm.db.JobStats
+::: pyslurm.db.JobStatistics
     handler: python
