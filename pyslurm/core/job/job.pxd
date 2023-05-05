@@ -22,9 +22,9 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.common cimport cstr, ctime
-from pyslurm.core.common.uint cimport *
-from pyslurm.core.common.ctime cimport time_t
+from pyslurm.utils cimport cstr, ctime
+from pyslurm.utils.uint cimport *
+from pyslurm.utils.ctime cimport time_t
 
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t

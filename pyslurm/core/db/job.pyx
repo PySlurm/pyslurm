@@ -25,16 +25,15 @@
 from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 from typing import Union
 from pyslurm.core.error import RPCError
-from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
 from pyslurm.core import slurmctld
 from typing import Any
-from pyslurm.core.common.uint import *
-from pyslurm.core.common.ctime import (
+from pyslurm.utils.uint import *
+from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,
     _raw_time,
 )
-from pyslurm.core.common import (
+from pyslurm.utils.helpers import (
     gid_to_name,
     group_to_gid,
     user_to_uid,

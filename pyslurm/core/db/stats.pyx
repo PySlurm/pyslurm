@@ -22,7 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.common import (
+from pyslurm.utils.helpers import (
     nodelist_from_range_str,
     instance_to_dict,
 )

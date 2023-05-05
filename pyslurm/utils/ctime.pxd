@@ -1,5 +1,5 @@
 #########################################################################
-# utils.py - pyslurm utility functions
+# ctime.pxd - wrappers around slurm time functions
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -18,27 +18,15 @@
 # You should have received a copy of the GNU General Public License along
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-"""pyslurm utility functions"""
+#
+# cython: c_string_type=unicode, c_string_encoding=default
+# cython: language_level=3
 
-# Utility time functions
-from pyslurm.core.common.ctime import (
-    timestr_to_secs,
-    timestr_to_mins,
-    secs_to_timestr,
-    mins_to_timestr,
-    date_to_timestamp,
-    timestamp_to_date,
-)
+from pyslurm cimport slurm
+from pyslurm.utils cimport cstr
+from libc.stdint cimport uint32_t
 
-# General utility functions
-from pyslurm.core.common import (
-    uid_to_name,
-    gid_to_name,
-    user_to_uid,
-    group_to_gid,
-    expand_range_str,
-    humanize,
-    dehumanize,
-    nodelist_from_range_str,
-    nodelist_to_range_str,
-)
+cdef extern from 'time.h' nogil:
+    ctypedef long time_t
+    double difftime(time_t time1, time_t time2)
+    time_t time(time_t *t)

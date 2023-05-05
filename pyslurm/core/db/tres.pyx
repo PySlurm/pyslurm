@@ -22,7 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.common.uint import *
+from pyslurm.utils.uint import *
 
 
 cdef class TrackableResources(dict):

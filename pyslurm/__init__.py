@@ -12,6 +12,9 @@ sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 from .pyslurm import *
 from .__version__ import __version__
 
+from pyslurm import utils
+from pyslurm import db
+
 from pyslurm.core.job import (
     Job,
     Jobs,
@@ -19,17 +22,12 @@ from pyslurm.core.job import (
     JobSteps,
     JobSubmitDescription,
 )
-
-from pyslurm import db
-from pyslurm import utils
 from pyslurm.core.node import Node, Nodes
-
 from pyslurm.core import error
 from pyslurm.core.error import (
     PyslurmError,
     RPCError,
 )
-
 from pyslurm.core import slurmctld
 
 # Initialize slurm api

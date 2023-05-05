@@ -1,5 +1,5 @@
 #########################################################################
-# common/__init__.pyx - common/utility functions
+# helpers.pyx - basic helper functions
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #

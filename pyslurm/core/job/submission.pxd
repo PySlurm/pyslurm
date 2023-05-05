@@ -38,6 +38,10 @@ from pyslurm.slurm cimport (
     xfree,
     try_xmalloc,
 )
+from pyslurm.utils cimport cstr, ctime
+from pyslurm.utils.uint cimport *
+from pyslurm.utils.ctime cimport time_t
+from pyslurm.core.job.task_dist cimport TaskDistribution
 
 
 cdef class JobSubmitDescription:

@@ -22,19 +22,13 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.slurm cimport xfree, try_xmalloc
-from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from typing import Union
-from pyslurm.core.common cimport cstr
-from pyslurm.core.common import cstr
-from pyslurm.core.common cimport ctime
-from pyslurm.core.common import ctime
-from pyslurm.core.common.ctime cimport time_t
-from pyslurm.core.common.uint cimport *
-from pyslurm.core.common.uint import *
+from pyslurm.utils import cstr
+from pyslurm.utils import ctime
+from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
-from pyslurm.core.common.ctime import timestamp_to_date, _raw_time
-from pyslurm.core.common import (
+from pyslurm.utils.ctime import timestamp_to_date, _raw_time
+from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
     humanize, 

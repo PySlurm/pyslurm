@@ -21,7 +21,7 @@
 # cython: language_level=3
 
 from pyslurm cimport slurm
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr
 from libc.stdint cimport uint64_t
 from pyslurm.slurm cimport (
     slurmdb_tres_rec_t,

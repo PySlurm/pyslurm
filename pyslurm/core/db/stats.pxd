@@ -31,7 +31,7 @@ from pyslurm.slurm cimport (
 from pyslurm.core.db.tres cimport TrackableResources
 from pyslurm.core.db.step cimport JobStep, JobSteps
 from pyslurm.core.db.job cimport Job
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr
 
 
 cdef class JobStats:

@@ -24,7 +24,7 @@
 
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from .job cimport Job
-
+from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     job_step_info_t,
@@ -43,6 +43,11 @@ from pyslurm.slurm cimport (
     xfree,
     try_xmalloc,
 )
+from pyslurm.utils cimport cstr, ctime
+from pyslurm.utils.uint cimport *
+from pyslurm.utils.ctime cimport time_t
+from pyslurm.core.job.task_dist cimport TaskDistribution
+
 
 cdef class JobSteps(dict):
     """A collection of [`pyslurm.JobStep`][] objects for a given Job.

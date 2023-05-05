@@ -22,7 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr
 from pyslurm cimport slurm
 from pyslurm.slurm cimport slurm_get_errno
 

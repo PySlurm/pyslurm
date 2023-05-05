@@ -48,8 +48,9 @@ from pyslurm.core.db.util cimport (
 from pyslurm.core.db.step cimport JobStep, JobSteps
 from pyslurm.core.db.stats cimport JobStats
 from pyslurm.core.db.connection cimport Connection
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr
 from pyslurm.core.db.qos cimport QualitiesOfService
+from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
 
 
 cdef class JobSearchFilter:

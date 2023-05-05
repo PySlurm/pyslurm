@@ -31,16 +31,16 @@
 from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 import re
 from typing import Union
-from pyslurm.core.common import cstr, ctime
-from pyslurm.core.common.uint import *
+from pyslurm.utils import cstr, ctime
+from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
 from pyslurm.core.error import (
     RPCError,
     verify_rpc,
     slurm_errno,
 )
-from pyslurm.core.common.ctime import _raw_time
-from pyslurm.core.common import (
+from pyslurm.utils.ctime import _raw_time
+from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
     signal_to_num,

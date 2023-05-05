@@ -38,7 +38,7 @@ from pyslurm.core.db.util cimport (
     make_char_list,
 )
 from pyslurm.core.db.connection cimport Connection
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr
 
 
 cdef class QualitiesOfService(dict):

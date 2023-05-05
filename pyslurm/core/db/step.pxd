@@ -38,8 +38,9 @@ from pyslurm.slurm cimport (
 )
 from pyslurm.core.db.util cimport SlurmList, SlurmListItem
 from pyslurm.core.db.connection cimport Connection
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr
 from pyslurm.core.db.stats cimport JobStats
+from pyslurm.core.db.tres cimport TrackableResources, TrackableResource
 
 
 cdef class JobSteps(dict):

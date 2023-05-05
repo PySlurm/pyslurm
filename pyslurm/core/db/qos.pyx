@@ -23,9 +23,7 @@
 # cython: language_level=3
 
 from pyslurm.core.error import RPCError
-from pyslurm.core.common import (
-    instance_to_dict,
-)
+from pyslurm.utils.helpers import instance_to_dict
 
 
 cdef class QualitiesOfService(dict):

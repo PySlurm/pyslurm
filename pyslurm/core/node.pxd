@@ -24,6 +24,7 @@
 
 from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from pyslurm.slurm cimport (
     node_info_t,
     node_info_msg_t,
@@ -47,7 +48,13 @@ from pyslurm.slurm cimport (
     slurm_node_state_string_complete,
     slurm_node_state_string,
     cpu_bind_type_t,
+    xfree,
+    try_xmalloc,
 )
+from pyslurm.utils cimport cstr
+from pyslurm.utils cimport ctime
+from pyslurm.utils.ctime cimport time_t
+from pyslurm.utils.uint cimport *
 
 
 cdef class Nodes(dict):

@@ -1,5 +1,5 @@
 #########################################################################
-# common/__init__.pxd - common/utility functions
+# helpers.pxd - basic helper functions
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -25,7 +25,7 @@
 from pyslurm cimport slurm
 from pyslurm.slurm cimport xfree, try_xmalloc, xmalloc
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
-from pyslurm.core.common cimport cstr
+from pyslurm.utils cimport cstr
 from libc.stdlib cimport free
 
 cpdef uid_to_name(uint32_t uid, err_on_invalid=*, dict lookup=*)

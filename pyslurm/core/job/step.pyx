@@ -22,23 +22,17 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from libc.string cimport memcpy, memset
 from typing import Union
-from pyslurm.core.common cimport cstr, ctime
-from pyslurm.core.common import cstr, ctime
-from pyslurm.core.common.uint cimport *
-from pyslurm.core.common.uint import *
-from pyslurm.core.common.ctime cimport time_t
+from pyslurm.utils import cstr, ctime
+from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
-from pyslurm.core.common import (
+from pyslurm.utils.helpers import (
     signal_to_num,
     instance_to_dict, 
     uid_to_name,
 )
 from pyslurm.core.job.util import cpu_freq_int_to_str
-from pyslurm.core.job.task_dist cimport TaskDistribution
-
-from pyslurm.core.common.ctime import (
+from pyslurm.utils.ctime import (
     secs_to_timestr,
     mins_to_timestr,
     timestr_to_mins,
