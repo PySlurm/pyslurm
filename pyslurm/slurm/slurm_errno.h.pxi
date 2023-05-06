@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2023-04-30T11:54:32.011184
+# Generated on 2023-05-06T18:02:46.304407
 #
 # The Original Copyright notice from slurm_errno.h has been included
 # below:
@@ -24,11 +24,14 @@
 #	Jim Garlick <garlick@llnl.gov>, et. al.
 #  CODE-OCEC-09-009. All rights reserved.
 #
-# Please also check the DISCLAIMER file in the Slurm repository here:
-# https://github.com/SchedMD/slurm/blob/master/DISCLAIMER
+# Slurm is licensed under the GNU GPLv2. For the full text of Slurm's License,
+# please see here: pyslurm/slurm/SLURM_LICENSE
+#
+# Please, as mentioned above, also have a look at Slurm's DISCLAIMER under
+# pyslurm/slurm/SLURM_DISCLAIMER
 ##############################################################################
 #
-# Copyright (C) 2023 The PySlurm Authors (Modifications as described above)
+# Copyright (C) 2023 PySlurm Developers (Modifications as described above)
 #
 # This file is part of PySlurm
 #
