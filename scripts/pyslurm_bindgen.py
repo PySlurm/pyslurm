@@ -133,13 +133,16 @@ def translate_slurm_header(hdr_dir, hdr):
 # below:
 #
 {copyright_notice}#
-# Please also check the DISCLAIMER file in the Slurm repository here:
-# https://github.com/SchedMD/slurm/blob/master/DISCLAIMER
+# Slurm is licensed under the GNU GPLv2. For the full text of Slurm's License,
+# please see here: pyslurm/slurm/SLURM_LICENSE
+#
+# Please, as mentioned above, also have a look at Slurm's DISCLAIMER under
+# pyslurm/slurm/SLURM_DISCLAIMER
 ##############################################################################
 """
 
     pyslurm_copyright = """#
-# Copyright (C) 2023 The PySlurm Authors (Modifications as described above)
+# Copyright (C) 2023 PySlurm Developers (Modifications as described above)
 #
 # This file is part of PySlurm
 #
