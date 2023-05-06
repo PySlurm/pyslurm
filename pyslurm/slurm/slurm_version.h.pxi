@@ -1,4 +1,4 @@
-# Copyright (C) 2023 The PySlurm Authors
+# Copyright (C) 2023 PySlurm Developers
 #
 # This file is part of PySlurm
 #
