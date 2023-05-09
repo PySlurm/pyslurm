@@ -1,8 +1,9 @@
 [build-system]
 # Minimum requirements
 requires = [
-    "setuptools==59.2.0",
-    "wheel==0.37.0",
-    "Cython>=0.29.30,<3.0",
+    "setuptools>=59.2.0",
+    "wheel>=0.37.0",
+    "Cython>=0.29.30",
+    "packaging>=21.3"
 ]
 
