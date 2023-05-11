@@ -30,7 +30,7 @@ cdef bytes NONE_BYTE = "None".encode("ascii")
 cdef char *from_unicode(s):
     """Convert Python3 str (unicode) to char* (no malloc)
 
-    Note
+    Note:
         The lifetime of this char* depends on the lifetime of the equivalent
         python-object passed in. If the python-object is gone, the char* cannot
         be used safely anymore.
@@ -173,7 +173,7 @@ def dict_to_str(vals, prepend=None, delim1=",", delim2="="):
     for Key/Value type things, which can be easily created from a dict.
 
     A String which already has this form can also be passed in. The correct
-    format of this string will the be validated.
+    format of this string will then be validated.
     """
     cdef:
         tmp_dict = {} if not vals else vals
@@ -273,7 +273,7 @@ def from_gres_dict(vals, typ=""):
             raise ValueError(f"Invalid specifier: '{gres_and_type}'")
 
         if typ not in gres_and_type:
-            gres_and_type = f"{gres_and_type}:{typ}"
+            gres_and_type = f"{typ}:{gres_and_type}"
 
         final.append(f"gres:{gres_and_type}:{int(cnt)}")
 

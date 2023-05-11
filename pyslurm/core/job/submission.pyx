@@ -219,7 +219,8 @@ cdef class JobSubmitDescription:
         cstr.fmalloc(&ptr.cpus_per_tres, 
                      cstr.from_gres_dict(self.cpus_per_gpu, "gpu"))
         cstr.fmalloc(&ptr.admin_comment, self.admin_comment)
-        
+        cstr.fmalloc(&self.ptr.dependency,
+                     _parse_dependencies(self.dependencies))
         cstr.from_list(&ptr.clusters, self.clusters)
         cstr.from_list(&ptr.exc_nodes, self.excluded_nodes)
         cstr.from_list(&ptr.req_nodes, self.required_nodes)
@@ -227,13 +228,11 @@ cdef class JobSubmitDescription:
         cstr.from_list(&ptr.partition, self.partitions)
         cstr.from_list(&ptr.reservation, self.reservations)
         cstr.from_dict(&ptr.acctg_freq, self.accounting_gather_frequency)
-
         ptr.deadline = date_to_timestamp(self.deadline)
         ptr.begin_time = date_to_timestamp(self.begin_time)
         ptr.delay_boot = timestr_to_secs(self.delay_boot_time)
         ptr.time_limit = timestr_to_mins(self.time_limit)
         ptr.time_min = timestr_to_mins(self.time_limit_min)
-
         ptr.priority = u32(self.priority, zero_is_noval=False)
         ptr.num_tasks = u32(self.ntasks)
         ptr.pn_min_tmp_disk = u32(dehumanize(self.temporary_disk_per_node))
@@ -257,21 +256,22 @@ cdef class JobSubmitDescription:
         ptr.reboot = u16_bool(self.requires_node_reboot)
         ptr.requeue = u16_bool(self.is_requeueable)
         ptr.wait_all_nodes = u16_bool(self.wait_all_nodes)
-
         ptr.mail_type = mail_type_list_to_int(self.mail_types)
         ptr.power_flags = power_type_list_to_int(self.power_options)
         ptr.profile = acctg_profile_list_to_int(self.profile_types)
         ptr.shared = shared_type_str_to_int(self.resource_sharing)
 
-        self._set_cpu_frequency()
-        self._set_nodes()
-        self._set_dependencies()
+        if not self.is_update:
+            self.ptr.min_nodes, self.ptr.max_nodes = _parse_nodes(self.nodes)
+            cstr.fmalloc(&self.ptr.script,
+                         _validate_batch_script(self.script, self.script_args))
+            self._set_script_args()
+            self._set_environment()
+            self._set_distribution()
+
         self._set_memory()
         self._set_open_mode()
-        self._set_script()
-        self._set_script_args()
-        self._set_environment()
-        self._set_distribution()
+        self._set_cpu_frequency()
         self._set_gpu_binding()
         self._set_gres_binding()
         self._set_min_cpus()
@@ -330,129 +330,19 @@ cdef class JobSubmitDescription:
             self.ptr.core_spec |= slurm.CORE_SPEC_THREAD
 
     def _set_cpu_frequency(self):
-        if not self.cpu_frequency:
-            return None
-
         freq = self.cpu_frequency
-        have_no_range = False
+        if not freq:
+            return None
 
         # Alternatively support sbatch-like --cpu-freq setting.
         if not isinstance(freq, dict):
-            freq_splitted = re.split("[-:]+", str(freq))
-            freq_len = len(freq_splitted)
-            freq = {}
+            freq = _parse_cpu_freq_str_to_dict(freq)
 
-            # Transform cpu-freq string to the individual components.
-            if freq_splitted[0].isdigit():
-                freq["max"] = freq_splitted[0]
-            else:
-                if freq_len > 1:
-                    raise ValueError(
-                        "Invalid cpu_frequency format: {kwargs}."
-                        "Governor must be provided as single element or "
-                        "as last element in the form of min-max:governor. "
-                    )
-                freq["governor"] = freq_splitted[0]
-
-            if freq_len >= 2:
-                freq["min"] = freq["max"]
-                freq["max"] = freq_splitted[1]
-
-            if freq_len == 3:
-                freq["governor"] = freq_splitted[2]
-
-        freq_min = cpu_freq_str_to_int(freq.get("min"))
-        freq_max = cpu_freq_str_to_int(freq.get("max"))
-        freq_gov = cpu_gov_str_to_int(freq.get("governor"))
-
-        if freq_min != u32(None):
-            if freq_max == u32(None):
-                freq_max = freq_min
-                freq_min = u32(None)
-                have_no_range = True
-            elif freq_max < freq_min:
-                raise ValueError(
-                    f"min cpu-freq ({freq_min}) must be smaller "
-                    f"than max cpu-freq ({freq_max})"
-                )
-        elif freq_max != u32(None) and freq_min == u32(None):
-            have_no_range = True
-
-        if have_no_range and freq_gov != u32(None):
-            raise ValueError(
-                "Setting Governor when specifying only either one "
-                "of min or max is not allowed."
-            )
-
+        freq_min, freq_max, freq_gov = _validate_cpu_freq(freq)
         self.ptr.cpu_freq_min = freq_min
         self.ptr.cpu_freq_max = freq_max
         self.ptr.cpu_freq_gov = freq_gov
     
-    def _set_nodes(self):
-        vals = self.nodes
-        nmin=nmax = 1
-
-        if self.is_update:
-            return None
-
-        # Support input like --nodes from sbatch (min-[max])
-        if isinstance(vals, dict):
-            nmin = u32(vals.get("min", 1), on_noval=1)
-            nmax = u32(vals.get("max", 1), on_noval=nmin)
-        elif vals is not None:
-            v = str(vals).split("-", 1)
-            nmin = int(v[0])
-            if nmin == 0:
-                nmin = 1
-            if "-" in str(vals):
-                nmax = int(v[1])
-            else:
-                nmax = nmin
-
-        if not nmax:
-            nmax = nmin
-        if nmax < nmin:
-            raise ValueError("Max Nodecount cannot be "
-                             "less than minimum nodecount.")
-
-        self.ptr.min_nodes = nmin
-        self.ptr.max_nodes = nmax
-
-    def _set_dependencies(self):
-        val = self.dependencies
-        final = None
-
-        if isinstance(val, str):
-            # TODO: Even though everything is checked in the slurmctld, maybe
-            # still do some sanity checks here on the input when a string
-            # is provided.
-            final = val
-        elif val is not None:
-            satisfy = val.pop("satisfy", "all").casefold()
-
-            if satisfy == "any":
-                delim = "?"
-            else:
-                delim = ","
-
-            final = []
-            for k, v in val.items():
-                if k == "singleton" and bool(v):
-                    final.append("singleton")
-                    continue
-
-                if not isinstance(v, list):
-                    raise TypeError(f"Values for {k} must be list, "
-                                    f"got {type(v)}.")
-                # Convert everything to strings and add it to the dependency
-                # list.
-                v[:] = [str(s) for s in v] 
-                final.append(f"{k}:{':'.join(v)}")
-
-            final = delim.join(final)
-
-        cstr.fmalloc(&self.ptr.dependency, final)
-
     def _set_memory(self):
         if self.memory_per_cpu:
             self.ptr.pn_min_memory = u64(dehumanize(self.memory_per_cpu)) 
@@ -469,45 +359,6 @@ cdef class JobSubmitDescription:
             self.ptr.open_mode = slurm.OPEN_MODE_APPEND
         elif val == "truncate":
             self.ptr.open_mode = slurm.OPEN_MODE_TRUNCATE
-
-    def _set_script(self):
-        sfile = self.script
-        sbody = None
-
-        if self.is_update:
-            return None
-
-        if Path(sfile).is_file():
-            # First assume the caller is passing a path to a script and we try
-            # to load it. 
-            sbody = Path(sfile).read_text()
-        else:
-            # Otherwise assume that the script content is passed directly.
-            sbody = sfile
-            if self.script_args:
-                raise ValueError("Passing arguments to a script is only allowed "
-                                 "if it was loaded from a file.")
-
-        # Validate the script
-        if not sbody or not len(sbody):
-            raise ValueError("Batch script is empty or none was provided.")
-        elif sbody.isspace():
-            raise ValueError("Batch script contains only whitespace.")
-        elif not sbody.startswith("#!"):
-            msg = "Not a valid Batch script. "
-            msg += "First line must start with '#!',"
-            msg += "followed by the path to an interpreter"
-            raise ValueError(msg)
-        elif "\0" in sbody:
-            msg = "The Slurm Controller does not allow scripts that "
-            msg += "contain a NULL character: '\\0'."
-            raise ValueError(msg)
-        elif "\r\n" in sbody:
-            msg = "Batch script contains DOS line breaks (\\r\\n) "
-            msg += "instead of expected UNIX line breaks (\\n)."
-            raise ValueError(msg)
-
-        cstr.fmalloc(&self.ptr.script, sbody)
 
     def _set_script_args(self):
         args = self.script_args
@@ -532,9 +383,6 @@ cdef class JobSubmitDescription:
             cstr.fmalloc(&self.ptr.argv[idx], opt)
 
     def _set_environment(self):
-        if self.is_update:
-            return None
-
         vals = self.environment
         get_user_env = self.get_user_environment
 
@@ -647,55 +495,32 @@ cdef class JobSubmitDescription:
             self.ptr.min_cpus = self.ptr.cpus_per_task * self.ptr.num_tasks
 
     def _set_switches(self):
-        kwargs = self.switches
-        if isinstance(kwargs, dict):
-            self.ptr.req_switch  = u32(kwargs.get("count"))
-            self.ptr.wait4switch = timestr_to_secs(kwargs.get("max_wait_time"))
-        elif kwargs is not None:
-            vals = str(kwargs.split("@"))
-            if len(vals) > 1:
-                self.ptr.wait4switch = timestr_to_secs(vals[1])
-            self.ptr.req_switch = u32(vals[0])
+        vals = self.switches
+        if not vals:
+            return None
+
+        if not isinstance(vals, dict):
+            vals = _parse_switches_str_to_dict(vals)
+
+        self.ptr.req_switch  = u32(kwargs.get("count"))
+        self.ptr.wait4switch = timestr_to_secs(kwargs.get("max_wait_time"))
 
     def _set_signal(self):
         vals = self.signal
         if not vals:
             return None
 
-        info = vals
-        # This supports input like the --signal option from sbatch
-        if vals and not isinstance(vals, dict):
-            info = {}
-            val_list = re.split("[:@]+", str(vals))
+        if not isinstance(vals, dict):
+            vals = _parse_signal_str_to_dict(vals)
 
-            if len(val_list):
-                if ":" in str(vals):
-                    flags = val_list.pop(0).casefold()
-
-                    if "r" in flags:
-                        info["allow_reservation_overlap"] = True
-
-                    if "b" in flags:
-                        info["batch_only"] = True
-
-                if "@" in str(vals):
-                    info["time"] = val_list[1]
-
-                info["signal"] = val_list[0]
-
-        # Parse values first to catch bad input
-        w_signal           = u16(signal_to_num(info.get("signal")))
-        w_time             = u16(info.get("time"), on_noval=60)
-        batch_only         = bool(info.get("batch_only"))
-        allow_resv_overlap = bool(info.get("allow_reservation_overlap"))
-
-        # Then set it. At this point we can be sure that the input is correct.
-        self.ptr.warn_signal = w_signal
-        self.ptr.warn_time   = w_time
+        self.ptr.warn_signal = u16(signal_to_num(vals.get("signal")))
+        self.ptr.warn_time = u16(vals.get("time"), on_noval=60)
         u16_set_bool_flag(&self.ptr.warn_flags,
-                batch_only, slurm.KILL_JOB_BATCH)
-        u16_set_bool_flag(&self.ptr.warn_flags,
-                allow_resv_overlap, slurm.KILL_JOB_RESV)
+                bool(vals.get("batch_only")), slurm.KILL_JOB_BATCH)
+        u16_set_bool_flag(
+                &self.ptr.warn_flags,
+                bool(vals.get("allow_reservation_overlap")),
+                slurm.KILL_JOB_RESV)
 
     def _set_gres_binding(self):
         if not self.gres_binding:
@@ -704,3 +529,183 @@ cdef class JobSubmitDescription:
             self.ptr.bitflags |= slurm.GRES_ENFORCE_BIND
         elif self.gres_binding.casefold() == "disable-binding":
             self.ptr.bitflags |= slurm.GRES_DISABLE_BIND
+
+
+def _parse_dependencies(val):
+    final = None
+
+    if isinstance(val, str):
+        # TODO: Even though everything is checked in the slurmctld, maybe
+        # still do some sanity checks here on the input when a string
+        # is provided.
+        final = val
+    elif val is not None:
+        satisfy = val.pop("satisfy", "all").casefold()
+
+        if satisfy == "any":
+            delim = "?"
+        else:
+            delim = ","
+
+        final = []
+        for condition, vals in val.items():
+            if condition == "singleton" and bool(vals):
+                final.append("singleton")
+                continue
+
+            if not isinstance(vals, list):
+                vals = str(vals).split(",")
+
+            vals = [str(s) for s in vals] 
+            final.append(f"{condition}:{':'.join(vals)}")
+
+        final = delim.join(final)
+
+    return final
+
+
+def _parse_nodes(vals):
+    nmin=nmax = 1
+
+    # Support input like --nodes from sbatch (min-[max])
+    if isinstance(vals, dict):
+        nmin = u32(vals.get("min", 1), on_noval=1)
+        nmax = u32(vals.get("max", 1), on_noval=nmin)
+    elif vals is not None:
+        v = str(vals).split("-", 1)
+        nmin = int(v[0])
+        if nmin == 0:
+            nmin = 1
+        if "-" in str(vals):
+            nmax = int(v[1])
+        else:
+            nmax = nmin
+
+    if not nmax:
+        nmax = nmin
+    if nmax < nmin:
+        raise ValueError("Max Nodecount cannot be less than minimum"
+                         " nodecount.")
+
+    return nmin, nmax
+
+
+def _parse_signal_str_to_dict(vals):
+    info = {}
+    # This supports input like the --signal option from sbatch
+    val_list = re.split("[:@]+", str(vals))
+
+    if len(val_list):
+        if ":" in str(vals):
+            flags = val_list.pop(0).casefold()
+
+            if "r" in flags:
+                info["allow_reservation_overlap"] = True
+
+            if "b" in flags:
+                info["batch_only"] = True
+
+        if "@" in str(vals):
+            info["time"] = val_list[1]
+
+        info["signal"] = val_list[0]
+
+    return info
+
+
+def _parse_switches_str_to_dict(switches_str):
+    out = {}
+    vals = str(switches_str.split("@"))
+    if len(vals) > 1:
+        out["max_wait_time"] = timestr_to_secs(vals[1])
+        
+    out["count"] = u32(vals[0])
+
+    return out
+
+
+def _parse_cpu_freq_str_to_dict(freq_str):
+    freq_splitted = re.split("[-:]+", str(freq_str))
+    freq_len = len(freq_splitted)
+    freq = {}
+
+    # Transform cpu-freq string to the individual components.
+    if freq_splitted[0].isdigit():
+        freq["max"] = freq_splitted[0]
+    else:
+        if freq_len > 1:
+            raise ValueError(
+                "Invalid cpu_frequency format: {kwargs}."
+                "Governor must be provided as single element or "
+                "as last element in the form of min-max:governor. "
+            )
+        freq["governor"] = freq_splitted[0]
+
+    if freq_len >= 2:
+        freq["min"] = freq["max"]
+        freq["max"] = freq_splitted[1]
+
+    if freq_len == 3:
+        freq["governor"] = freq_splitted[2]
+
+    return freq
+
+
+def _validate_cpu_freq(freq):
+    have_no_range = False
+    freq_min = cpu_freq_str_to_int(freq.get("min"))
+    freq_max = cpu_freq_str_to_int(freq.get("max"))
+    freq_gov = cpu_gov_str_to_int(freq.get("governor"))
+
+    if freq_min != u32(None):
+        if freq_max == u32(None):
+            freq_max = freq_min
+            freq_min = u32(None)
+            have_no_range = True
+        elif freq_max < freq_min:
+            raise ValueError(
+                f"min cpu-freq ({freq_min}) must be smaller "
+                f"than max cpu-freq ({freq_max})"
+            )
+    elif freq_max != u32(None) and freq_min == u32(None):
+        have_no_range = True
+
+    if have_no_range and freq_gov != u32(None):
+        raise ValueError(
+            "Setting Governor when specifying only either one "
+            "of min or max is not allowed."
+        )
+
+    return freq_min, freq_max, freq_gov
+
+
+def _validate_batch_script(script, args=None):
+    if Path(script).is_file():
+        # First assume the caller is passing a path to a script and we try
+        # to load it. 
+        script = Path(script).read_text()
+    else:
+        if args:
+            raise ValueError("Passing arguments to a script is only allowed "
+                             "if it was loaded from a file.")
+
+    # Validate the script
+    if not script or not len(script):
+        raise ValueError("Batch script is empty or none was provided.")
+    elif script.isspace():
+        raise ValueError("Batch script contains only whitespace.")
+    elif not script.startswith("#!"):
+        msg = "Not a valid Batch script. "
+        msg += "First line must start with '#!',"
+        msg += "followed by the path to an interpreter"
+        raise ValueError(msg)
+    elif "\0" in script:
+        msg = "The Slurm Controller does not allow scripts that "
+        msg += "contain a NULL character: '\\0'."
+        raise ValueError(msg)
+    elif "\r\n" in script:
+        msg = "Batch script contains DOS line breaks (\\r\\n) "
+        msg += "instead of expected UNIX line breaks (\\n)."
+        raise ValueError(msg)
+
+    return script
