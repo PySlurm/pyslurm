@@ -108,8 +108,7 @@ cdef class JobSubmitDescription:
         cpu_frequency (Union[dict, str]):
             CPU Frequency for the Job, same as --cpu-freq from sbatch.
 
-            Examples:
-                Specifying it as a dict:
+            For example, specifying it as a dict:
 
                 cpu_frequency = {
                     "min": "Low",
@@ -117,17 +116,17 @@ cdef class JobSubmitDescription:
                     "governor": "UserSpace"
                 }
 
-                or like in sbatch with a string. For more info on that, check
-                out the sbatch documentation for --cpu-freq.
+            or like in sbatch with a string. For more info on that, check
+            out the sbatch documentation for --cpu-freq.
 
-                If you only want to set a Governor without any min or max, you
-                can simply specify it as a standalone string:
+            If you only want to set a Governor without any min or max, you
+            can simply specify it as a standalone string:
 
                 cpu_frequency = "Performance"
                 or
                 cpu_frequency = {"governor": "Performance"}
 
-                If you want to set a specific, fixed frequency, you can do:
+            If you want to set a specific, fixed frequency, you can do:
 
                 cpu_frequency = <frequency in kilohertz>
                 or either
@@ -136,21 +135,19 @@ cdef class JobSubmitDescription:
             Amount of nodes needed for the job.
             This is the same as -N/--nodes from sbatch.
 
-            Examples:
-                Providing min/max nodes as a dict:
+            For example, providing min/max nodes as a dict:
 
                 nodes = {
                     "min": 3,
                     "max": 6
                 }
 
-                When no range is needed, you can also simply specify it as
-                int:
+            When no range is needed, you can also simply specify it as int:
 
                 nodes = 3
 
-                Other than that, a range can also be specified in a str like
-                with sbatch:
+            Other than that, a range can also be specified in a str like with
+            sbatch:
 
                 nodes = "1-5"
         deadline (str):
@@ -193,7 +190,9 @@ cdef class JobSubmitDescription:
             This is the same as --mem-per-cpu from sbatch. This is mutually
             exclusive with memory_per_node and memory_per_gpu.
 
+
             Examples:
+
                 # 1 MiB
                 memory_per_cpu = 1024
 
@@ -207,7 +206,9 @@ cdef class JobSubmitDescription:
             This is the same as --mem from sbatch. This is mutually exclusive
             with memory_per_cpu and memory_per_gpu.
 
+
             Examples:
+
                 # 1 MiB
                 memory_per_node = 1024
 
@@ -221,7 +222,9 @@ cdef class JobSubmitDescription:
             This is the same as --mem-per-gpu from sbatch. This is mutually
             exclusive with memory_per_node and memory_per_cpu.
 
+
             Examples:
+
                 # 1 MiB
                 memory_per_gpu = 1024
 
@@ -235,12 +238,13 @@ cdef class JobSubmitDescription:
             This is the same as --nice from sbatch.
         log_files_open_mode (str):
             Mode in which standard_output and standard_error log files should be opened. 
+            This is the same as --open-mode from sbatch.
+
 
             Valid options are:
-                * append
-                * truncate
 
-            This is the same as --open-mode from sbatch.
+            * `append`
+            * `truncate`
         overcommit (bool):
             If the resources should be overcommitted.
             This is the same as -O/--overcommit from sbatch.
@@ -254,15 +258,15 @@ cdef class JobSubmitDescription:
             Interval for accounting info to be gathered.
             This is the same as --acctg-freq from sbatch.
 
-            Examples:
-                Specifying it as a dict:
+
+            For example, specifying it as a dict:
 
                 accounting_gather_frequency = {
-                    energy=60,
-                    network=20,
+                    "energy"=60,
+                    "network"=20,
                 }
 
-                or as a single string:
+            or as a single string:
 
                 accounting_gather_frequency = "energy=60,network=20"
         qos (str):
@@ -283,34 +287,38 @@ cdef class JobSubmitDescription:
             You can specify either a path to a script which will be loaded, or
             you can pass the script as a string.
             If the script is passed as a string, providing arguments to it
-            (see "script_args") is not supported.
+            (see `script_args`) is not supported.
         script_args (str):
             Arguments passed to the batch script.
             You can only set arguments if a file path was specified for
-            "script".
+            `script`.
         environment (Union[dict, str]):
             Environment variables to be set for the Job.
             This is the same as --export from sbatch.
         resource_sharing (str):
             Controls the resource sharing with other Jobs.
-        
             This property combines functionality of --oversubscribe and
             --exclusive from sbatch.
 
+
             Allowed values are are:
 
-            * "oversubscribe" or "yes":
+            * `oversubscribe` or `yes`:
+
                 The Job allows resources to be shared with other running Jobs.
 
-            * "user" 
+            * `user`:
+
                 Only sharing resources with other Jobs that have the "user"
                 option set is allowed
 
-            * "mcs" 
+            * `mcs`:
+
                 Only sharing resources with other Jobs that have the "mcs"
                 option set is allowed.
 
-            * "no" or "exclusive"
+            * `no` or `exclusive`:
+
                 No sharing of resources is allowed. (--exclusive from sbatch)
         distribution (str):
             Task distribution for the Job, same as --distribution from sbatch
@@ -327,12 +335,12 @@ cdef class JobSubmitDescription:
             The amount of cpus required for each task.
 
             This is the same as -c/--cpus-per-task from sbatch.
-            This is mutually exclusive with cpus_per_gpu.
+            This is mutually exclusive with `cpus_per_gpu`.
         cpus_per_gpu (int):
             The amount of cpus required for each allocated GPU.
 
             This is the same as --cpus-per-gpu from sbatch.
-            This is mutually exclusive with cpus_per_task.
+            This is mutually exclusive with `cpus_per_task`.
         sockets_per_node (int):
             Restrict Job to nodes with atleast this many sockets.
             This is the same as --sockets-per-node from sbatch.
@@ -344,23 +352,22 @@ cdef class JobSubmitDescription:
             This is the same as --threads-per-core from sbatch.
         gpus (Union[dict, str, int]):
             GPUs for the Job to be allocated in total.
-
             This is the same as -G/--gpus from sbatch.
             Specifying the type of the GPU is optional. 
 
-            Examples:
-                Specifying the GPU counts as a dict:
+
+            For example, specifying the GPU counts as a dict:
 
                 gpus = {
                     "tesla": 1,
                     "volta": 5,
                 }
 
-                Or, for example, in string format:
+            Or, for example, in string format:
 
                 gpus = "tesla:1,volta:5"
 
-                Or, if you don't care about the type of the GPU:
+            Or, if you don't care about the type of the GPU:
 
                 gpus = 6
         gpus_per_socket (Union[dict, str, int]):
@@ -369,21 +376,21 @@ cdef class JobSubmitDescription:
             This is the same as --gpus-per-socket from sbatch.
 
             Specifying the type of the GPU is optional. Note that setting
-            gpus_per_socket requires to also specify sockets_per_node.
+            `gpus_per_socket` requires to also specify sockets_per_node.
 
-            Examples:
-                Specifying it as a dict:
+
+            For example, specifying it as a dict:
 
                 gpus_per_socket = {
                     "tesla": 1,
                     "volta": 5,
                 }
 
-                Or, for example, in string format:
+            Or, for example, in string format:
 
                 gpus_per_socket = "tesla:1,volta:5"
 
-                Or, if you don't care about the type of the GPU:
+            Or, if you don't care about the type of the GPU:
 
                 gpus_per_socket = 6
         gpus_per_task (Union[dict, str, int]):
@@ -392,22 +399,21 @@ cdef class JobSubmitDescription:
             This is the same as --gpus-per-task from sbatch.
 
             Specifying the type of the GPU is optional. Note that setting
-            "gpus_per_task" requires to also specify either one of "ntasks" or
-            "gpus".
+            `gpus_per_task` requires to also specify either one of `ntasks` or
+            `gpus`.
 
-            Examples:
-                Specifying it as a dict:
+            For example, specifying it as a dict:
 
                 gpus_per_task = {
                     "tesla": 1,
                     "volta": 5,
                 }
 
-                Or, for example, in string format:
+            Or, for example, in string format:
 
                 gpus_per_task = "tesla:1,volta:5"
 
-                Or, if you don't care about the type of the GPU:
+            Or, if you don't care about the type of the GPU:
 
                 gpus_per_task = 6
         gres_per_node (Union[dict, str]):
@@ -418,19 +424,18 @@ cdef class JobSubmitDescription:
             Specifying the type (by seperating GRES name and type with a
             semicolon) is optional. 
 
-            Examples:
-                Specifying it as a dict:
+            For example, specifying it as a dict:
 
                 gres_per_node = {
                     "gpu:tesla": 1,
                     "gpu:volta": 5,
                 }
 
-                Or, for example, in string format:
+            Or, for example, in string format:
 
                 gres_per_node = "gpu:tesla:1,gpu:volta:5"
 
-                GPU Gres without a specific type:
+            GPU Gres without a specific type:
 
                 gres_per_node = "gpu:6"
         gpu_binding (str):
@@ -458,12 +463,12 @@ cdef class JobSubmitDescription:
             switches.
             This is the same as --switches from sbatch.
 
-            Examples: 
-                Specifying it as a dict:
+            
+            For example, specifying it as a dict:
 
                 switches = { "count": 5, "max_wait_time": "00:10:00" }
 
-                Or as a single string (sbatch-style):
+            Or as a single string (sbatch-style):
 
                 switches = "5@00:10:00"
         signal (Union[dict, str]):
@@ -473,18 +478,18 @@ cdef class JobSubmitDescription:
             The signal can both be specified with its name, e.g. "SIGKILL", or
             as a number, e.g. 9
 
-            Examples:
-                Specifying it as a dict:
+
+            For example, specifying it as a dict:
 
                 signal = {
                     "signal": "SIGKILL",
                     "time": 120
                 }
 
-                The above will send a "SIGKILL" signal 120 seconds before the
-                Jobs' time limit is reached.
+            The above will send a "SIGKILL" signal 120 seconds before the
+            Jobs' time limit is reached.
 
-                Or, specifying it as a string (sbatch-style):
+            Or, specifying it as a string (sbatch-style):
 
                 signal = "SIGKILL@120"
         standard_in (str):
@@ -509,9 +514,11 @@ cdef class JobSubmitDescription:
             Generic resource task binding options.
             This is the --gres-flags option from sbatch.
 
+
             Possible values are:
-                * "enforce-binding"
-                * "disable-binding"
+
+            * `enforce-binding`
+            * `disable-binding`
         temporary_disk_per_node (Union[str, int]):
             Amount of temporary disk space needed per node.
 
@@ -519,7 +526,9 @@ cdef class JobSubmitDescription:
             K|M|G|T (multiples of 1024).
             If no unit is specified, the value will be assumed as Mebibytes.
 
+
             Examples:
+
                 # 2048 MiB
                 tmp_disk_per_node = "2G"
 

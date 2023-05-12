@@ -69,12 +69,12 @@ cdef class JobSearchFilter:
         self.ptr.flags |= slurm.JOBCOND_FLAG_NO_TRUNC
 
     def _parse_qos(self):
-        if not self.qualities_of_service:
+        if not self.qos:
             return None
 
         qos_id_list = []
         qos = QualitiesOfService.load()
-        for q in self.qualities_of_service:
+        for q in self.qos:
             if isinstance(q, int):
                 qos_id_list.append(q)
             elif q in qos:
@@ -519,7 +519,7 @@ cdef class Job:
         return u32_parse(self.ptr.priority, zero_is_noval=False)
 
     @property
-    def quality_of_service(self):
+    def qos(self):
         _qos = self.qos_data.get(self.ptr.qosid, None)
         if _qos:
             return _qos.name

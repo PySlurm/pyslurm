@@ -135,7 +135,7 @@ cdef class JobSearchFilter:
         max_cpus
         nodes
         max_nodes
-        qualities_of_service
+        qos
         names
         partitions
         groups
@@ -229,7 +229,7 @@ cdef class Job:
             Name of the Partition for this Job
         priority (int):
             Priority for the Job
-        quality_of_service (str):
+        qos (str):
             Name of the Quality of Service for the Job
         cpus (int):
             Amount of CPUs the Job has/had allocated, or, if the Job is still
