@@ -30,10 +30,9 @@ from pyslurm.utils.uint cimport *
 # Note: Maybe consider using libslurmfull again to avoid having to reimplement
 # some of these functions and keeping track for changes in new releases.
 
-def mail_type_list_to_int(mail_types):
+def mail_type_list_to_int(types):
     """Convert a str or list of mail types to a uint16_t."""
     cdef uint16_t flags = 0
-    types = mail_types
 
     if not types or "None" == types:
         return slurm.NO_VAL16
@@ -41,42 +40,31 @@ def mail_type_list_to_int(mail_types):
     if isinstance(types, str):
         types = types.split(",")
 
-    for typ in mail_types:
+    for typ in types:
         typ = typ.casefold()
 
         if "array_tasks" == typ:
             flags |= slurm.MAIL_ARRAY_TASKS
-
         elif "begin" == typ:
             flags |= slurm.MAIL_JOB_BEGIN
-
         elif "end" == typ:
             flags |= slurm.MAIL_JOB_END
-
         elif "fail" == typ:
             flags |= slurm.MAIL_JOB_FAIL
-
     #    elif "invalid_depend" == typ:
     #        flags |= slurm.MAIL_INVALID_DEPEND
-
         elif "requeue" == typ:
             flags |= slurm.MAIL_JOB_REQUEUE
-
         elif "stage_out" == typ:
             flags |= slurm.MAIL_JOB_STAGE_OUT
-
         elif "time_limit" == typ:
             flags |= slurm.MAIL_JOB_TIME100
-
         elif "time_limit_90" == typ:
             flags |= slurm.MAIL_JOB_TIME90
-
         elif "time_limit_80" == typ:
             flags |= slurm.MAIL_JOB_TIME80
-
         elif "time_limit_50" == typ:
             flags |= slurm.MAIL_JOB_TIME50
-
         elif "all" == typ:
             flags |= (slurm.MAIL_JOB_BEGIN
                   |   slurm.MAIL_JOB_END
@@ -97,65 +85,68 @@ def mail_type_int_to_list(uint16_t typ):
         return types
 
     if typ & slurm.MAIL_ARRAY_TASKS:
-        types.append("array_tasks")
+        types.append("ARRAY_TASKS")
 
 #    if typ & slurm.MAIL_INVALID_DEPEND:
 #        types.append("invalid_depend")
 
     if typ & slurm.MAIL_JOB_BEGIN:
-        types.append("begin")
+        types.append("BEGIN")
 
     if typ & slurm.MAIL_JOB_END:
-        types.append("end")
+        types.append("END")
 
     if typ & slurm.MAIL_JOB_FAIL:
-        types.append("fail")
+        types.append("FAIL")
 
     if typ & slurm.MAIL_JOB_REQUEUE:
-        types.append("requeue")
+        types.append("REQUEUE")
 
     if typ & slurm.MAIL_JOB_STAGE_OUT:
-        types.append("stage_out")
+        types.append("STAGE_OUT")
 
     if typ & slurm.MAIL_JOB_TIME50:
-        types.append("time_limit_50")
+        types.append("TIME_LIMIT_50")
 
     if typ & slurm.MAIL_JOB_TIME80:
-        types.append("time_limit_80")
+        types.append("TIME_LIMIT_80")
 
     if typ & slurm.MAIL_JOB_TIME90:
-        types.append("time_limit_90")
+        types.append("TIME_LIMIT_90")
 
     if typ & slurm.MAIL_JOB_TIME100:
-        types.append("time_limit_100")
+        types.append("TIME_LIMIT_100")
 
     return types
 
 
-def acctg_profile_list_to_int(acctg_profiles):
+def acctg_profile_list_to_int(types):
     """Convert a str or list of accounting gather profiles to uin32_t."""
     cdef uint32_t profile = 0
-    profiles = acctg_profiles
 
-    if not acctg_profiles:
+    if not types:
         return slurm.NO_VAL
 
-    if "none" in acctg_profiles:
-        return slurm.ACCT_GATHER_PROFILE_NONE
-    elif "all" in acctg_profiles:
-        return slurm.ACCT_GATHER_PROFILE_ALL
+    if isinstance(types, str):
+        types = types.split(",")
 
-    if "energy" in acctg_profiles:
-        profile |= slurm.ACCT_GATHER_PROFILE_ENERGY
+    for typ in types:
+        typ = typ.casefold()
 
-    if "task" in acctg_profiles:
-        profile |= slurm.ACCT_GATHER_PROFILE_TASK
-
-    if "lustre" in acctg_profiles:
-        profile |= slurm.ACCT_GATHER_PROFILE_LUSTRE
-
-    if "network" in acctg_profiles:
-        profile |= slurm.ACCT_GATHER_PROFILE_NETWORK
+        if "energy" == typ:
+            profile |= slurm.ACCT_GATHER_PROFILE_ENERGY
+        elif "task" == typ:
+            profile |= slurm.ACCT_GATHER_PROFILE_TASK
+        elif "lustre" == typ:
+            profile |= slurm.ACCT_GATHER_PROFILE_LUSTRE
+        elif "network" == typ:
+            profile |= slurm.ACCT_GATHER_PROFILE_NETWORK
+        elif "none" == typ:
+            return slurm.ACCT_GATHER_PROFILE_NONE
+        elif "all" == typ:
+            return slurm.ACCT_GATHER_PROFILE_ALL
+        else:
+            raise ValueError("Invalid profile type: {typ}.")
 
     return profile
 
@@ -168,34 +159,44 @@ def acctg_profile_int_to_list(flags):
         return []
 
     if flags == slurm.ACCT_GATHER_PROFILE_ALL:
-        return ["all"]
+        return ["ALL"]
     elif flags == slurm.ACCT_GATHER_PROFILE_NONE:
         return []
 
     if flags & slurm.ACCT_GATHER_PROFILE_ENERGY:
-        profiles.append("energy")
+        profiles.append("ENERGY")
 
     if flags & slurm.ACCT_GATHER_PROFILE_TASK:
-        profiles.append("task")
+        profiles.append("TASK")
 
     if flags & slurm.ACCT_GATHER_PROFILE_LUSTRE:
-        profiles.append("lustre")
+        profiles.append("LUSTRE")
 
     if flags & slurm.ACCT_GATHER_PROFILE_NETWORK:
-        profiles.append("network")
+        profiles.append("NETWORK")
 
     return profiles
 
 
-def power_type_list_to_int(power_types):
+def power_type_list_to_int(types):
     """Convert a str or list of str with power types to uint8_t."""
     cdef uint8_t flags = 0
 
-    if not power_types:
+    if not types:
         return slurm.NO_VAL8
 
-    if "level" in power_types:
-        flags |= slurm.SLURM_POWER_FLAGS_LEVEL
+    if isinstance(types, str):
+        types = types.split(",")
+
+    for typ in types:
+        typ = typ.casefold()
+
+        if "level" == typ:
+            flags |= slurm.SLURM_POWER_FLAGS_LEVEL
+        else:
+            raise ValueError("Invalid power type: {typ}.")
+
+    return flags
 
 
 def power_type_int_to_list(flags):
@@ -203,7 +204,7 @@ def power_type_int_to_list(flags):
     types = []
 
     if flags & slurm.SLURM_POWER_FLAGS_LEVEL:
-        types.append("level")
+        types.append("LEVEL")
 
     return types
 
@@ -255,7 +256,7 @@ def cpu_gov_str_to_int(gov):
 def cpu_freq_str_to_int(freq):
     """Convert a cpu-frequency str to its numerical representation."""
     if not freq:
-        return u32(None)
+        return slurm.NO_VAL
 
     if isinstance(freq, str) and not freq.isdigit():
         freq = freq.casefold()
@@ -279,25 +280,25 @@ def cpu_freq_str_to_int(freq):
 def cpu_freq_int_to_str(freq):
     """Convert a numerical cpufreq value to its string representation."""
     if freq == slurm.CPU_FREQ_LOW:
-        return "Low"
+        return "LOW"
     elif freq == slurm.CPU_FREQ_MEDIUM:
-        return "Medium"
+        return "MEDIUM"
     elif freq == slurm.CPU_FREQ_HIGHM1:
-        return "Highm1"
+        return "HIGHM1"
     elif freq == slurm.CPU_FREQ_HIGH:
-        return "High"
+        return "HIGH"
     elif freq == slurm.CPU_FREQ_CONSERVATIVE:
-        return "Conservative"
+        return "CONSERVATIVE"
     elif freq == slurm.CPU_FREQ_PERFORMANCE:
-        return "Performance"
+        return "PERFORMANCE"
     elif freq == slurm.CPU_FREQ_POWERSAVE:
-        return "PowerSave"
+        return "POWERSAVE"
     elif freq == slurm.CPU_FREQ_USERSPACE:
-        return "UserSpace"
+        return "USERSPACE"
     elif freq == slurm.CPU_FREQ_ONDEMAND:
-        return "OnDemand"
+        return "ONDEMAND"
     elif freq == slurm.CPU_FREQ_SCHEDUTIL:
-        return "SchedUtil"
+        return "SCHEDUTIL"
     elif freq & slurm.CPU_FREQ_RANGE_FLAG:
         return None
     elif freq == slurm.NO_VAL or freq == 0:

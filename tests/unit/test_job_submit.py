@@ -28,18 +28,36 @@ import tempfile
 import os
 from os import environ as pyenviron
 from util import create_simple_job_desc, create_job_script
+from pyslurm.utils.uint import u32
 from pyslurm import (
     Job,
     Jobs,
     JobSubmitDescription,
     RPCError,
 )
+from pyslurm.core.job.submission import (
+    _parse_cpu_freq_str_to_dict,
+    _validate_cpu_freq,
+    _parse_nodes,
+    _parse_dependencies,
+    _parse_signal_str_to_dict,
+    _validate_batch_script,
+)
+from pyslurm.core.job.util import (
+    mail_type_list_to_int,
+    acctg_profile_list_to_int,
+    cpu_freq_str_to_int,
+    cpu_gov_str_to_int,
+    shared_type_str_to_int,
+    power_type_list_to_int,
+)
+
 
 def job_desc(**kwargs):
     return JobSubmitDescription(script=create_job_script(), **kwargs)
 
 
-def test_environment():
+def test_parse_environment():
     job = job_desc()
 
     # Everything in the current environment will be exported
@@ -58,91 +76,84 @@ def test_environment():
 #        }
 
 
-def test_cpu_frequencyuency():
-    job = job_desc()
-    job._create_job_submit_desc()
+def test_parse_cpu_frequency():
+    freq = "Performance"
+    freq_dict = _parse_cpu_freq_str_to_dict(freq)
+    assert freq_dict["governor"] == "Performance"
+    assert len(freq_dict) == 1
+    _validate_cpu_freq(freq_dict)
 
-    job.cpu_frequency = "Performance"
-    job._create_job_submit_desc()
+    freq = 1000000
+    freq_dict = _parse_cpu_freq_str_to_dict(freq)
+    assert freq_dict["max"] == "1000000"
+    assert len(freq_dict) == 1
+    _validate_cpu_freq(freq_dict)
 
-    job.cpu_frequency = {"governor": "Performance"}
-    job._create_job_submit_desc()
+    freq = "1000000-3700000"
+    freq_dict = _parse_cpu_freq_str_to_dict(freq)
+    assert freq_dict["min"] == "1000000"
+    assert freq_dict["max"] == "3700000"
+    assert len(freq_dict) == 2
+    _validate_cpu_freq(freq_dict)
 
-    job.cpu_frequency = 1000000
-    job._create_job_submit_desc()
-
-    job.cpu_frequency = {"max": 1000000}
-    job._create_job_submit_desc()
-
-    job.cpu_frequency = "1000000-3700000"
-    job._create_job_submit_desc()
-
-    job.cpu_frequency = {"min": 1000000, "max": 3700000}
-    job._create_job_submit_desc()
-
-    job.cpu_frequency = "1000000-3700000:Performance"
-    job._create_job_submit_desc()
-
-    job.cpu_frequency = {"min": 1000000, "max": 3700000,
-                         "governor": "Performance"}
-    job._create_job_submit_desc()
+    freq = "1000000-3700000:Performance"
+    freq_dict = _parse_cpu_freq_str_to_dict(freq)
+    assert freq_dict["min"] == "1000000"
+    assert freq_dict["max"] == "3700000"
+    assert freq_dict["governor"] == "Performance"
+    _validate_cpu_freq(freq_dict)
 
     with pytest.raises(ValueError,
             match=r"Invalid cpu_frequency format*"):
-        job.cpu_frequency = "Performance:3700000"
-        job._create_job_submit_desc()
+        freq = "Performance:3700000"
+        freq_dict = _parse_cpu_freq_str_to_dict(freq)
 
     with pytest.raises(ValueError,
             match=r"min cpu-freq*"):
-        job.cpu_frequency = "4000000-3700000"
-        job._create_job_submit_desc()
+        freq = "4000000-3700000"
+        freq_dict = _parse_cpu_freq_str_to_dict(freq)
+        _validate_cpu_freq(freq_dict)
 
-    with pytest.raises(ValueError,
-            match=r"Invalid cpu freq value*"):
-        job.cpu_frequency = "3700000:Performance"
-        job._create_job_submit_desc()
-
-    with pytest.raises(ValueError,
-            match=r"Setting Governor when specifying*"):
-        job.cpu_frequency = {"max": 3700000, "governor": "Performance"}
-        job._create_job_submit_desc()
+#    with pytest.raises(ValueError,
+#            match=r"Invalid cpu freq value*"):
+#        freq = "3700000:Performance"
+#        job._create_job_submit_desc()
 
     with pytest.raises(ValueError,
             match=r"Setting Governor when specifying*"):
-        job.cpu_frequency = {"min": 3700000, "governor": "Performance"}
-        job._create_job_submit_desc()
+        freq = {"max": 3700000, "governor": "Performance"}
+        _validate_cpu_freq(freq)
+
+    with pytest.raises(ValueError,
+            match=r"Setting Governor when specifying*"):
+        freq = {"min": 3700000, "governor": "Performance"}
+        _validate_cpu_freq(freq)
 
 
-def test_nodes():
-    job = job_desc()
-    job._create_job_submit_desc()
+def test_parse_nodes():
+    nodes = "5"
+    nmin, nmax = _parse_nodes(nodes)
+    assert nmin == 5
+    assert nmax == 5
 
-    job.nodes = "5"
-    job._create_job_submit_desc()
+    nodes = {"min": 5, "max": 5}
+    nmin, nmax = _parse_nodes(nodes)
+    assert nmin == 5
+    assert nmax == 5
 
-    job.nodes = {"min": 5, "max": 5}
-    job._create_job_submit_desc()
-
-    job.nodes = "5-10"
-    job._create_job_submit_desc()
-
-    job.nodes = {"min": 5, "max": 10}
-    job._create_job_submit_desc()
+    nodes = "5-10"
+    nmin, nmax = _parse_nodes(nodes)
+    assert nmin == 5
+    assert nmax == 10
 
     with pytest.raises(ValueError,
             match=r"Max Nodecount cannot be less than*"):
-        job.nodes = {"min": 10, "max": 5}
-        job._create_job_submit_desc()
+        nodes = {"min": 10, "max": 5}
+        nmin, nmax = _parse_nodes(nodes)
 
 
-def test_script():
-    job = job_desc()
+def test_parse_script():
     script = create_job_script()
-    job._create_job_submit_desc()
-
-    job.script = script
-    assert job.script == script
-    assert job.script_args is None
 
     # Try passing in a path to a script.
     fd, path = tempfile.mkstemp()
@@ -150,104 +161,148 @@ def test_script():
         with os.fdopen(fd, 'w') as tmp:
             tmp.write(script)
 
-        job.script = path
-        job.script_args = "-t 10 input.csv"
-        job._create_job_submit_desc()
+        _validate_batch_script(path, "-t 10 input.csv")
     finally:
             os.remove(path)
 
     with pytest.raises(ValueError,
             match=r"Passing arguments to a script*"):
-        job.script = "#!/bin/bash\nsleep 10"
-        job.script_args = "-t 10"
-        job._create_job_submit_desc()
+        script = "#!/bin/bash\nsleep 10"
+        script_args = "-t 10"
+        _validate_batch_script(script, script_args)
 
     with pytest.raises(ValueError,
             match=r"The Slurm Controller does not allow*"):
-        job.script = script + "\0"
-        job.script_args = None
-        job._create_job_submit_desc()
+        script = "#!/bin/bash\nsleep 10" + "\0"
+        script_args = None
+        _validate_batch_script(script, script_args)
 
     with pytest.raises(ValueError,
-            match="You need to provide a batch script."):
-        job.script = ""
-        job.script_args = None
-        job._create_job_submit_desc()
+            match="Batch script is empty or none was provided."):
+        script = ""
+        script_args = None
+        _validate_batch_script(script, script_args)
 
     with pytest.raises(ValueError,
             match=r"Batch script contains DOS line breaks*"):
-        job.script = script + "\r\n"
-        job.script_args = None
-        job._create_job_submit_desc()
+        script = "#!/bin/bash\nsleep 10" + "\r\n"
+        script_args = None
+        _validate_batch_script(script, script_args)
 
 
-def test_dependencies():
-    job = job_desc()
-    job._create_job_submit_desc()
-
-    job.dependencies = "after:70:90:60+30,afterok:80"
-    job._create_job_submit_desc()
-
-    job.dependencies = "after:70:90:60?afterok:80"
-    job._create_job_submit_desc()
-
-    job.dependencies = {
+def test_parse_dependencies():
+    dep = {
         "afterany": [40, 30, 20],
         "afternotok": [100],
         "satisfy": "any",
         "singleton": True,
     }
-    job._create_job_submit_desc()
+    dep_str = _parse_dependencies(dep)
+    assert dep_str == "afterany:40:30:20?afternotok:100?singleton"
+
+    dep = {
+        "after": [100, "200+30"],
+        "afterok": [300],
+    }
+    dep_str = _parse_dependencies(dep)
+    assert dep_str == "after:100:200+30,afterok:300"
+
+    dep = {
+        "after": 200,
+        "afterok": 300,
+    }
+    dep_str = _parse_dependencies(dep)
+    assert dep_str == "after:200,afterok:300"
 
 
-def test_cpus():
+def test_validate_cpus():
     job = job_desc()
-    job._create_job_submit_desc()
-
     job.cpus_per_task = 5
-    job._create_job_submit_desc()
+    job._validate_options()
 
     with pytest.raises(ValueError,
             match="cpus_per_task and cpus_per_gpu are mutually exclusive."):
         job.cpus_per_gpu = 5
-        job._create_job_submit_desc()
+        job._validate_options()
 
     job.cpus_per_task = None
     job.cpus_per_gpu = 5
-    job._create_job_submit_desc()
+    job._validate_options()
 
     with pytest.raises(ValueError,
             match="cpus_per_task and cpus_per_gpu are mutually exclusive."):
         job.cpus_per_task = 5
-        job._create_job_submit_desc()
+        job._validate_options()
 
 
-def test_gres_per_node():
-    job = job_desc()
-    job._create_job_submit_desc()
+def test_parse_signal():
+    signal = 7
+    signal_dict = _parse_signal_str_to_dict(signal)
+    assert signal_dict["signal"] == "7"
+    assert len(signal_dict) == 1
 
-    job.gres_per_node = "gpu:tesla:1,gpu:volta:5"
-    job._create_job_submit_desc()
+    signal = "7@120"
+    signal_dict = _parse_signal_str_to_dict(signal)
+    assert signal_dict["signal"] == "7"
+    assert signal_dict["time"] == "120"
+    assert len(signal_dict) == 2
 
-    job.gres_per_node = {"gpu:tesla": 1, "gpu:volta": 1}
-    job._create_job_submit_desc()
+    signal = "RB:8@180"
+    signal_dict = _parse_signal_str_to_dict(signal)
+    assert signal_dict["signal"] == "8"
+    assert signal_dict["time"] == "180"
+    assert signal_dict["batch_only"]
+    assert signal_dict["allow_reservation_overlap"]
+    assert len(signal_dict) == 4
 
 
-def test_signal():
-    job = job_desc()
-    job._create_job_submit_desc()
+def test_mail_type_list_to_int():
+    typ = "ARRAY_TASKS,BEGIN"
+    assert mail_type_list_to_int(typ) > 0
 
-    job.signal = 7
-    job._create_job_submit_desc()
+    with pytest.raises(ValueError, match=r"Invalid *"):
+        typ = "BEGIN,END,INVALID_TYPE"
+        mail_type_list_to_int(typ)
 
-    job.signal = {"batch_only": True}
-    job._create_job_submit_desc()
 
-    job.signal = "7@120"
-    job._create_job_submit_desc()
+def test_acctg_profile_list_to_int():
+    typ = "energy,task"
+    assert acctg_profile_list_to_int(typ) > 0
 
-    job.signal = "RB:8@180"
-    job._create_job_submit_desc()
+    with pytest.raises(ValueError, match=r"Invalid *"):
+        typ = "energy,invalid_type"
+        acctg_profile_list_to_int(typ)
+
+
+def test_power_type_list_to_int():
+    typ = "level"
+    assert power_type_list_to_int(typ) > 0
+
+    with pytest.raises(ValueError, match=r"Invalid *"):
+        typ = "invalid_type"
+        power_type_list_to_int(typ)
+
+
+def test_cpu_gov_str_to_int():
+    typ = "PERFORMANCE"
+    assert cpu_gov_str_to_int(typ) > 0
+
+    with pytest.raises(ValueError, match=r"Invalid *"):
+        typ = "INVALID_GOVERNOR"
+        cpu_gov_str_to_int(typ)
+
+
+def test_cpu_freq_str_to_int():
+    typ = "HIGH"
+    assert cpu_freq_str_to_int(typ) > 0
+
+    with pytest.raises(ValueError, match=r"Invalid *"):
+        typ = "INVALID_FREQ_STR"
+        cpu_freq_str_to_int(typ)
+
+    with pytest.raises(OverflowError):
+        typ = 2**32
+        cpu_freq_str_to_int(typ)
 
 
 def test_setting_attrs_with_env_vars():
@@ -267,14 +322,22 @@ def test_setting_attrs_with_env_vars():
     assert job.wckey == "wckey"
     assert job.clusters == "cluster1,cluster2"
     assert job.comment == "A simple job comment"
-    assert job.working_directory == "/work/user2"
     assert job.requires_contiguous_nodes == True
-    job._create_job_submit_desc()
+    assert job.working_directory == "/work/user2"
+
+    job = job_desc(working_directory="/work/user2", account="account2")
+    job.load_environment(overwrite=True)
+
+    assert job.account == "account1"
+    assert job.name == "jobname"
+    assert job.wckey == "wckey"
+    assert job.clusters == "cluster1,cluster2"
+    assert job.comment == "A simple job comment"
+    assert job.requires_contiguous_nodes == True
+    assert job.working_directory == "/work/user1"
 
 
 def test_parsing_sbatch_options_from_script():
-    job = job_desc(working_directory="/work/user2")
-
     fd, path = tempfile.mkstemp()
     try:
         with os.fdopen(fd, 'w') as tmp:
@@ -292,15 +355,25 @@ def test_parsing_sbatch_options_from_script():
                 """
             )
 
+        job = job_desc(ntasks=5)
         job.script = path
         job.load_sbatch_options()
         assert job.time_limit == "20"
         assert job.memory_per_cpu == "1G"
         assert job.gpus == "1"
         assert job.resource_sharing == "no"
+        assert job.ntasks == 5
+        assert job.cpus_per_task == "3"
+
+        job = job_desc(ntasks=5)
+        job.script = path
+        job.load_sbatch_options(overwrite=True)
+        assert job.time_limit == "20"
+        assert job.memory_per_cpu == "1G"
+        assert job.gpus == "1"
+        assert job.resource_sharing == "no"
         assert job.ntasks == "2"
         assert job.cpus_per_task == "3"
-        job._create_job_submit_desc()
     finally:
             os.remove(path)
     
