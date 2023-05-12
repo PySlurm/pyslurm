@@ -22,7 +22,7 @@
 
 import pyslurm
 import pytest
-import datetime
+from datetime import datetime
 from pyslurm import Job, JobSubmitDescription, Node
 from pyslurm.utils.ctime import (
     timestr_to_mins,
@@ -259,12 +259,10 @@ class TestTime:
             timestr_to_secs("invalid_val")
 
     def test_parse_date(self):
-        timestamp = 1667941697
-        date = "2022-11-08T21:08:17" 
-        datetime_date = datetime.datetime(2022, 11, 8, 21, 8, 17)
+        datetime_date = datetime(2022, 11, 8, 21, 8, 17)
+        timestamp = int(datetime_date.timestamp())
+        date = datetime_date.isoformat(timespec="seconds")
 
-        # Converting date str to timestamp with the slurm API functions may
-        # not yield the expected timestamp above due to using local time zone
         assert date_to_timestamp(date) == timestamp
         assert date_to_timestamp(timestamp) == timestamp
         assert date_to_timestamp(datetime_date) == timestamp
