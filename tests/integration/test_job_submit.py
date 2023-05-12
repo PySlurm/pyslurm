@@ -20,10 +20,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_job_submit.py - Test the job submit api functions."""
 
-import time
 import pytest
 import pyslurm
-from os import environ as pyenviron
 from util import create_simple_job_desc, create_job_script
 from pyslurm import (
     Job,
@@ -32,12 +30,24 @@ from pyslurm import (
     RPCError,
 )
 
+def job_desc(**kwargs):
+    return JobSubmitDescription(script=create_job_script(), **kwargs)
+
 
 def test_submit_example1():
-    # TODO
-    assert True
-
-
-def test_submit_example2():
-    # TODO
-    assert True
+    desc = job_desc()
+    desc.name = "test1"
+    desc.working_directory = "/tmp"
+    desc.qos = "normal"
+    desc.standard_output = "/tmp/test1.out"
+    desc.standard_error = "/tmp/test1.err"
+    desc.ntasks = 2
+    desc.cpus_per_task = 2
+    desc.resource_sharing = "yes"
+    desc.memory_per_cpu = "2G"
+    desc.time_limit = 10
+    desc.nice = 500
+    desc.distribution = "block:block:cyclic"
+    desc.is_requeueable = True
+    desc.kill_on_node_fail = True
+    desc.submit()

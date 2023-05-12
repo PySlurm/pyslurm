@@ -22,7 +22,7 @@
 
 import pyslurm
 import pytest
-import datetime
+from datetime import datetime
 from pyslurm import Job, JobSubmitDescription, Node
 from pyslurm.utils.ctime import (
     timestr_to_mins,
@@ -59,9 +59,9 @@ from pyslurm.utils.helpers import (
 from pyslurm.utils import cstr
 
 
-class TestTypes:
+class TestStrings:
 
-    def test_strings(self):
+    def test_fmalloc(self):
         n = Node()
 
         n.name = "Testing fmalloc string routines."
@@ -132,14 +132,25 @@ class TestTypes:
         expected_str = "gres:gpu:tesla:3"
         assert cstr.from_gres_dict(input_dict) == expected_str
         assert cstr.from_gres_dict(expected_str) == expected_str
+        assert cstr.from_gres_dict("gpu:tesla:3") == expected_str
 
         input_dict = {"gpu": 3}
         expected_str = "gres:gpu:3"
         assert cstr.from_gres_dict(input_dict) == expected_str
         assert cstr.from_gres_dict(expected_str) == expected_str
+        assert cstr.from_gres_dict("gpu:3") == expected_str
+
+        input_dict = {"tesla": 3, "a100": 5}
+        expected_str = "gres:gpu:tesla:3,gres:gpu:a100:5"
+        assert cstr.from_gres_dict(input_dict, "gpu") == expected_str
+        assert cstr.from_gres_dict(expected_str) == expected_str
+        assert cstr.from_gres_dict("tesla:3,a100:5", "gpu") == expected_str
 
     def test_str_to_gres_dict(self):
         assert True
+
+
+class TestUint:
 
     def _uint_impl(self, func_set, func_get, typ):
         val = func_set(2**typ-2)
@@ -248,12 +259,10 @@ class TestTime:
             timestr_to_secs("invalid_val")
 
     def test_parse_date(self):
-        timestamp = 1667941697
-        date = "2022-11-08T21:08:17" 
-        datetime_date = datetime.datetime(2022, 11, 8, 21, 8, 17)
+        datetime_date = datetime(2022, 11, 8, 21, 8, 17)
+        timestamp = int(datetime_date.timestamp())
+        date = datetime_date.isoformat(timespec="seconds")
 
-        # Converting date str to timestamp with the slurm API functions may
-        # not yield the expected timestamp above due to using local time zone
         assert date_to_timestamp(date) == timestamp
         assert date_to_timestamp(timestamp) == timestamp
         assert date_to_timestamp(datetime_date) == timestamp
@@ -266,6 +275,7 @@ class TestTime:
         with pytest.raises(ValueError,
                 match="Invalid Time Specification: 2022-11-08T21"):
             date_to_timestamp("2022-11-08T21")
+
 
 class TestMiscUtil:
 
