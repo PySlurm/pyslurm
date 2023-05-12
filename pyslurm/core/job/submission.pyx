@@ -107,9 +107,9 @@ cdef class JobSubmitDescription:
 
         !!! note
 
-            Instead of `SBATCH_`, pyslurm uses `PYSLURM_JOBDESC_` as a prefix to
-            identify environment variables which should be used to set
-            attributes. 
+            Instead of `SBATCH_`, pyslurm uses `PYSLURM_JOBDESC_` as a prefix
+            to identify environment variables which should be used to set
+            attributes.
 
         Args:
             overwrite (bool): 
@@ -118,22 +118,26 @@ cdef class JobSubmitDescription:
                 in this instance. Default is False
 
         Examples:
-            Lets consider you want to set the name of the Job and its
-            Account name. Therefore, you will need to have set these two
-            environment variables:
+            Lets consider you want to set the name of the Job, its Account
+            name and that the Job cannot be requeued.
+            Therefore, you will need to have set these environment variables:
 
             ```bash
+            # Format is: PYSLURM_JOBDESC_{ATTRIBUTE_NAME}
             export PYSLURM_JOBDESC_ACCOUNT="myaccount"
             export PYSLURM_JOBDESC_NAME="myjobname"
+            export PYSLURM_JOBDESC_IS_REQUEUEABLE="False"
             ```
 
+            As you can see above, boolean values should be the literal strings
+            "False" or "True".
             In python, you can do this now:
 
             >>> import pyslurm
             >>> desc = pyslurm.JobSubmitDescription(...other args...)
             >>> desc.load_environment()
-            >>> print(desc.name, desc.account)
-            myjobname, myaccount
+            >>> print(desc.name, desc.account, desc.is_requeueable)
+            myjobname, myaccount, False
         """
         self._parse_env(overwrite)
 
