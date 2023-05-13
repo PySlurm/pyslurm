@@ -97,9 +97,6 @@ cdef class QualityOfServiceSearchFilter:
             if _mode == slurm.NO_VAL16:
                 raise ValueError(f"Unknown preempt mode: {mode}")
 
-            if _mode == slurm.PREEMPT_MODE_OFF:
-                _mode = slurm.PREEMPT_MODE_COND_OFF
-
             out |= _mode
 
         return out
