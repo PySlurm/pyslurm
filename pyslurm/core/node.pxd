@@ -33,8 +33,6 @@ from pyslurm.slurm cimport (
     slurm_load_node,
     slurm_load_node_single,
     slurm_update_node,
-    slurm_delete_node,
-    slurm_create_node,
     slurm_load_partitions,
     slurm_free_update_node_msg,
     slurm_init_update_node_msg,
@@ -77,8 +75,6 @@ cdef class Nodes(dict):
             Total amount of idle CPUs in this node collection.
         allocated_cpus (int):
             Total amount of allocated CPUs in this node collection.
-        effective_cpus (int):
-            Total amount of effective CPUs in this node collection.
         current_watts (int):
             Total amount of Watts consumed in this node collection.
         avg_watts (int):
@@ -166,8 +162,6 @@ cdef class Node:
             Amount of temporary disk space this node has, in Mebibytes.
         weight (int):
             Weight of the node in scheduling.
-        effective_cpus (int):
-            Number of effective CPUs the node has.
         total_cpus (int):
             Total amount of CPUs the node has.
         sockets (int):
