@@ -233,6 +233,9 @@ cdef inline IS_NODE_DRAINING(slurm.node_info_t _X):
     return ((_X.node_state & NODE_STATE_DRAIN) and
             (IS_NODE_ALLOCATED(_X) or IS_NODE_MIXED(_X)))
 
+cdef inline IS_NODE_DYNAMIC(slurm.node_info_t _X):
+    return (_X.node_state and NODE_STATE_DYNAMIC)
+
 cdef inline IS_NODE_DRAINED(slurm.node_info_t _X):
     return (IS_NODE_DRAIN(_X) and not IS_NODE_DRAINING(_X))
 
@@ -619,9 +622,11 @@ cdef class config:
             Ctl_dict['job_file_append'] = bool(self.__Config_ptr.job_file_append)
             Ctl_dict['job_requeue'] = bool(self.__Config_ptr.job_requeue)
             Ctl_dict['job_submit_plugins'] = slurm.stringOrNone(self.__Config_ptr.job_submit_plugins, '')
-            Ctl_dict['keep_alive_time'] = slurm.int16orNone(self.__Config_ptr.keepalive_time)
+            Ctl_dict['keep_alive_time'] = slurm.int16orNone(self.__Config_ptr.keep_alive_time)
             Ctl_dict['kill_on_bad_exit'] = bool(self.__Config_ptr.kill_on_bad_exit)
             Ctl_dict['kill_wait'] = self.__Config_ptr.kill_wait
+            Ctl_dict['launch_params'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
+            Ctl_dict['launch_type'] = slurm.stringOrNone(self.__Config_ptr.launch_type, '')
             Ctl_dict['licenses'] = __get_licenses(self.__Config_ptr.licenses)
             Ctl_dict['log_fmt'] = self.__Config_ptr.log_fmt
             Ctl_dict['mail_domain'] = slurm.stringOrNone(self.__Config_ptr.mail_domain, '')
@@ -717,6 +722,7 @@ cdef class config:
             # TODO: slurmctld_host
             Ctl_dict['slurmctld_logfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_logfile, '')
             Ctl_dict['slurmctld_pidfile'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_pidfile, '')
+            Ctl_dict['slurmctld_plugstack'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_plugstack, '')
             Ctl_dict['slurmctld_port'] = self.__Config_ptr.slurmctld_port
             Ctl_dict['slurmctld_port_count'] = self.__Config_ptr.slurmctld_port_count
             Ctl_dict['slurmctld_primary_off_prog'] = slurm.stringOrNone(self.__Config_ptr.slurmctld_primary_off_prog, '')
@@ -4877,8 +4883,6 @@ cdef class statistics:
             3011: "REQUEST_UPDATE_FRONT_END",
             3012: "DEFUNCT_RPC_3012",
             3013: "DEFUNCT_RPC_3013",
-            3014: "REQUEST_DELETE_NODE",
-            3015: "REQUEST_CREATE_NODE",
 
             4001: "REQUEST_RESOURCE_ALLOCATION",
             4002: "RESPONSE_RESOURCE_ALLOCATION",
@@ -4973,7 +4977,7 @@ cdef class statistics:
             6013: "REQUEST_ABORT_JOB",
 
             6014: "REQUEST_FILE_BCAST",
-            6015: "DEFUNCT_RPC_6015",
+            6015: "TASK_USER_MANAGED_IO_STREAM",
             6016: "REQUEST_KILL_PREEMPTED",
 
             6017: "REQUEST_LAUNCH_PROLOG",
@@ -4987,7 +4991,7 @@ cdef class statistics:
             7003: "SRUN_NODE_FAIL",
             7004: "SRUN_JOB_COMPLETE",
             7005: "SRUN_USER_MSG",
-            7006: "DEFUNCT_RPC_7006",
+            7006: "SRUN_EXEC",
             7007: "SRUN_STEP_MISSING",
             7008: "SRUN_REQUEST_SUSPEND",
             7009: "SRUN_STEP_SIGNAL",
@@ -5010,15 +5014,6 @@ cdef class statistics:
             10003: "ACCOUNTING_REGISTER_CTLD",
             10004: "ACCOUNTING_TRES_CHANGE_DB",
             10005: "ACCOUNTING_NODES_CHANGE_DB",
-
-            11001: "SLURMSCRIPTD_REQUEST_FLUSH",
-            11002: "SLURMSCRIPTD_REQUEST_FLUSH_JOB",
-            11003: "SLURMSCRIPTD_REQUEST_RECONFIG",
-            11004: "SLURMSCRIPTD_REQUEST_RUN_SCRIPT",
-            11005: "SLURMSCRIPTD_REQUEST_SCRIPT_COMPLETE",
-            11006: "SLURMSCRIPTD_REQUEST_UPDATE_DEBUG_FLAGS",
-            11007: "SLURMSCRIPTD_REQUEST_UPDATE_LOG",
-            11008: "SLURMSCRIPTD_SHUTDOWN",
         }
         return num2string[opcode]
 
@@ -5440,6 +5435,25 @@ cdef class slurmdb_jobs:
                 # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
                 # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
                 # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
+                JOBS_info['stats'] = {}
+                stats = JOBS_info['stats']
+                stats['act_cpufreq'] = job.stats.act_cpufreq
+                stats['consumed_energy'] = job.stats.consumed_energy
+                stats['tres_usage_in_max'] = slurm.stringOrNone(job.stats.tres_usage_in_max, '')
+                stats['tres_usage_in_max_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_nodeid, '')
+                stats['tres_usage_in_max_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_max_taskid, '')
+                stats['tres_usage_in_min'] = slurm.stringOrNone(job.stats.tres_usage_in_min, '')
+                stats['tres_usage_in_min_nodeid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_nodeid, '')
+                stats['tres_usage_in_min_taskid']  = slurm.stringOrNone(job.stats.tres_usage_in_min_taskid, '')
+                stats['tres_usage_in_tot'] = slurm.stringOrNone(job.stats.tres_usage_in_tot, '')
+                stats['tres_usage_out_ave'] = slurm.stringOrNone(job.stats.tres_usage_out_ave, '')
+                stats['tres_usage_out_max'] = slurm.stringOrNone(job.stats.tres_usage_out_max, '')
+                stats['tres_usage_out_max_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_nodeid, '')
+                stats['tres_usage_out_max_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_max_taskid, '')
+                stats['tres_usage_out_min'] = slurm.stringOrNone(job.stats.tres_usage_out_min, '')
+                stats['tres_usage_out_min_nodeid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_nodeid, '')
+                stats['tres_usage_out_min_taskid'] = slurm.stringOrNone(job.stats.tres_usage_out_min_taskid, '')
+                stats['tres_usage_out_tot'] = slurm.stringOrNone(job.stats.tres_usage_out_tot, '')
 
                 # add job steps
                 JOBS_info['steps'] = {}
@@ -5520,6 +5534,7 @@ cdef class slurmdb_jobs:
                 JOBS_info['timelimit'] = job.timelimit
                 JOBS_info['tot_cpu_sec'] = job.tot_cpu_sec
                 JOBS_info['tot_cpu_usec'] = job.tot_cpu_usec
+                JOBS_info['track_steps'] = job.track_steps
                 JOBS_info['tres_alloc_str'] = slurm.stringOrNone(job.tres_alloc_str,'')
                 JOBS_info['tres_req_str'] = slurm.stringOrNone(job.tres_req_str,'')
                 JOBS_info['uid'] = job.uid
@@ -6230,6 +6245,9 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
     if (debug_flags & DEBUG_FLAG_DB_WCKEY):
         debugFlags.append('DB_WCKey')
 
+    if (debug_flags & DEBUG_FLAG_ESEARCH):
+        debugFlags.append('Elasticsearch')
+
     if (debug_flags & DEBUG_FLAG_ENERGY):
         debugFlags.append('Energy')
 
@@ -6295,6 +6313,9 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
 
     if (debug_flags & DEBUG_FLAG_SWITCH):
         debugFlags.append('Switch')
+
+    if (debug_flags & DEBUG_FLAG_TASK):
+        debugFlags.append('Task')
 
     if (debug_flags & DEBUG_FLAG_TIME_CRAY):
         debugFlags.append('TimeCray')
