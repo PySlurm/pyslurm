@@ -46,7 +46,7 @@ cdef to_unicode(char *_str, default=None):
     """Convert a char* to Python3 str (unicode)"""
     if _str and _str[0] != NULL_BYTE:
         if _str == NONE_BYTE:
-            return None
+            return default
 
         return _str
     else:
@@ -96,12 +96,12 @@ cdef fmalloc(char **old, val):
         old[0] = NULL
 
 
-cpdef list to_list(char *str_list):
+cpdef list to_list(char *str_list, default=[]):
     """Convert C-String to a list."""
     cdef str ret = to_unicode(str_list)
 
     if not ret:
-        return []
+        return default
 
     return ret.split(",")
 
