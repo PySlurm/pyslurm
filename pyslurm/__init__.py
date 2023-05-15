@@ -23,6 +23,7 @@ from pyslurm.core.job import (
     JobSubmitDescription,
 )
 from pyslurm.core.node import Node, Nodes
+from pyslurm.core.partition import Partition, Partitions
 from pyslurm.core import error
 from pyslurm.core.error import (
     PyslurmError,
