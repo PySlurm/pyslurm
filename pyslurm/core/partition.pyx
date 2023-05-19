@@ -77,9 +77,11 @@ cdef class Partitions(dict):
             Partitions partitions = Partitions.__new__(Partitions)
             int flags = slurm.SHOW_ALL
             Partition partition
+            slurmctld.Config slurm_conf
+            int power_save_enabled = 0
 
         verify_rpc(slurm_load_partitions(0, &partitions.info, flags))
-        # TODO: Load slurm conf
+        slurm_conf = slurmctld.Config.load()
 
         # If requested, preload the passwd and groups database to potentially
         # speedup lookups for an attribute.
@@ -89,6 +91,9 @@ cdef class Partitions(dict):
 
         # zero-out a dummy partition_info_t
         memset(&partitions.tmp_info, 0, sizeof(partition_info_t))
+
+        if slurm_conf.suspend_program and slurm_conf.resume_program:
+            power_save_enabled = 1
 
         # Put each pointer into its own instance.
         for cnt in range(partitions.info.record_count):
@@ -102,7 +107,8 @@ cdef class Partitions(dict):
                 partition.passwd = passwd
                 partition.groups = groups
 
-            # TODO: Check if power-save is enabled (need to load slurm conf)
+            partition.power_save_enabled = power_save_enabled
+            partition.slurm_conf = slurm_conf
             partitions[partition.name] = partition
 
         # At this point we memcpy'd all the memory for the Partitions. Setting
@@ -224,15 +230,7 @@ cdef class Partition:
 
     @property
     def select_types(self):
-#        cdef char *_typ = select_type_param_string(self.ptr.cr_type)
-#        typ = cstr.to_unicode(_typ)
-#        return typ
-        return None
-
-    @select_types.setter
-    def select_types(self, val):
-        # TODO
-        pass 
+        return _select_type_int_to_list(self.ptr.cr_type)
 
     @property
     def cpu_binding(self):
@@ -246,9 +244,7 @@ cdef class Partition:
 
     @cpu_binding.setter
     def cpu_binding(self, val):
-        # TODO
-        # self.ptr.cpu_bind = cpubind_to_num(val)
-        pass
+        self.ptr.cpu_bind = cpubind_to_num(val)
 
     @property
     def default_memory_per_cpu(self):
@@ -434,14 +430,11 @@ cdef class Partition:
 
     @property
     def preempt_mode(self):
-        # TODO
-        # may need to get preempt mode from slurm config
-        return None
+        return _preempt_mode_int_to_str(self.ptr.preempt_mode, self.slurm_conf)
 
     @preempt_mode.setter
     def preempt_mode(self, val):
-        # TODO
-        pass
+        self.ptr.preempt_mode = _preempt_mode_str_to_int(val)
 
     @property
     def priority_job_factor(self):
@@ -481,8 +474,7 @@ cdef class Partition:
 
     @state.setter
     def state(self, val):
-        # TODO
-        pass
+        self.ptr.state_up = _partition_state_str_to_int(val)
 
     @property
     def is_default(self):
@@ -550,6 +542,7 @@ cdef class Partition:
 
     # TODO: tres_fmt_str
 
+
 def _partition_state_int_to_str(state):
     if state == slurm.PARTITION_UP:
         return "UP"
@@ -561,6 +554,23 @@ def _partition_state_int_to_str(state):
         return "DRAIN"
     else:
         return "UNKNOWN"
+
+
+def _partition_state_str_to_int(state):
+    state = state.upper()
+
+    if state == "UP":
+        return slurm.PARTITION_UP
+    elif state == "DOWN":
+        return slurm.PARTITION_DOWN
+    elif state == "INACTIVE":
+        return slurm.PARTITION_INACTIVE
+    elif state == "DRAIN":
+        return slurm.PARTITION_DRAIN
+    else:
+        choices = "UP, DOWN, INACTIVE, DRAIN"
+        raise ValueError(f"Invalid partition state: {state}, valid choices "
+                         f"are {choices}")
 
 
 def _oversubscribe_mode_int_to_str(shared):
@@ -575,3 +585,65 @@ def _oversubscribe_mode_int_to_str(shared):
         return "NO", None
     else:
         return "YES", value
+
+
+def _select_type_int_to_list(stype):
+    # https://github.com/SchedMD/slurm/blob/257ca5e4756a493dc4c793ded3ac3c1a769b3c83/slurm/slurm.h#L996
+    # The 3 main select types are mutually exclusive, and may be combined with
+    # CR_MEMORY
+    # CR_BOARD exists but doesn't show up in the documentation, so ignore it.
+    out = []
+
+    if stype & slurm.CR_CPU:
+        out.append("CR_CPU")
+    elif stype & slurm.CR_CORE:
+        out.append("CR_CORE")
+    elif stype & slurm.CR_SOCKET:
+        out.append("CR_SOCKET")
+    elif stype & slurm.CR_CPU and stype & slurm.CR_MEMORY:
+        out.append("CR_CPU_MEMORY")
+    elif stype & slurm.CR_CORE and stype & slurm.CR_MEMORY:
+        out.append("CR_CORE_MEMORY")
+    elif stype & slurm.CR_SOCKET and stype & slurm.CR_MEMORY:
+        out.append("CR_SOCKET_MEMORY")
+
+    # The rest of the CR_* stuff is not mutually exclusive
+    if stype & slurm.CR_OTHER_CONS_RES:
+        out.append("CR_OTHER_CONS_RES")
+
+    if stype & slurm.CR_ONE_TASK_PER_CORE:
+        out.append("CR_ONE_TASK_PER_CORE")
+
+    if stype & slurm.CR_PACK_NODES:
+        out.append("CR_PACK_NODES")
+
+    if stype & slurm.CR_OTHER_CONS_TRES:
+        out.append("CR_OTHER_CONS_TRES")
+
+    if stype & slurm.CR_CORE_DEFAULT_DIST_BLOCK:
+        out.append("CR_CORE_DEFAULT_DIST_BLOCK")
+
+    if stype & slurm.CR_LLN:
+        out.append("CR_LLN")
+
+    return out
+
+
+def _preempt_mode_str_to_int(mode):
+    if not mode:
+        return slurm.NO_VAL16
+
+    pmode = slurm_preempt_mode_num(str(mode))
+    if pmode == slurm.NO_VAL16:
+        raise ValueError(f"Invalid Preempt mode: {mode}")
+
+    return pmode
+
+
+def _preempt_mode_int_to_str(mode, slurmctld.Config slurm_conf):
+    cdef char *tmp = NULL
+    if mode == slurm.NO_VAL16:
+        return slurm_conf.preempt_mode
+    else:
+        tmp = slurm_preempt_mode_string(mode)
+        return cstr.to_unicode(tmp)

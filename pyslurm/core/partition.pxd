@@ -37,6 +37,8 @@ from pyslurm.slurm cimport (
     slurm_load_partitions,
     slurm_sprint_cpu_bind_type,
     cpu_bind_type_t,
+    slurm_preempt_mode_string,
+    slurm_preempt_mode_num,
     xfree,
     try_xmalloc,
 )
@@ -44,6 +46,7 @@ from pyslurm.utils cimport cstr
 from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
+from pyslurm.core cimport slurmctld
 
 
 cdef class Partitions(dict):
@@ -87,6 +90,8 @@ cdef class Partition:
         partition_info_t *ptr
         dict passwd
         dict groups
+        int power_save_enabled
+        slurmctld.Config slurm_conf
 
     @staticmethod
     cdef Partition from_ptr(partition_info_t *in_ptr)

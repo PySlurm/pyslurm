@@ -46,3 +46,17 @@ cdef class Config:
     @property
     def cluster(self):
         return cstr.to_unicode(self.ptr.cluster_name)
+
+    @property
+    def preempt_mode(self):
+        cdef char *tmp = slurm_preempt_mode_string(self.ptr.preempt_mode)
+        return cstr.to_unicode(tmp)
+
+    @property
+    def suspend_program(self):
+        return cstr.to_unicode(self.ptr.suspend_program)
+
+    @property
+    def resume_program(self):
+        return cstr.to_unicode(self.ptr.resume_program)
+
