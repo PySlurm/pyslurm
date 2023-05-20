@@ -28,6 +28,7 @@ from pyslurm cimport slurm
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from pyslurm.slurm cimport (
     partition_info_msg_t,
+    delete_part_msg_t,
     partition_info_t,
     update_part_msg_t,
     slurm_free_partition_info_members,
@@ -39,6 +40,9 @@ from pyslurm.slurm cimport (
     cpu_bind_type_t,
     slurm_preempt_mode_string,
     slurm_preempt_mode_num,
+    slurm_create_partition,
+    slurm_update_partition,
+    slurm_delete_partition,
     xfree,
     try_xmalloc,
 )
@@ -88,8 +92,6 @@ cdef class Partition:
     """
     cdef:
         partition_info_t *ptr
-        dict passwd
-        dict groups
         int power_save_enabled
         slurmctld.Config slurm_conf
 

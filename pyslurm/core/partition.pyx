@@ -53,15 +53,8 @@ cdef class Partitions(dict):
         self.info = NULL
 
     @staticmethod
-    def load(preload_passwd_info=False):
+    def load():
         """Load all Partitions in the system.
-
-        Args:
-            preload_passwd_info (bool): 
-                Decides whether to query passwd and groups information from
-                the system.
-                If True, the information will fetched and stored in each of
-                the Node instances. The default is False.
 
         Returns:
             (pyslurm.Partitions): Collection of Partition objects.
@@ -72,8 +65,6 @@ cdef class Partitions(dict):
             MemoryError: If malloc fails to allocate memory.
         """
         cdef:
-            dict passwd = {}
-            dict groups = {}
             Partitions partitions = Partitions.__new__(Partitions)
             int flags = slurm.SHOW_ALL
             Partition partition
@@ -82,12 +73,6 @@ cdef class Partitions(dict):
 
         verify_rpc(slurm_load_partitions(0, &partitions.info, flags))
         slurm_conf = slurmctld.Config.load()
-
-        # If requested, preload the passwd and groups database to potentially
-        # speedup lookups for an attribute.
-        if preload_passwd_info:
-            passwd = _getpwall_to_dict()
-            groups = _getgrall_to_dict()
 
         # zero-out a dummy partition_info_t
         memset(&partitions.tmp_info, 0, sizeof(partition_info_t))
@@ -102,10 +87,6 @@ cdef class Partitions(dict):
             # Prevent double free if xmalloc fails mid-loop and a MemoryError
             # is raised by replacing it with a zeroed-out partition_info_t.
             partitions.info.partition_array[cnt] = partitions.tmp_info
-
-            if preload_passwd_info:
-                partition.passwd = passwd
-                partition.groups = groups
 
             partition.power_save_enabled = power_save_enabled
             partition.slurm_conf = slurm_conf
@@ -126,7 +107,6 @@ cdef class Partition:
 
     def __cinit__(self):
         self.ptr = NULL
-#        self.umsg = NULL
 
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
@@ -135,21 +115,10 @@ cdef class Partition:
             setattr(self, k, v)
 
     def _alloc_impl(self):
-        self._alloc_info()
-#        self._alloc_umsg()
-
-    def _alloc_info(self):
         if not self.ptr:
             self.ptr = <partition_info_t*>try_xmalloc(sizeof(partition_info_t))
             if not self.ptr:
                 raise MemoryError("xmalloc failed for partition_info_t")
-
-#   def _alloc_umsg(self):
-#       if not self.umsg:
-#           self.umsg = <update_part_msg_t*>try_xmalloc(sizeof(update_part_msg_t))
-#           if not self.umsg:
-#               raise MemoryError("xmalloc failed for update_part_msg_t")
-#           slurm_init_part_desc_msg(self.umsg)
 
     def _dealloc_impl(self):
         slurm_free_partition_info_members(self.ptr)
@@ -161,11 +130,15 @@ cdef class Partition:
     @staticmethod
     cdef Partition from_ptr(partition_info_t *in_ptr):
         cdef Partition wrap = Partition.__new__(Partition)
-        wrap._alloc_info()
-        wrap.passwd = {}
-        wrap.groups = {}
+        wrap._alloc_impl()
         memcpy(wrap.ptr, in_ptr, sizeof(partition_info_t))
         return wrap
+
+    def _error_or_name(self):
+        if not self.name:
+            raise ValueError("You need to set a Partition name for this "
+                             "instance.")
+        return self.name
 
     def as_dict(self):
         """Partition information formatted as a dictionary.
@@ -179,6 +152,89 @@ cdef class Partition:
             >>> mypart_dict = mypart.as_dict()
         """
         return instance_to_dict(self)
+
+    @staticmethod
+    def load(name):
+        """Load information for a specific Partition.
+
+        Returns:
+            (pyslurm.Partition): Returns a new Partition instance.
+
+        Raises:
+            RPCError: If requesting the Partition information from the
+                slurmctld was not successful.
+
+        Examples:
+            >>> import pyslurm
+            >>> part = pyslurm.Partition.load("normal")
+        """
+        partitions = Partitions.load()
+        if name not in partitions:
+            raise RPCError(msg=f"Partition {name} doesn't exist")
+
+        return partitions[name]
+
+    def create(self):
+        """Create a Partition.
+
+        Implements the slurm_create_partition RPC.
+
+        Returns:
+            (pyslurm.Partition): This function returns the current Partition
+                instance object itself.
+
+        Raises:
+            RPCError: If creating the Partition was not successful.
+
+        Examples:
+            >>> import pyslurm
+            >>> part = pyslurm.Partition("debug").create()
+        """
+        self._error_or_name()
+        verify_rpc(slurm_create_partition(self.ptr))
+        return self
+
+    def modify(self, changes):
+        """Modify a Partition.
+
+        Implements the slurm_update_partition RPC.
+
+        Args:
+            changes (pyslurm.Partition):
+                Another Partition object which contains all the changes that
+                should be applied to this instance.
+
+        Raises:
+            RPCError: When updating the Partition was not successful.
+
+        Examples:
+            >>> import pyslurm
+            >>>
+            >>> mypart = pyslurm.Partition("normal")
+            >>> changes = pyslurm.Partition(max_time_limit="10-00:00:00")
+            >>> mypart.modify(changes)
+        """
+        cdef Partition part = <Partition>changes
+        part.name = self._error_or_name()
+        verify_rpc(slurm_update_partition(part.ptr))
+
+    def delete(self):
+        """Delete a Partition.
+
+        Implements the slurm_delete_partition RPC.
+
+        Raises:
+            RPCError: When deleting the Partition was not successful.
+
+        Examples:
+            >>> import pyslurm
+            >>> pyslurm.Partition("normal").delete()
+        """
+        cdef delete_part_msg_t del_part_msg
+        memset(&del_part_msg, 0, sizeof(del_part_msg))
+
+        del_part_msg.name = cstr.from_unicode(self._error_or_name())
+        verify_rpc(slurm_delete_partition(&del_part_msg))
 
     @property
     def name(self):
