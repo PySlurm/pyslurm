@@ -245,11 +245,11 @@ cdef class Partition:
         cstr.fmalloc(&self.ptr.name, val)
 
     @property
-    def allowed_allocating_nodes(self):
+    def allowed_submit_nodes(self):
         return cstr.to_list(self.ptr.allow_alloc_nodes, ["ALL"])
 
-    @allowed_allocating_nodes.setter
-    def allowed_allocating_nodes(self, val):
+    @allowed_submit_nodes.setter
+    def allowed_submit_nodes(self, val):
         cstr.from_list(&self.ptr.allow_alloc_nodes, val)
 
     @property
@@ -304,12 +304,7 @@ cdef class Partition:
 
     @property
     def default_memory_per_cpu(self):
-        if self.ptr.def_mem_per_cpu != slurm.NO_VAL64:
-            if self.ptr.def_mem_per_cpu & slurm.MEM_PER_CPU:
-                mem = self.ptr.def_mem_per_cpu & (~slurm.MEM_PER_CPU)
-                return u64_parse(mem)
-        else:
-            return None
+        return _get_memory(self.ptr.def_mem_per_cpu, per_cpu=True)
 
     @default_memory_per_cpu.setter
     def default_memory_per_cpu(self, val):
@@ -318,11 +313,7 @@ cdef class Partition:
 
     @property
     def default_memory_per_node(self):
-        if self.ptr.def_mem_per_cpu != slurm.NO_VAL64:
-            if not self.ptr.def_mem_per_cpu & slurm.MEM_PER_CPU:
-                return u64_parse(self.ptr.def_mem_per_cpu)
-        else:
-            return None
+        return _get_memory(self.ptr.def_mem_per_cpu, per_cpu=False)
 
     @default_memory_per_node.setter
     def default_memory_per_node(self, val):
@@ -330,12 +321,7 @@ cdef class Partition:
 
     @property
     def max_memory_per_cpu(self):
-        if self.ptr.max_mem_per_cpu != slurm.NO_VAL64:
-            if self.ptr.max_mem_per_cpu & slurm.MEM_PER_CPU:
-                mem = self.ptr.max_mem_per_cpu & (~slurm.MEM_PER_CPU)
-                return u64_parse(mem)
-        else:
-            return None
+        return _get_memory(self.ptr.max_mem_per_cpu, per_cpu=True)
 
     @max_memory_per_cpu.setter
     def max_memory_per_cpu(self, val):
@@ -344,12 +330,7 @@ cdef class Partition:
 
     @property
     def max_memory_per_node(self):
-        # TODO: handle unlimited?
-        if self.ptr.max_mem_per_cpu != slurm.NO_VAL64:
-            if not self.ptr.max_mem_per_cpu & slurm.MEM_PER_CPU:
-                return u64_parse(self.ptr.max_mem_per_cpu)
-        else:
-            return None
+        return _get_memory(self.ptr.max_mem_per_cpu, per_cpu=False)
 
     @max_memory_per_node.setter
     def max_memory_per_node(self, val):
@@ -357,7 +338,7 @@ cdef class Partition:
 
     @property
     def default_time(self):
-        return _raw_time(self.ptr.default_time)
+        return _raw_time(self.ptr.default_time, on_inf="UNLIMITED")
 
     @default_time.setter
     def default_time(self, val):
@@ -380,36 +361,35 @@ cdef class Partition:
         cstr.from_list(&self.ptr.deny_accounts, val)
 
     @property
-    def grace_time(self):
+    def preemption_grace_time(self):
         return _raw_time(self.ptr.grace_time)
 
-    @grace_time.setter
-    def grace_time(self, val):
+    @preemption_grace_time.setter
+    def preemption_grace_time(self, val):
         self.ptr.grace_time = timestr_to_secs(val)
 
     @property
     def default_cpus_per_gpu(self):
-        # TODO: parse List job_defaults_list
-        return None
+        return _extract_job_default_item(slurm.JOB_DEF_CPU_PER_GPU,
+                                         self.ptr.job_defaults_list)
 
     @default_cpus_per_gpu.setter
     def default_cpus_per_gpu(self, val):
-        # TODO
-        pass
+        _concat_job_default_str("DefCpuPerGpu", val,
+                                &self.ptr.job_defaults_str)
 
     @property
     def default_memory_per_gpu(self):
-        # TODO: parse List job_defaults_list
-        return None
+        return _extract_job_default_item(slurm.JOB_DEF_MEM_PER_GPU,
+                                         self.ptr.job_defaults_list)
 
     @default_memory_per_gpu.setter
     def default_memory_per_gpu(self, val):
-        # TODO
-        pass
+        _concat_job_default_str("DefMemPerGpu", val,
+                                &self.ptr.job_defaults_str)
 
     @property
     def max_cpus_per_node(self):
-        # how to handle infinite?
         return u32_parse(self.ptr.max_cpus_per_node)
 
     @max_cpus_per_node.setter
@@ -418,7 +398,6 @@ cdef class Partition:
 
     @property
     def max_cpus_per_socket(self):
-        # how to handle infinite?
         return u32_parse(self.ptr.max_cpus_per_socket)
 
     @max_cpus_per_socket.setter
@@ -435,11 +414,11 @@ cdef class Partition:
 
     @property
     def min_nodes(self):
-        return u32_parse(self.ptr.min_nodes)
+        return u32_parse(self.ptr.min_nodes, zero_is_noval=False)
 
     @min_nodes.setter
     def min_nodes(self, val):
-        self.ptr.min_nodes = u32(val)
+        self.ptr.min_nodes = u32(val, zero_is_noval=False)
 
     @property
     def max_time_limit(self):
@@ -449,16 +428,13 @@ cdef class Partition:
     def max_time_limit(self, val):
         self.ptr.max_time = timestr_to_mins(val)
 
-    # maybe namedtuple for this?
-#   @property
-#   def oversubscribe_mode(self):
-#       mode, _ = _oversubscribe_mode_int_to_str(self.ptr.max_share)
-#       return mode
+    @property
+    def oversubscribe(self):
+        return _oversubscribe_int_to_str(self.ptr.max_share)
 
-#   @property
-#   def oversubscribe_count(self):
-#       _, count = _oversubscribe_mode_int_to_str(self.ptr.max_share)
-#       return count
+    @oversubscribe.setter
+    def oversubscribe(self, val):
+        self.ptr.max_share = _oversubscribe_str_to_int(val)
 
     @property
     def nodes(self):
@@ -629,18 +605,42 @@ def _partition_state_str_to_int(state):
                          f"are {choices}")
 
 
-def _oversubscribe_mode_int_to_str(shared):
-    is_forced = shared & slurm.SHARED_FORCE
-    value = shared & (~slurm.SHARED_FORCE)
+def _oversubscribe_int_to_str(shared):
+    if shared == slurm.NO_VAL16:
+        return None
 
-    if not value:
-        return "EXCLUSIVE", None
+    is_forced = shared & slurm.SHARED_FORCE
+    max_jobs = shared & (~slurm.SHARED_FORCE)
+
+    if not max_jobs:
+        return "EXCLUSIVE"
     elif is_forced:
-        return "FORCE", value
-    elif value == 1:
-        return "NO", None
+        return f"FORCE:{max_jobs}"
+    elif max_jobs == 1:
+        return "NO"
     else:
-        return "YES", value
+        return f"YES:{max_jobs}"
+
+
+def _oversubscribe_str_to_int(typ):
+    if typ == "NO":
+        return 1
+    elif typ == "EXCLUSIVE":
+        return 0
+    elif "YES" in typ:
+        return _split_oversubscribe_str(typ)
+    elif "FORCE" in typ:
+        return _split_oversubscribe_str(typ) | slurm.SHARED_FORCE
+    else:
+        return slurm.NO_VAL16
+
+
+def _split_oversubscribe_str(val):
+    max_jobs = val.split(":", 1)
+    if len(max_jobs) == 2:
+        return int(max_jobs[1])
+    else:
+        return 4
 
 
 def _select_type_int_to_list(stype):
@@ -703,3 +703,35 @@ def _preempt_mode_int_to_str(mode, slurmctld.Config slurm_conf):
     else:
         tmp = slurm_preempt_mode_string(mode)
         return cstr.to_unicode(tmp)
+
+
+cdef _extract_job_default_item(typ, slurm.List job_defaults_list):
+    cdef:
+        job_defaults_t *default_item
+        SlurmList job_def_list
+        SlurmListItem job_def_item
+    
+    job_def_list = SlurmList.wrap(job_defaults_list, owned=False)
+    for job_def_item in job_def_list:
+        default_item = <job_defaults_t*>job_def_item.data
+        if default_item.type == typ:
+            return default_item.value
+
+    return None
+
+
+cdef _concat_job_default_str(typ, val, char **job_defaults_str):
+    current = cstr.to_dict(part.ptr.job_defaults_str[0])
+    current.update({typ : val})
+    cstr.from_dict(job_defaults_str, current)
+    
+
+def _get_memory(value, per_cpu):
+    if value != slurm.NO_VAL64:
+        if value & slurm.MEM_PER_CPU and per_cpu:
+            return u64_parse(value & (~slurm.MEM_PER_CPU))
+        elif not value & slurm.MEM_PER_CPU and not per_cpu:
+            return u64_parse(value)
+        elif value == 0:
+            return "UNLIMITED"
+    return None
