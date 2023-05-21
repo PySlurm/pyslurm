@@ -5,6 +5,12 @@ repo_url: "https://github.com/PySlurm/pyslurm"
 repo_name: "PySlurm/pyslurm"
 copyright: Copyright &copy; 2023 PySlurm Developers
 
+nav:
+  - Home:
+    - Home: index.md
+    - Changelog: changelog.md
+  - ...
+
 theme:
   name: "material"
   logo: logo.png
