@@ -72,6 +72,8 @@ def timestr_to_mins(timestr):
 
     if timestr is None:
         return slurm.NO_VAL
+    elif str(timestr).isdigit():
+        return timestr
     elif timestr.casefold() == "unlimited":
         return slurm.INFINITE
 

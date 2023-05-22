@@ -23,7 +23,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from typing import Union
+from typing import Union, Any
 from pyslurm.utils import cstr
 from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
@@ -101,6 +101,35 @@ cdef class Partitions(dict):
         partitions.info.record_count = 0
 
         return partitions
+
+    def set_state(self, state):
+        """Modify the State of all Partitions in this Collection.
+
+        Args:
+            state (str):
+                Partition state to set
+
+        Raises:
+            RPCError: When updating the state failed
+        """
+        for part in self.values():
+            part.modify(state=state)
+
+    def as_list(self):
+        """Format the information as list of Partition objects.
+
+        Returns:
+            (list): List of Partition objects
+        """
+        return list(self.values())
+
+    @property
+    def total_cpus(self):
+        return _sum_prop(self, Partition.total_cpus)
+
+    @property
+    def total_nodes(self):
+        return _sum_prop(self, Partition.total_nodes)
     
 
 cdef class Partition:
@@ -119,6 +148,8 @@ cdef class Partition:
             self.ptr = <partition_info_t*>try_xmalloc(sizeof(partition_info_t))
             if not self.ptr:
                 raise MemoryError("xmalloc failed for partition_info_t")
+
+            slurm_init_part_desc_msg(self.ptr)
 
     def _dealloc_impl(self):
         slurm_free_partition_info_members(self.ptr)
@@ -170,7 +201,7 @@ cdef class Partition:
         """
         partitions = Partitions.load()
         if name not in partitions:
-            raise RPCError(msg=f"Partition {name} doesn't exist")
+            raise RPCError(msg=f"Partition '{name}' doesn't exist")
 
         return partitions[name]
 
@@ -194,27 +225,34 @@ cdef class Partition:
         verify_rpc(slurm_create_partition(self.ptr))
         return self
 
-    def modify(self, changes):
+    def modify(self, **changes):
         """Modify a Partition.
 
         Implements the slurm_update_partition RPC.
 
         Args:
-            changes (pyslurm.Partition):
-                Another Partition object which contains all the changes that
-                should be applied to this instance.
+            **changes (Any):
+                Changes for the Partition. Almost every Attribute from a
+                Partition can be modified, except for:
+
+                * total_cpus
+                * total_nodes
+                * select_type
 
         Raises:
+            ValueError: When no changes were specified.
             RPCError: When updating the Partition was not successful.
 
         Examples:
             >>> import pyslurm
             >>>
             >>> mypart = pyslurm.Partition("normal")
-            >>> changes = pyslurm.Partition(max_time_limit="10-00:00:00")
-            >>> mypart.modify(changes)
+            >>> mypart.modify(max_time_limit="10-00:00:00")
         """
-        cdef Partition part = <Partition>changes
+        if not changes:
+            raise ValueError("No changes were specified")
+
+        cdef Partition part = Partition(**changes)
         part.name = self._error_or_name()
         verify_rpc(slurm_update_partition(part.ptr))
 
@@ -235,6 +273,14 @@ cdef class Partition:
 
         del_part_msg.name = cstr.from_unicode(self._error_or_name())
         verify_rpc(slurm_delete_partition(&del_part_msg))
+
+    # If using property getter/setter style internally becomes too messy at
+    # some point, we can easily switch to normal "cdef public" attributes and
+    # just extract the getter/setter logic into two functions, where one
+    # creates a pointer from the instance attributes, and the other parses
+    # pointer values into instance attributes.
+    #
+    # From a user perspective nothing would change.
 
     @property
     def name(self):
@@ -370,6 +416,10 @@ cdef class Partition:
 
     @property
     def default_cpus_per_gpu(self):
+        def_dict = cstr.to_dict(self.ptr.job_defaults_str)
+        if def_dict and "DefCpuPerGpu" in def_dict:
+            return int(def_dict["DefCpuPerGpu"])
+
         return _extract_job_default_item(slurm.JOB_DEF_CPU_PER_GPU,
                                          self.ptr.job_defaults_list)
 
@@ -380,6 +430,10 @@ cdef class Partition:
 
     @property
     def default_memory_per_gpu(self):
+        def_dict = cstr.to_dict(self.ptr.job_defaults_str)
+        if def_dict and "DefMemPerGpu" in def_dict:
+            return int(def_dict["DefMemPerGpu"])
+
         return _extract_job_default_item(slurm.JOB_DEF_MEM_PER_GPU,
                                          self.ptr.job_defaults_list)
 
@@ -494,11 +548,11 @@ cdef class Partition:
 
     @property
     def total_cpus(self):
-        return u32_parse(self.ptr.total_cpus)
+        return u32_parse(self.ptr.total_cpus, on_noval=0)
 
     @property
     def total_nodes(self):
-        return u32_parse(self.ptr.total_nodes)
+        return u32_parse(self.ptr.total_nodes, on_noval=0)
 
     @property
     def state(self):
@@ -699,7 +753,7 @@ def _preempt_mode_str_to_int(mode):
 def _preempt_mode_int_to_str(mode, slurmctld.Config slurm_conf):
     cdef char *tmp = NULL
     if mode == slurm.NO_VAL16:
-        return slurm_conf.preempt_mode
+        return slurm_conf.preempt_mode if slurm_conf else None
     else:
         tmp = slurm_preempt_mode_string(mode)
         return cstr.to_unicode(tmp)
@@ -721,8 +775,11 @@ cdef _extract_job_default_item(typ, slurm.List job_defaults_list):
 
 
 cdef _concat_job_default_str(typ, val, char **job_defaults_str):
-    current = cstr.to_dict(part.ptr.job_defaults_str[0])
-    current.update({typ : val})
+    current = cstr.to_dict(job_defaults_str[0])
+    if not val:
+        current.pop(typ, None)
+    else:
+        current.update({typ : val})
     cstr.from_dict(job_defaults_str, current)
     
 

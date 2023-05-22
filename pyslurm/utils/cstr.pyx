@@ -137,7 +137,7 @@ cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
         str key, val
         dict out = {}
 
-    if not _str_dict or delim1 not in _str_dict:
+    if not _str_dict:
         return out
 
     for kv in _str_dict.split(delim1):
@@ -187,7 +187,7 @@ def dict_to_str(vals, prepend=None, delim1=",", delim2="="):
     
     for k, v in tmp_dict.items():
         if ((delim1 in k or delim2 in k) or
-                delim1 in v or delim2 in v):    
+                delim1 in str(v) or delim2 in str(v)):    
             raise ValueError(
                 f"Key or Value cannot contain either {delim1} or {delim2}. "
                 f"Got Key: {k} and Value: {v}."

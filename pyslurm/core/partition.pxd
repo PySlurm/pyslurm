@@ -66,8 +66,10 @@ cdef class Partitions(dict):
             Partitions to initialize this collection with.
 
     Attributes:
-        free_memory (int):
-            Amount of free memory in this node collection. (in Mebibytes)
+        total_cpus (int):
+            Amount combined total CPUs the Partitions in a Collection have
+        total_nodes (int):
+            Amount combined total Nodes the Partitions in a Collection have
 
     Raises:
         MemoryError: If malloc fails to allocate memory.
