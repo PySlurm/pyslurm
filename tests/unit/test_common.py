@@ -162,8 +162,8 @@ class TestUint:
         val = func_set(str(2**typ-2))
         assert func_get(val) == None
 
-        val = func_set("unlimited", inf=True)
-        assert func_get(val) == "unlimited"
+        val = func_set("UNLIMITED", inf=True)
+        assert func_get(val) == "UNLIMITED"
 
         val = func_set(0)
         assert func_get(val) == None
@@ -173,7 +173,7 @@ class TestUint:
 
         with pytest.raises(TypeError,
                            match="an integer is required"): 
-            val = func_set("unlimited")
+            val = func_set("UNLIMITED")
 
         with pytest.raises(OverflowError,
                            match=r"can't convert negative value to*"): 
@@ -229,11 +229,11 @@ class TestTime:
         mins_str = "01:00:00"
 
         assert timestr_to_mins(mins_str) == mins
-        assert timestr_to_mins("unlimited") == 2**32-1 
+        assert timestr_to_mins("UNLIMITED") == 2**32-1 
         assert timestr_to_mins(None) == 2**32-2
 
         assert mins_to_timestr(mins) == mins_str
-        assert mins_to_timestr(2**32-1) == "unlimited"
+        assert mins_to_timestr(2**32-1) == "UNLIMITED"
         assert mins_to_timestr(2**32-2) == None
         assert mins_to_timestr(0) == None 
 
@@ -246,11 +246,11 @@ class TestTime:
         secs_str = "01:00:00"
 
         assert timestr_to_secs(secs_str) == secs
-        assert timestr_to_secs("unlimited") == 2**32-1 
+        assert timestr_to_secs("UNLIMITED") == 2**32-1 
         assert timestr_to_secs(None) == 2**32-2
 
         assert secs_to_timestr(secs) == secs_str
-        assert secs_to_timestr(2**32-1) == "unlimited"
+        assert secs_to_timestr(2**32-1) == "UNLIMITED"
         assert secs_to_timestr(2**32-2) == None
         assert secs_to_timestr(0) == None 
 
@@ -327,8 +327,8 @@ class TestMiscUtil:
         val = humanize(800)
         assert val == "800.0M"
 
-        val = humanize("unlimited")
-        assert val == "unlimited"
+        val = humanize("UNLIMITED")
+        assert val == "UNLIMITED"
 
         val = humanize(None)
         assert val == None
