@@ -26,6 +26,7 @@ import time
 import pytest
 import pyslurm
 import os
+import util
 from pyslurm import Partition, Partitions, RPCError
 
 
@@ -71,3 +72,21 @@ def test_modify():
 
 def test_parse_all():
     Partitions.load().as_list()[0].as_dict()
+
+
+def test_reload():
+    _partnames = [util.randstr() for i in range(3)]
+    _tmp_parts = Partitions(_partnames)
+    for part in _tmp_parts.values():
+        part.create()
+
+    all_parts = Partitions.load()
+    assert len(all_parts) >= 3
+
+    my_parts = Partitions(_partnames[1:]).reload()
+    assert len(my_parts) == 2
+    for part in my_parts.as_list():
+        assert part.state != "UNKNOWN"
+    
+    for part in _tmp_parts.values():
+        part.delete()

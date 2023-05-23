@@ -61,7 +61,7 @@ cdef class Partitions(dict):
         elif partitions is not None:
             for part in partitions:
                 if isinstance(part, str):
-                    self[part] = Partitions(part)
+                    self[part] = Partition(part)
                 else:
                     self[part.name] = part
 
@@ -113,6 +113,34 @@ cdef class Partitions(dict):
         partitions.info.record_count = 0
 
         return partitions
+
+    def reload(self):
+        """Reload the information for Partitions in a collection.
+
+        !!! note
+
+            Only information for Partitions which are already in the
+            collection at the time of calling this method will be reloaded.
+
+        Returns:
+            (pyslurm.Partitions): Returns self
+
+        Raises:
+            RPCError: When getting the Partitions from the slurmctld failed.
+        """
+        cdef Partitions reloaded_parts
+        our_parts = list(self.keys())
+
+        if not our_parts:
+            return None
+
+        reloaded_parts = Partitions.load()
+        for part in list(self.keys()):
+            if part in reloaded_parts:
+                # Put the new data in.
+                self[part] = reloaded_parts[part]
+
+        return self
 
     def set_state(self, state):
         """Modify the State of all Partitions in this Collection.
