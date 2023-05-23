@@ -2,9 +2,12 @@
 title: Partition
 ---
 
-!!! warning
-    This API is currently being completely reworked, and is subject to be
-    removed in the future when a replacement is introduced
+!!! note
+    This supersedes the [pyslurm.partition](old/partition.md) class, which
+    will be removed in a future release
 
-::: pyslurm.partition
+::: pyslurm.Partition
+    handler: python
+
+::: pyslurm.Partitions
     handler: python

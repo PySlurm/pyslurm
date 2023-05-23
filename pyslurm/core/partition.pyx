@@ -52,6 +52,19 @@ cdef class Partitions(dict):
     def __cinit__(self):
         self.info = NULL
 
+    def __init__(self, partitions=None):
+        if isinstance(partitions, dict):
+            self.update(partitions)
+        elif isinstance(partitions, str):
+            partlist = partitions.split(",")
+            self.update({part: Partition(part) for part in partlist})
+        elif partitions is not None:
+            for part in partitions:
+                if isinstance(part, str):
+                    self[part] = Partitions(part)
+                else:
+                    self[part.name] = part
+
     @staticmethod
     def load():
         """Load all Partitions in the system.
@@ -62,7 +75,6 @@ cdef class Partitions(dict):
         Raises:
             RPCError: When getting all the Partitions from the slurmctld
                 failed.
-            MemoryError: If malloc fails to allocate memory.
         """
         cdef:
             Partitions partitions = Partitions.__new__(Partitions)
@@ -188,6 +200,10 @@ cdef class Partition:
     def load(name):
         """Load information for a specific Partition.
 
+        Args:
+            name (str):
+                The name of the Partition to load.
+
         Returns:
             (pyslurm.Partition): Returns a new Partition instance.
 
@@ -237,17 +253,22 @@ cdef class Partition:
 
                 * total_cpus
                 * total_nodes
-                * select_type
+                * select_types
 
         Raises:
-            ValueError: When no changes were specified.
+            ValueError: When no changes were specified or when a parsing error
+                occured.
             RPCError: When updating the Partition was not successful.
 
         Examples:
             >>> import pyslurm
             >>>
+            >>> # Modifying the maximum time limit
             >>> mypart = pyslurm.Partition("normal")
             >>> mypart.modify(max_time_limit="10-00:00:00")
+            >>>
+            >>> # Modifying the partition state
+            >>> mypart.modify(state="DRAIN")
         """
         if not changes:
             raise ValueError("No changes were specified")
@@ -775,20 +796,30 @@ cdef _extract_job_default_item(typ, slurm.List job_defaults_list):
 
 
 cdef _concat_job_default_str(typ, val, char **job_defaults_str):
+    cdef uint64_t _val = u64(dehumanize(val))
+
     current = cstr.to_dict(job_defaults_str[0])
-    if not val:
+    if _val == slurm.NO_VAL64:
         current.pop(typ, None)
     else:
-        current.update({typ : val})
+        current.update({typ : _val})
+
     cstr.from_dict(job_defaults_str, current)
     
 
 def _get_memory(value, per_cpu):
     if value != slurm.NO_VAL64:
         if value & slurm.MEM_PER_CPU and per_cpu:
+            if value == slurm.MEM_PER_CPU:
+                return "UNLIMITED"
             return u64_parse(value & (~slurm.MEM_PER_CPU))
+
+        # For these values, Slurm interprets 0 as being equal to
+        # INFINITE/UNLIMITED
+        elif value == 0 and not per_cpu:
+            return "UNLIMITED"
+
         elif not value & slurm.MEM_PER_CPU and not per_cpu:
             return u64_parse(value)
-        elif value == 0:
-            return "UNLIMITED"
+
     return None

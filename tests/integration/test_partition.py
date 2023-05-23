@@ -62,6 +62,12 @@ def test_modify():
     part.modify(default_time="UNLIMITED")
     assert Partition.load(part.name).default_time == "UNLIMITED"
 
+    part.modify(state="DRAIN")
+    assert Partition.load(part.name).state == "DRAIN"
+
+    part.modify(state="UP")
+    assert Partition.load(part.name).state == "UP"
+
 
 def test_parse_all():
     Partitions.load().as_list()[0].as_dict()

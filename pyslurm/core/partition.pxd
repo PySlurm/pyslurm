@@ -62,17 +62,14 @@ cdef class Partitions(dict):
     """A collection of [pyslurm.Partition][] objects.
 
     Args:
-        partitions (Union[list, dict, str], optional=None):
+        partitions (Union[list[str], dict[str, Partition], str], optional=None):
             Partitions to initialize this collection with.
 
     Attributes:
         total_cpus (int):
-            Amount combined total CPUs the Partitions in a Collection have
+            Total amount of CPUs the Partitions in a Collection have
         total_nodes (int):
-            Amount combined total Nodes the Partitions in a Collection have
-
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
+            Total amount of Nodes the Partitions in a Collection have
     """
     cdef:
         partition_info_msg_t *info
@@ -82,9 +79,28 @@ cdef class Partitions(dict):
 cdef class Partition:
     """A Slurm partition.
 
+    ??? info "Setting Memory related attributes"
+
+        Unless otherwise noted, all attributes in this class representing a
+        memory value, like `default_memory_per_cpu`, may also be set with a
+        string that contains suffixes like "K", "M", "G" or "T".
+
+        For example:
+
+            default_memory_per_cpu = "10G"
+
+        This will internally be converted to 10240 (how the Slurm API expects
+        it)
+
     Args:
         name (str, optional=None):
             Name of a Partition
+        **kwargs (Any, optional=None):
+            Every attribute of a Partition can be set, except for:
+
+            * total_cpus
+            * total_nodes
+            * select_types
 
     Attributes:
         name (str):
@@ -99,30 +115,39 @@ cdef class Partition:
             List of QoS which are allowed to execute Jobs
         alternate (str):
             Name of the alternate Partition in case a Partition is down.
-        select_types (list):
+        select_types (list[str]):
             List of Select Types in effect for this Partition.
             This value is readonly
         cpu_binding (str):
             Default CPU-binding for Jobs that execute in a Partition.
         default_memory_per_cpu (int):
-            Default Memory per CPU for Jobs in this Partition.
-            Note: This may also return the String "UNLIMITED" when there is no
+            Default Memory per CPU for Jobs in this Partition, in Mebibytes.
+            Mutually exclusive with `default_memory_per_node`.
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         default_memory_per_node (int):
-            Default Memory per Node for Jobs in this Partition.
-            Note: This may also return the String "UNLIMITED" when there is no
+            Default Memory per Node for Jobs in this Partition, in Mebibytes.
+            Mutually exclusive with `default_memory_per_cpu`.
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         max_memory_per_cpu (int):
-            Max Memory per CPU allowed for Jobs in this Partition.
-            Note: This may also return the String "UNLIMITED" when there is no
+            Max Memory per CPU allowed for Jobs in this Partition, in
+            Mebibytes. Mutually exclusive with `max_memory_per_node`.
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         max_memory_per_node (int):
-            Max Memory per Node allowed for Jobs in this Partition.
-            Note: This may also return the String "UNLIMITED" when there is no
+            Max Memory per Node allowed for Jobs in this Partition, in
+            Mebibytes. Mutually exclusive with `max_memory_per_cpu`
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         default_time (int):
             Default run time-limit in minutes for Jobs that don't specify one.
-            Note: This may also return the String "UNLIMITED" when there is no
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         denied_qos (list[str]):
             List of QoS that cannot be used in a Partition
@@ -133,24 +158,28 @@ cdef class Partition:
         default_cpus_per_gpu (int):
             Default CPUs per GPU for Jobs in this Partition
         default_memory_per_gpu (int):
-            Default Memory per GPU for Jobs in this Partition
+            Default Memory per GPU, in Mebibytes, for Jobs in this Partition
         max_cpus_per_node (int):
             Max CPUs per Node allowed for Jobs in this Partition
-            Note: This may also return the String "UNLIMITED" when there is no
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         max_cpus_per_socket (int):
             Max CPUs per Socket allowed for Jobs in this Partition
-            Note: This may also return the String "UNLIMITED" when there is no
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         max_nodes (int):
             Max number of Nodes allowed for Jobs
-            Note: This may also return the String "UNLIMITED" when there is no
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         min_nodes (int):
             Minimum number of Nodes that must be requested by Jobs 
         max_time_limit (int):
             Max Time-Limit in minutes that Jobs can request
-            Note: This may also return the String "UNLIMITED" when there is no
+
+            This may also return the String `UNLIMITED` when there is no
             restriction.
         oversubscribe (str):
             The oversubscribe mode for this Partition
@@ -160,7 +189,8 @@ cdef class Partition:
             List of Nodesets that a Partition has configured
         over_time_limit (int):
             Limit in minutes that Jobs can exceed their time-limit
-            Note: This can also be the string "UNLIMITED" when there is no
+
+            This can also be the string `UNLIMITED` when there is no
             restriction.
         preempt_mode (str):
             Preemption Mode in a Partition
