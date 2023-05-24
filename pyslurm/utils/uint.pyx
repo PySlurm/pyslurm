@@ -115,67 +115,72 @@ cpdef u64_parse(uint64_t val, on_inf="UNLIMITED", on_noval=None, noval=slurm.NO_
         return val
 
 
-cpdef u8_bool(val):
+cdef uint_set_bool_flag(flags, boolean, true_flag, false_flag=0):
+    if boolean:
+        if false_flag:
+            flags &= ~false_flag
+        flags |= true_flag
+    elif boolean is not None:
+        if false_flag:
+            flags |= false_flag
+        flags &= ~true_flag
+
+    return flags
+
+
+cdef uint_parse_bool_flag(flags, flag, no_val):
+    if flags == no_val:
+        return False
+
+    if flags & flag:
+        return True
+    else:
+        return False
+
+
+cdef uint_parse_bool(val, no_val):
+    if not val or val == no_val:
+        return False 
+
+    return True
+
+
+cdef uint_bool(val, no_val):
     if val is None:
-        return slurm.NO_VAL8
+        return no_val
     elif val:
         return 1
     else:
         return 0
+
+
+cpdef u8_bool(val):
+    return uint_bool(val, slurm.NO_VAL8)
 
 
 cpdef u16_bool(val):
-    if val is None:
-        return slurm.NO_VAL16
-    elif val:
-        return 1
-    else:
-        return 0
+    return uint_bool(val, slurm.NO_VAL16)
 
 
 cdef u8_parse_bool(uint8_t val):
-    if not val or val == slurm.NO_VAL8:
-        return False 
-
-    return True
+    return uint_parse_bool(val, slurm.NO_VAL8)
 
 
 cdef u16_parse_bool(uint16_t val):
-    if not val or val == slurm.NO_VAL16:
-        return False 
-
-    return True
+    return uint_parse_bool(val, slurm.NO_VAL16)
 
 
-cdef u64_set_bool_flag(uint64_t *flags, boolean, flag_val):
-    if boolean:
-        flags[0] |= flag_val
-    else:
-        flags[0] &= ~flag_val
+cdef u16_set_bool_flag(uint16_t *flags, boolean, true_flag, false_flag=0):
+    flags[0] = uint_set_bool_flag(flags[0], boolean, true_flag, false_flag)
 
 
-cdef u64_parse_bool_flag(uint64_t flags, flag):
-    if flags == slurm.NO_VAL:
-        return False
-
-    if flags & flag:
-        return True
-    else:
-        return False
-
-
-cdef u16_set_bool_flag(uint16_t *flags, boolean, flag_val):
-    if boolean:
-        flags[0] |= flag_val
-    else:
-        flags[0] &= ~flag_val
+cdef u64_set_bool_flag(uint64_t *flags, boolean, true_flag, false_flag=0):
+    flags[0] = uint_set_bool_flag(flags[0], boolean, true_flag, false_flag)
 
 
 cdef u16_parse_bool_flag(uint16_t flags, flag):
-    if flags == slurm.NO_VAL16:
-        return False
+    return uint_parse_bool_flag(flags, flag, slurm.NO_VAL16)
 
-    if flags & flag:
-        return True
-    else:
-        return False
+
+cdef u64_parse_bool_flag(uint64_t flags, flag):
+    return uint_parse_bool_flag(flags, flag, slurm.NO_VAL64)

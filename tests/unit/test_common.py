@@ -23,7 +23,7 @@
 import pyslurm
 import pytest
 from datetime import datetime
-from pyslurm import Job, JobSubmitDescription, Node
+from pyslurm import Job, JobSubmitDescription, Node, Partition
 from pyslurm.utils.ctime import (
     timestr_to_mins,
     timestr_to_secs,
@@ -195,6 +195,28 @@ class TestUint:
 
     def test_u64(self):
         self._uint_impl(u64, u64_parse, 64)
+
+    def test_set_parse_bool_flag(self):
+        part = pyslurm.Partition()
+
+        assert not part.is_hidden
+
+        part.is_hidden = True
+        assert part.is_hidden
+
+        part.is_root_only = True
+        assert part.is_hidden
+        assert part.is_root_only
+        assert not part.is_default
+        assert not part.allow_root_jobs
+        
+        part.is_default = False
+        part.is_hidden = False
+        assert not part.is_hidden
+        assert part.is_root_only
+        assert not part.is_default
+        assert not part.allow_root_jobs
+
 
 #   def _uint_bool_impl(self, arg):
 #       js = JobSubmitDescription()
