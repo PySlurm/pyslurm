@@ -100,7 +100,8 @@ cdef class Partition:
 
             * total_cpus
             * total_nodes
-            * select_types
+            * select_type_parameters
+            * consumable_resource
 
     Attributes:
         name (str):
@@ -115,7 +116,9 @@ cdef class Partition:
             List of QoS which are allowed to execute Jobs
         alternate (str):
             Name of the alternate Partition in case a Partition is down.
-        select_types (list[str]):
+        consumable_resource (ConsumableResource):
+            Which consumable resource type is used in the Partition.
+        select_type_parameters (list[SelectTypeParameter]):
             List of Select Types in effect for this Partition.
             This value is readonly
         cpu_binding (str):
@@ -192,7 +195,7 @@ cdef class Partition:
 
             This can also be the string `UNLIMITED` when there is no
             restriction.
-        preempt_mode (str):
+        preempt_mode (PreemptMode):
             Preemption Mode in a Partition
         priority_job_factor (int):
             The Priority Job Factor for a partition
@@ -204,7 +207,7 @@ cdef class Partition:
             Total number of CPUs available in a Partition
         total_nodes (int):
             Total number of nodes available in a Partition
-        state (str):
+        state (PartitionState):
             State the Partition is in
         is_default (bool):
             Whether this Partition is the default partition or not

@@ -29,6 +29,14 @@ from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
+from pyslurm.utils.enum_types import try_cast_enum
+from pyslurm.const import (
+    ConsumableResource,
+    SelectTypeParameter,
+    PartitionState,
+    PreemptMode,
+    UNLIMITED,
+)
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -281,7 +289,8 @@ cdef class Partition:
 
                 * total_cpus
                 * total_nodes
-                * select_types
+                * select_type_parameters
+                * consumable_resource
 
         Raises:
             ValueError: When no changes were specified or when a parsing error
@@ -380,7 +389,11 @@ cdef class Partition:
         cstr.fmalloc(&self.ptr.alternate, val)
 
     @property
-    def select_types(self):
+    def consumable_resource(self):
+        return _select_type_int_to_cons_res(self.ptr.cr_type)
+
+    @property
+    def select_type_parameters(self):
         return _select_type_int_to_list(self.ptr.cr_type)
 
     @property
@@ -433,7 +446,7 @@ cdef class Partition:
 
     @property
     def default_time(self):
-        return _raw_time(self.ptr.default_time, on_inf="UNLIMITED")
+        return _raw_time(self.ptr.default_time, on_inf=UNLIMITED)
 
     @default_time.setter
     def default_time(self, val):
@@ -525,7 +538,7 @@ cdef class Partition:
 
     @property
     def max_time_limit(self):
-        return _raw_time(self.ptr.max_time, on_inf="UNLIMITED")
+        return _raw_time(self.ptr.max_time, on_inf=UNLIMITED)
 
     @max_time_limit.setter
     def max_time_limit(self, val):
@@ -680,27 +693,27 @@ cdef class Partition:
 
 def _partition_state_int_to_str(state):
     if state == slurm.PARTITION_UP:
-        return "UP"
+        return PartitionState.UP
     elif state == slurm.PARTITION_DOWN:
-        return "DOWN"
+        return PartitionState.DOWN
     elif state == slurm.PARTITION_INACTIVE:
-        return "INACTIVE"
+        return PartitionState.INACTIVE
     elif state == slurm.PARTITION_DRAIN:
-        return "DRAIN"
+        return PartitionState.DRAIN
     else:
-        return "UNKNOWN"
+        return PartitionState.UNKNOWN
 
 
 def _partition_state_str_to_int(state):
     state = state.upper()
 
-    if state == "UP":
+    if state == PartitionState.UP:
         return slurm.PARTITION_UP
-    elif state == "DOWN":
+    elif state == PartitionState.DOWN:
         return slurm.PARTITION_DOWN
-    elif state == "INACTIVE":
+    elif state == PartitionState.INACTIVE:
         return slurm.PARTITION_INACTIVE
-    elif state == "DRAIN":
+    elif state == PartitionState.DRAIN:
         return slurm.PARTITION_DRAIN
     else:
         choices = "UP, DOWN, INACTIVE, DRAIN"
@@ -747,45 +760,52 @@ def _split_oversubscribe_str(val):
 
 
 def _select_type_int_to_list(stype):
+    # The rest of the CR_* stuff are just some extra parameters to the select
+    # plugin
+    out = []
+
+    if stype & slurm.CR_OTHER_CONS_RES:
+        out.append(SelectTypeParameter.OTHER_CONS_RES)
+
+    if stype & slurm.CR_ONE_TASK_PER_CORE:
+        out.append(SelectTypeParameter.ONE_TASK_PER_CORE)
+
+    if stype & slurm.CR_PACK_NODES:
+        out.append(SelectTypeParameter.PACK_NODES)
+
+    if stype & slurm.CR_OTHER_CONS_TRES:
+        out.append(SelectTypeParameter.OTHER_CONS_TRES)
+
+    if stype & slurm.CR_CORE_DEFAULT_DIST_BLOCK:
+        out.append(SelectTypeParameter.CORE_DEFAULT_DIST_BLOCK)
+
+    if stype & slurm.CR_LLN:
+        out.append(SelectTypeParameter.LLN)
+
+    return out
+
+
+def _select_type_int_to_cons_res(stype):
     # https://github.com/SchedMD/slurm/blob/257ca5e4756a493dc4c793ded3ac3c1a769b3c83/slurm/slurm.h#L996
     # The 3 main select types are mutually exclusive, and may be combined with
     # CR_MEMORY
     # CR_BOARD exists but doesn't show up in the documentation, so ignore it.
-    out = []
-
     if stype & slurm.CR_CPU:
-        out.append("CR_CPU")
+        return ConsumableResource.CPU
     elif stype & slurm.CR_CORE:
-        out.append("CR_CORE")
+        return ConsumableResource.CORE
     elif stype & slurm.CR_SOCKET:
-        out.append("CR_SOCKET")
+        return ConsumableResource.SOCKET
     elif stype & slurm.CR_CPU and stype & slurm.CR_MEMORY:
-        out.append("CR_CPU_MEMORY")
+        return ConsumableResource.CPU_MEMORY
     elif stype & slurm.CR_CORE and stype & slurm.CR_MEMORY:
-        out.append("CR_CORE_MEMORY")
+        return ConsumableResource.CORE_MEMORY
     elif stype & slurm.CR_SOCKET and stype & slurm.CR_MEMORY:
-        out.append("CR_SOCKET_MEMORY")
-
-    # The rest of the CR_* stuff is not mutually exclusive
-    if stype & slurm.CR_OTHER_CONS_RES:
-        out.append("CR_OTHER_CONS_RES")
-
-    if stype & slurm.CR_ONE_TASK_PER_CORE:
-        out.append("CR_ONE_TASK_PER_CORE")
-
-    if stype & slurm.CR_PACK_NODES:
-        out.append("CR_PACK_NODES")
-
-    if stype & slurm.CR_OTHER_CONS_TRES:
-        out.append("CR_OTHER_CONS_TRES")
-
-    if stype & slurm.CR_CORE_DEFAULT_DIST_BLOCK:
-        out.append("CR_CORE_DEFAULT_DIST_BLOCK")
-
-    if stype & slurm.CR_LLN:
-        out.append("CR_LLN")
-
-    return out
+        return ConsumableResource.SOCKET_MEMORY
+    elif stype & slurm.CR_MEMORY:
+        return ConsumableResource.MEMORY
+    else:
+        return None
 
 
 def _preempt_mode_str_to_int(mode):
@@ -800,12 +820,11 @@ def _preempt_mode_str_to_int(mode):
 
 
 def _preempt_mode_int_to_str(mode, slurmctld.Config slurm_conf):
-    cdef char *tmp = NULL
     if mode == slurm.NO_VAL16:
         return slurm_conf.preempt_mode if slurm_conf else None
     else:
-        tmp = slurm_preempt_mode_string(mode)
-        return cstr.to_unicode(tmp)
+        tmp = cstr.to_unicode(slurm_preempt_mode_string(mode))
+        return try_cast_enum(tmp, PreemptMode)
 
 
 cdef _extract_job_default_item(typ, slurm.List job_defaults_list):
@@ -839,13 +858,13 @@ def _get_memory(value, per_cpu):
     if value != slurm.NO_VAL64:
         if value & slurm.MEM_PER_CPU and per_cpu:
             if value == slurm.MEM_PER_CPU:
-                return "UNLIMITED"
+                return UNLIMITED
             return u64_parse(value & (~slurm.MEM_PER_CPU))
 
         # For these values, Slurm interprets 0 as being equal to
         # INFINITE/UNLIMITED
         elif value == 0 and not per_cpu:
-            return "UNLIMITED"
+            return UNLIMITED
 
         elif not value & slurm.MEM_PER_CPU and not per_cpu:
             return u64_parse(value)
