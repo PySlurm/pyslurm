@@ -23,6 +23,8 @@
 # cython: language_level=3
 
 from pyslurm.core.error import verify_rpc, RPCError
+from pyslurm.const import PreemptMode
+from pyslurm.utils.enum_types import try_cast_enum
 
 
 cdef class Config:
@@ -50,7 +52,7 @@ cdef class Config:
     @property
     def preempt_mode(self):
         cdef char *tmp = slurm_preempt_mode_string(self.ptr.preempt_mode)
-        return cstr.to_unicode(tmp)
+        return try_cast_enum(cstr.to_unicode(tmp), PreemptMode)
 
     @property
     def suspend_program(self):

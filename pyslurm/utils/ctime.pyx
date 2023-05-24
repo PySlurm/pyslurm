@@ -23,6 +23,7 @@
 # cython: language_level=3
 
 import datetime
+from pyslurm.const import UNLIMITED
 
 
 def timestr_to_secs(timestr):
@@ -41,7 +42,7 @@ def timestr_to_secs(timestr):
 
     if timestr is None:
         return slurm.NO_VAL
-    elif timestr.casefold() == "unlimited":
+    elif timestr == UNLIMITED or timestr.casefold() == "unlimited":
         return slurm.INFINITE
 
     if str(timestr).isdigit():
@@ -74,7 +75,7 @@ def timestr_to_mins(timestr):
         return slurm.NO_VAL
     elif str(timestr).isdigit():
         return timestr
-    elif timestr.casefold() == "unlimited":
+    elif timestr == UNLIMITED or timestr.casefold() == "unlimited":
         return slurm.INFINITE
 
     tmp = cstr.from_unicode(timestr)
@@ -113,7 +114,7 @@ def secs_to_timestr(secs, default=None):
         else:
             return tmp
     else:
-        return "UNLIMITED"
+        return UNLIMITED
 
 
 def mins_to_timestr(mins, default=None):
@@ -143,7 +144,7 @@ def mins_to_timestr(mins, default=None):
         else:
             return tmp
     else:
-        return "UNLIMITED"
+        return UNLIMITED
 
 
 def date_to_timestamp(date, on_nodate=0):

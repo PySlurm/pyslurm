@@ -22,12 +22,14 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from pyslurm.const import UNLIMITED
+
 
 cpdef u8(val, inf=False, noval=slurm.NO_VAL8, on_noval=slurm.NO_VAL8, zero_is_noval=True):
     """Try to convert arbitrary 'val' to uint8_t"""
     if val is None or (val == 0 and zero_is_noval) or val == noval:
         return on_noval
-    elif inf and (val == "UNLIMITED" or val == "unlimited"):
+    elif inf and (val == UNLIMITED or val == "unlimited"):
         return slurm.INFINITE8
     else:
         if isinstance(val, str) and val.isdigit():
@@ -36,7 +38,7 @@ cpdef u8(val, inf=False, noval=slurm.NO_VAL8, on_noval=slurm.NO_VAL8, zero_is_no
         return <uint8_t>val
 
 
-cpdef u8_parse(uint8_t val, on_inf="UNLIMITED", on_noval=None, noval=slurm.NO_VAL8, zero_is_noval=True):
+cpdef u8_parse(uint8_t val, on_inf=UNLIMITED, on_noval=None, noval=slurm.NO_VAL8, zero_is_noval=True):
     """Convert uint8_t to Python int (with a few situational parameters)"""
     if val == noval or (val == 0 and zero_is_noval):
         return on_noval
@@ -50,7 +52,7 @@ cpdef u16(val, inf=False, noval=slurm.NO_VAL16, on_noval=slurm.NO_VAL16, zero_is
     """Try to convert arbitrary 'val' to uint16_t"""
     if val is None or (val == 0 and zero_is_noval) or val == noval:
         return on_noval
-    elif inf and (val == "UNLIMITED" or val == "unlimited"):
+    elif inf and (val == UNLIMITED or val == "unlimited"):
         return slurm.INFINITE16
     else:
         if isinstance(val, str) and val.isdigit():
@@ -59,7 +61,7 @@ cpdef u16(val, inf=False, noval=slurm.NO_VAL16, on_noval=slurm.NO_VAL16, zero_is
         return <uint16_t>val
 
 
-cpdef u16_parse(uint16_t val, on_inf="UNLIMITED", on_noval=None, noval=slurm.NO_VAL16, zero_is_noval=True):
+cpdef u16_parse(uint16_t val, on_inf=UNLIMITED, on_noval=None, noval=slurm.NO_VAL16, zero_is_noval=True):
     """Convert uint16_t to Python int (with a few situational parameters)"""
     if val == noval or (val == 0 and zero_is_noval):
         return on_noval
@@ -73,7 +75,7 @@ cpdef u32(val, inf=False, noval=slurm.NO_VAL, on_noval=slurm.NO_VAL, zero_is_nov
     """Try to convert arbitrary 'val' to uint32_t"""
     if val is None or (val == 0 and zero_is_noval) or val == noval:
         return on_noval
-    elif inf and (val == "UNLIMITED" or val == "unlimited"):
+    elif inf and (val == UNLIMITED or val == "unlimited"):
         return slurm.INFINITE
     else:
         if isinstance(val, str) and val.isdigit():
@@ -82,7 +84,7 @@ cpdef u32(val, inf=False, noval=slurm.NO_VAL, on_noval=slurm.NO_VAL, zero_is_nov
         return <uint32_t>val
 
 
-cpdef u32_parse(uint32_t val, on_inf="UNLIMITED", on_noval=None, noval=slurm.NO_VAL, zero_is_noval=True):
+cpdef u32_parse(uint32_t val, on_inf=UNLIMITED, on_noval=None, noval=slurm.NO_VAL, zero_is_noval=True):
     """Convert uint32_t to Python int (with a few situational parameters)"""
     if val == noval or (val == 0 and zero_is_noval):
         return on_noval
@@ -96,7 +98,7 @@ cpdef u64(val, inf=False, noval=slurm.NO_VAL64, on_noval=slurm.NO_VAL64, zero_is
     """Try to convert arbitrary 'val' to uint64_t"""
     if val is None or (val == 0 and zero_is_noval) or val == noval:
         return on_noval
-    elif inf and (val == "UNLIMITED" or val == "unlimited"):
+    elif inf and (val == UNLIMITED or val == "unlimited"):
         return slurm.INFINITE64
     else:
         if isinstance(val, str) and val.isdigit():
@@ -105,7 +107,7 @@ cpdef u64(val, inf=False, noval=slurm.NO_VAL64, on_noval=slurm.NO_VAL64, zero_is
         return <uint64_t>val
 
 
-cpdef u64_parse(uint64_t val, on_inf="UNLIMITED", on_noval=None, noval=slurm.NO_VAL64, zero_is_noval=True):
+cpdef u64_parse(uint64_t val, on_inf=UNLIMITED, on_noval=None, noval=slurm.NO_VAL64, zero_is_noval=True):
     """Convert uint64_t to Python int (with a few situational parameters)"""
     if val == noval or (val == 0 and zero_is_noval):
         return on_noval
