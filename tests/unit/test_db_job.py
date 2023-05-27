@@ -42,8 +42,32 @@ def test_search_filter():
         job_filter._create()
 
 
-def test_collection_init():
-    # TODO
+def test_create_collection():
+    jobs = pyslurm.db.Jobs("101,102")
+    assert len(jobs) == 2
+    assert 101 in jobs
+    assert 102 in jobs
+    assert jobs[101].id == 101
+    assert jobs[102].id == 102
+
+    jobs = pyslurm.db.Jobs([101, 102])
+    assert len(jobs) == 2
+    assert 101 in jobs
+    assert 102 in jobs
+    assert jobs[101].id == 101
+    assert jobs[102].id == 102
+    
+    jobs = pyslurm.db.Jobs(
+        {
+            101: pyslurm.db.Job(101),
+            102: pyslurm.db.Job(102),
+        }
+    )
+    assert len(jobs) == 2
+    assert 101 in jobs
+    assert 102 in jobs
+    assert jobs[101].id == 101
+    assert jobs[102].id == 102
     assert True
 
 
