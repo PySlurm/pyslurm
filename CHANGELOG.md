@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased on the [22.5.x](https://github.com/PySlurm/pyslurm/tree/22.5.x) branch
+
+### Added
+
+- Ability to modify Database Jobs
+- New classes to interact with the Partition API
+    - [pyslurm.Partition](https://pyslurm.github.io/23.2/reference/partition/#pyslurm.Partition)
+    - [pyslurm.Partitions](https://pyslurm.github.io/23.2/reference/partition/#pyslurm.Partitions)
+- New attributes for a Database Job:
+    - extra
+    - failed_node
+- Now possible to initialize a pyslurm.db.Jobs collection with existing job
+  ids or pyslurm.db.Job objects
+
+### Fixed
+
+- Fixes a problem that prevented loading specific Jobs from the Database if
+  the following two conditions were met:
+    - no start/end time was specified
+    - the Job was older than a day
+
 ## [22.5.2](https://github.com/PySlurm/pyslurm/releases/tag/v22.5.2) - 2023-05-21
 
 ### Added

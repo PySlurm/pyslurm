@@ -22,6 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 from grp import getgrgid, getgrnam, getgrall
 from pwd import getpwuid, getpwnam, getpwall
 from os import getuid, getgid
@@ -348,3 +349,16 @@ def _sum_prop(obj, name, startval=0):
             val += v
 
     return val
+
+
+def _get_exit_code(exit_code):
+    exit_state=sig = 0
+    if exit_code != slurm.NO_VAL:
+        if WIFSIGNALED(exit_code):
+            exit_state, sig = 0, WTERMSIG(exit_code)
+        elif WIFEXITED(exit_code):
+            exit_state, sig = WEXITSTATUS(exit_code), 0
+            if exit_state >= 128:
+                exit_state -= 128
+
+    return exit_state, sig

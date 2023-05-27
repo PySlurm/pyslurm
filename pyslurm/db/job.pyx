@@ -22,9 +22,8 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
-from typing import Union
-from pyslurm.core.error import RPCError
+from typing import Union, Any
+from pyslurm.core.error import RPCError, PyslurmError
 from pyslurm.core import slurmctld
 from typing import Any
 from pyslurm.utils.uint import *
@@ -40,6 +39,7 @@ from pyslurm.utils.helpers import (
     uid_to_name,
     nodelist_to_range_str,
     instance_to_dict,
+    _get_exit_code,
 )
 
 
@@ -134,7 +134,6 @@ cdef class JobSearchFilter:
 
         ptr.usage_start = date_to_timestamp(self.start_time)  
         ptr.usage_end = date_to_timestamp(self.end_time)  
-        slurmdb_job_cond_def_start_end(ptr)
         ptr.cpus_min = u32(self.cpus, on_noval=0)
         ptr.cpus_max = u32(self.max_cpus, on_noval=0)
         ptr.nodes_min = u32(self.nodes, on_noval=0)
@@ -190,12 +189,25 @@ cdef class JobSearchFilter:
                 slurm_list_append(ptr.step_list, selected_step)
                 already_added.append(job_id)
 
+        # This must be at the end because it makes decisions based on some
+        # conditions that might be set.
+        slurmdb_job_cond_def_start_end(ptr)
+
 
 cdef class Jobs(dict):
 
-    def __init__(self):
-        # TODO: ability to initialize with existing job objects
-        pass
+    def __init__(self, jobs=None):
+        if isinstance(jobs, dict):
+            self.update(jobs)
+        elif isinstance(jobs, str):
+            joblist = jobs.split(",")
+            self.update({int(job): Job(job) for job in joblist})
+        elif jobs is not None:
+            for job in jobs:
+                if isinstance(job, int):
+                    self[job] = Job(job)
+                else:
+                    self[job.name] = job
 
     @staticmethod
     def load(search_filter=None):
@@ -207,6 +219,9 @@ cdef class Jobs(dict):
             search_filter (pyslurm.db.JobSearchFilter):
                 A search filter that the slurmdbd will apply when retrieving
                 Jobs from the database.
+
+        Returns:
+            (pyslurm.db.Jobs): A Collection of database Jobs.
 
         Raises:
             RPCError: When getting the Jobs from the Database was not
@@ -266,15 +281,134 @@ cdef class Jobs(dict):
 
         return jobs
 
+    @staticmethod
+    def modify(search_filter, db_connection=None, **changes):
+        """Modify Slurm database Jobs.
+
+        Implements the slurm_job_modify RPC.
+
+        Args:
+            search_filter (Union[pyslurm.db.JobSearchFilter, pyslurm.db.Jobs]):
+                A filter to decide which Jobs should be modified.
+            db_connection (pyslurm.db.Connection):
+                A Connection to the slurmdbd. By default, if no connection is
+                supplied, one will automatically be created internally. This
+                means that when the changes were considered successful by the
+                slurmdbd, those modifications will be **automatically
+                committed**.
+
+                If you however decide to provide your own Connection instance
+                (which must be already opened before), and the changes were
+                successful, they will basically be in a kind of "staging
+                area". By the time this function returns, the changes are not
+                actually made.
+                You are then responsible to decide whether the changes should
+                be committed or rolled back by using the respective methods on
+                the connection object. This way, you have a chance to see
+                which Jobs were modified before you commit the changes.
+            **changes (Any):
+                Check the `Other Parameters` Section of [pyslurm.db.Job][] to
+                see what attributes can be modified.
+
+        Returns:
+            (list[int]): A list of Jobs that were modified
+
+        Raises:
+            ValueError: When a parsing error occured or the Database
+                connection is not open
+            RPCError: When a failure modifying the Jobs occurred.
+
+        Examples:
+            In its simplest form, you can do something like this:
+
+            >>> import pyslurm
+            >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> modified_jobs = pyslurm.db.Jobs.modify(
+            ...             search_filter, comment="A comment for the job")
+            >>> print(modified_jobs)
+            >>> [9999]
+
+            In the above example, the changes will be automatically committed
+            if successful.
+            You can however also control this manually by providing your own
+            connection object:
+
+            >>> import pyslurm
+            >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> db_conn = pyslurm.db.Connection.open()
+            >>> modified_jobs = pyslurm.db.Jobs.modify(
+            ...             search_filter, db_conn,
+            ...             comment="A comment for the job")
+            >>> # Now you can first examine which Jobs have been modified
+            >>> print(modified_jobs)
+            >>> [9999]
+            >>> # And then you can actually commit (or even rollback) the
+            >>> # changes
+            >>> db_conn.commit()
+        """
+
+        cdef:
+            Job job = Job(**changes)
+            JobSearchFilter jfilter
+            Connection conn = <Connection>db_connection
+            SlurmList response
+            SlurmListItem response_ptr
+            list out = []
+
+        conn = Connection.open() if not conn else conn
+        if not conn.is_open:
+            raise ValueError("Database connection is not open")
+
+        if isinstance(search_filter, Jobs):
+            job_ids = list(search_filter.keys())
+            jfilter = JobSearchFilter(ids=job_ids)
+        else:
+            jfilter = <JobSearchFilter>search_filter
+
+        jfilter._create()
+        response = SlurmList.wrap(
+                slurmdb_job_modify(conn.ptr, jfilter.ptr, job.ptr))
+
+        if not response.is_null and response.cnt:
+            for response_ptr in response:
+                response_str = cstr.to_unicode(<char*>response_ptr.data)
+                if not response_str:
+                    continue
+
+                # The strings in the list returned above have a structure
+                # like this:
+                #
+                # "<job_id> submitted at <timestamp>"
+                #
+                # We are just interest in the Job-ID, so extract it
+                job_id = response_str.split(" ")[0]
+                if job_id and job_id.isdigit():
+                    out.append(int(job_id))
+
+        elif not response.is_null:
+            # There was no real error, but simply nothing has been modified
+            raise RPCError(msg="Nothing was modified")
+        else:
+            # Autodetects the last slurm error
+            raise RPCError()
+        
+        if not db_connection:
+            # Autocommit if no connection was explicitly specified.
+            conn.commit()
+
+        return out
+
 
 cdef class Job:
 
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, job_id=0):
+    def __init__(self, job_id=0, **kwargs):
         self._alloc_impl()
         self.ptr.jobid = int(job_id)
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __dealloc__(self):
         self._dealloc_impl()
@@ -285,10 +419,7 @@ cdef class Job:
 
     def _alloc_impl(self):
         if not self.ptr:
-            self.ptr = <slurmdb_job_rec_t*>try_xmalloc(
-                    sizeof(slurmdb_job_rec_t))
-            if not self.ptr:
-                raise MemoryError("xmalloc failed for slurmdb_job_rec_t")
+            self.ptr = slurmdb_create_job_rec()
 
     @staticmethod
     cdef Job from_ptr(slurmdb_job_rec_t *in_ptr):
@@ -307,7 +438,7 @@ cdef class Job:
                 ID of the Job to be loaded.
 
         Returns:
-            (pyslurm.Job): Returns a new Database Job instance
+            (pyslurm.db.Job): Returns a new Database Job instance
 
         Raises:
             RPCError: If requesting the information for the database Job was
@@ -368,6 +499,24 @@ cdef class Job:
 
         return out
 
+    def modify(self, db_connection=None, **changes):
+        """Modify a Slurm database Job.
+
+        Args:
+            db_connection (pyslurm.db.Connection):
+                A slurmdbd connection. See
+                [pyslurm.db.Jobs.modify][pyslurm.db.job.Jobs.modify] for more
+                info
+            **changes (Any):
+                Check the `Other Parameters` Section of this class to see what
+                attributes can be modified.
+
+        Raises:
+            RPCError: When modifying the Job failed.
+        """
+        cdef JobSearchFilter jfilter = JobSearchFilter(ids=[self.id])
+        Jobs.modify(jfilter, db_connection, **changes)
+
     @property
     def account(self):
         return cstr.to_unicode(self.ptr.account)
@@ -375,6 +524,10 @@ cdef class Job:
     @property
     def admin_comment(self):
         return cstr.to_unicode(self.ptr.admin_comment)
+
+    @admin_comment.setter
+    def admin_comment(self, val):
+        cstr.fmalloc(&self.ptr.admin_comment, val)
 
     @property
     def num_nodes(self):
@@ -441,23 +594,25 @@ cdef class Job:
 
     @property
     def derived_exit_code(self):
-        if (self.ptr.derived_ec == slurm.NO_VAL
-                or not WIFEXITED(self.ptr.derived_ec)):
-            return None
+        ec, _ = _get_exit_code(self.ptr.derived_ec)
+        return ec
 
-        return WEXITSTATUS(self.ptr.derived_ec)
+    @derived_exit_code.setter
+    def derived_exit_code(self, val):
+        self.ptr.derived_ec = int(val)
 
     @property
     def derived_exit_code_signal(self):
-        if (self.ptr.derived_ec == slurm.NO_VAL
-                or not WIFSIGNALED(self.ptr.derived_ec)): 
-            return None
-
-        return WTERMSIG(self.ptr.derived_ec)
+        _, sig = _get_exit_code(self.ptr.derived_ec)
+        return sig
 
     @property
     def comment(self):
         return cstr.to_unicode(self.ptr.derived_es)
+
+    @comment.setter
+    def comment(self, val):
+        cstr.fmalloc(&self.ptr.derived_es, val)
 
     @property
     def elapsed_time(self):
@@ -472,16 +627,28 @@ cdef class Job:
         return _raw_time(self.ptr.end)
 
     @property
+    def extra(self):
+        return cstr.to_unicode(self.ptr.extra)
+
+    @extra.setter
+    def extra(self, val):
+        cstr.fmalloc(&self.ptr.extra, val)
+
+    @property
     def exit_code(self):
-        # TODO
-        return 0
+        ec, _ = _get_exit_code(self.ptr.exitcode)
+        return ec
 
     @property
     def exit_code_signal(self):
-        # TODO
-        return 0
+        _, sig = _get_exit_code(self.ptr.exitcode)
+        return sig
 
     # uint32_t flags
+
+    @property
+    def failed_node(self):
+        return cstr.to_unicode(self.ptr.failed_node)
 
     def group_id(self):
         return u32_parse(self.ptr.gid, zero_is_noval=False)
@@ -593,6 +760,10 @@ cdef class Job:
     def system_comment(self):
         return cstr.to_unicode(self.ptr.system_comment)
 
+    @system_comment.setter
+    def system_comment(self, val):
+        cstr.fmalloc(&self.ptr.system_comment, val)
+
     @property
     def time_limit(self):
         # TODO: Perhaps we should just find out what the actual PartitionLimit
@@ -614,6 +785,10 @@ cdef class Job:
     @property
     def wckey(self):
         return cstr.to_unicode(self.ptr.wckey)
+
+    @wckey.setter
+    def wckey(self, val):
+        cstr.fmalloc(&self.ptr.wckey, val)
 
 #    @property
 #    def wckey_id(self):
