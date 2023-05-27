@@ -23,6 +23,7 @@
 # cython: language_level=3
 
 import datetime
+from pyslurm.constants import UNLIMITED
 
 
 def timestr_to_secs(timestr):
@@ -41,7 +42,7 @@ def timestr_to_secs(timestr):
 
     if timestr is None:
         return slurm.NO_VAL
-    elif timestr == "unlimited":
+    elif timestr == UNLIMITED or timestr.casefold() == "unlimited":
         return slurm.INFINITE
 
     if str(timestr).isdigit():
@@ -72,7 +73,9 @@ def timestr_to_mins(timestr):
 
     if timestr is None:
         return slurm.NO_VAL
-    elif timestr == "unlimited":
+    elif str(timestr).isdigit():
+        return timestr
+    elif timestr == UNLIMITED or timestr.casefold() == "unlimited":
         return slurm.INFINITE
 
     tmp = cstr.from_unicode(timestr)
@@ -111,7 +114,7 @@ def secs_to_timestr(secs, default=None):
         else:
             return tmp
     else:
-        return "unlimited"
+        return UNLIMITED
 
 
 def mins_to_timestr(mins, default=None):
@@ -141,7 +144,7 @@ def mins_to_timestr(mins, default=None):
         else:
             return tmp
     else:
-        return "unlimited"
+        return UNLIMITED
 
 
 def date_to_timestamp(date, on_nodate=0):
@@ -204,10 +207,10 @@ def timestamp_to_date(timestamp):
     return ret
 
 
-def _raw_time(time, default=None):
-   if (time == slurm.NO_VAL or
-          time == 0 or
-          time == slurm.INFINITE):
-       return default
-
-   return time
+def _raw_time(time, on_noval=None, on_inf=None):
+    if time == slurm.NO_VAL or time == 0:
+        return on_noval
+    elif time == slurm.INFINITE:
+        return on_inf
+    else:
+        return time

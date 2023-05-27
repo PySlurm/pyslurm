@@ -25,6 +25,7 @@ from pyslurm import (
     JobSubmitDescription,
 )
 import time
+import random, string
 
 # Horrendous, but works for now, because when testing against a real slurmctld
 # we need to wait a bit for state changes (i.e. we cancel a job and
@@ -35,6 +36,11 @@ WAIT_SECS_SLURMCTLD = 3
 
 def wait(secs=WAIT_SECS_SLURMCTLD):
     time.sleep(secs)
+
+
+def randstr(strlen=10):
+   chars = string.ascii_lowercase
+   return ''.join(random.choice(chars) for n in range(strlen))
 
 
 def create_job_script():
