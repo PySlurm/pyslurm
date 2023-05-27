@@ -133,10 +133,10 @@ cdef class Partitions(dict):
         our_parts = list(self.keys())
 
         if not our_parts:
-            return None
+            return self
 
         reloaded_parts = Partitions.load()
-        for part in list(self.keys()):
+        for part in our_parts:
             if part in reloaded_parts:
                 # Put the new data in.
                 self[part] = reloaded_parts[part]
