@@ -22,7 +22,11 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
+"""pyslurm common Constants"""
 
 
 UNLIMITED = "UNLIMITED"
-"""Represents an infinite/unlimited value"""
+"""
+Represents an infinite/unlimited value. This is sometimes returned for
+specific attributes as a value to indicate that there is no restriction for it.
+"""

@@ -127,31 +127,26 @@ cdef class Partition:
             Default Memory per CPU for Jobs in this Partition, in Mebibytes.
             Mutually exclusive with `default_memory_per_node`.
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         default_memory_per_node (int):
             Default Memory per Node for Jobs in this Partition, in Mebibytes.
             Mutually exclusive with `default_memory_per_cpu`.
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         max_memory_per_cpu (int):
             Max Memory per CPU allowed for Jobs in this Partition, in
             Mebibytes. Mutually exclusive with `max_memory_per_node`.
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         max_memory_per_node (int):
             Max Memory per Node allowed for Jobs in this Partition, in
             Mebibytes. Mutually exclusive with `max_memory_per_cpu`
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         default_time (int):
             Default run time-limit in minutes for Jobs that don't specify one.
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         denied_qos (list[str]):
             List of QoS that cannot be used in a Partition
         denied_accounts (list[str]):
@@ -165,25 +160,21 @@ cdef class Partition:
         max_cpus_per_node (int):
             Max CPUs per Node allowed for Jobs in this Partition
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         max_cpus_per_socket (int):
             Max CPUs per Socket allowed for Jobs in this Partition
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         max_nodes (int):
             Max number of Nodes allowed for Jobs
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         min_nodes (int):
             Minimum number of Nodes that must be requested by Jobs 
         max_time_limit (int):
             Max Time-Limit in minutes that Jobs can request
 
-            This may also return the String `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         oversubscribe (str):
             The oversubscribe mode for this Partition
         nodes (str):
@@ -193,8 +184,7 @@ cdef class Partition:
         over_time_limit (int):
             Limit in minutes that Jobs can exceed their time-limit
 
-            This can also be the string `UNLIMITED` when there is no
-            restriction.
+            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         preempt_mode (str):
             Preemption Mode in a Partition
         priority_job_factor (int):

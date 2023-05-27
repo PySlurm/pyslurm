@@ -14,6 +14,7 @@ from .__version__ import __version__
 
 from pyslurm import utils
 from pyslurm import db
+from pyslurm import constants
 
 from pyslurm.core.job import (
     Job,
