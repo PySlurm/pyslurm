@@ -31,6 +31,7 @@ from pyslurm.utils.helpers import (
     gid_to_name,
     uid_to_name,
     instance_to_dict,
+    _get_exit_code,
 )
 from pyslurm.core.job.util import cpu_freq_int_to_str
 from pyslurm.core.job.step import humanize_step_id
@@ -120,8 +121,13 @@ cdef class JobStep:
 
     @property
     def exit_code(self):
-        # TODO
-        return None
+        ec, _ = _get_exit_code(self.ptr.exitcode)
+        return ec
+
+    @property
+    def exit_code_signal(self):
+        _, sig = _get_exit_code(self.ptr.exitcode)
+        return sig
 
     @property
     def ntasks(self):

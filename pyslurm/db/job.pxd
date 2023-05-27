@@ -39,6 +39,8 @@ from pyslurm.slurm cimport (
     slurmdb_job_cond_def_start_end,
     slurm_job_state_string,
     slurm_job_reason_string,
+    slurmdb_create_job_rec,
+    slurmdb_job_modify,
 )
 from pyslurm.db.util cimport (
     SlurmList,
@@ -162,8 +164,17 @@ cdef class Job:
         job_id (int, optional=0):
             An Integer representing a Job-ID.
 
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
+    Other Parameters:
+        admin_comment (str):
+            Admin comment for the Job.
+        comment (str):
+            Comment for the Job
+        wckey (str):
+            Name of the WCKey for this Job
+        derived_exit_code (int):
+            Highest exit code of all the Job steps
+        extra (str):
+            Arbitrary string that can be stored with a Job.
 
     Attributes:
         steps (pyslurm.db.JobSteps):
@@ -209,10 +220,14 @@ cdef class Job:
             When the Job became eligible to run, as a unix timestamp
         end_time (int):
             When the Job ended, as a unix timestamp
+        extra (str):
+            Arbitrary string that can be stored with a Job.
         exit_code (int):
             Exit code of the job script or salloc.
         exit_code_signal (int):
             Signal of the exit code for this Job.
+        failed_node (str):
+            Name of the failed node that caused the job to get killed.
         group_id (int):
             ID of the group for this Job
         group_name (str):

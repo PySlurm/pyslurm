@@ -48,6 +48,7 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     instance_to_dict,
     _sum_prop,
+    _get_exit_code,
 )
 
 
@@ -785,35 +786,23 @@ cdef class Job:
 
     @property
     def derived_exit_code(self):
-        if (self.ptr.derived_ec == slurm.NO_VAL
-                or not WIFEXITED(self.ptr.derived_ec)):
-            return None
-
-        return WEXITSTATUS(self.ptr.derived_ec)
+        ec, _ = _get_exit_code(self.ptr.derived_ec)
+        return ec
 
     @property
     def derived_exit_code_signal(self):
-        if (self.ptr.derived_ec == slurm.NO_VAL
-                or not WIFSIGNALED(self.ptr.derived_ec)): 
-            return None
-
-        return WTERMSIG(self.ptr.derived_ec)
+        _, sig = _get_exit_code(self.ptr.derived_ec)
+        return sig
 
     @property
     def exit_code(self):
-        if (self.ptr.exit_code == slurm.NO_VAL
-                or not WIFEXITED(self.ptr.exit_code)):
-            return None
-
-        return WEXITSTATUS(self.ptr.exit_code)
+        ec, _ = _get_exit_code(self.ptr.exit_code)
+        return ec
 
     @property
     def exit_code_signal(self):
-        if (self.ptr.exit_code == slurm.NO_VAL
-                or not WIFSIGNALED(self.ptr.exit_code)):
-            return None
-
-        return WTERMSIG(self.ptr.exit_code)
+        _, sig = _get_exit_code(self.ptr.exit_code)
+        return sig
 
     @property
     def batch_constraints(self):
