@@ -1,7 +1,8 @@
 #########################################################################
-# slurmctld.pyx - pyslurm slurmctld api
+# constants.py - pyslurm constants used throughout the project
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2023 PySlurm Developers
 #
 # This file is part of PySlurm
 #
@@ -21,42 +22,11 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
+"""pyslurm common Constants"""
 
-from pyslurm.core.error import verify_rpc, RPCError
 
-
-cdef class Config:
-
-    def __cinit__(self):
-        self.ptr = NULL
-
-    def __init__(self, job_id):
-        raise RuntimeError("Cannot instantiate class directly")
-
-    def __dealloc__(self):
-        slurm_free_ctl_conf(self.ptr)
-        self.ptr = NULL
-
-    @staticmethod
-    def load():
-        cdef Config conf = Config.__new__(Config)
-        verify_rpc(slurm_load_ctl_conf(0, &conf.ptr))
-        return conf
-        
-    @property
-    def cluster(self):
-        return cstr.to_unicode(self.ptr.cluster_name)
-
-    @property
-    def preempt_mode(self):
-        cdef char *tmp = slurm_preempt_mode_string(self.ptr.preempt_mode)
-        return cstr.to_unicode(tmp)
-
-    @property
-    def suspend_program(self):
-        return cstr.to_unicode(self.ptr.suspend_program)
-
-    @property
-    def resume_program(self):
-        return cstr.to_unicode(self.ptr.resume_program)
-
+UNLIMITED = "UNLIMITED"
+"""
+Represents an infinite/unlimited value. This is sometimes returned for
+specific attributes as a value to indicate that there is no restriction for it.
+"""

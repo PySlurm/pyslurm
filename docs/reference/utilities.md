@@ -1,5 +1,5 @@
 ---
-title: Utilities
+title: utils
 ---
 
 ::: pyslurm.utils

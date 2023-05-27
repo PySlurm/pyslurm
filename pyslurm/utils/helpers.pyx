@@ -28,6 +28,7 @@ from os import getuid, getgid
 from itertools import chain
 import re
 import signal
+from pyslurm.constants import UNLIMITED
 
 
 MEMORY_UNITS = {
@@ -235,7 +236,7 @@ def humanize(num, decimals=1):
     Returns:
         (str): Humanized number with appropriate suffix.
     """
-    if num is None or num == "unlimited":
+    if num is None or num == "unlimited" or num == UNLIMITED:
         return num
 
     num = int(num)

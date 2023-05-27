@@ -46,7 +46,7 @@ cdef to_unicode(char *_str, default=None):
     """Convert a char* to Python3 str (unicode)"""
     if _str and _str[0] != NULL_BYTE:
         if _str == NONE_BYTE:
-            return None
+            return default
 
         return _str
     else:
@@ -96,12 +96,12 @@ cdef fmalloc(char **old, val):
         old[0] = NULL
 
 
-cpdef list to_list(char *str_list):
+cpdef list to_list(char *str_list, default=[]):
     """Convert C-String to a list."""
     cdef str ret = to_unicode(str_list)
 
     if not ret:
-        return []
+        return default
 
     return ret.split(",")
 
@@ -137,7 +137,7 @@ cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
         str key, val
         dict out = {}
 
-    if not _str_dict or delim1 not in _str_dict:
+    if not _str_dict:
         return out
 
     for kv in _str_dict.split(delim1):
@@ -187,7 +187,7 @@ def dict_to_str(vals, prepend=None, delim1=",", delim2="="):
     
     for k, v in tmp_dict.items():
         if ((delim1 in k or delim2 in k) or
-                delim1 in v or delim2 in v):    
+                delim1 in str(v) or delim2 in str(v)):    
             raise ValueError(
                 f"Key or Value cannot contain either {delim1} or {delim2}. "
                 f"Got Key: {k} and Value: {v}."
