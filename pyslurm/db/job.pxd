@@ -164,9 +164,6 @@ cdef class Job:
         job_id (int, optional=0):
             An Integer representing a Job-ID.
 
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
-
     Other Parameters:
         admin_comment (str):
             Admin comment for the Job.

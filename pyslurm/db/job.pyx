@@ -220,6 +220,9 @@ cdef class Jobs(dict):
                 A search filter that the slurmdbd will apply when retrieving
                 Jobs from the database.
 
+        Returns:
+            (pyslurm.db.Jobs): A Collection of database Jobs.
+
         Raises:
             RPCError: When getting the Jobs from the Database was not
                 sucessful
@@ -291,8 +294,8 @@ cdef class Jobs(dict):
                 A Connection to the slurmdbd. By default, if no connection is
                 supplied, one will automatically be created internally. This
                 means that when the changes were considered successful by the
-                slurmdbd, those modifications will be *automatically
-                committed*.
+                slurmdbd, those modifications will be **automatically
+                committed**.
 
                 If you however decide to provide your own Connection instance
                 (which must be already opened before), and the changes were
@@ -308,12 +311,40 @@ cdef class Jobs(dict):
                 see what attributes can be modified.
 
         Returns:
-            list[int]: A list of Jobs that were modified
+            (list[int]): A list of Jobs that were modified
 
         Raises:
             ValueError: When a parsing error occured or the Database
                 connection is not open
             RPCError: When a failure modifying the Jobs occurred.
+
+        Examples:
+            In its simplest form, you can do something like this:
+
+            >>> import pyslurm
+            >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> modified_jobs = pyslurm.db.Jobs.modify(
+            ...             search_filter, comment="A comment for the job")
+            >>> print(modified_jobs)
+            >>> [9999]
+
+            In the above example, the changes will be automatically committed
+            if successful.
+            You can however also control this manually by providing your own
+            connection object:
+
+            >>> import pyslurm
+            >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> db_conn = pyslurm.db.Connection.open()
+            >>> modified_jobs = pyslurm.db.Jobs.modify(
+            ...             search_filter, db_conn,
+            ...             comment="A comment for the job")
+            >>> # Now you can first examine which Jobs have been modified
+            >>> print(modified_jobs)
+            >>> [9999]
+            >>> # And then you can actually commit (or even rollback) the
+            >>> # changes
+            >>> db_conn.commit()
         """
 
         cdef:
@@ -407,7 +438,7 @@ cdef class Job:
                 ID of the Job to be loaded.
 
         Returns:
-            (pyslurm.Job): Returns a new Database Job instance
+            (pyslurm.db.Job): Returns a new Database Job instance
 
         Raises:
             RPCError: If requesting the information for the database Job was
@@ -472,6 +503,10 @@ cdef class Job:
         """Modify a Slurm database Job.
 
         Args:
+            db_connection (pyslurm.db.Connection):
+                A slurmdbd connection. See
+                [pyslurm.db.Jobs.modify][pyslurm.db.job.Jobs.modify] for more
+                info
             **changes (Any):
                 Check the `Other Parameters` Section of this class to see what
                 attributes can be modified.
