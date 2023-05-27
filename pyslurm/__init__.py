@@ -14,6 +14,7 @@ from .__version__ import __version__
 
 from pyslurm import utils
 from pyslurm import db
+from pyslurm import constants
 
 from pyslurm.core.job import (
     Job,
@@ -23,6 +24,7 @@ from pyslurm.core.job import (
     JobSubmitDescription,
 )
 from pyslurm.core.node import Node, Nodes
+from pyslurm.core.partition import Partition, Partitions
 from pyslurm.core import error
 from pyslurm.core.error import (
     PyslurmError,

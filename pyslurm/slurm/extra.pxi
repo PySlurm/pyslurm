@@ -271,3 +271,10 @@ cdef extern char *slurm_hostlist_deranged_string_malloc(hostlist_t hl)
 
 cdef extern void slurmdb_job_cond_def_start_end(slurmdb_job_cond_t *job_cond)
 cdef extern uint64_t slurmdb_find_tres_count_in_string(char *tres_str_in, int id)
+
+#
+# Slurm Partition functions
+#
+
+cdef extern void slurm_free_update_part_msg(update_part_msg_t *msg)
+cdef extern void slurm_free_partition_info_members(partition_info_t *node)
