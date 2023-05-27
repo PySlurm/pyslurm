@@ -56,8 +56,30 @@ def test_parse_all(submit_job):
 
 
 def test_modify(submit_job):
-    # TODO
-    pass
+    job = submit_job()
+    util.wait(5)
+
+    jfilter = pyslurm.db.JobSearchFilter(ids=[job.id])
+    pyslurm.db.Jobs.modify(jfilter, comment="test comment")
+
+    job = pyslurm.db.Job.load(job.id)
+    assert job.comment == "test comment"
+
+
+def test_modify_with_existing_conn(submit_job):
+    job = submit_job()
+    util.wait(5)
+
+    conn = pyslurm.db.Connection.open()
+    jfilter = pyslurm.db.JobSearchFilter(ids=[job.id])
+    pyslurm.db.Jobs.modify(jfilter, conn, comment="test comment")
+
+    job = pyslurm.db.Job.load(job.id)
+    assert job.comment != "test comment"
+
+    conn.commit()
+    job = pyslurm.db.Job.load(job.id)
+    assert job.comment == "test comment"
 
 
 def test_if_steps_exist(submit_job):
