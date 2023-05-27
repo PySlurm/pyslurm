@@ -29,14 +29,7 @@ from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
-from pyslurm.utils.enum_types import try_cast_enum
-from pyslurm.const import (
-    ConsumableResource,
-    SelectTypeParameter,
-    PartitionState,
-    PreemptMode,
-    UNLIMITED,
-)
+from pyslurm.constants import UNLIMITED
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -693,27 +686,27 @@ cdef class Partition:
 
 def _partition_state_int_to_str(state):
     if state == slurm.PARTITION_UP:
-        return PartitionState.UP
+        return "UP"
     elif state == slurm.PARTITION_DOWN:
-        return PartitionState.DOWN
+        return "DOWN"
     elif state == slurm.PARTITION_INACTIVE:
-        return PartitionState.INACTIVE
+        return "INACTIVE"
     elif state == slurm.PARTITION_DRAIN:
-        return PartitionState.DRAIN
+        return "DRAIN"
     else:
-        return PartitionState.UNKNOWN
+        return "UNKNOWN"
 
 
 def _partition_state_str_to_int(state):
     state = state.upper()
 
-    if state == PartitionState.UP:
+    if state == "UP":
         return slurm.PARTITION_UP
-    elif state == PartitionState.DOWN:
+    elif state == "DOWN":
         return slurm.PARTITION_DOWN
-    elif state == PartitionState.INACTIVE:
+    elif state == "INACTIVE":
         return slurm.PARTITION_INACTIVE
-    elif state == PartitionState.DRAIN:
+    elif state == "DRAIN":
         return slurm.PARTITION_DRAIN
     else:
         choices = "UP, DOWN, INACTIVE, DRAIN"
@@ -739,6 +732,8 @@ def _oversubscribe_int_to_str(shared):
 
 
 def _oversubscribe_str_to_int(typ):
+    typ = typ.upper()
+
     if typ == "NO":
         return 1
     elif typ == "EXCLUSIVE":
@@ -765,22 +760,22 @@ def _select_type_int_to_list(stype):
     out = []
 
     if stype & slurm.CR_OTHER_CONS_RES:
-        out.append(SelectTypeParameter.OTHER_CONS_RES)
+        out.append("OTHER_CONS_RES")
 
     if stype & slurm.CR_ONE_TASK_PER_CORE:
-        out.append(SelectTypeParameter.ONE_TASK_PER_CORE)
+        out.append("ONE_TASK_PER_CORE")
 
     if stype & slurm.CR_PACK_NODES:
-        out.append(SelectTypeParameter.PACK_NODES)
+        out.append("PACK_NODES")
 
     if stype & slurm.CR_OTHER_CONS_TRES:
-        out.append(SelectTypeParameter.OTHER_CONS_TRES)
+        out.append("OTHER_CONS_TRES")
 
     if stype & slurm.CR_CORE_DEFAULT_DIST_BLOCK:
-        out.append(SelectTypeParameter.CORE_DEFAULT_DIST_BLOCK)
+        out.append("CORE_DEFAULT_DIST_BLOCK")
 
     if stype & slurm.CR_LLN:
-        out.append(SelectTypeParameter.LLN)
+        out.append("LLN")
 
     return out
 
@@ -790,20 +785,20 @@ def _select_type_int_to_cons_res(stype):
     # The 3 main select types are mutually exclusive, and may be combined with
     # CR_MEMORY
     # CR_BOARD exists but doesn't show up in the documentation, so ignore it.
-    if stype & slurm.CR_CPU:
-        return ConsumableResource.CPU
-    elif stype & slurm.CR_CORE:
-        return ConsumableResource.CORE
-    elif stype & slurm.CR_SOCKET:
-        return ConsumableResource.SOCKET
-    elif stype & slurm.CR_CPU and stype & slurm.CR_MEMORY:
-        return ConsumableResource.CPU_MEMORY
+    if stype & slurm.CR_CPU and stype & slurm.CR_MEMORY:
+        return "CPU_MEMORY"
     elif stype & slurm.CR_CORE and stype & slurm.CR_MEMORY:
-        return ConsumableResource.CORE_MEMORY
+        return "CORE_MEMORY"
     elif stype & slurm.CR_SOCKET and stype & slurm.CR_MEMORY:
-        return ConsumableResource.SOCKET_MEMORY
+        return "SOCKET_MEMORY"
+    elif stype & slurm.CR_CPU:
+        return "CPU"
+    elif stype & slurm.CR_CORE:
+        return "CORE"
+    elif stype & slurm.CR_SOCKET:
+        return "SOCKET"
     elif stype & slurm.CR_MEMORY:
-        return ConsumableResource.MEMORY
+        return "MEMORY"
     else:
         return None
 
@@ -823,8 +818,7 @@ def _preempt_mode_int_to_str(mode, slurmctld.Config slurm_conf):
     if mode == slurm.NO_VAL16:
         return slurm_conf.preempt_mode if slurm_conf else None
     else:
-        tmp = cstr.to_unicode(slurm_preempt_mode_string(mode))
-        return try_cast_enum(tmp, PreemptMode)
+        return cstr.to_unicode(slurm_preempt_mode_string(mode))
 
 
 cdef _extract_job_default_item(typ, slurm.List job_defaults_list):

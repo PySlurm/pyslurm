@@ -23,7 +23,7 @@
 # cython: language_level=3
 
 import datetime
-from pyslurm.const import UNLIMITED
+from pyslurm.constants import UNLIMITED
 
 
 def timestr_to_secs(timestr):

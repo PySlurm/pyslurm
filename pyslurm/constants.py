@@ -1,5 +1,5 @@
 #########################################################################
-# enum_types.pyx - custom enums
+# constants.py - pyslurm constants used throughout the project
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 # Copyright (C) 2023 PySlurm Developers
@@ -24,23 +24,5 @@
 # cython: language_level=3
 
 
-import enum
-
-
-# StrEnum is only available in relatively new python versions, but its easy to
-# implement since its just a mixin of "str" and "enum.Enum"
-# https://docs.python.org/3/library/enum.html#notes
-class StrEnum(str, enum.Enum):
-
-    def __str__(self):
-        return str(self.value)
-
-    def _generate_next_value_(name, *_unused):
-        return name
-
-
-def try_cast_enum(value, enum_type, default=None):
-    try:
-        return enum_type(value) 
-    except ValueError:
-        return default
+UNLIMITED = "UNLIMITED"
+"""Represents an infinite/unlimited value"""

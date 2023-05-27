@@ -60,7 +60,7 @@ def test_create_collection():
 
 
 def test_parse_all():
-    Partition("localhost").as_dict()
+    Partition("normal").as_dict()
 
 
 def test_parse_memory():

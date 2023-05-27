@@ -28,7 +28,7 @@ from os import getuid, getgid
 from itertools import chain
 import re
 import signal
-from pyslurm.const import UNLIMITED
+from pyslurm.constants import UNLIMITED
 
 
 MEMORY_UNITS = {

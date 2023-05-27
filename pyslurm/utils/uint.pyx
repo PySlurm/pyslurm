@@ -22,7 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.const import UNLIMITED
+from pyslurm.constants import UNLIMITED
 
 
 cpdef u8(val, inf=False, noval=slurm.NO_VAL8, on_noval=slurm.NO_VAL8, zero_is_noval=True):

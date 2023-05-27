@@ -21,11 +21,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_partition.py - Test the Partition api functions."""
 
-import sys
-import time
 import pytest
 import pyslurm
-import os
 import util
 from pyslurm import Partition, Partitions, RPCError
 
