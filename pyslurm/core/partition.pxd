@@ -105,7 +105,7 @@ cdef class Partition:
 
     Attributes:
         name (str):
-            Name of the node.
+            Name of the Partition.
         allowed_submit_nodes (list[str]):
             List of Nodes from which Jobs can be submitted to the partition.
         allowed_accounts (list[str]):
@@ -117,10 +117,9 @@ cdef class Partition:
         alternate (str):
             Name of the alternate Partition in case a Partition is down.
         consumable_resource (str):
-            Which consumable resource type is used in the Partition.
+            The type of consumable resource used in the Partition.
         select_type_parameters (list[str]):
-            List of Select Types in effect for this Partition.
-            This value is readonly
+            List of additional parameters passed to the select plugin used.
         cpu_binding (str):
             Default CPU-binding for Jobs that execute in a Partition.
         default_memory_per_cpu (int):
