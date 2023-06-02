@@ -506,15 +506,15 @@ cdef class Job:
         """Modify a Slurm database Job.
 
         Args:
-            db_connection (pyslurm.db.Connection):
-                A slurmdbd connection. See
-                [pyslurm.db.Jobs.modify][pyslurm.db.job.Jobs.modify] for more
-                info on this parameter.
             changes (pyslurm.db.Job):
                 Another [pyslurm.db.Job][] object that contains all the
                 changes to apply. Check the `Other Parameters` of the
                 [pyslurm.db.Job][] class to see which properties can be
                 modified.
+            db_connection (pyslurm.db.Connection):
+                A slurmdbd connection. See
+                [pyslurm.db.Jobs.modify][pyslurm.db.job.Jobs.modify] for more
+                info on this parameter.
 
         Raises:
             RPCError: When modifying the Job failed.
