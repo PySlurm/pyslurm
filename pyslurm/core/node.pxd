@@ -117,6 +117,9 @@ cdef class Node:
             Default CPU-Binding for the node
         state (str):
             State of the node
+        reason (str):
+            Reason for the Node, typically used along with updating the node
+            state
 
     Attributes:
         name (str):
