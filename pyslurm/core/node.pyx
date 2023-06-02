@@ -38,6 +38,7 @@ from pyslurm.utils.helpers import (
     instance_to_dict,
     _sum_prop,
     nodelist_from_range_str,
+    nodelist_to_range_str,
 )
 
 
@@ -157,10 +158,37 @@ cdef class Nodes(dict):
         """Format the information as list of Node objects.
 
         Returns:
-            (list): List of Node objects
+            (list[pyslurm.Node]): List of Node objects
         """
         return list(self.values())
 
+    def modify(self, Node changes):
+        """Modify all Nodes in a collection.
+
+        Args:
+            changes (pyslurm.Node):
+                Another Node object that contains all the changes to apply.
+                Check the `Other Parameters` of the Node class to see which
+                properties can be modified.
+
+        Raises:
+            RPCError: When updating the Node was not successful.
+
+        Examples:
+            >>> import pyslurm
+            >>>
+            >>> nodes = pyslurm.Nodes.load()
+            >>> # Prepare the changes
+            >>> changes = pyslurm.Node(state="DRAIN", reason="DRAIN Reason")
+            >>> # Apply the changes to all the nodes
+            >>> nodes.modify(changes)
+        """
+        cdef Node n = <Node>changes
+        node_str = nodelist_to_range_str(list(self.keys()))
+        n._alloc_umsg()
+        cstr.fmalloc(&n.umsg.node_names, node_str)
+        verify_rpc(slurm_update_node(n.umsg))
+        
     @property
     def free_memory(self):
         return _sum_prop(self, Node.free_memory)
@@ -340,15 +368,16 @@ cdef class Node:
 
         return self
 
-    def modify(self, changes):
+    def modify(self, Node changes):
         """Modify a node.
 
         Implements the slurm_update_node RPC.
 
         Args:
             changes (pyslurm.Node):
-                Another Node object which contains all the changes that
-                should be applied to this instance.
+                Another Node object that contains all the changes to apply.
+                Check the `Other Parameters` of the Node class to see which
+                properties can be modified.
 
         Raises:
             RPCError: When updating the Node was not successful.
@@ -356,9 +385,10 @@ cdef class Node:
         Examples:
             >>> import pyslurm
             >>>
-            >>> mynode = pyslurm.Node("localhost")
-            >>> changes = pyslurm.Node(weight=100)
-            >>> # Setting the weight to 100 for the "localhost" node
+            >>> mynode = pyslurm.Node.load("localhost")
+            >>> # Prepare the changes
+            >>> changes = pyslurm.Node(state="DRAIN", reason="DRAIN Reason")
+            >>> # Modify it
             >>> mynode.modify(changes)
         """
         cdef Node n = <Node>changes
@@ -447,6 +477,10 @@ cdef class Node:
     @property
     def reason(self):
         return cstr.to_unicode(self.info.reason)
+
+    @reason.setter
+    def reason(self, val):
+        cstr.fmalloc2(&self.info.reason, &self.umsg.reason, val)
 
     @property
     def reason_user(self):
@@ -667,6 +701,10 @@ cdef class Node:
         xfree(state)
         return state_str
 
+    @state.setter
+    def state(self, val):
+        self.umsg.node_state=self.info.node_state = _node_state_from_str(val)
+
     @property
     def next_state(self):
         if ((self.info.next_state != slurm.NO_VAL)
@@ -676,10 +714,6 @@ cdef class Node:
                     slurm_node_state_string(self.info.next_state))
         else:
             return None
-
-    @state.setter
-    def state(self, val):
-        self.umsg.node_state=self.info.node_state = _node_state_from_str(val)
 
     @property
     def cpu_load(self):
@@ -694,10 +728,36 @@ cdef class Node:
 def _node_state_from_str(state, err_on_invalid=True):
     if not state:
         return slurm.NO_VAL
+    ustate = state.upper()
 
-    for i in range(slurm.NODE_STATE_END):
-        if state == slurm_node_state_string(i):
-            return i
+    # Following states are explicitly possible as per documentation
+    # https://slurm.schedmd.com/scontrol.html#OPT_State_1
+    if ustate == "CANCEL_REBOOT":
+        return slurm.NODE_STATE_CANCEL_REBOOT
+    elif ustate == "DOWN":
+        return slurm.NODE_STATE_DOWN
+    elif ustate == "DRAIN":
+        return slurm.NODE_STATE_DRAIN
+    elif ustate == "FAIL":
+        return slurm.NODE_STATE_FAIL
+    elif ustate == "FUTURE":
+        return slurm.NODE_STATE_FUTURE
+    elif ustate == "NORESP" or ustate == "NO_RESP":
+        return slurm.NODE_STATE_NO_RESPOND
+    elif ustate == "POWER_DOWN":
+        return slurm.NODE_STATE_POWER_DOWN
+    elif ustate == "POWER_DOWN_ASAP":
+        # Drain and mark for power down
+        return slurm.NODE_STATE_POWER_DOWN | slurm.NODE_STATE_POWER_DRAIN
+    elif ustate == "POWER_DOWN_FORCE":
+        # Kill all Jobs and power down
+        return slurm.NODE_STATE_POWER_DOWN | slurm.NODE_STATE_POWERED_DOWN
+    elif ustate == "POWER_UP":
+        return slurm.NODE_STATE_POWER_UP
+    elif ustate == "RESUME":
+        return slurm.NODE_RESUME
+    elif ustate == "UNDRAIN":
+        return slurm.NODE_STATE_UNDRAIN
 
     if err_on_invalid:
         raise ValueError(f"Invalid Node state: {state}")

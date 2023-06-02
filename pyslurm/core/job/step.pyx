@@ -279,15 +279,17 @@ cdef class JobStep:
         step_id = self.ptr.step_id.step_id
         verify_rpc(slurm_kill_job_step(self.job_id, step_id, 9))
 
-    def modify(self, changes):
+    def modify(self, JobStep changes):
         """Modify a job step.
 
         Implements the slurm_update_step RPC.
 
         Args:
             changes (pyslurm.JobStep):
-                Another JobStep object which contains all the changes that
-                should be applied to this instance.
+                Another JobStep object that contains all the changes to apply.
+                Check the `Other Parameters` of the JobStep class to see which
+                properties can be modified.
+
         Raises:
             RPCError: When updating the JobStep was not successful.
 

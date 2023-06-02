@@ -51,19 +51,19 @@ def test_create_delete():
 def test_modify():
     part = Partitions.load().as_list()[0]
 
-    part.modify(default_time=120)
+    part.modify(Partition(default_time=120))
     assert Partition.load(part.name).default_time == 120
 
-    part.modify(default_time="1-00:00:00")
+    part.modify(Partition(default_time="1-00:00:00"))
     assert Partition.load(part.name).default_time == 24*60
 
-    part.modify(default_time="UNLIMITED")
+    part.modify(Partition(default_time="UNLIMITED"))
     assert Partition.load(part.name).default_time == "UNLIMITED"
 
-    part.modify(state="DRAIN")
+    part.modify(Partition(state="DRAIN"))
     assert Partition.load(part.name).state == "DRAIN"
 
-    part.modify(state="UP")
+    part.modify(Partition(state="UP"))
     assert Partition.load(part.name).state == "UP"
 
 

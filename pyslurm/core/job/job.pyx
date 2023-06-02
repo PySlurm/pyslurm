@@ -92,7 +92,6 @@ cdef class Jobs(dict):
 
         Raises:
             RPCError: When getting all the Jobs from the slurmctld failed.
-            MemoryError: If malloc fails to allocate memory.
         """
         cdef:
             dict passwd = {}
@@ -188,7 +187,7 @@ cdef class Jobs(dict):
         """Format the information as list of Job objects.
 
         Returns:
-            (list): List of Job objects
+            (list[pyslurm.Job]): List of Job objects
         """
         return list(self.values())
 
@@ -258,7 +257,6 @@ cdef class Job:
         Raises:
             RPCError: If requesting the Job information from the slurmctld was
                 not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
