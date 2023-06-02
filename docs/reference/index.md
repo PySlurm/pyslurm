@@ -41,6 +41,9 @@ The `pyslurm` package is a wrapper around the Slurm C-API
 * Node API
     * [pyslurm.Node][]
     * [pyslurm.Nodes][]
+* Partition API
+    * [pyslurm.Partition][]
+    * [pyslurm.Partitions][]
 * New Exceptions
     * [pyslurm.RPCError][]
     * [pyslurm.PyslurmError][]

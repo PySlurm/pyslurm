@@ -101,7 +101,6 @@ cdef class Partition:
             * total_cpus
             * total_nodes
             * select_type_parameters
-            * consumable_resource
 
     Attributes:
         name (str):
@@ -116,10 +115,8 @@ cdef class Partition:
             List of QoS which are allowed to execute Jobs
         alternate (str):
             Name of the alternate Partition in case a Partition is down.
-        consumable_resource (str):
-            The type of consumable resource used in the Partition.
         select_type_parameters (list[str]):
-            List of additional parameters passed to the select plugin used.
+            List of Select type parameters for the select plugin.
         cpu_binding (str):
             Default CPU-binding for Jobs that execute in a Partition.
         default_memory_per_cpu (int):

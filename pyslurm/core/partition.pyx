@@ -143,18 +143,29 @@ cdef class Partitions(dict):
 
         return self
 
-    def set_state(self, state):
-        """Modify the State of all Partitions in this Collection.
+    def modify(self, changes):
+        """Modify all Partitions in a Collection.
 
         Args:
-            state (str):
-                Partition state to set
+            changes (pyslurm.Partition):
+                Another Partition object that contains all the changes to
+                apply. Check the `Other Parameters` of the Partition class to
+                see which properties can be modified.
 
         Raises:
-            RPCError: When updating the state failed
+            RPCError: When updating at least one Partition failed.
+
+        Examples:
+            >>> import pyslurm
+            >>>
+            >>> parts = pyslurm.Partitions.load()
+            >>> # Prepare the changes
+            >>> changes = pyslurm.Partition(state="DRAIN")
+            >>> # Apply the changes to all the partitions
+            >>> parts.modify(changes)
         """
         for part in self.values():
-            part.modify(state=state)
+            part.modify(changes)
 
     def as_list(self):
         """Format the information as list of Partition objects.
@@ -270,40 +281,30 @@ cdef class Partition:
         verify_rpc(slurm_create_partition(self.ptr))
         return self
 
-    def modify(self, **changes):
+    def modify(self, Partition changes):
         """Modify a Partition.
 
         Implements the slurm_update_partition RPC.
 
         Args:
-            **changes (Any):
-                Changes for the Partition. Almost every Attribute from a
-                Partition can be modified, except for:
-
-                * total_cpus
-                * total_nodes
-                * select_type_parameters
-                * consumable_resource
+            changes (pyslurm.Partition):
+                Another Partition object that contains all the changes to
+                apply. Check the `Other Parameters` of the Partition class to
+                see which properties can be modified.
 
         Raises:
-            ValueError: When no changes were specified or when a parsing error
-                occured.
             RPCError: When updating the Partition was not successful.
 
         Examples:
             >>> import pyslurm
             >>>
-            >>> # Modifying the maximum time limit
-            >>> mypart = pyslurm.Partition("normal")
-            >>> mypart.modify(max_time_limit="10-00:00:00")
-            >>>
-            >>> # Modifying the partition state
-            >>> mypart.modify(state="DRAIN")
+            >>> part = pyslurm.Partition.load("normal")
+            >>> # Prepare the changes
+            >>> changes = pyslurm.Partition(state="DRAIN")
+            >>> # Apply the changes to the "normal" Partition
+            >>> part.modify(changes)
         """
-        if not changes:
-            raise ValueError("No changes were specified")
-
-        cdef Partition part = Partition(**changes)
+        cdef Partition part = <Partition>changes
         part.name = self._error_or_name()
         verify_rpc(slurm_update_partition(part.ptr))
 
@@ -380,10 +381,6 @@ cdef class Partition:
     @alternate.setter
     def alternate(self, val):
         cstr.fmalloc(&self.ptr.alternate, val)
-
-    @property
-    def consumable_resource(self):
-        return _select_type_int_to_cons_res(self.ptr.cr_type)
 
     @property
     def select_type_parameters(self):
@@ -757,7 +754,7 @@ def _split_oversubscribe_str(val):
 def _select_type_int_to_list(stype):
     # The rest of the CR_* stuff are just some extra parameters to the select
     # plugin
-    out = []
+    out = _select_type_int_to_cons_res(stype)
 
     if stype & slurm.CR_OTHER_CONS_RES:
         out.append("OTHER_CONS_RES")
@@ -800,7 +797,7 @@ def _select_type_int_to_cons_res(stype):
     elif stype & slurm.CR_MEMORY:
         return "MEMORY"
     else:
-        return None
+        return []
 
 
 def _preempt_mode_str_to_int(mode):

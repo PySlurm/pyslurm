@@ -23,6 +23,7 @@
 import pytest
 import pyslurm
 from pyslurm import Node, Nodes
+from pyslurm.core.node import _node_state_from_str
 
 
 def test_create_instance():
@@ -35,8 +36,37 @@ def test_parse_all():
 
 
 def test_create_nodes_collection():
-    # TODO
-    assert True
+    nodes = Nodes("node1,node2")
+    assert len(nodes) == 2
+    assert "node1" in nodes
+    assert "node2" in nodes
+    assert nodes["node1"].name == "node1"
+    assert nodes["node2"].name == "node2"
+
+    nodes = Nodes(["node1", "node2"])
+    assert len(nodes) == 2
+    assert "node1" in nodes
+    assert "node2" in nodes
+    assert nodes["node1"].name == "node1"
+    assert nodes["node2"].name == "node2"
+    
+    nodes = Nodes(
+        {
+            "node1": Node("node1"),
+            "node2": Node("node2"),
+        }
+    )
+    assert len(nodes) == 2
+    assert "node1" in nodes
+    assert "node2" in nodes
+    assert nodes["node1"].name == "node1"
+    assert nodes["node2"].name == "node2"
+
+
+def test_set_node_state():
+    assert _node_state_from_str("RESUME")
+    assert _node_state_from_str("undrain")
+    assert _node_state_from_str("POWER_DOWN")
 
 
 def test_setting_attributes():

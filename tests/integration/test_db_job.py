@@ -60,7 +60,8 @@ def test_modify(submit_job):
     util.wait(5)
 
     jfilter = pyslurm.db.JobSearchFilter(ids=[job.id])
-    pyslurm.db.Jobs.modify(jfilter, comment="test comment")
+    changes = pyslurm.db.Job(comment="test comment")
+    pyslurm.db.Jobs.modify(jfilter, changes)
 
     job = pyslurm.db.Job.load(job.id)
     assert job.comment == "test comment"
@@ -72,7 +73,8 @@ def test_modify_with_existing_conn(submit_job):
 
     conn = pyslurm.db.Connection.open()
     jfilter = pyslurm.db.JobSearchFilter(ids=[job.id])
-    pyslurm.db.Jobs.modify(jfilter, conn, comment="test comment")
+    changes = pyslurm.db.Job(comment="test comment")
+    pyslurm.db.Jobs.modify(jfilter, changes, conn)
 
     job = pyslurm.db.Job.load(job.id)
     assert job.comment != "test comment"
