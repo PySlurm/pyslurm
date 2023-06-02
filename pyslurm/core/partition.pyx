@@ -281,7 +281,7 @@ cdef class Partition:
         verify_rpc(slurm_create_partition(self.ptr))
         return self
 
-    def modify(self, changes):
+    def modify(self, Partition changes):
         """Modify a Partition.
 
         Implements the slurm_update_partition RPC.
@@ -298,7 +298,7 @@ cdef class Partition:
         Examples:
             >>> import pyslurm
             >>>
-            >>> part = pyslurm.Partition("normal")
+            >>> part = pyslurm.Partition.load("normal")
             >>> # Prepare the changes
             >>> changes = pyslurm.Partition(state="DRAIN")
             >>> # Apply the changes to the "normal" Partition

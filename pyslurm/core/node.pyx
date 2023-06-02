@@ -158,11 +158,11 @@ cdef class Nodes(dict):
         """Format the information as list of Node objects.
 
         Returns:
-            (list): List of Node objects
+            (list[pyslurm.Node]): List of Node objects
         """
         return list(self.values())
 
-    def modify(self, changes):
+    def modify(self, Node changes):
         """Modify all Nodes in a collection.
 
         Args:
@@ -368,7 +368,7 @@ cdef class Node:
 
         return self
 
-    def modify(self, changes):
+    def modify(self, Node changes):
         """Modify a node.
 
         Implements the slurm_update_node RPC.
@@ -385,7 +385,7 @@ cdef class Node:
         Examples:
             >>> import pyslurm
             >>>
-            >>> mynode = pyslurm.Node("localhost")
+            >>> mynode = pyslurm.Node.load("localhost")
             >>> # Prepare the changes
             >>> changes = pyslurm.Node(state="DRAIN", reason="DRAIN Reason")
             >>> # Modify it
@@ -728,35 +728,35 @@ cdef class Node:
 def _node_state_from_str(state, err_on_invalid=True):
     if not state:
         return slurm.NO_VAL
-    state = state.upper()
+    ustate = state.upper()
 
     # Following states are explicitly possible as per documentation
     # https://slurm.schedmd.com/scontrol.html#OPT_State_1
-    if lstate == "CANCEL_REBOOT":
+    if ustate == "CANCEL_REBOOT":
         return slurm.NODE_STATE_CANCEL_REBOOT
-    elif lstate == "DOWN":
+    elif ustate == "DOWN":
         return slurm.NODE_STATE_DOWN
-    elif lstate == "DRAIN":
+    elif ustate == "DRAIN":
         return slurm.NODE_STATE_DRAIN
-    elif lstate == "FAIL":
+    elif ustate == "FAIL":
         return slurm.NODE_STATE_FAIL
-    elif lstate == "FUTURE":
+    elif ustate == "FUTURE":
         return slurm.NODE_STATE_FUTURE
-    elif lstate == "NORESP" or lstate == "NO_RESP":
+    elif ustate == "NORESP" or ustate == "NO_RESP":
         return slurm.NODE_STATE_NO_RESPOND
-    elif lstate == "POWER_DOWN":
+    elif ustate == "POWER_DOWN":
         return slurm.NODE_STATE_POWER_DOWN
-    elif lstate == "POWER_DOWN_ASAP":
+    elif ustate == "POWER_DOWN_ASAP":
         # Drain and mark for power down
         return slurm.NODE_STATE_POWER_DOWN | slurm.NODE_STATE_POWER_DRAIN
-    elif lstate == "POWER_DOWN_FORCE":
+    elif ustate == "POWER_DOWN_FORCE":
         # Kill all Jobs and power down
         return slurm.NODE_STATE_POWER_DOWN | slurm.NODE_STATE_POWERED_DOWN
-    elif lstate == "POWER_UP":
+    elif ustate == "POWER_UP":
         return slurm.NODE_STATE_POWER_UP
-    elif lstate == "RESUME":
+    elif ustate == "RESUME":
         return slurm.NODE_RESUME
-    elif lstate == "UNDRAIN":
+    elif ustate == "UNDRAIN":
         return slurm.NODE_STATE_UNDRAIN
 
     if err_on_invalid:

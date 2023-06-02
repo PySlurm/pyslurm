@@ -282,7 +282,7 @@ cdef class Jobs(dict):
         return jobs
 
     @staticmethod
-    def modify(search_filter, db_connection=None, **changes):
+    def modify(search_filter, Job changes, db_connection=None):
         """Modify Slurm database Jobs.
 
         Implements the slurm_job_modify RPC.
@@ -290,6 +290,11 @@ cdef class Jobs(dict):
         Args:
             search_filter (Union[pyslurm.db.JobSearchFilter, pyslurm.db.Jobs]):
                 A filter to decide which Jobs should be modified.
+            changes (pyslurm.db.Job):
+                Another [pyslurm.db.Job][] object that contains all the
+                changes to apply. Check the `Other Parameters` of the
+                [pyslurm.db.Job][] class to see which properties can be
+                modified.
             db_connection (pyslurm.db.Connection):
                 A Connection to the slurmdbd. By default, if no connection is
                 supplied, one will automatically be created internally. This
@@ -306,25 +311,21 @@ cdef class Jobs(dict):
                 be committed or rolled back by using the respective methods on
                 the connection object. This way, you have a chance to see
                 which Jobs were modified before you commit the changes.
-            **changes (Any):
-                Check the `Other Parameters` Section of [pyslurm.db.Job][] to
-                see what attributes can be modified.
 
         Returns:
             (list[int]): A list of Jobs that were modified
 
         Raises:
-            ValueError: When a parsing error occured or the Database
-                connection is not open
             RPCError: When a failure modifying the Jobs occurred.
 
         Examples:
             In its simplest form, you can do something like this:
 
             >>> import pyslurm
+            >>> 
             >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
-            >>> modified_jobs = pyslurm.db.Jobs.modify(
-            ...             search_filter, comment="A comment for the job")
+            >>> changes = pyslurm.db.Job(comment="A comment for the job")
+            >>> modified_jobs = pyslurm.db.Jobs.modify(search_filter, changes)
             >>> print(modified_jobs)
             >>> [9999]
 
@@ -334,11 +335,13 @@ cdef class Jobs(dict):
             connection object:
 
             >>> import pyslurm
-            >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> 
             >>> db_conn = pyslurm.db.Connection.open()
+            >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(
-            ...             search_filter, db_conn,
-            ...             comment="A comment for the job")
+            ...             search_filter, changes, db_conn)
+            >>> 
             >>> # Now you can first examine which Jobs have been modified
             >>> print(modified_jobs)
             >>> [9999]
@@ -348,7 +351,7 @@ cdef class Jobs(dict):
         """
 
         cdef:
-            Job job = Job(**changes)
+            Job job = <Job>changes
             JobSearchFilter jfilter
             Connection conn = <Connection>db_connection
             SlurmList response
@@ -499,23 +502,25 @@ cdef class Job:
 
         return out
 
-    def modify(self, db_connection=None, **changes):
+    def modify(self, changes, db_connection=None):
         """Modify a Slurm database Job.
 
         Args:
             db_connection (pyslurm.db.Connection):
                 A slurmdbd connection. See
                 [pyslurm.db.Jobs.modify][pyslurm.db.job.Jobs.modify] for more
-                info
-            **changes (Any):
-                Check the `Other Parameters` Section of this class to see what
-                attributes can be modified.
+                info on this parameter.
+            changes (pyslurm.db.Job):
+                Another [pyslurm.db.Job][] object that contains all the
+                changes to apply. Check the `Other Parameters` of the
+                [pyslurm.db.Job][] class to see which properties can be
+                modified.
 
         Raises:
             RPCError: When modifying the Job failed.
         """
         cdef JobSearchFilter jfilter = JobSearchFilter(ids=[self.id])
-        Jobs.modify(jfilter, db_connection, **changes)
+        Jobs.modify(jfilter, changes, db_connection)
 
     @property
     def account(self):
