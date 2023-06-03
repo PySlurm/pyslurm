@@ -36,3 +36,7 @@ from .qos import (
     QualityOfService,
     QualityOfServiceSearchFilter,
 )
+from .assoc import (
+    Associations,
+    Association,
+)
