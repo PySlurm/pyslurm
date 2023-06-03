@@ -29,8 +29,6 @@ from pyslurm.slurm cimport (
     slurmdb_associations_get,
     slurmdb_destroy_assoc_rec,
     slurmdb_destroy_assoc_cond,
-    slurmdb_init_assoc_rec,
-    slurmdb_associations_modify,
     try_xmalloc,
 )
 from pyslurm.db.util cimport (
@@ -40,47 +38,24 @@ from pyslurm.db.util cimport (
     slurm_list_to_pylist,
     qos_list_to_pylist,
 )
-from pyslurm.db.tres cimport (
-    _set_tres_limits,
-    TrackableResources,
-    TrackableResourceLimits,
-)
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.utils.uint cimport *
-from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
-
-cdef _parse_assoc_ptr(Association ass)
-cdef _create_assoc_ptr(Association ass, conn=*)
+from pyslurm.db.qos cimport QualitiesOfService
 
 
-cdef class Associations(list):
-    pass
+cdef class Associations(dict):
+    cdef SlurmList info
 
 
-cdef class AssociationFilter:
+cdef class AssociationSearchFilter:
     cdef slurmdb_assoc_cond_t *ptr
-
-    cdef public:
-        users
-        ids
 
 
 cdef class Association:
     cdef:
         slurmdb_assoc_rec_t *ptr
-        dict qos_data
-        dict tres_data
-
-    cdef public:
-        group_tres
-        group_tres_mins
-        group_tres_run_mins
-        max_tres_mins_per_job
-        max_tres_run_mins_per_user
-        max_tres_per_job
-        max_tres_per_node
-        qos
+        QualitiesOfService qos_data
 
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr)

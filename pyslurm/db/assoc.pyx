@@ -23,148 +23,51 @@
 # cython: language_level=3
 
 from pyslurm.core.error import RPCError
-from pyslurm.utils.helpers import (
-    instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
-    user_to_uid,
-)
+from pyslurm.utils.helpers import instance_to_dict
 from pyslurm.utils.uint import *
-from pyslurm.db.connection import _open_conn_or_error
-from pyslurm.db.cluster import LOCAL_CLUSTER
 
 
-cdef class Associations(list):
+cdef class Associations(dict):
 
     def __init__(self):
         pass
 
-    def as_dict(self, recursive=False, group_by_cluster=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-            group_by_cluster (bool, optional):
-                By default, only the Jobs from your local Cluster are
-                returned. If this is set to `True`, then all the Jobs in the
-                collection will be grouped by the Cluster - with the name of
-                the cluster as the key and the value being the collection as
-                another dict.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Association.id,
-                                 recursive=recursive)
-        if not group_by_cluster:
-            return col.get(LOCAL_CLUSTER, {})
-
-        return col
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self) 
-
     @staticmethod
-    def load(AssociationFilter db_filter=None, Connection db_connection=None):
+    def load(AssociationSearchFilter search_filter=None,
+             Connection db_connection=None):
         cdef:
-            Associations out = Associations()
+            Associations assoc_dict = Associations()
             Association assoc
-            AssociationFilter cond = db_filter
-            SlurmList assoc_data
+            AssociationSearchFilter cond = search_filter
             SlurmListItem assoc_ptr
-            Connection conn
-            dict qos_data
-            dict tres_data
+            Connection conn = db_connection
+            QualitiesOfService qos_data
 
-        # Prepare SQL Filter
-        if not db_filter:
-            cond = AssociationFilter()
+        if not search_filter:
+            cond = AssociationSearchFilter()
         cond._create()
 
-        # Setup DB Conn
-        conn = _open_conn_or_error(db_connection)
+        if not conn:
+            conn = Connection.open()
 
-        # Fetch Assoc Data
-        assoc_data = SlurmList.wrap(slurmdb_associations_get(
-            conn.ptr, cond.ptr))
+        assoc_dict.info = SlurmList.wrap(
+                slurmdb_associations_get(conn.ptr, cond.ptr))
         
-        if assoc_data.is_null:
+        if assoc_dict.info.is_null:
             raise RPCError(msg="Failed to get Association data from slurmdbd")
 
-        # Fetch other necessary dependencies needed for translating some
-        # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(db_connection=conn).as_dict(
-                name_is_key=False)
-        tres_data = TrackableResources.load(db_connection=conn).as_dict(
-                name_is_key=False)
+        qos_data = QualitiesOfService.load(name_is_key=False,
+                                           db_connection=conn)
 
-        # Setup Association objects
-        for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
+        for assoc_ptr in SlurmList.iter_and_pop(assoc_dict.info):
             assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>assoc_ptr.data)
             assoc.qos_data = qos_data
-            assoc.tres_data = tres_data
-            _parse_assoc_ptr(assoc)
-            out.append(assoc)
+            assoc_dict[assoc.id] = assoc
 
-        return out
-
-    @staticmethod
-    def modify(db_filter, Association changes, Connection db_connection=None):
-        cdef:
-            AssociationFilter afilter
-            Connection conn
-            SlurmList response
-            SlurmListItem response_ptr
-            list out = []
-
-        # Prepare SQL Filter
-        if isinstance(db_filter, Associations):
-            assoc_ids = [ass.id for ass in db_filter]
-            afilter = AssociationFilter(ids=assoc_ids)
-        else:
-            afilter = <AssociationFilter>db_filter
-        afilter._create()
-
-        # Setup DB conn
-        conn = _open_conn_or_error(db_connection)
-
-        # Any data that isn't parsed yet or needs validation is done in this
-        # function.
-        _create_assoc_ptr(changes, conn)
-
-        # Modify associations, get the result
-        # This returns a List of char* with the associations that were
-        # modified
-        response = SlurmList.wrap(slurmdb_associations_modify(
-            conn.ptr, afilter.ptr, changes.ptr))
-
-        if not response.is_null and response.cnt:
-            for response_ptr in response:
-                response_str = cstr.to_unicode(<char*>response_ptr.data)
-                if not response_str:
-                    continue
-
-                # TODO: Better format
-                out.append(response_str)
-
-        elif not response.is_null:
-            # There was no real error, but simply nothing has been modified
-            raise RPCError(msg="Nothing was modified")
-        else:
-            # Autodetects the last slurm error
-            raise RPCError()
-        
-        if not db_connection:
-            # Autocommit if no connection was explicitly specified.
-            conn.commit()
-
-        return out
+        return assoc_dict
 
 
-cdef class AssociationFilter:
+cdef class AssociationSearchFilter:
 
     def __cinit__(self):
         self.ptr = NULL
@@ -186,16 +89,9 @@ cdef class AssociationFilter:
         if not self.ptr:
             raise MemoryError("xmalloc failed for slurmdb_assoc_cond_t")
 
-    def _parse_users(self):
-        if not self.users:
-            return None
-        return list({user_to_uid(user) for user in self.users})
-
     def _create(self):
         self._alloc()
         cdef slurmdb_assoc_cond_t *ptr = self.ptr
-
-        make_char_list(&ptr.user_list, self.users)
 
 
 cdef class Association:
@@ -203,12 +99,8 @@ cdef class Association:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self._alloc_impl()
-        self.id = 0
-        self.cluster = LOCAL_CLUSTER
-        for k, v in kwargs.items():
-            setattr(self, k, v)
 
     def __dealloc__(self):
         self._dealloc_impl()
@@ -224,8 +116,6 @@ cdef class Association:
             if not self.ptr:
                 raise MemoryError("xmalloc failed for slurmdb_assoc_rec_t")
 
-            slurmdb_init_assoc_rec(self.ptr, 0)
-
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr):
         cdef Association wrap = Association.__new__(Association)
@@ -240,10 +130,9 @@ cdef class Association:
         """
         return instance_to_dict(self)
 
-    def __eq__(self, other):
-        if isinstance(other, Association):
-            return self.id == other.id and self.cluster == other.cluster
-        return NotImplemented
+    @staticmethod
+    def load(name):
+        pass
 
     @property
     def account(self):
@@ -298,6 +187,30 @@ cdef class Association:
         self.ptr.grp_submit_jobs = u32(val, zero_is_noval=False)
 
     @property
+    def group_tres(self):
+        return cstr.to_dict(self.ptr.grp_tres)
+
+    @group_tres.setter
+    def group_tres(self, val):
+        cstr.from_dict(&self.ptr.grp_tres, val)
+
+    @property
+    def group_tres_mins(self):
+        return cstr.to_dict(self.ptr.grp_tres_mins)
+
+    @group_tres_mins.setter
+    def group_tres_mins(self, val):
+        cstr.from_dict(&self.ptr.grp_tres_mins, val)
+
+    @property
+    def group_tres_run_mins(self):
+        return cstr.to_dict(self.ptr.grp_tres_run_mins)
+
+    @group_tres_run_mins.setter
+    def group_tres_run_mins(self, val):
+        cstr.from_dict(&self.ptr.grp_tres_run_mins, val)
+
+    @property
     def group_wall_time(self):
         return u32_parse(self.ptr.grp_wall, zero_is_noval=False)
 
@@ -307,7 +220,7 @@ cdef class Association:
 
     @property
     def id(self):
-        return u32_parse(self.ptr.id)
+        return self.ptr.id
 
     @id.setter
     def id(self, val):
@@ -319,7 +232,7 @@ cdef class Association:
 
     @property
     def lft(self):
-        return u32_parse(self.ptr.lft)
+        return self.ptr.lft
 
     @property
     def max_jobs(self):
@@ -344,6 +257,38 @@ cdef class Association:
     @max_submit_jobs.setter
     def max_submit_jobs(self, val):
         self.ptr.max_submit_jobs = u32(val, zero_is_noval=False)
+
+    @property
+    def max_tres_mins_per_job(self):
+        return cstr.to_dict(self.ptr.max_tres_mins_pj)
+
+    @max_tres_mins_per_job.setter
+    def max_tres_mins_per_job(self, val):
+        cstr.from_dict(&self.ptr.max_tres_mins_pj, val)
+
+    @property
+    def max_tres_run_mins_per_user(self):
+        return cstr.to_dict(self.ptr.max_tres_run_mins)
+
+    @max_tres_run_mins_per_user.setter
+    def max_tres_run_mins_per_user(self, val):
+        cstr.from_dict(&self.ptr.max_tres_run_mins, val)
+
+    @property
+    def max_tres_per_job(self):
+        return cstr.to_dict(self.ptr.max_tres_pj)
+
+    @max_tres_per_job.setter
+    def max_tres_per_job(self, val):
+        cstr.from_dict(&self.ptr.max_tres_pj, val)
+
+    @property
+    def max_tres_per_node(self):
+        return cstr.to_dict(self.ptr.max_tres_pn)
+
+    @max_tres_per_node.setter
+    def max_tres_per_node(self, val):
+        cstr.from_dict(&self.ptr.max_tres_pn, val)
 
     @property
     def max_wall_time_per_job(self):
@@ -386,8 +331,16 @@ cdef class Association:
         self.ptr.priority = u32(val)
 
     @property
+    def qos(self):
+        return qos_list_to_pylist(self.ptr.qos_list, self.qos_data)
+
+    @qos.setter
+    def qos(self, val):
+        make_char_list(&self.ptr.qos_list, val)
+
+    @property
     def rgt(self):
-        return u32_parse(self.ptr.rgt)
+        return self.ptr.rgt
 
     @property
     def shares(self):
@@ -404,52 +357,4 @@ cdef class Association:
     @user.setter
     def user(self, val):
         cstr.fmalloc(&self.ptr.user, val)
-
-
-cdef _parse_assoc_ptr(Association ass):
-    cdef:
-        dict tres = ass.tres_data
-        dict qos = ass.qos_data
-
-    ass.group_tres = TrackableResourceLimits.from_ids(
-            ass.ptr.grp_tres, tres)
-    ass.group_tres_mins = TrackableResourceLimits.from_ids(
-            ass.ptr.grp_tres_mins, tres)
-    ass.group_tres_run_mins = TrackableResourceLimits.from_ids(
-            ass.ptr.grp_tres_mins, tres)
-    ass.max_tres_mins_per_job = TrackableResourceLimits.from_ids(
-            ass.ptr.max_tres_mins_pj, tres)
-    ass.max_tres_run_mins_per_user = TrackableResourceLimits.from_ids(
-            ass.ptr.max_tres_run_mins, tres)
-    ass.max_tres_per_job = TrackableResourceLimits.from_ids(
-            ass.ptr.max_tres_pj, tres)
-    ass.max_tres_per_node = TrackableResourceLimits.from_ids(
-            ass.ptr.max_tres_pn, tres)
-    ass.qos = qos_list_to_pylist(ass.ptr.qos_list, qos)
-
-
-cdef _create_assoc_ptr(Association ass, conn=None):
-    # _set_tres_limits will also check if specified TRES are valid and
-    # translate them to its ID which is why we need to load the current TRES
-    # available in the system.
-    ass.tres_data = TrackableResources.load(db_connection=conn)
-    _set_tres_limits(&ass.ptr.grp_tres, ass.group_tres, ass.tres_data)
-    _set_tres_limits(&ass.ptr.grp_tres_mins, ass.group_tres_mins,
-                    ass.tres_data)
-    _set_tres_limits(&ass.ptr.grp_tres_run_mins, ass.group_tres_run_mins,
-                    ass.tres_data)
-    _set_tres_limits(&ass.ptr.max_tres_mins_pj, ass.max_tres_mins_per_job,
-                    ass.tres_data)
-    _set_tres_limits(&ass.ptr.max_tres_run_mins, ass.max_tres_run_mins_per_user,
-                    ass.tres_data)
-    _set_tres_limits(&ass.ptr.max_tres_pj, ass.max_tres_per_job,
-                    ass.tres_data)
-    _set_tres_limits(&ass.ptr.max_tres_pn, ass.max_tres_per_node,
-                    ass.tres_data)
-
-    # _set_qos_list will also check if specified QoS are valid and translate
-    # them to its ID, which is why we need to load the current QOS available
-    # in the system.
-    ass.qos_data = QualitiesOfService.load(db_connection=conn)
-    _set_qos_list(&ass.ptr.qos_list, self.qos, ass.qos_data)
 
