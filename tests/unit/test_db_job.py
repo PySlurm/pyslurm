@@ -24,7 +24,7 @@ import pytest
 import pyslurm
 
 
-def test_search_filter():
+def test_filter():
     job_filter = pyslurm.db.JobSearchFilter()
 
     job_filter.clusters = ["test1"]
