@@ -56,72 +56,72 @@ from pyslurm.db.tres cimport TrackableResources, TrackableResource
 
 
 cdef class JobSearchFilter:
-    """Search conditions for Slurm database Jobs.
+    """Query-Conditions for Jobs in the Slurm Database.
 
     Args:
         **kwargs (Any, optional=None):
             Any valid attribute of the object.
 
     Attributes:
-        ids (list):
+        ids (list[int]):
             A list of Job ids to search for.
         start_time (Union[str, int, datetime.datetime]):
             Search for Jobs which started after this time.
         end_time (Union[str, int, datetime.datetime]):
             Search for Jobs which ended before this time.
-        accounts (list):
+        accounts (list[str]):
             Search for Jobs with these account names.
-        association_ids (list):
+        association_ids (list[int]):
             Search for Jobs with these association ids.
-        clusters (list):
+        clusters (list[str]):
             Search for Jobs running in these clusters.
-        constraints (list):
+        constraints (list[str]):
             Search for Jobs with these constraints.
         cpus (int):
             Search for Jobs with exactly this many CPUs.
-            Note: If you also specify max_cpus, then this value will act as
+            Note: If you also specify `max_cpus`, then this value will act as
             the minimum.
         max_cpus (int):
             Search for Jobs with no more than this amount of CPUs.
-            Note: This value has no effect without also setting cpus.
+            Note: This value has no effect without also setting `cpus`.
         nodes (int):
             Search for Jobs with exactly this many nodes.
-            Note: If you also specify max_nodes, then this value will act as
+            Note: If you also specify `max_nodes`, then this value will act as
             the minimum.
         max_nodes (int):
             Search for Jobs with no more than this amount of nodes.
-            Note: This value has no effect without also setting nodes.
-        qos (list):
+            Note: This value has no effect without also setting `nodes`.
+        qos (list[str]):
             Search for Jobs with these Qualities of Service.
-        names (list):
+        names (list[str]):
             Search for Jobs with these job names.
-        partitions (list):
+        partitions (list[str]):
             Search for Jobs with these partition names.
-        groups (list):
-            Search for Jobs with these group names. You can both specify the
-            groups as string or by their GID.
+        groups (list[str]):
+            Search for Jobs with these group names. Alternatively, you can
+            also specify the GIDs directly.
         timelimit (Union[str, int]):
             Search for Jobs with exactly this timelimit.
-            Note: If you also specify max_timelimit, then this value will act
+            Note: If you also specify `max_timelimit`, then this value will act
             as the minimum.
         max_timelimit (Union[str, int]):
             Search for Jobs which run no longer than this timelimit
-            Note: This value has no effect without also setting timelimit
-        users (list):
-            Search for Jobs with these user names. You can both specify the
-            users as string or by their UID.
-        wckeys (list):
+            Note: This value has no effect without also setting `timelimit`
+        users (list[str]):
+            Search for Jobs with these user names. Alternatively, you can also
+            specify the UIDs directly.
+        wckeys (list[str]):
             Search for Jobs with these WCKeys
-        nodelist (list):
+        nodelist (list[str]):
             Search for Jobs that ran on any of these Nodes
         with_script (bool):
             Instruct the slurmdbd to also send the job script(s)
             Note: This requires specifying explictiy job ids, and is mutually
-            exclusive with with_env
+            exclusive with `with_env`
         with_env (bool):
             Instruct the slurmdbd to also send the job environment(s)
             Note: This requires specifying explictiy job ids, and is mutually
-            exclusive with with_script
+            exclusive with `with_script`
     """
     cdef slurmdb_job_cond_t *ptr
 

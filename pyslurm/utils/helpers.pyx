@@ -95,10 +95,10 @@ def user_to_uid(user, err_on_invalid=True):
         return slurm.NO_VAL
 
     try:
-        if isinstance(user, str):
+        if isinstance(user, str) and not user.isdigit():
             return getpwnam(user).pw_uid
         
-        return getpwuid(user).pw_uid
+        return getpwuid(int(user)).pw_uid
     except KeyError as e:
         if err_on_invalid:
             raise e
@@ -112,10 +112,10 @@ def group_to_gid(group, err_on_invalid=True):
         return slurm.NO_VAL
 
     try:
-        if isinstance(group, str):
+        if isinstance(group, str) and not group.isdigit():
             return getgrnam(group).gr_gid
 
-        return getgrgid(group).gr_gid
+        return getgrgid(int(group)).gr_gid
     except KeyError as e:
         if err_on_invalid:
             raise e

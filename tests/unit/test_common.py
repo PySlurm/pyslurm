@@ -309,8 +309,9 @@ class TestMiscUtil:
         name = uid_to_name(0, lookup=lookup) 
         assert name == "root"
 
-        uid = user_to_uid("root")
-        assert uid == 0
+        assert user_to_uid("root") == 0
+        assert user_to_uid(0) == 0
+        assert user_to_uid("0") == 0
 
         with pytest.raises(KeyError):
             name = uid_to_name(2**32-5)
@@ -326,8 +327,9 @@ class TestMiscUtil:
         name = gid_to_name(0, lookup=lookup) 
         assert name == "root"
 
-        gid = group_to_gid("root")
-        assert gid == 0
+        assert group_to_gid("root") == 0
+        assert group_to_gid(0) == 0
+        assert group_to_gid("0") == 0
 
         with pytest.raises(KeyError):
             name = gid_to_name(2**32-5)
