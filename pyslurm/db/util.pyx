@@ -44,8 +44,10 @@ cdef slurm_list_to_pylist(List in_list):
 
 
 cdef qos_list_to_pylist(List in_list, qos_data):
-    cdef list qos_nums = SlurmList.wrap(in_list, owned=False).to_pylist()
+    if not in_list:
+        return []
 
+    cdef list qos_nums = SlurmList.wrap(in_list, owned=False).to_pylist()
     return [qos.name for qos_id, qos in qos_data.items()
             if qos_id in qos_nums]
 

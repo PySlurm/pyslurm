@@ -23,6 +23,7 @@
 # cython: language_level=3
 
 from pyslurm.utils.uint import *
+from pyslurm.constants import UNLIMITED
 
 
 cdef class TrackableResources(dict):
@@ -51,14 +52,16 @@ cdef class TrackableResources(dict):
         return tres
 
     @staticmethod
-    def find_count_in_str(tres_str, typ):
+    cdef find_count_in_str(char *tres_str, typ, on_noval=0, on_inf=0):
         if not tres_str:
-            return 0
+            return on_noval
 
         cdef uint64_t tmp
         tmp = slurmdb_find_tres_count_in_string(tres_str, typ)
-        if tmp == slurm.INFINITE64 or tmp == slurm.NO_VAL64:
-            return 0
+        if tmp == slurm.INFINITE64:
+            return on_inf
+        elif tmp == slurm.NO_VAL64:
+            return on_noval
         else:
             return tmp
 
@@ -110,3 +113,20 @@ cdef class TrackableResource:
 
     # rec_count
     # alloc_secs
+
+
+cdef find_tres_limit(char *tres_str, typ):
+    return TrackableResources.find_count_in_str(tres_str, typ, on_noval=None,
+                                                on_inf=UNLIMITED)
+
+
+cdef merge_tres_str(char **tres_str, typ, val):
+    cdef uint64_t _val = u64(val)
+
+    current = cstr.to_dict(tres_str[0])
+    if _val == slurm.NO_VAL64:
+        current.pop(typ, None)
+    else:
+        current.update({typ : _val})
+
+    cstr.from_dict(tres_str, current)

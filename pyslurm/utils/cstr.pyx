@@ -186,7 +186,7 @@ def dict_to_str(vals, prepend=None, delim1=",", delim2="="):
         tmp_dict = validate_str_key_value_format(vals, delim1, delim2)
     
     for k, v in tmp_dict.items():
-        if ((delim1 in k or delim2 in k) or
+        if ((delim1 in str(k) or delim2 in str(k)) or
                 delim1 in str(v) or delim2 in str(v)):    
             raise ValueError(
                 f"Key or Value cannot contain either {delim1} or {delim2}. "

@@ -30,12 +30,18 @@ from pyslurm.slurm cimport (
     try_xmalloc,
 )
 
+cdef find_tres_limit(char *tres_str, typ)
+cdef merge_tres_str(char **tres_str, typ, val)
+
 
 cdef class TrackableResources(dict):
     cdef public raw_str
 
     @staticmethod
     cdef TrackableResources from_str(char *tres_str)
+
+    @staticmethod
+    cdef find_count_in_str(char *tres_str, typ, on_noval=*, on_inf=*)
 
 
 cdef class TrackableResource:
