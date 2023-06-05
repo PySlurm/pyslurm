@@ -87,28 +87,12 @@ cdef class JobSearchFilter:
     def _parse_groups(self):
         if not self.groups:
             return None
-
-        gid_list = []
-        for group in self.groups:
-            if isinstance(group, int):
-                gid_list.append(group)
-            else:
-                gid_list.append(group_to_gid(group))
-
-        return gid_list
+        return list({group_to_gid(group) for group in self.groups})
 
     def _parse_users(self):
         if not self.users:
             return None
-
-        uid_list = []
-        for user in self.users:
-            if not isinstance(user, list):
-                uid_list.append(int(user))
-            elif user:
-                uid_list.append(user_to_uid(user))
-
-        return uid_list
+        return list({user_to_uid(user) for user in self.users})
 
     def _parse_clusters(self):
         if not self.clusters:
