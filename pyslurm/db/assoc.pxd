@@ -29,6 +29,7 @@ from pyslurm.slurm cimport (
     slurmdb_associations_get,
     slurmdb_destroy_assoc_rec,
     slurmdb_destroy_assoc_cond,
+    slurmdb_init_assoc_rec,
     try_xmalloc,
 )
 from pyslurm.db.util cimport (
@@ -37,6 +38,10 @@ from pyslurm.db.util cimport (
     make_char_list,
     slurm_list_to_pylist,
     qos_list_to_pylist,
+)
+from pyslurm.db.tres cimport (
+    find_tres_limit,
+    merge_tres_str,
 )
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr

@@ -116,6 +116,8 @@ cdef class Association:
             if not self.ptr:
                 raise MemoryError("xmalloc failed for slurmdb_assoc_rec_t")
 
+            slurmdb_init_assoc_rec(self.ptr, 0)
+
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr):
         cdef Association wrap = Association.__new__(Association)
@@ -193,6 +195,14 @@ cdef class Association:
     @group_tres.setter
     def group_tres(self, val):
         cstr.from_dict(&self.ptr.grp_tres, val)
+
+    @property
+    def group_cpus(self):
+        return find_tres_limit(self.ptr.grp_tres, slurm.TRES_CPU)
+
+    @group_cpus.setter
+    def group_cpus(self, val):
+        merge_tres_str(&self.ptr.grp_tres, slurm.TRES_CPU, val)
 
     @property
     def group_tres_mins(self):
