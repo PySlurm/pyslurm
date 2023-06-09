@@ -23,7 +23,11 @@
 # cython: language_level=3
 
 from pyslurm.core.error import RPCError
-from pyslurm.utils.helpers import instance_to_dict
+from pyslurm.utils.helpers import (
+    instance_to_dict,
+    user_to_uid,
+)
+from pyslurm.db.tres import tres_names_to_ids
 from pyslurm.utils.uint import *
 
 
@@ -33,22 +37,26 @@ cdef class Associations(dict):
         pass
 
     @staticmethod
-    def load(AssociationSearchFilter search_filter=None,
+    def load(AssociationFilter search_filter=None,
              Connection db_connection=None):
         cdef:
             Associations assoc_dict = Associations()
             Association assoc
-            AssociationSearchFilter cond = search_filter
+            AssociationFilter cond = search_filter
             SlurmListItem assoc_ptr
             Connection conn = db_connection
             QualitiesOfService qos_data
+            TrackableResources tres_data
 
         if not search_filter:
-            cond = AssociationSearchFilter()
+            cond = AssociationFilter()
         cond._create()
 
         if not conn:
             conn = Connection.open()
+
+        if not conn.is_open:
+            raise ValueError("Database connection is not open")
 
         assoc_dict.info = SlurmList.wrap(
                 slurmdb_associations_get(conn.ptr, cond.ptr))
@@ -58,16 +66,71 @@ cdef class Associations(dict):
 
         qos_data = QualitiesOfService.load(name_is_key=False,
                                            db_connection=conn)
+        tres_data = TrackableResources.load(name_is_key=False,
+                                            db_connection=conn)
 
         for assoc_ptr in SlurmList.iter_and_pop(assoc_dict.info):
             assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>assoc_ptr.data)
             assoc.qos_data = qos_data
+            assoc.tres_data = tres_data
             assoc_dict[assoc.id] = assoc
 
         return assoc_dict
 
+    @staticmethod
+    def modify(assocs, Association changes,
+               Connection db_connection=None):
+        cdef:
+            AssociationFilter afilter
+            Connection conn = db_connection
+            SlurmList response
+            SlurmListItem response_ptr
+            list out = []
 
-cdef class AssociationSearchFilter:
+        if not conn:
+            conn = Connection.open()
+
+        if not conn.is_open:
+            raise ValueError("Database connection is not open")
+
+        if isinstance(assocs, Associations):
+            assoc_ids = list(assocs.keys())
+            afilter = AssociationFilter(ids=assoc_ids)
+        else:
+            afilter = <AssociationFilter>assocs
+
+        # Check if TRES specified are actually valid. slurmdbd does not
+        # give an explicit error and just ignores invalid tres types.
+        changes._validate_tres()
+
+        afilter._create()
+        response = SlurmList.wrap(
+                slurmdb_associations_modify(conn.ptr, afilter.ptr, changes.ptr))
+
+        if not response.is_null and response.cnt:
+            for response_ptr in response:
+                response_str = cstr.to_unicode(<char*>response_ptr.data)
+                if not response_str:
+                    continue
+
+                # TODO: Better format
+                out.append(response_str)
+
+        elif not response.is_null:
+            # There was no real error, but simply nothing has been modified
+            raise RPCError(msg="Nothing was modified")
+        else:
+            # Autodetects the last slurm error
+            raise RPCError()
+        
+        if not db_connection:
+            # Autocommit if no connection was explicitly specified.
+            conn.commit()
+
+        return out
+
+
+cdef class AssociationFilter:
 
     def __cinit__(self):
         self.ptr = NULL
@@ -89,9 +152,16 @@ cdef class AssociationSearchFilter:
         if not self.ptr:
             raise MemoryError("xmalloc failed for slurmdb_assoc_cond_t")
 
+    def _parse_users(self):
+        if not self.users:
+            return None
+        return list({user_to_uid(user) for user in self.users})
+
     def _create(self):
         self._alloc()
         cdef slurmdb_assoc_cond_t *ptr = self.ptr
+
+        make_char_list(&ptr.user_list, self.users)
 
 
 cdef class Association:
@@ -131,6 +201,22 @@ cdef class Association:
             (dict): Database Association information as dict
         """
         return instance_to_dict(self)
+
+    def _validate_tres(self):
+        self.tres_data = TrackableResources.load(name_is_key=False)
+        self.group_tres = tres_names_to_ids(self.group_tres, self.tres_data) 
+        self.group_tres_mins = tres_names_to_ids(
+                self.group_tres_mins, self.tres_data) 
+        self.group_tres_run_mins = tres_names_to_ids(
+                self.group_tres_run_mins, self.tres_data) 
+        self.max_tres_mins_per_job = tres_names_to_ids(
+                self.max_tres_mins_per_job, self.tres_data) 
+        self.max_tres_run_mins_per_user = tres_names_to_ids(
+                self.max_tres_run_mins_per_user, self.tres_data) 
+        self.max_tres_per_job = tres_names_to_ids(
+                self.max_tres_per_job, self.tres_data) 
+        self.max_tres_per_node = tres_names_to_ids(
+                self.max_tres_per_node, self.tres_data) 
 
     @staticmethod
     def load(name):
@@ -190,23 +276,15 @@ cdef class Association:
 
     @property
     def group_tres(self):
-        return cstr.to_dict(self.ptr.grp_tres)
+        return tres_ids_to_names(self.ptr.grp_tres, self.tres_data)
 
     @group_tres.setter
     def group_tres(self, val):
         cstr.from_dict(&self.ptr.grp_tres, val)
 
     @property
-    def group_cpus(self):
-        return find_tres_limit(self.ptr.grp_tres, slurm.TRES_CPU)
-
-    @group_cpus.setter
-    def group_cpus(self, val):
-        merge_tres_str(&self.ptr.grp_tres, slurm.TRES_CPU, val)
-
-    @property
     def group_tres_mins(self):
-        return cstr.to_dict(self.ptr.grp_tres_mins)
+        return tres_ids_to_names(self.ptr.grp_tres_mins, self.tres_data)
 
     @group_tres_mins.setter
     def group_tres_mins(self, val):
@@ -214,7 +292,7 @@ cdef class Association:
 
     @property
     def group_tres_run_mins(self):
-        return cstr.to_dict(self.ptr.grp_tres_run_mins)
+        return tres_ids_to_names(self.ptr.grp_tres_run_mins, self.tres_data)
 
     @group_tres_run_mins.setter
     def group_tres_run_mins(self, val):
@@ -270,7 +348,7 @@ cdef class Association:
 
     @property
     def max_tres_mins_per_job(self):
-        return cstr.to_dict(self.ptr.max_tres_mins_pj)
+        return tres_ids_to_names(self.ptr.max_tres_mins_pj, self.tres_data)
 
     @max_tres_mins_per_job.setter
     def max_tres_mins_per_job(self, val):
@@ -278,7 +356,7 @@ cdef class Association:
 
     @property
     def max_tres_run_mins_per_user(self):
-        return cstr.to_dict(self.ptr.max_tres_run_mins)
+        return tres_ids_to_names(self.ptr.max_tres_run_mins, self.tres_data)
 
     @max_tres_run_mins_per_user.setter
     def max_tres_run_mins_per_user(self, val):
@@ -286,7 +364,7 @@ cdef class Association:
 
     @property
     def max_tres_per_job(self):
-        return cstr.to_dict(self.ptr.max_tres_pj)
+        return tres_ids_to_names(self.ptr.max_tres_pj, self.tres_data)
 
     @max_tres_per_job.setter
     def max_tres_per_job(self, val):
@@ -294,7 +372,7 @@ cdef class Association:
 
     @property
     def max_tres_per_node(self):
-        return cstr.to_dict(self.ptr.max_tres_pn)
+        return tres_ids_to_names(self.ptr.max_tres_pn, self.tres_data)
 
     @max_tres_per_node.setter
     def max_tres_per_node(self, val):

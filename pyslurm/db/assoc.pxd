@@ -30,6 +30,7 @@ from pyslurm.slurm cimport (
     slurmdb_destroy_assoc_rec,
     slurmdb_destroy_assoc_cond,
     slurmdb_init_assoc_rec,
+    slurmdb_associations_modify,
     try_xmalloc,
 )
 from pyslurm.db.util cimport (
@@ -42,6 +43,8 @@ from pyslurm.db.util cimport (
 from pyslurm.db.tres cimport (
     find_tres_limit,
     merge_tres_str,
+    tres_ids_to_names,
+    TrackableResources,
 )
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
@@ -53,14 +56,19 @@ cdef class Associations(dict):
     cdef SlurmList info
 
 
-cdef class AssociationSearchFilter:
+cdef class AssociationFilter:
     cdef slurmdb_assoc_cond_t *ptr
+
+    cdef public:
+        users
+        ids
 
 
 cdef class Association:
     cdef:
         slurmdb_assoc_rec_t *ptr
         QualitiesOfService qos_data
+        TrackableResources tres_data
 
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr)
