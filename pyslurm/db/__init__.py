@@ -39,4 +39,5 @@ from .qos import (
 from .assoc import (
     Associations,
     Association,
+    AssociationFilter,
 )
