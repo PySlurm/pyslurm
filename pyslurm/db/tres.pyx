@@ -25,6 +25,85 @@
 from pyslurm.utils.uint import *
 from pyslurm.constants import UNLIMITED
 from pyslurm.core.error import RPCError
+from pyslurm.utils.helpers import instance_to_dict
+from pyslurm.utils import cstr
+import json
+
+
+TRES_TYPE_DELIM = "/"
+
+
+cdef class TrackableResourceLimits:
+
+    def __init__(self, **kwargs):
+        self.fs = {}
+        self.gres = {}
+        self.license = {}
+
+        for k, v in kwargs.items():
+            if TRES_TYPE_DELIM in k:
+                typ, name = self._unflatten_tres(k)
+                cur_val = getattr(self, typ)
+
+                if not isinstance(cur_val, dict):
+                    raise ValueError(f"TRES Type {typ} cannot have a name "
+                                     f"({name}). Invalid Value: {typ}/{name}")
+
+                cur_val.update({name : int(v)})
+                setattr(self, typ, cur_val)
+            else:
+                setattr(self, k, v)
+
+    @staticmethod
+    cdef from_ids(char *tres_id_str, TrackableResources tres_data):
+        tres_list = tres_ids_to_names(tres_id_str, tres_data)
+        if not tres_list:
+            return None
+
+        cdef TrackableResourceLimits out = TrackableResourceLimits()
+
+        for tres in tres_list:
+            typ, name, cnt = tres
+            cur_val = getattr(out, typ, slurm.NO_VAL64)
+            if cur_val != slurm.NO_VAL64:
+                if isinstance(cur_val, dict):
+                    cur_val.update({name : cnt})
+                    setattr(out, typ, cur_val)
+                else:
+                    setattr(out, typ, cnt)
+
+        return out
+
+    def _validate(self, TrackableResources tres_data):
+        id_dict = tres_names_to_ids(self.as_dict(flatten_limits=True),
+                                    tres_data)
+        return id_dict
+
+    def _unflatten_tres(self, type_and_name):
+        typ, name = type_and_name.split(TRES_TYPE_DELIM, 1)
+        return typ, name
+
+    def _flatten_tres(self, typ, vals):
+        cdef dict out = {}
+        for name, cnt in vals.items():
+            out[f"{typ}{TRES_TYPE_DELIM}{name}"] = cnt
+
+        return out
+
+    def as_dict(self, flatten_limits=False):
+        cdef dict inst_dict = instance_to_dict(self)
+
+        if flatten_limits:
+            vals = inst_dict.pop("fs")
+            inst_dict.update(self._flatten_tres("fs", vals))
+
+            vals = inst_dict.pop("license")
+            inst_dict.update(self._flatten_tres("license", vals))
+
+            vals = inst_dict.pop("gres")
+            inst_dict.update(self._flatten_tres("gres", vals))
+
+        return inst_dict
 
 
 cdef class TrackableResourceFilter:
@@ -162,7 +241,7 @@ cdef class TrackableResource:
     def type_and_name(self):
         type_and_name = self.type
         if self.name:
-            type_and_name = f"{type_and_name}/{self.name}"
+            type_and_name = f"{type_and_name}{TRES_TYPE_DELIM}{self.name}"
 
         return type_and_name
 
@@ -206,24 +285,22 @@ cdef merge_tres_str(char **tres_str, typ, val):
 
 cdef tres_ids_to_names(char *tres_str, TrackableResources tres_data):
     if not tres_str:
-        return {}
+        return None
 
     cdef:
         dict tdict = cstr.to_dict(tres_str)
-        dict out = {}
+        list out = []
 
     if not tres_data:
-        return tdict
+        return None
 
     for tid, cnt in tdict.items():
         if isinstance(tid, str) and tid.isdigit():
             _tid = int(tid)
             if _tid in tres_data:
-                out[tres_data[_tid].type_and_name] = cnt
-                continue
-
-        # If we can't find the TRES ID in our data, return it raw.
-        out[tid] = cnt
+                out.append(
+                    (tres_data[_tid].type, tres_data[_tid].name, int(cnt))
+                )
 
     return out
 

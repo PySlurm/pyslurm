@@ -45,6 +45,24 @@ cdef merge_tres_str(char **tres_str, typ, val)
 cdef tres_ids_to_names(char *tres_str, TrackableResources tres_data)
 
 
+cdef class TrackableResourceLimits:
+
+    cdef public:
+        cpu
+        mem
+        energy
+        node
+        billing
+        fs
+        vmem
+        pages
+        gres
+        license
+
+    @staticmethod
+    cdef from_ids(char *tres_id_str, TrackableResources tres_data)
+
+
 cdef class TrackableResourceFilter:
     cdef slurmdb_tres_cond_t *ptr
 
