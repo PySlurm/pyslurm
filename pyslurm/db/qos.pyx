@@ -24,6 +24,28 @@
 
 from pyslurm.core.error import RPCError
 from pyslurm.utils.helpers import instance_to_dict
+from pyslurm.db.connection import _open_conn_or_error
+
+
+def _qos_names_to_ids(qos_list, QualitiesOfService data):
+    cdef list out = []
+    if not qos_list:
+        return None
+
+    return [_validate_qos_single(qid, data) for qid in qos_list]
+
+
+def _validate_qos_single(qid, QualitiesOfService data):
+    for item in data.values():
+        if qid == item.id or qid == item.name:
+            return item.id
+
+    raise ValueError(f"Invalid QOS specified: {qid}")
+
+
+cdef _set_qos_list(List *in_list, vals, QualitiesOfService data):
+    qos_ids = _qos_names_to_ids(vals, data)
+    make_char_list(in_list, qos_ids)
 
 
 cdef class QualitiesOfService(dict):
@@ -32,34 +54,39 @@ cdef class QualitiesOfService(dict):
         pass
 
     @staticmethod
-    def load(search_filter=None, name_is_key=True, db_connection=None):
+    def load(QualityOfServiceSearchFilter db_filter=None,
+             db_connection=None, name_is_key=True):
         cdef:
-            QualitiesOfService qos_dict = QualitiesOfService()
+            QualitiesOfService out = QualitiesOfService()
             QualityOfService qos
-            QualityOfServiceSearchFilter cond
+            QualityOfServiceSearchFilter cond = db_filter
+            SlurmList qos_data
             SlurmListItem qos_ptr
-            Connection conn = <Connection>db_connection
+            Connection conn
 
-        if search_filter:
-            cond = <QualityOfServiceSearchFilter>search_filter
-        else:
+        # Prepare SQL Filter
+        if not db_filter:
             cond = QualityOfServiceSearchFilter()
-
         cond._create()
-        qos_dict.db_conn = Connection.open() if not conn else conn
-        qos_dict.info = SlurmList.wrap(slurmdb_qos_get(qos_dict.db_conn.ptr,
-                                                       cond.ptr))
-        if qos_dict.info.is_null:
+
+        # Setup DB Conn
+        conn = _open_conn_or_error(db_connection)
+
+        # Fetch QoS Data
+        qos_data = SlurmList.wrap(slurmdb_qos_get(conn.ptr, cond.ptr))
+
+        if qos_data.is_null:
             raise RPCError(msg="Failed to get QoS data from slurmdbd")
 
-        for qos_ptr in SlurmList.iter_and_pop(qos_dict.info):
+        # Setup QOS objects
+        for qos_ptr in SlurmList.iter_and_pop(qos_data):
             qos = QualityOfService.from_ptr(<slurmdb_qos_rec_t*>qos_ptr.data)
             if name_is_key:
-                qos_dict[qos.name] = qos
+                out[qos.name] = qos
             else:
-                qos_dict[qos.id] = qos
+                out[qos.id] = qos
 
-        return qos_dict
+        return out
 
 
 cdef class QualityOfServiceSearchFilter:

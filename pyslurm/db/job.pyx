@@ -41,6 +41,7 @@ from pyslurm.utils.helpers import (
     instance_to_dict,
     _get_exit_code,
 )
+from pyslurm.db.connection import _open_conn_or_error
 
 
 cdef class JobSearchFilter:
@@ -194,15 +195,17 @@ cdef class Jobs(dict):
                     self[job.name] = job
 
     @staticmethod
-    def load(search_filter=None):
+    def load(JobSearchFilter db_filter=None, Connection db_connection=None):
         """Load Jobs from the Slurm Database
 
         Implements the slurmdb_jobs_get RPC.
 
         Args:
-            search_filter (pyslurm.db.JobSearchFilter):
+            db_filter (pyslurm.db.JobSearchFilter):
                 A search filter that the slurmdbd will apply when retrieving
                 Jobs from the database.
+            db_connection (pyslurm.db.Connection):
+                An open database connection.
 
         Returns:
             (pyslurm.db.Jobs): A Collection of database Jobs.
@@ -223,30 +226,35 @@ cdef class Jobs(dict):
 
             >>> import pyslurm
             >>> accounts = ["acc1", "acc2"]
-            >>> search_filter = pyslurm.db.JobSearchFilter(accounts=accounts)
-            >>> db_jobs = pyslurm.db.Jobs.load(search_filter)
+            >>> db_filter = pyslurm.db.JobSearchFilter(accounts=accounts)
+            >>> db_jobs = pyslurm.db.Jobs.load(db_filter)
         """
         cdef:
-            Jobs jobs = Jobs()
+            Jobs out = Jobs()
             Job job
-            JobSearchFilter cond
+            JobSearchFilter cond = db_filter
+            SlurmList job_data
             SlurmListItem job_ptr
+            Connection conn
             QualitiesOfService qos_data
 
-        if search_filter:
-            cond = <JobSearchFilter>search_filter
-        else:
+        # Prepare SQL Filter
+        if not db_filter:
             cond = JobSearchFilter()
-
         cond._create()
-        jobs.db_conn = Connection.open()
-        jobs.info = SlurmList.wrap(slurmdb_jobs_get(jobs.db_conn.ptr,
-                                                    cond.ptr))
-        if jobs.info.is_null:
+
+        # Setup DB Conn
+        conn = _open_conn_or_error(db_connection)
+
+        # Fetch Job data
+        job_data = SlurmList.wrap(slurmdb_jobs_get(conn.ptr, cond.ptr))
+        if job_data.is_null:
             raise RPCError(msg="Failed to get Jobs from slurmdbd")
 
+        # Fetch other necessary dependencies needed for translating some
+        # attributes (i.e QoS IDs to its name)
         qos_data = QualitiesOfService.load(name_is_key=False,
-                                           db_connection=jobs.db_conn)
+                                           db_connection=conn)
 
         # TODO: also get trackable resources with slurmdb_tres_get and store
         # it in each job instance. tres_alloc_str and tres_req_str only
@@ -256,23 +264,23 @@ cdef class Jobs(dict):
         # TODO: For multi-cluster support, remove duplicate federation jobs
         # TODO: How to handle the possibility of duplicate job ids that could
         # appear if IDs on a cluster are resetted?
-        for job_ptr in SlurmList.iter_and_pop(jobs.info):
+        for job_ptr in SlurmList.iter_and_pop(job_data):
             job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
             job.qos_data = qos_data
             job._create_steps()
             JobStatistics._sum_step_stats_for_job(job, job.steps)
-            jobs[job.id] = job
+            out[job.id] = job
 
-        return jobs
+        return out
 
     @staticmethod
-    def modify(search_filter, Job changes, db_connection=None):
+    def modify(db_filter, Job changes, db_connection=None):
         """Modify Slurm database Jobs.
 
         Implements the slurm_job_modify RPC.
 
         Args:
-            search_filter (Union[pyslurm.db.JobSearchFilter, pyslurm.db.Jobs]):
+            db_filter (Union[pyslurm.db.JobSearchFilter, pyslurm.db.Jobs]):
                 A filter to decide which Jobs should be modified.
             changes (pyslurm.db.Job):
                 Another [pyslurm.db.Job][] object that contains all the
@@ -307,9 +315,9 @@ cdef class Jobs(dict):
 
             >>> import pyslurm
             >>> 
-            >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> db_filter = pyslurm.db.JobSearchFilter(ids=[9999])
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
-            >>> modified_jobs = pyslurm.db.Jobs.modify(search_filter, changes)
+            >>> modified_jobs = pyslurm.db.Jobs.modify(db_filter, changes)
             >>> print(modified_jobs)
             >>> [9999]
 
@@ -321,10 +329,10 @@ cdef class Jobs(dict):
             >>> import pyslurm
             >>> 
             >>> db_conn = pyslurm.db.Connection.open()
-            >>> search_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> db_filter = pyslurm.db.JobSearchFilter(ids=[9999])
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(
-            ...             search_filter, changes, db_conn)
+            ...             db_filter, changes, db_conn)
             >>> 
             >>> # Now you can first examine which Jobs have been modified
             >>> print(modified_jobs)
@@ -333,28 +341,29 @@ cdef class Jobs(dict):
             >>> # changes
             >>> db_conn.commit()
         """
-
         cdef:
-            Job job = <Job>changes
-            JobSearchFilter jfilter
-            Connection conn = <Connection>db_connection
+            JobSearchFilter cond
+            Connection conn
             SlurmList response
             SlurmListItem response_ptr
             list out = []
 
-        conn = Connection.open() if not conn else conn
-        if not conn.is_open:
-            raise ValueError("Database connection is not open")
-
-        if isinstance(search_filter, Jobs):
-            job_ids = list(search_filter.keys())
-            jfilter = JobSearchFilter(ids=job_ids)
+        # Prepare SQL Filter
+        if isinstance(db_filter, Jobs):
+            job_ids = list(db_filter.keys())
+            cond = JobSearchFilter(ids=job_ids)
         else:
-            jfilter = <JobSearchFilter>search_filter
+            cond = <JobSearchFilter>db_filter
+        cond._create()
 
-        jfilter._create()
+        # Setup DB Conn
+        conn = _open_conn_or_error(db_connection)
+
+        # Modify Jobs, get the result
+        # This returns a List of char* with the Jobs ids that were
+        # modified
         response = SlurmList.wrap(
-                slurmdb_job_modify(conn.ptr, jfilter.ptr, job.ptr))
+                slurmdb_job_modify(conn.ptr, cond.ptr, changes.ptr))
 
         if not response.is_null and response.cnt:
             for response_ptr in response:

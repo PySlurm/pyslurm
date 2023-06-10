@@ -152,9 +152,7 @@ cdef class JobSearchFilter:
 
 cdef class Jobs(dict):
     """A collection of [pyslurm.db.Job][] objects."""
-    cdef:
-        SlurmList info
-        Connection db_conn
+    pass
 
 
 cdef class Job:

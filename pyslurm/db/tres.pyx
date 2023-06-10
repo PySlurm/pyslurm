@@ -27,6 +27,7 @@ from pyslurm.constants import UNLIMITED
 from pyslurm.core.error import RPCError
 from pyslurm.utils.helpers import instance_to_dict
 from pyslurm.utils import cstr
+from pyslurm.db.connection import _open_conn_or_error
 import json
 
 
@@ -56,7 +57,7 @@ cdef class TrackableResourceLimits:
 
     @staticmethod
     cdef from_ids(char *tres_id_str, TrackableResources tres_data):
-        tres_list = tres_ids_to_names(tres_id_str, tres_data)
+        tres_list = _tres_ids_to_names(tres_id_str, tres_data)
         if not tres_list:
             return None
 
@@ -75,7 +76,7 @@ cdef class TrackableResourceLimits:
         return out
 
     def _validate(self, TrackableResources tres_data):
-        id_dict = tres_names_to_ids(self.as_dict(flatten_limits=True),
+        id_dict = _tres_names_to_ids(self.as_dict(flatten_limits=True),
                                     tres_data)
         return id_dict
 
@@ -143,24 +144,25 @@ cdef class TrackableResources(dict):
         cdef:
             TrackableResources out = TrackableResources()
             TrackableResource tres
-            Connection conn = db_connection
-            SlurmList tres_list 
+            Connection conn
+            SlurmList tres_data 
             SlurmListItem tres_ptr 
             TrackableResourceFilter db_filter = TrackableResourceFilter()
 
-        if not conn:
-            conn = Connection.open()
-
-        if not conn.is_open:
-            raise ValueError("Database connection is not open")
-
+        # Prepare SQL Filter
         db_filter._create()
-        tres_list = SlurmList.wrap(slurmdb_tres_get(conn.ptr, db_filter.ptr))
 
-        if tres_list.is_null:
+        # Setup DB Conn
+        conn = _open_conn_or_error(db_connection)
+
+        # Fetch TRES data
+        tres_data = SlurmList.wrap(slurmdb_tres_get(conn.ptr, db_filter.ptr))
+
+        if tres_data.is_null:
             raise RPCError(msg="Failed to get TRES data from slurmdbd")
 
-        for tres_ptr in SlurmList.iter_and_pop(tres_list):
+        # Setup TRES objects
+        for tres_ptr in SlurmList.iter_and_pop(tres_data):
             tres = TrackableResource.from_ptr(
                     <slurmdb_tres_rec_t*>tres_ptr.data)
 
@@ -283,7 +285,7 @@ cdef merge_tres_str(char **tres_str, typ, val):
     cstr.from_dict(tres_str, current)
 
 
-cdef tres_ids_to_names(char *tres_str, TrackableResources tres_data):
+cdef _tres_ids_to_names(char *tres_str, TrackableResources tres_data):
     if not tres_str:
         return None
 
@@ -305,21 +307,26 @@ cdef tres_ids_to_names(char *tres_str, TrackableResources tres_data):
     return out
 
 
-def tres_names_to_ids(dict tres_dict, TrackableResources tres_data):
+def _tres_names_to_ids(dict tres_dict, TrackableResources tres_data):
     cdef dict out = {}
     if not tres_dict:
         return out
 
     for tid, cnt in tres_dict.items():
-        real_id = validate_tres_single(tid, tres_data)
+        real_id = _validate_tres_single(tid, tres_data)
         out[real_id] = cnt
 
     return out
 
 
-def validate_tres_single(tid, TrackableResources tres_data):
+def _validate_tres_single(tid, TrackableResources tres_data):
     for tres in tres_data.values():
         if tid == tres.id or tid == tres.type_and_name:
             return tres.id
 
     raise ValueError(f"Invalid TRES specified: {tid}")
+
+
+cdef _set_tres_limits(char **dest, TrackableResourceLimits src,
+                          TrackableResources tres_data):
+    cstr.from_dict(dest, src._validate(tres_data))

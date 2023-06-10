@@ -27,8 +27,8 @@ from pyslurm.utils.helpers import (
     instance_to_dict,
     user_to_uid,
 )
-from pyslurm.db.tres import tres_names_to_ids
 from pyslurm.utils.uint import *
+from pyslurm.db.connection import _open_conn_or_error
 
 
 cdef class Associations(dict):
@@ -37,76 +37,78 @@ cdef class Associations(dict):
         pass
 
     @staticmethod
-    def load(AssociationFilter search_filter=None,
-             Connection db_connection=None):
+    def load(AssociationFilter db_filter=None, Connection db_connection=None):
         cdef:
-            Associations assoc_dict = Associations()
+            Associations out = Associations()
             Association assoc
-            AssociationFilter cond = search_filter
+            AssociationFilter cond = db_filter
+            SlurmList assoc_data
             SlurmListItem assoc_ptr
-            Connection conn = db_connection
+            Connection conn
             QualitiesOfService qos_data
             TrackableResources tres_data
 
-        if not search_filter:
+        # Prepare SQL Filter
+        if not db_filter:
             cond = AssociationFilter()
         cond._create()
 
-        if not conn:
-            conn = Connection.open()
+        # Setup DB Conn
+        conn = _open_conn_or_error(db_connection)
 
-        if not conn.is_open:
-            raise ValueError("Database connection is not open")
-
-        assoc_dict.info = SlurmList.wrap(
-                slurmdb_associations_get(conn.ptr, cond.ptr))
+        # Fetch Assoc Data
+        assoc_data = SlurmList.wrap(slurmdb_associations_get(
+            conn.ptr, cond.ptr))
         
-        if assoc_dict.info.is_null:
+        if assoc_data.is_null:
             raise RPCError(msg="Failed to get Association data from slurmdbd")
 
+        # Fetch other necessary dependencies needed for translating some
+        # attributes (i.e QoS IDs to its name)
         qos_data = QualitiesOfService.load(name_is_key=False,
                                            db_connection=conn)
         tres_data = TrackableResources.load(name_is_key=False,
                                             db_connection=conn)
 
-        for assoc_ptr in SlurmList.iter_and_pop(assoc_dict.info):
+        # Setup Association objects
+        for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
             assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>assoc_ptr.data)
             assoc.qos_data = qos_data
             assoc.tres_data = tres_data
-            assoc._parse_tres()
-            assoc_dict[assoc.id] = assoc
+            _parse_assoc_ptr(assoc)
+            out[assoc.id] = assoc
 
-        return assoc_dict
+        return out
 
     @staticmethod
-    def modify(assocs, Association changes,
-               Connection db_connection=None):
+    def modify(db_filter, Association changes, Connection db_connection=None):
         cdef:
             AssociationFilter afilter
-            Connection conn = db_connection
+            Connection conn
             SlurmList response
             SlurmListItem response_ptr
             list out = []
 
-        if not conn:
-            conn = Connection.open()
-
-        if not conn.is_open:
-            raise ValueError("Database connection is not open")
-
-        if isinstance(assocs, Associations):
-            assoc_ids = list(assocs.keys())
+        # Prepare SQL Filter
+        if isinstance(db_filter, Associations):
+            assoc_ids = list(db_filter.keys())
             afilter = AssociationFilter(ids=assoc_ids)
         else:
-            afilter = <AssociationFilter>assocs
-
-        # Check if TRES specified are actually valid. slurmdbd does not
-        # give an explicit error and just ignores invalid tres types.
-        changes._validate_tres()
-
+            afilter = <AssociationFilter>db_filter
         afilter._create()
-        response = SlurmList.wrap(
-                slurmdb_associations_modify(conn.ptr, afilter.ptr, changes.ptr))
+
+        # Setup DB conn
+        conn = _open_conn_or_error(db_connection)
+
+        # Any data that isn't parsed yet or needs validation is done in this
+        # function.
+        _create_assoc_ptr(changes, conn)
+
+        # Modify associations, get the result
+        # This returns a List of char* with the associations that were
+        # modified
+        response = SlurmList.wrap(slurmdb_associations_modify(
+            conn.ptr, afilter.ptr, changes.ptr))
 
         if not response.is_null and response.cnt:
             for response_ptr in response:
@@ -195,23 +197,6 @@ cdef class Association:
         wrap.ptr = in_ptr
         return wrap
 
-    def _parse_tres(self):
-        cdef TrackableResources tres = self.tres_data
-        self.group_tres = TrackableResourceLimits.from_ids(
-                self.ptr.grp_tres, tres)
-        self.group_tres_mins = TrackableResourceLimits.from_ids(
-                self.ptr.grp_tres_mins, tres)
-        self.group_tres_run_mins = TrackableResourceLimits.from_ids(
-                self.ptr.grp_tres_mins, tres)
-        self.max_tres_mins_per_job = TrackableResourceLimits.from_ids(
-                self.ptr.max_tres_mins_pj, tres)
-        self.max_tres_run_mins_per_user = TrackableResourceLimits.from_ids(
-                self.ptr.max_tres_run_mins, tres)
-        self.max_tres_per_job = TrackableResourceLimits.from_ids(
-                self.ptr.max_tres_pj, tres)
-        self.max_tres_per_node = TrackableResourceLimits.from_ids(
-                self.ptr.max_tres_pn, tres)
-
     def as_dict(self):
         """Database Association information formatted as a dictionary.
 
@@ -219,23 +204,6 @@ cdef class Association:
             (dict): Database Association information as dict
         """
         return instance_to_dict(self)
-
-    def _validate_tres(self):
-        self.tres_data = TrackableResources.load(name_is_key=False)
-        cstr.from_dict(&self.ptr.grp_tres,
-                       self.group_tres._validate(self.tres_data))
-        cstr.from_dict(&self.ptr.grp_tres_mins,
-                       self.group_tres_mins._validate(self.tres_data))
-        cstr.from_dict(&self.ptr.grp_tres_run_mins,
-                       self.group_tres_run_mins._validate(self.tres_data))
-        cstr.from_dict(&self.ptr.max_tres_mins_pj,
-                       self.max_tres_mins_per_job._validate(self.tres_data))
-        cstr.from_dict(&self.ptr.max_tres_run_mins,
-                       self.max_tres_run_mins_per_user._validate(self.tres_data))
-        cstr.from_dict(&self.ptr.max_tres_pj,
-                       self.max_tres_per_job._validate(self.tres_data))
-        cstr.from_dict(&self.ptr.max_tres_pn,
-                       self.max_tres_per_node._validate(self.tres_data))
 
     @staticmethod
     def load(name):
@@ -382,15 +350,6 @@ cdef class Association:
         self.ptr.priority = u32(val)
 
     @property
-    def qos(self):
-        return qos_list_to_pylist(self.ptr.qos_list, self.qos_data)
-
-    @qos.setter
-    def qos(self, val):
-        # TODO: must be ids
-        make_char_list(&self.ptr.qos_list, val)
-
-    @property
     def rgt(self):
         return self.ptr.rgt
 
@@ -409,4 +368,54 @@ cdef class Association:
     @user.setter
     def user(self, val):
         cstr.fmalloc(&self.ptr.user, val)
+
+
+cdef _parse_assoc_ptr(Association ass):
+    cdef:
+        TrackableResources tres = ass.tres_data
+        QualitiesOfService qos = ass.qos_data
+
+    ass.group_tres = TrackableResourceLimits.from_ids(
+            ass.ptr.grp_tres, tres)
+    ass.group_tres_mins = TrackableResourceLimits.from_ids(
+            ass.ptr.grp_tres_mins, tres)
+    ass.group_tres_run_mins = TrackableResourceLimits.from_ids(
+            ass.ptr.grp_tres_mins, tres)
+    ass.max_tres_mins_per_job = TrackableResourceLimits.from_ids(
+            ass.ptr.max_tres_mins_pj, tres)
+    ass.max_tres_run_mins_per_user = TrackableResourceLimits.from_ids(
+            ass.ptr.max_tres_run_mins, tres)
+    ass.max_tres_per_job = TrackableResourceLimits.from_ids(
+            ass.ptr.max_tres_pj, tres)
+    ass.max_tres_per_node = TrackableResourceLimits.from_ids(
+            ass.ptr.max_tres_pn, tres)
+    ass.qos = qos_list_to_pylist(ass.ptr.qos_list, qos)
+
+
+cdef _create_assoc_ptr(Association ass, conn=None):
+    # _set_tres_limits will also check if specified TRES are valid and
+    # translate them to its ID which is why we need to load the current TRES
+    # available in the system.
+    ass.tres_data = TrackableResources.load(name_is_key=False,
+                                            db_connection=conn)
+    _set_tres_limits(&ass.ptr.grp_tres, ass.group_tres, ass.tres_data)
+    _set_tres_limits(&ass.ptr.grp_tres_mins, ass.group_tres_mins,
+                    ass.tres_data)
+    _set_tres_limits(&ass.ptr.grp_tres_run_mins, ass.group_tres_run_mins,
+                    ass.tres_data)
+    _set_tres_limits(&ass.ptr.max_tres_mins_pj, ass.max_tres_mins_per_job,
+                    ass.tres_data)
+    _set_tres_limits(&ass.ptr.max_tres_run_mins, ass.max_tres_run_mins_per_user,
+                    ass.tres_data)
+    _set_tres_limits(&ass.ptr.max_tres_pj, ass.max_tres_per_job,
+                    ass.tres_data)
+    _set_tres_limits(&ass.ptr.max_tres_pn, ass.max_tres_per_node,
+                    ass.tres_data)
+
+    # _set_qos_list will also check if specified QoS are valid and translate
+    # them to its ID, which is why we need to load the current QOS available
+    # in the system.
+    ass.qos_data = QualitiesOfService.load(name_is_key=False,
+                                           db_connection=conn)
+    _set_qos_list(&ass.ptr.qos_list, self.qos, ass.qos_data)
 

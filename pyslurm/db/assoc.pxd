@@ -41,20 +41,21 @@ from pyslurm.db.util cimport (
     qos_list_to_pylist,
 )
 from pyslurm.db.tres cimport (
-    find_tres_limit,
-    merge_tres_str,
-    tres_ids_to_names,
+    _set_tres_limits,
     TrackableResources,
     TrackableResourceLimits,
 )
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.utils.uint cimport *
-from pyslurm.db.qos cimport QualitiesOfService
+from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
+
+cdef _parse_assoc_ptr(Association ass)
+cdef _create_assoc_ptr(Association ass, conn=*)
 
 
 cdef class Associations(dict):
-    cdef SlurmList info
+    pass
 
 
 cdef class AssociationFilter:
@@ -79,6 +80,7 @@ cdef class Association:
         max_tres_run_mins_per_user
         max_tres_per_job
         max_tres_per_node
+        qos
 
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr)
