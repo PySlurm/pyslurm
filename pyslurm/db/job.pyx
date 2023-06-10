@@ -27,7 +27,6 @@ from pyslurm.core.error import RPCError, PyslurmError
 from pyslurm.core import slurmctld
 from typing import Any
 from pyslurm.utils.uint import *
-from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,
@@ -40,14 +39,12 @@ from pyslurm.utils.helpers import (
     uid_to_name,
     nodelist_to_range_str,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
     _get_exit_code,
 )
 from pyslurm.db.connection import _open_conn_or_error
 
 
-cdef class JobFilter:
+cdef class JobSearchFilter:
 
     def __cinit__(self):
         self.ptr = NULL
@@ -77,19 +74,14 @@ cdef class JobFilter:
             return None
 
         qos_id_list = []
-        qos_data = QualitiesOfService.load()
-        for user_input in self.qos:
-            found = False
-            for qos in qos_data:
-                if (qos.id == user_input
-                        or qos.name == user_input
-                        or qos == user_input):
-                    qos_id_list.append(str(qos.id))
-                    found = True
-                    break
-
-            if not found:
-                raise ValueError(f"QoS '{user_input}' does not exist")
+        qos = QualitiesOfService.load()
+        for q in self.qos:
+            if isinstance(q, int):
+                qos_id_list.append(q)
+            elif q in qos:
+                qos_id_list.append(str(qos[q].id))
+            else:
+                raise ValueError(f"QoS {q} does not exist")
 
         return qos_id_list
 
@@ -105,9 +97,11 @@ cdef class JobFilter:
 
     def _parse_clusters(self):
         if not self.clusters:
+            # Get the local cluster name
             # This is a requirement for some other parameters to function
             # correctly, like self.nodelist
-            return [LOCAL_CLUSTER]
+            slurm_conf = slurmctld.Config.load()
+            return [slurm_conf.cluster]
         elif self.clusters == "all":
             return None
         else:
@@ -185,67 +179,29 @@ cdef class JobFilter:
         slurmdb_job_cond_def_start_end(ptr)
 
 
-# Alias
-JobSearchFilter = JobFilter
-
-
-cdef class Jobs(list):
+cdef class Jobs(dict):
 
     def __init__(self, jobs=None):
-        if isinstance(jobs, list):
-            for job in jobs:
-                if isinstance(job, int):
-                    self.append(Job(job))
-                else:
-                    self.append(job)
+        if isinstance(jobs, dict):
+            self.update(jobs)
         elif isinstance(jobs, str):
             joblist = jobs.split(",")
-            self.extend([Job(job) for job in joblist])
-        elif isinstance(jobs, dict):
-            self.extend([job for job in jobs.values()])
+            self.update({int(job): Job(job) for job in joblist})
         elif jobs is not None:
-            raise TypeError("Invalid Type: {type(jobs)}")
-
-    def as_dict(self, recursive=False, group_by_cluster=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-            group_by_cluster (bool, optional):
-                By default, only the Jobs from your local Cluster are
-                returned. If this is set to `True`, then all the Jobs in the
-                collection will be grouped by the Cluster - with the name of
-                the cluster as the key and the value being the collection as
-                another dict.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Job.id, recursive=recursive)
-        if not group_by_cluster:
-            return col.get(LOCAL_CLUSTER, {})
-
-        return col
-
-    def group_by_cluster(self):
-        """Group Jobs by cluster name
-
-        Returns:
-            (dict[str, Jobs]): Jobs grouped by cluster.
-        """
-        return group_collection_by_cluster(self)
+            for job in jobs:
+                if isinstance(job, int):
+                    self[job] = Job(job)
+                else:
+                    self[job.name] = job
 
     @staticmethod
-    def load(JobFilter db_filter=None, Connection db_connection=None):
+    def load(JobSearchFilter db_filter=None, Connection db_connection=None):
         """Load Jobs from the Slurm Database
 
         Implements the slurmdb_jobs_get RPC.
 
         Args:
-            db_filter (pyslurm.db.JobFilter):
+            db_filter (pyslurm.db.JobSearchFilter):
                 A search filter that the slurmdbd will apply when retrieving
                 Jobs from the database.
             db_connection (pyslurm.db.Connection):
@@ -270,21 +226,21 @@ cdef class Jobs(list):
 
             >>> import pyslurm
             >>> accounts = ["acc1", "acc2"]
-            >>> db_filter = pyslurm.db.JobFilter(accounts=accounts)
+            >>> db_filter = pyslurm.db.JobSearchFilter(accounts=accounts)
             >>> db_jobs = pyslurm.db.Jobs.load(db_filter)
         """
         cdef:
             Jobs out = Jobs()
             Job job
-            JobFilter cond = db_filter
+            JobSearchFilter cond = db_filter
             SlurmList job_data
             SlurmListItem job_ptr
             Connection conn
-            dict qos_data
+            QualitiesOfService qos_data
 
         # Prepare SQL Filter
         if not db_filter:
-            cond = JobFilter()
+            cond = JobSearchFilter()
         cond._create()
 
         # Setup DB Conn
@@ -297,8 +253,8 @@ cdef class Jobs(list):
 
         # Fetch other necessary dependencies needed for translating some
         # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(db_connection=conn).as_dict(
-                name_is_key=False)
+        qos_data = QualitiesOfService.load(name_is_key=False,
+                                           db_connection=conn)
 
         # TODO: also get trackable resources with slurmdb_tres_get and store
         # it in each job instance. tres_alloc_str and tres_req_str only
@@ -313,7 +269,7 @@ cdef class Jobs(list):
             job.qos_data = qos_data
             job._create_steps()
             JobStatistics._sum_step_stats_for_job(job, job.steps)
-            out.append(job)
+            out[job.id] = job
 
         return out
 
@@ -324,7 +280,7 @@ cdef class Jobs(list):
         Implements the slurm_job_modify RPC.
 
         Args:
-            db_filter (Union[pyslurm.db.JobFilter, pyslurm.db.Jobs]):
+            db_filter (Union[pyslurm.db.JobSearchFilter, pyslurm.db.Jobs]):
                 A filter to decide which Jobs should be modified.
             changes (pyslurm.db.Job):
                 Another [pyslurm.db.Job][] object that contains all the
@@ -359,7 +315,7 @@ cdef class Jobs(list):
 
             >>> import pyslurm
             >>> 
-            >>> db_filter = pyslurm.db.JobFilter(ids=[9999])
+            >>> db_filter = pyslurm.db.JobSearchFilter(ids=[9999])
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(db_filter, changes)
             >>> print(modified_jobs)
@@ -373,7 +329,7 @@ cdef class Jobs(list):
             >>> import pyslurm
             >>> 
             >>> db_conn = pyslurm.db.Connection.open()
-            >>> db_filter = pyslurm.db.JobFilter(ids=[9999])
+            >>> db_filter = pyslurm.db.JobSearchFilter(ids=[9999])
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(
             ...             db_filter, changes, db_conn)
@@ -386,7 +342,7 @@ cdef class Jobs(list):
             >>> db_conn.commit()
         """
         cdef:
-            JobFilter cond
+            JobSearchFilter cond
             Connection conn
             SlurmList response
             SlurmListItem response_ptr
@@ -394,10 +350,10 @@ cdef class Jobs(list):
 
         # Prepare SQL Filter
         if isinstance(db_filter, Jobs):
-            job_ids = [job.id for job in self]
-            cond = JobFilter(ids=job_ids)
+            job_ids = list(db_filter.keys())
+            cond = JobSearchFilter(ids=job_ids)
         else:
-            cond = <JobFilter>db_filter
+            cond = <JobSearchFilter>db_filter
         cond._create()
 
         # Setup DB Conn
@@ -444,10 +400,9 @@ cdef class Job:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, job_id=0, cluster=LOCAL_CLUSTER, **kwargs):
+    def __init__(self, job_id=0, **kwargs):
         self._alloc_impl()
         self.ptr.jobid = int(job_id)
-        cstr.fmalloc(&self.ptr.cluster, cluster)
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -471,7 +426,7 @@ cdef class Job:
         return wrap
 
     @staticmethod
-    def load(job_id, cluster=LOCAL_CLUSTER, with_script=False, with_env=False):
+    def load(job_id, with_script=False, with_env=False):
         """Load the information for a specific Job from the Database.
 
         Args:
@@ -498,15 +453,13 @@ cdef class Job:
             >>> print(db_job.script)
 
         """
-        jfilter = JobFilter(ids=[int(job_id)], clusters=[cluster],
-                            with_script=with_script, with_env=with_env)
+        jfilter = JobSearchFilter(ids=[int(job_id)],
+                                  with_script=with_script, with_env=with_env)
         jobs = Jobs.load(jfilter)
-        if not jobs:
-            raise RPCError(msg=f"Job {job_id} does not exist on "
-                           f"Cluster {cluster}")
+        if not jobs or job_id not in jobs:
+            raise RPCError(msg=f"Job {job_id} does not exist")
 
-        # TODO: There might be multiple entries when job ids were reset.
-        return jobs[0]
+        return jobs[job_id]
 
     def _create_steps(self):
         cdef:
@@ -559,7 +512,7 @@ cdef class Job:
         Raises:
             RPCError: When modifying the Job failed.
         """
-        cdef JobFilter jfilter = JobFilter(ids=[self.id])
+        cdef JobSearchFilter jfilter = JobSearchFilter(ids=[self.id])
         Jobs.modify(jfilter, changes, db_connection)
 
     @property

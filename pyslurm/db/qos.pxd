@@ -44,11 +44,11 @@ from pyslurm.utils cimport cstr
 cdef _set_qos_list(List *in_list, vals, QualitiesOfService data)
 
 
-cdef class QualitiesOfService(list):
+cdef class QualitiesOfService(dict):
     pass
 
 
-cdef class QualityOfServiceFilter:
+cdef class QualityOfServiceSearchFilter:
    cdef slurmdb_qos_cond_t *ptr
 
    cdef public:
