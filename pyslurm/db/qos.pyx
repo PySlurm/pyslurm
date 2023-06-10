@@ -54,19 +54,19 @@ cdef class QualitiesOfService(dict):
         pass
 
     @staticmethod
-    def load(QualityOfServiceSearchFilter db_filter=None,
+    def load(QualityOfServiceFilter db_filter=None,
              db_connection=None, name_is_key=True):
         cdef:
             QualitiesOfService out = QualitiesOfService()
             QualityOfService qos
-            QualityOfServiceSearchFilter cond = db_filter
+            QualityOfServiceFilter cond = db_filter
             SlurmList qos_data
             SlurmListItem qos_ptr
             Connection conn
 
         # Prepare SQL Filter
         if not db_filter:
-            cond = QualityOfServiceSearchFilter()
+            cond = QualityOfServiceFilter()
         cond._create()
 
         # Setup DB Conn
@@ -89,7 +89,7 @@ cdef class QualitiesOfService(dict):
         return out
 
 
-cdef class QualityOfServiceSearchFilter:
+cdef class QualityOfServiceFilter:
 
     def __cinit__(self):
         self.ptr = NULL
@@ -195,7 +195,7 @@ cdef class QualityOfService:
             RPCError: If requesting the information from the database was not
                 sucessful.
         """
-        qfilter = QualityOfServiceSearchFilter(names=[name])
+        qfilter = QualityOfServiceFilter(names=[name])
         qos_data = QualitiesOfService.load(qfilter)
         if not qos_data or name not in qos_data:
             raise RPCError(msg=f"QualityOfService {name} does not exist")

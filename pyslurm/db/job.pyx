@@ -44,7 +44,7 @@ from pyslurm.utils.helpers import (
 from pyslurm.db.connection import _open_conn_or_error
 
 
-cdef class JobSearchFilter:
+cdef class JobFilter:
 
     def __cinit__(self):
         self.ptr = NULL
@@ -179,6 +179,10 @@ cdef class JobSearchFilter:
         slurmdb_job_cond_def_start_end(ptr)
 
 
+# Alias
+JobSearchFilter = JobFilter
+
+
 cdef class Jobs(dict):
 
     def __init__(self, jobs=None):
@@ -195,13 +199,13 @@ cdef class Jobs(dict):
                     self[job.name] = job
 
     @staticmethod
-    def load(JobSearchFilter db_filter=None, Connection db_connection=None):
+    def load(JobFilter db_filter=None, Connection db_connection=None):
         """Load Jobs from the Slurm Database
 
         Implements the slurmdb_jobs_get RPC.
 
         Args:
-            db_filter (pyslurm.db.JobSearchFilter):
+            db_filter (pyslurm.db.JobFilter):
                 A search filter that the slurmdbd will apply when retrieving
                 Jobs from the database.
             db_connection (pyslurm.db.Connection):
@@ -226,13 +230,13 @@ cdef class Jobs(dict):
 
             >>> import pyslurm
             >>> accounts = ["acc1", "acc2"]
-            >>> db_filter = pyslurm.db.JobSearchFilter(accounts=accounts)
+            >>> db_filter = pyslurm.db.JobFilter(accounts=accounts)
             >>> db_jobs = pyslurm.db.Jobs.load(db_filter)
         """
         cdef:
             Jobs out = Jobs()
             Job job
-            JobSearchFilter cond = db_filter
+            JobFilter cond = db_filter
             SlurmList job_data
             SlurmListItem job_ptr
             Connection conn
@@ -240,7 +244,7 @@ cdef class Jobs(dict):
 
         # Prepare SQL Filter
         if not db_filter:
-            cond = JobSearchFilter()
+            cond = JobFilter()
         cond._create()
 
         # Setup DB Conn
@@ -280,7 +284,7 @@ cdef class Jobs(dict):
         Implements the slurm_job_modify RPC.
 
         Args:
-            db_filter (Union[pyslurm.db.JobSearchFilter, pyslurm.db.Jobs]):
+            db_filter (Union[pyslurm.db.JobFilter, pyslurm.db.Jobs]):
                 A filter to decide which Jobs should be modified.
             changes (pyslurm.db.Job):
                 Another [pyslurm.db.Job][] object that contains all the
@@ -315,7 +319,7 @@ cdef class Jobs(dict):
 
             >>> import pyslurm
             >>> 
-            >>> db_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> db_filter = pyslurm.db.JobFilter(ids=[9999])
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(db_filter, changes)
             >>> print(modified_jobs)
@@ -329,7 +333,7 @@ cdef class Jobs(dict):
             >>> import pyslurm
             >>> 
             >>> db_conn = pyslurm.db.Connection.open()
-            >>> db_filter = pyslurm.db.JobSearchFilter(ids=[9999])
+            >>> db_filter = pyslurm.db.JobFilter(ids=[9999])
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(
             ...             db_filter, changes, db_conn)
@@ -342,7 +346,7 @@ cdef class Jobs(dict):
             >>> db_conn.commit()
         """
         cdef:
-            JobSearchFilter cond
+            JobFilter cond
             Connection conn
             SlurmList response
             SlurmListItem response_ptr
@@ -351,9 +355,9 @@ cdef class Jobs(dict):
         # Prepare SQL Filter
         if isinstance(db_filter, Jobs):
             job_ids = list(db_filter.keys())
-            cond = JobSearchFilter(ids=job_ids)
+            cond = JobFilter(ids=job_ids)
         else:
-            cond = <JobSearchFilter>db_filter
+            cond = <JobFilter>db_filter
         cond._create()
 
         # Setup DB Conn
@@ -453,7 +457,7 @@ cdef class Job:
             >>> print(db_job.script)
 
         """
-        jfilter = JobSearchFilter(ids=[int(job_id)],
+        jfilter = JobFilter(ids=[int(job_id)],
                                   with_script=with_script, with_env=with_env)
         jobs = Jobs.load(jfilter)
         if not jobs or job_id not in jobs:
@@ -512,7 +516,7 @@ cdef class Job:
         Raises:
             RPCError: When modifying the Job failed.
         """
-        cdef JobSearchFilter jfilter = JobSearchFilter(ids=[self.id])
+        cdef JobFilter jfilter = JobFilter(ids=[self.id])
         Jobs.modify(jfilter, changes, db_connection)
 
     @property

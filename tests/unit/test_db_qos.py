@@ -25,7 +25,7 @@ import pyslurm
 
 
 def test_search_filter():
-    qos_filter = pyslurm.db.QualityOfServiceSearchFilter()
+    qos_filter = pyslurm.db.QualityOfServiceFilter()
     qos_filter._create()
 
     qos_filter.ids = [1, 2]

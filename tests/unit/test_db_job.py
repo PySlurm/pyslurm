@@ -25,7 +25,7 @@ import pyslurm
 
 
 def test_filter():
-    job_filter = pyslurm.db.JobSearchFilter()
+    job_filter = pyslurm.db.JobFilter()
 
     job_filter.clusters = ["test1"]
     job_filter.partitions = ["partition1", "partition2"]

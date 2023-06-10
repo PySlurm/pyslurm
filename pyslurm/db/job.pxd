@@ -55,7 +55,7 @@ from pyslurm.db.qos cimport QualitiesOfService
 from pyslurm.db.tres cimport TrackableResources, TrackableResource
 
 
-cdef class JobSearchFilter:
+cdef class JobFilter:
     """Query-Conditions for Jobs in the Slurm Database.
 
     Args:

@@ -48,7 +48,7 @@ cdef class QualitiesOfService(dict):
     pass
 
 
-cdef class QualityOfServiceSearchFilter:
+cdef class QualityOfServiceFilter:
    cdef slurmdb_qos_cond_t *ptr
 
    cdef public:
