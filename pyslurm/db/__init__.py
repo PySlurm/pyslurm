@@ -25,6 +25,7 @@ from .stats import JobStatistics
 from .job import (
     Job,
     Jobs,
+    JobFilter,
     JobSearchFilter,
 )
 from .tres import (
@@ -34,7 +35,7 @@ from .tres import (
 from .qos import (
     QualitiesOfService,
     QualityOfService,
-    QualityOfServiceSearchFilter,
+    QualityOfServiceFilter,
 )
 from .assoc import (
     Associations,
