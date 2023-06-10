@@ -73,6 +73,7 @@ cdef class Associations(dict):
             assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>assoc_ptr.data)
             assoc.qos_data = qos_data
             assoc.tres_data = tres_data
+            assoc._parse_tres()
             assoc_dict[assoc.id] = assoc
 
         return assoc_dict
@@ -194,6 +195,23 @@ cdef class Association:
         wrap.ptr = in_ptr
         return wrap
 
+    def _parse_tres(self):
+        cdef TrackableResources tres = self.tres_data
+        self.group_tres = TrackableResourceLimits.from_ids(
+                self.ptr.grp_tres, tres)
+        self.group_tres_mins = TrackableResourceLimits.from_ids(
+                self.ptr.grp_tres_mins, tres)
+        self.group_tres_run_mins = TrackableResourceLimits.from_ids(
+                self.ptr.grp_tres_mins, tres)
+        self.max_tres_mins_per_job = TrackableResourceLimits.from_ids(
+                self.ptr.max_tres_mins_pj, tres)
+        self.max_tres_run_mins_per_user = TrackableResourceLimits.from_ids(
+                self.ptr.max_tres_run_mins, tres)
+        self.max_tres_per_job = TrackableResourceLimits.from_ids(
+                self.ptr.max_tres_pj, tres)
+        self.max_tres_per_node = TrackableResourceLimits.from_ids(
+                self.ptr.max_tres_pn, tres)
+
     def as_dict(self):
         """Database Association information formatted as a dictionary.
 
@@ -204,19 +222,20 @@ cdef class Association:
 
     def _validate_tres(self):
         self.tres_data = TrackableResources.load(name_is_key=False)
-        self.group_tres = tres_names_to_ids(self.group_tres, self.tres_data) 
-        self.group_tres_mins = tres_names_to_ids(
-                self.group_tres_mins, self.tres_data) 
-        self.group_tres_run_mins = tres_names_to_ids(
-                self.group_tres_run_mins, self.tres_data) 
-        self.max_tres_mins_per_job = tres_names_to_ids(
-                self.max_tres_mins_per_job, self.tres_data) 
-        self.max_tres_run_mins_per_user = tres_names_to_ids(
-                self.max_tres_run_mins_per_user, self.tres_data) 
-        self.max_tres_per_job = tres_names_to_ids(
-                self.max_tres_per_job, self.tres_data) 
-        self.max_tres_per_node = tres_names_to_ids(
-                self.max_tres_per_node, self.tres_data) 
+        cstr.from_dict(&self.ptr.grp_tres,
+                       self.group_tres._validate(self.tres_data))
+        cstr.from_dict(&self.ptr.grp_tres_mins,
+                       self.group_tres_mins._validate(self.tres_data))
+        cstr.from_dict(&self.ptr.grp_tres_run_mins,
+                       self.group_tres_run_mins._validate(self.tres_data))
+        cstr.from_dict(&self.ptr.max_tres_mins_pj,
+                       self.max_tres_mins_per_job._validate(self.tres_data))
+        cstr.from_dict(&self.ptr.max_tres_run_mins,
+                       self.max_tres_run_mins_per_user._validate(self.tres_data))
+        cstr.from_dict(&self.ptr.max_tres_pj,
+                       self.max_tres_per_job._validate(self.tres_data))
+        cstr.from_dict(&self.ptr.max_tres_pn,
+                       self.max_tres_per_node._validate(self.tres_data))
 
     @staticmethod
     def load(name):
@@ -275,30 +294,6 @@ cdef class Association:
         self.ptr.grp_submit_jobs = u32(val, zero_is_noval=False)
 
     @property
-    def group_tres(self):
-        return tres_ids_to_names(self.ptr.grp_tres, self.tres_data)
-
-    @group_tres.setter
-    def group_tres(self, val):
-        cstr.from_dict(&self.ptr.grp_tres, val)
-
-    @property
-    def group_tres_mins(self):
-        return tres_ids_to_names(self.ptr.grp_tres_mins, self.tres_data)
-
-    @group_tres_mins.setter
-    def group_tres_mins(self, val):
-        cstr.from_dict(&self.ptr.grp_tres_mins, val)
-
-    @property
-    def group_tres_run_mins(self):
-        return tres_ids_to_names(self.ptr.grp_tres_run_mins, self.tres_data)
-
-    @group_tres_run_mins.setter
-    def group_tres_run_mins(self, val):
-        cstr.from_dict(&self.ptr.grp_tres_run_mins, val)
-
-    @property
     def group_wall_time(self):
         return u32_parse(self.ptr.grp_wall, zero_is_noval=False)
 
@@ -347,38 +342,6 @@ cdef class Association:
         self.ptr.max_submit_jobs = u32(val, zero_is_noval=False)
 
     @property
-    def max_tres_mins_per_job(self):
-        return tres_ids_to_names(self.ptr.max_tres_mins_pj, self.tres_data)
-
-    @max_tres_mins_per_job.setter
-    def max_tres_mins_per_job(self, val):
-        cstr.from_dict(&self.ptr.max_tres_mins_pj, val)
-
-    @property
-    def max_tres_run_mins_per_user(self):
-        return tres_ids_to_names(self.ptr.max_tres_run_mins, self.tres_data)
-
-    @max_tres_run_mins_per_user.setter
-    def max_tres_run_mins_per_user(self, val):
-        cstr.from_dict(&self.ptr.max_tres_run_mins, val)
-
-    @property
-    def max_tres_per_job(self):
-        return tres_ids_to_names(self.ptr.max_tres_pj, self.tres_data)
-
-    @max_tres_per_job.setter
-    def max_tres_per_job(self, val):
-        cstr.from_dict(&self.ptr.max_tres_pj, val)
-
-    @property
-    def max_tres_per_node(self):
-        return tres_ids_to_names(self.ptr.max_tres_pn, self.tres_data)
-
-    @max_tres_per_node.setter
-    def max_tres_per_node(self, val):
-        cstr.from_dict(&self.ptr.max_tres_pn, val)
-
-    @property
     def max_wall_time_per_job(self):
         return u32_parse(self.ptr.max_wall_pj, zero_is_noval=False)
 
@@ -424,6 +387,7 @@ cdef class Association:
 
     @qos.setter
     def qos(self, val):
+        # TODO: must be ids
         make_char_list(&self.ptr.qos_list, val)
 
     @property

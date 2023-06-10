@@ -45,6 +45,7 @@ from pyslurm.db.tres cimport (
     merge_tres_str,
     tres_ids_to_names,
     TrackableResources,
+    TrackableResourceLimits,
 )
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
@@ -69,6 +70,15 @@ cdef class Association:
         slurmdb_assoc_rec_t *ptr
         QualitiesOfService qos_data
         TrackableResources tres_data
+
+    cdef public:
+        group_tres
+        group_tres_mins
+        group_tres_run_mins
+        max_tres_mins_per_job
+        max_tres_run_mins_per_user
+        max_tres_per_job
+        max_tres_per_node
 
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr)
