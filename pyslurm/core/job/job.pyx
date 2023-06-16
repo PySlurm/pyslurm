@@ -234,7 +234,9 @@ cdef class Job:
         self._dealloc_impl()
 
     def __eq__(self, other):
-        return isinstance(other, Job) and self.id == other.id
+        if isinstance(other, Job):
+            return self.id == other.id and self.cluster == other.cluster
+        return NotImplemented
 
     @staticmethod
     def load(job_id):

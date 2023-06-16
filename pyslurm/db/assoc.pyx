@@ -31,7 +31,7 @@ from pyslurm.utils.uint import *
 from pyslurm.db.connection import _open_conn_or_error
 
 
-cdef class Associations(dict):
+cdef class Associations(list):
 
     def __init__(self):
         pass
@@ -76,7 +76,7 @@ cdef class Associations(dict):
             assoc.qos_data = qos_data
             assoc.tres_data = tres_data
             _parse_assoc_ptr(assoc)
-            out[assoc.id] = assoc
+            out.append(assoc)
 
         return out
 
@@ -91,7 +91,7 @@ cdef class Associations(dict):
 
         # Prepare SQL Filter
         if isinstance(db_filter, Associations):
-            assoc_ids = list(db_filter.keys())
+            assoc_ids = [ass.id for ass in db_filter]
             afilter = AssociationFilter(ids=assoc_ids)
         else:
             afilter = <AssociationFilter>db_filter
@@ -172,8 +172,11 @@ cdef class Association:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._alloc_impl()
+        self.id = 0
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __dealloc__(self):
         self._dealloc_impl()
@@ -205,9 +208,10 @@ cdef class Association:
         """
         return instance_to_dict(self)
 
-    @staticmethod
-    def load(name):
-        pass
+    def __eq__(self, other):
+        if isinstance(other, Association):
+            return self.id == other.id and self.cluster == other.cluster
+        return NotImplemented
 
     @property
     def account(self):
@@ -271,7 +275,7 @@ cdef class Association:
 
     @property
     def id(self):
-        return self.ptr.id
+        return u32_parse(self.ptr.id)
 
     @id.setter
     def id(self, val):
@@ -283,7 +287,7 @@ cdef class Association:
 
     @property
     def lft(self):
-        return self.ptr.lft
+        return u32_parse(self.ptr.lft)
 
     @property
     def max_jobs(self):
@@ -351,7 +355,7 @@ cdef class Association:
 
     @property
     def rgt(self):
-        return self.ptr.rgt
+        return u32_parse(self.ptr.rgt)
 
     @property
     def shares(self):

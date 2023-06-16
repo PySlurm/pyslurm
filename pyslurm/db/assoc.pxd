@@ -54,7 +54,7 @@ cdef _parse_assoc_ptr(Association ass)
 cdef _create_assoc_ptr(Association ass, conn=*)
 
 
-cdef class Associations(dict):
+cdef class Associations(list):
     pass
 
 
