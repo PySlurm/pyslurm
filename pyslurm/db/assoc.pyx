@@ -25,6 +25,8 @@
 from pyslurm.core.error import RPCError
 from pyslurm.utils.helpers import (
     instance_to_dict,
+    collection_to_dict,
+    group_collection_by_cluster,
     user_to_uid,
 )
 from pyslurm.utils.uint import *
@@ -36,6 +38,12 @@ cdef class Associations(list):
     def __init__(self):
         pass
 
+    def as_dict(self, group_by_cluster=False):
+        return collection_to_dict(self, group_by_cluster, True, Association.id)
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self) 
+
     @staticmethod
     def load(AssociationFilter db_filter=None, Connection db_connection=None):
         cdef:
@@ -45,8 +53,8 @@ cdef class Associations(list):
             SlurmList assoc_data
             SlurmListItem assoc_ptr
             Connection conn
-            QualitiesOfService qos_data
-            TrackableResources tres_data
+            dict qos_data
+            dict tres_data
 
         # Prepare SQL Filter
         if not db_filter:
@@ -65,10 +73,10 @@ cdef class Associations(list):
 
         # Fetch other necessary dependencies needed for translating some
         # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(name_is_key=False,
-                                           db_connection=conn)
-        tres_data = TrackableResources.load(name_is_key=False,
-                                            db_connection=conn)
+        qos_data = QualitiesOfService.load(db_connection=conn).as_dict(
+                name_is_key=False)
+        tres_data = TrackableResources.load(db_connection=conn).as_dict(
+                name_is_key=False)
 
         # Setup Association objects
         for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
@@ -376,8 +384,8 @@ cdef class Association:
 
 cdef _parse_assoc_ptr(Association ass):
     cdef:
-        TrackableResources tres = ass.tres_data
-        QualitiesOfService qos = ass.qos_data
+        dict tres = ass.tres_data
+        dict qos = ass.qos_data
 
     ass.group_tres = TrackableResourceLimits.from_ids(
             ass.ptr.grp_tres, tres)
@@ -400,8 +408,7 @@ cdef _create_assoc_ptr(Association ass, conn=None):
     # _set_tres_limits will also check if specified TRES are valid and
     # translate them to its ID which is why we need to load the current TRES
     # available in the system.
-    ass.tres_data = TrackableResources.load(name_is_key=False,
-                                            db_connection=conn)
+    ass.tres_data = TrackableResources.load(db_connection=conn)
     _set_tres_limits(&ass.ptr.grp_tres, ass.group_tres, ass.tres_data)
     _set_tres_limits(&ass.ptr.grp_tres_mins, ass.group_tres_mins,
                     ass.tres_data)
@@ -419,7 +426,6 @@ cdef _create_assoc_ptr(Association ass, conn=None):
     # _set_qos_list will also check if specified QoS are valid and translate
     # them to its ID, which is why we need to load the current QOS available
     # in the system.
-    ass.qos_data = QualitiesOfService.load(name_is_key=False,
-                                           db_connection=conn)
+    ass.qos_data = QualitiesOfService.load(db_connection=conn)
     _set_qos_list(&ass.ptr.qos_list, self.qos, ass.qos_data)
 

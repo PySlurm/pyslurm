@@ -69,8 +69,8 @@ cdef class AssociationFilter:
 cdef class Association:
     cdef:
         slurmdb_assoc_rec_t *ptr
-        QualitiesOfService qos_data
-        TrackableResources tres_data
+        dict qos_data
+        dict tres_data
 
     cdef public:
         group_tres

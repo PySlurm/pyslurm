@@ -165,6 +165,9 @@ ctypedef enum tres_types_t:
 # Global Environment
 cdef extern char **environ
 
+# Local slurm config
+cdef extern slurm_conf_t slurm_conf
+
 #
 # Slurm Memory routines
 # We simply use the macros from xmalloc.h - more convenient

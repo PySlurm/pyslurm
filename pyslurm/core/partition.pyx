@@ -30,7 +30,6 @@ from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
-from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -58,35 +57,20 @@ cdef class Partitions(list):
         self.info = NULL
 
     def __init__(self, partitions=None):
-        if isinstance(partitions, list):
-            for part in partitions:
-                if isinstance(part, str):
-                    self.append(Partition(part))
-                else:
-                    self.append(part)
+        if isinstance(partitions, dict):
+            self.update(partitions)
         elif isinstance(partitions, str):
             partlist = partitions.split(",")
-            self.extend([Partition(part) for part in partlist])
-        elif isinstance(partitions, dict):
-            self.extend([part for part in partitions.values()])
+            self.update({part: Partition(part) for part in partlist})
         elif partitions is not None:
-            raise TypeError("Invalid Type: {type(partitions)}")
+            for part in partitions:
+                if isinstance(part, str):
+                    self[part] = Partition(part)
+                else:
+                    self[part.name] = part
 
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Partition.name,
-                                 recursive=recursive)
-        return col.get(LOCAL_CLUSTER, {})
+    def as_dict(self):
+        return collection_to_dict(self, False, False, Partition.name)
 
     def group_by_cluster(self):
         return group_collection_by_cluster(self)
@@ -128,6 +112,7 @@ cdef class Partitions(list):
 
             partition.power_save_enabled = power_save_enabled
             partition.slurm_conf = slurm_conf
+            partition.cluster = slurm_conf.cluster
             partitions.append(partition)
 
         # At this point we memcpy'd all the memory for the Partitions. Setting
@@ -160,7 +145,7 @@ cdef class Partitions(list):
             return self
 
         reloaded_parts = Partitions.load().as_dict()
-        for idx, part in enumerate(self):
+        for part, idx in enumerate(self):
             part_name = part.name
             if part_name in reloaded_parts:
                 # Put the new data in.
@@ -209,7 +194,6 @@ cdef class Partition:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
-        self.cluster = LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -232,7 +216,6 @@ cdef class Partition:
     cdef Partition from_ptr(partition_info_t *in_ptr):
         cdef Partition wrap = Partition.__new__(Partition)
         wrap._alloc_impl()
-        wrap.cluster = LOCAL_CLUSTER
         memcpy(wrap.ptr, in_ptr, sizeof(partition_info_t))
         return wrap
 
@@ -274,7 +257,7 @@ cdef class Partition:
             >>> import pyslurm
             >>> part = pyslurm.Partition.load("normal")
         """
-        partitions = Partitions.load().as_dict()
+        partitions = Partitions.load()
         if name not in partitions:
             raise RPCError(msg=f"Partition '{name}' doesn't exist")
 

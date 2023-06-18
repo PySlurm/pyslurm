@@ -39,6 +39,7 @@ from pyslurm.utils.helpers import (
     uid_to_name,
     nodelist_to_range_str,
     instance_to_dict,
+    collection_to_dict,
     _get_exit_code,
 )
 from pyslurm.db.connection import _open_conn_or_error
@@ -183,20 +184,25 @@ cdef class JobFilter:
 JobSearchFilter = JobFilter
 
 
-cdef class Jobs(dict):
+cdef class Jobs(list):
 
     def __init__(self, jobs=None):
-        if isinstance(jobs, dict):
-            self.update(jobs)
-        elif isinstance(jobs, str):
-            joblist = jobs.split(",")
-            self.update({int(job): Job(job) for job in joblist})
-        elif jobs is not None:
+        if isinstance(jobs, list):
             for job in jobs:
                 if isinstance(job, int):
-                    self[job] = Job(job)
+                    self.extend(Job(job))
                 else:
-                    self[job.name] = job
+                    self.extend(job)
+        elif isinstance(jobs, str):
+            joblist = jobs.split(",")
+            self.extend([Job(job) for job in joblist])
+        elif isinstance(jobs, dict):
+            self.extend([job for job in jobs.values()])
+        elif jobs is not None:
+            raise TypeError("Invalid Type: {type(jobs)}")
+
+    def as_dict(self, by_cluster=False):
+        return collection_to_dict(self, by_cluster)
 
     @staticmethod
     def load(JobFilter db_filter=None, Connection db_connection=None):
@@ -273,7 +279,7 @@ cdef class Jobs(dict):
             job.qos_data = qos_data
             job._create_steps()
             JobStatistics._sum_step_stats_for_job(job, job.steps)
-            out[job.id] = job
+            out.append(job)
 
         return out
 
