@@ -23,7 +23,7 @@
 # cython: language_level=3
 
 from pyslurm.core.error import RPCError
-from pyslurm.utils.helpers import instance_to_dict
+from pyslurm.utils.helpers import instance_to_dict, collection_to_dict
 from pyslurm.db.connection import _open_conn_or_error
 
 
@@ -36,7 +36,7 @@ def _qos_names_to_ids(qos_list, QualitiesOfService data):
 
 
 def _validate_qos_single(qid, QualitiesOfService data):
-    for item in data.values():
+    for item in data:
         if qid == item.id or qid == item.name:
             return item.id
 
@@ -48,14 +48,20 @@ cdef _set_qos_list(List *in_list, vals, QualitiesOfService data):
     make_char_list(in_list, qos_ids)
 
 
-cdef class QualitiesOfService(dict):
+cdef class QualitiesOfService(list):
 
     def __init__(self):
         pass
 
+    def as_dict(self, name_is_key=True):
+        identifier = QualityOfService.name
+        if not name_is_key:
+            identifier = QualityOfService.id
+
+        return collection_to_dict(self, False, True, identifier)
+
     @staticmethod
-    def load(QualityOfServiceFilter db_filter=None,
-             db_connection=None, name_is_key=True):
+    def load(QualityOfServiceFilter db_filter=None, db_connection=None):
         cdef:
             QualitiesOfService out = QualitiesOfService()
             QualityOfService qos
@@ -81,10 +87,7 @@ cdef class QualitiesOfService(dict):
         # Setup QOS objects
         for qos_ptr in SlurmList.iter_and_pop(qos_data):
             qos = QualityOfService.from_ptr(<slurmdb_qos_rec_t*>qos_ptr.data)
-            if name_is_key:
-                out[qos.name] = qos
-            else:
-                out[qos.id] = qos
+            out.append(qos)
 
         return out
 

@@ -58,7 +58,7 @@ from pyslurm.utils.uint cimport *
 from pyslurm.core cimport slurmctld
 
 
-cdef class Partitions(dict):
+cdef class Partitions(list):
     """A collection of [pyslurm.Partition][] objects.
 
     Args:
@@ -215,6 +215,8 @@ cdef class Partition:
         partition_info_t *ptr
         int power_save_enabled
         slurmctld.Config slurm_conf
+
+    cdef readonly cluster
 
     @staticmethod
     cdef Partition from_ptr(partition_info_t *in_ptr)

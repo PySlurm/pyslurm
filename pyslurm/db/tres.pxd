@@ -69,7 +69,7 @@ cdef class TrackableResourceFilter:
     cdef slurmdb_tres_cond_t *ptr
 
 
-cdef class TrackableResources(dict):
+cdef class TrackableResources(list):
     cdef public raw_str
 
     @staticmethod

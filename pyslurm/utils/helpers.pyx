@@ -341,6 +341,44 @@ def instance_to_dict(inst):
     return out
 
 
+def collection_to_dict(collection, by_cluster, is_global_data, identifier):
+    cdef dict out = {}
+
+    if is_global_data:
+        for item in collection:
+            _id = identifier.__get__(item)
+            out[_id] = item
+        return out
+
+    for item in collection:
+        cluster = item.cluster
+        if cluster not in out:
+            out[cluster] = {}
+
+        _id = identifier.__get__(item)
+        out[cluster][_id] = item
+
+    if not by_cluster:
+        # TODO: Return only local cluster data
+        return out
+
+    return out
+
+
+def group_collection_by_cluster(collection):
+    cdef dict out = {}
+    collection_type = type(collection)
+
+    for item in collection:
+        cluster = item.cluster
+        if cluster not in out:
+            out[cluster] = collection_type()
+
+        out[cluster].append(item)
+    
+    return out
+
+
 def _sum_prop(obj, name, startval=0):
     val = startval
     for n in obj.values():

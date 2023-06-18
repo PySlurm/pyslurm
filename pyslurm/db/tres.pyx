@@ -134,10 +134,17 @@ cdef class TrackableResourceFilter:
         self._alloc()
 
 
-cdef class TrackableResources(dict):
+cdef class TrackableResources(list):
 
     def __init__(self):
         pass
+
+    def as_dict(self, name_is_key=True):
+        identifier = TrackableResource.type_and_name
+        if not name_is_key:
+            identifier = TrackableResource.id
+
+        return collection_to_dict(self, False, True, identifier)
 
     @staticmethod
     def load(Connection db_connection=None, name_is_key=True):
@@ -165,11 +172,7 @@ cdef class TrackableResources(dict):
         for tres_ptr in SlurmList.iter_and_pop(tres_data):
             tres = TrackableResource.from_ptr(
                     <slurmdb_tres_rec_t*>tres_ptr.data)
-
-            if name_is_key and tres.type:
-                out[tres.type_and_name] = tres
-            else:
-                out[tres.id] = tres
+            out.append(tres)
 
         return out
 
@@ -320,7 +323,7 @@ def _tres_names_to_ids(dict tres_dict, TrackableResources tres_data):
 
 
 def _validate_tres_single(tid, TrackableResources tres_data):
-    for tres in tres_data.values():
+    for tres in tres_data:
         if tid == tres.id or tid == tres.type_and_name:
             return tres.id
 

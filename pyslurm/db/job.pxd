@@ -150,7 +150,7 @@ cdef class JobFilter:
         with_env
 
 
-cdef class Jobs(dict):
+cdef class Jobs(list):
     """A collection of [pyslurm.db.Job][] objects."""
     pass
 

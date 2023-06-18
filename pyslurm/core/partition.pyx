@@ -37,6 +37,8 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
+    collection_to_dict,
+    group_collection_by_cluster,
     _sum_prop,
     dehumanize,
 )
@@ -46,7 +48,8 @@ from pyslurm.utils.ctime import (
 )
 
 
-cdef class Partitions(dict):
+cdef class Partitions(list):
+
     def __dealloc__(self):
         slurm_free_partition_info_msg(self.info)
 
@@ -65,6 +68,12 @@ cdef class Partitions(dict):
                     self[part] = Partition(part)
                 else:
                     self[part.name] = part
+
+    def as_dict(self):
+        return collection_to_dict(self, False, False, Partition.name)
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self)
 
     @staticmethod
     def load():
@@ -103,7 +112,8 @@ cdef class Partitions(dict):
 
             partition.power_save_enabled = power_save_enabled
             partition.slurm_conf = slurm_conf
-            partitions[partition.name] = partition
+            partition.cluster = slurm_conf.cluster
+            partitions.append(partition)
 
         # At this point we memcpy'd all the memory for the Partitions. Setting
         # this to 0 will prevent the slurm partition free function to
@@ -129,17 +139,17 @@ cdef class Partitions(dict):
         Raises:
             RPCError: When getting the Partitions from the slurmctld failed.
         """
-        cdef Partitions reloaded_parts
-        our_parts = list(self.keys())
+        cdef dict reloaded_parts
 
-        if not our_parts:
+        if not self:
             return self
 
-        reloaded_parts = Partitions.load()
-        for part in our_parts:
-            if part in reloaded_parts:
+        reloaded_parts = Partitions.load().as_dict()
+        for part, idx in enumerate(self):
+            part_name = part.name
+            if part_name in reloaded_parts:
                 # Put the new data in.
-                self[part] = reloaded_parts[part]
+                self[idx] = reloaded_parts[part_name]
 
         return self
 
@@ -164,16 +174,8 @@ cdef class Partitions(dict):
             >>> # Apply the changes to all the partitions
             >>> parts.modify(changes)
         """
-        for part in self.values():
+        for part in self:
             part.modify(changes)
-
-    def as_list(self):
-        """Format the information as list of Partition objects.
-
-        Returns:
-            (list): List of Partition objects
-        """
-        return list(self.values())
 
     @property
     def total_cpus(self):
