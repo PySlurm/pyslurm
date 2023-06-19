@@ -40,6 +40,7 @@ from pyslurm.utils.helpers import (
     nodelist_to_range_str,
     instance_to_dict,
     collection_to_dict,
+    group_collection_by_cluster,
     _get_exit_code,
 )
 from pyslurm.db.connection import _open_conn_or_error
@@ -75,14 +76,19 @@ cdef class JobFilter:
             return None
 
         qos_id_list = []
-        qos = QualitiesOfService.load()
-        for q in self.qos:
-            if isinstance(q, int):
-                qos_id_list.append(q)
-            elif q in qos:
-                qos_id_list.append(str(qos[q].id))
-            else:
-                raise ValueError(f"QoS {q} does not exist")
+        qos_data = QualitiesOfService.load()
+        for user_input in self.qos:
+            found = False
+            for qos in qos_data:
+                if (qos.id == user_input
+                        or qos.name == user_input
+                        or qos == user_input):
+                    qos_id_list.append(str(qos.id))
+                    found = True
+                    break
+
+            if not found:
+                raise ValueError(f"QoS '{user_input}' does not exist")
 
         return qos_id_list
 
@@ -202,7 +208,10 @@ cdef class Jobs(list):
             raise TypeError("Invalid Type: {type(jobs)}")
 
     def as_dict(self, by_cluster=False):
-        return collection_to_dict(self, by_cluster)
+        return collection_to_dict(self, by_cluster, False, Job.id)
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self)
 
     @staticmethod
     def load(JobFilter db_filter=None, Connection db_connection=None):
@@ -246,7 +255,7 @@ cdef class Jobs(list):
             SlurmList job_data
             SlurmListItem job_ptr
             Connection conn
-            QualitiesOfService qos_data
+            dict qos_data
 
         # Prepare SQL Filter
         if not db_filter:
@@ -263,8 +272,8 @@ cdef class Jobs(list):
 
         # Fetch other necessary dependencies needed for translating some
         # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(name_is_key=False,
-                                           db_connection=conn)
+        qos_data = QualitiesOfService.load(db_connection=conn).as_dict(
+                name_is_key=False)
 
         # TODO: also get trackable resources with slurmdb_tres_get and store
         # it in each job instance. tres_alloc_str and tres_req_str only
@@ -360,7 +369,7 @@ cdef class Jobs(list):
 
         # Prepare SQL Filter
         if isinstance(db_filter, Jobs):
-            job_ids = list(db_filter.keys())
+            job_ids = [job.id for job in self]
             cond = JobFilter(ids=job_ids)
         else:
             cond = <JobFilter>db_filter

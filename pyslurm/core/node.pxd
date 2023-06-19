@@ -57,7 +57,7 @@ from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
 
 
-cdef class Nodes(dict):
+cdef class Nodes(list):
     """A collection of [pyslurm.Node][] objects.
 
     Args:

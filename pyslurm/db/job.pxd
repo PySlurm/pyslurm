@@ -283,7 +283,7 @@ cdef class Job:
     """
     cdef:
         slurmdb_job_rec_t *ptr
-        QualitiesOfService qos_data
+        dict qos_data
 
     cdef public:
         JobSteps steps

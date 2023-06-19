@@ -47,12 +47,14 @@ from pyslurm.utils.helpers import (
     _getgrall_to_dict,
     _getpwall_to_dict,
     instance_to_dict,
+    collection_to_dict,
+    group_collection_by_cluster,
     _sum_prop,
     _get_exit_code,
 )
 
 
-cdef class Jobs(dict):
+cdef class Jobs(list):
 
     def __cinit__(self):
         self.info = NULL
@@ -63,14 +65,25 @@ cdef class Jobs(dict):
     def __init__(self, jobs=None, frozen=False):
         self.frozen = frozen
 
-        if isinstance(jobs, dict):
-            self.update(jobs)
-        elif jobs is not None:
+        if isinstance(jobs, list):
             for job in jobs:
                 if isinstance(job, int):
-                    self[job] = Job(job)
+                    self.extend(Job(job))
                 else:
-                    self[job.id] = job
+                    self.extend(job)
+        elif isinstance(jobs, str):
+            joblist = jobs.split(",")
+            self.extend([Job(int(job)) for job in joblist])
+        elif isinstance(jobs, dict):
+            self.extend([job for job in jobs.values()])
+        elif jobs is not None:
+            raise TypeError("Invalid Type: {type(jobs)}")
+
+    def as_dict(self):
+        return collection_to_dict(self, False, False, Job.id)
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self)
 
     @staticmethod
     def load(preload_passwd_info=False, frozen=False):
@@ -124,7 +137,7 @@ cdef class Jobs(dict):
                 job.passwd = passwd
                 job.groups = groups
 
-            jobs[job.id] = job
+            jobs.append(job)
 
         # At this point we memcpy'd all the memory for the Jobs. Setting this
         # to 0 will prevent the slurm job free function to deallocate the
@@ -143,22 +156,28 @@ cdef class Jobs(dict):
         Raises:
             RPCError: When getting the Jobs from the slurmctld failed.
         """
-        cdef Jobs reloaded_jobs = Jobs.load()
+        cdef:
+            Jobs reloaded_jobs
+            Jobs new_jobs = Jobs()
+            dict self_dict
 
-        for jid in list(self.keys()):
+        if not self:
+            return self
+
+        reloaded_jobs = Jobs.load().as_dict()
+        for jid, idx in enumerate(self):
             if jid in reloaded_jobs:
                 # Put the new data in.
-                self[jid] = reloaded_jobs[jid]
-            elif not self.frozen:
-                # Remove this instance from the current collection, as the Job
-                # doesn't exist anymore.
-                del self[jid]
+                new_jobs.append(reloaded_jobs[jid])
 
         if not self.frozen:
+            self_dict = self.as_dict()
             for jid in reloaded_jobs:
-                if jid not in self:
-                    self[jid] = reloaded_jobs[jid]
+                if jid not in self_dict:
+                    new_jobs.append(reloaded_jobs[jid])
 
+        self.clear()
+        self.extend(new_jobs)
         return self
 
     def load_steps(self):
@@ -177,19 +196,12 @@ cdef class Jobs(dict):
         """
         cdef dict step_info = JobSteps.load_all()
 
-        for jid in self:
+        for job, idx in enumerate(self):
             # Ignore any Steps from Jobs which do not exist in this
             # collection.
+            jid = job.id
             if jid in step_info:
-                self[jid].steps = step_info[jid]
-
-    def as_list(self):
-        """Format the information as list of Job objects.
-
-        Returns:
-            (list[pyslurm.Job]): List of Job objects
-        """
-        return list(self.values())
+                self[idx].steps = step_info[jid]
 
     @property
     def memory(self):

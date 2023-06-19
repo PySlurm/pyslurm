@@ -57,17 +57,19 @@ cdef class Partitions(list):
         self.info = NULL
 
     def __init__(self, partitions=None):
-        if isinstance(partitions, dict):
-            self.update(partitions)
-        elif isinstance(partitions, str):
-            partlist = partitions.split(",")
-            self.update({part: Partition(part) for part in partlist})
-        elif partitions is not None:
+        if isinstance(partitions, list):
             for part in partitions:
                 if isinstance(part, str):
-                    self[part] = Partition(part)
+                    self.extend(Partition(part))
                 else:
-                    self[part.name] = part
+                    self.extend(part)
+        elif isinstance(partitions, str):
+            partlist = partitions.split(",")
+            self.extend([Partition(part) for part in partlist])
+        elif isinstance(partitions, dict):
+            self.extend([part for part in partitions.values()])
+        elif partitions is not None:
+            raise TypeError("Invalid Type: {type(partitions)}")
 
     def as_dict(self):
         return collection_to_dict(self, False, False, Partition.name)
