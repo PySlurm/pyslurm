@@ -25,7 +25,7 @@
 from pyslurm.utils.uint import *
 from pyslurm.constants import UNLIMITED
 from pyslurm.core.error import RPCError
-from pyslurm.utils.helpers import instance_to_dict
+from pyslurm.utils.helpers import instance_to_dict, collection_to_dict
 from pyslurm.utils import cstr
 from pyslurm.db.connection import _open_conn_or_error
 import json
@@ -56,7 +56,7 @@ cdef class TrackableResourceLimits:
                 setattr(self, k, v)
 
     @staticmethod
-    cdef from_ids(char *tres_id_str, TrackableResources tres_data):
+    cdef from_ids(char *tres_id_str, dict tres_data):
         tres_list = _tres_ids_to_names(tres_id_str, tres_data)
         if not tres_list:
             return None
@@ -144,7 +144,7 @@ cdef class TrackableResources(list):
         if not name_is_key:
             identifier = TrackableResource.id
 
-        return collection_to_dict(self, False, True, identifier)
+        return collection_to_dict(self, True, identifier)
 
     @staticmethod
     def load(Connection db_connection=None, name_is_key=True):
@@ -288,7 +288,7 @@ cdef merge_tres_str(char **tres_str, typ, val):
     cstr.from_dict(tres_str, current)
 
 
-cdef _tres_ids_to_names(char *tres_str, TrackableResources tres_data):
+cdef _tres_ids_to_names(char *tres_str, dict tres_data):
     if not tres_str:
         return None
 

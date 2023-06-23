@@ -31,6 +31,7 @@ from pyslurm.utils.helpers import (
 )
 from pyslurm.utils.uint import *
 from pyslurm.db.connection import _open_conn_or_error
+from pyslurm.db.cluster import LOCAL_CLUSTER
 
 
 cdef class Associations(list):
@@ -38,8 +39,12 @@ cdef class Associations(list):
     def __init__(self):
         pass
 
-    def as_dict(self, group_by_cluster=False):
-        return collection_to_dict(self, group_by_cluster, True, Association.id)
+    def as_dict(self, recursive=False, group_by_cluster=False):
+        col = collection_to_dict(self, False, Association.id, recursive)
+        if not group_by_cluster:
+            return col.get(LOCAL_CLUSTER, {})
+
+        return col
 
     def group_by_cluster(self):
         return group_collection_by_cluster(self) 
@@ -183,6 +188,7 @@ cdef class Association:
     def __init__(self, **kwargs):
         self._alloc_impl()
         self.id = 0
+        self.cluster = LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
