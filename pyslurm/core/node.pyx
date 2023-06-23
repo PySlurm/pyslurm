@@ -28,6 +28,7 @@ from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -58,9 +59,9 @@ cdef class Nodes(list):
         if isinstance(nodes, list):
             for node in nodes:
                 if isinstance(node, str):
-                    self.extend(Node(node))
+                    self.append(Node(node))
                 else:
-                    self.extend(node)
+                    self.append(node)
         elif isinstance(nodes, str):
             nodelist = nodes.split(",")
             self.extend([Node(node) for node in nodelist])
@@ -69,8 +70,9 @@ cdef class Nodes(list):
         elif nodes is not None:
             raise TypeError("Invalid Type: {type(nodes)}")
 
-    def as_dict(self):
-        return collection_to_dict(self, False, False, Node.name)
+    def as_dict(self, recursive=False):
+        col = collection_to_dict(self, False, Node.name, recursive)
+        return col.get(LOCAL_CLUSTER, {})
 
     def group_by_cluster(self):
         return group_collection_by_cluster(self)
@@ -156,7 +158,7 @@ cdef class Nodes(list):
             return self
 
         reloaded_nodes = Nodes.load().as_dict()
-        for node, idx in enumerate(self):
+        for idx, node in enumerate(self):
             node_name = node.name
             if node in reloaded_nodes:
                 # Put the new data in.
@@ -240,6 +242,7 @@ cdef class Node:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
+        self.cluster = LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -287,6 +290,7 @@ cdef class Node:
         wrap._alloc_info()
         wrap.passwd = {}
         wrap.groups = {}
+        wrap.cluster = LOCAL_CLUSTER
         memcpy(wrap.info, in_ptr, sizeof(node_info_t))
         return wrap
 

@@ -27,38 +27,17 @@ from pyslurm.utils.helpers import instance_to_dict, collection_to_dict
 from pyslurm.db.connection import _open_conn_or_error
 
 
-def _qos_names_to_ids(qos_list, QualitiesOfService data):
-    cdef list out = []
-    if not qos_list:
-        return None
-
-    return [_validate_qos_single(qid, data) for qid in qos_list]
-
-
-def _validate_qos_single(qid, QualitiesOfService data):
-    for item in data:
-        if qid == item.id or qid == item.name:
-            return item.id
-
-    raise ValueError(f"Invalid QOS specified: {qid}")
-
-
-cdef _set_qos_list(List *in_list, vals, QualitiesOfService data):
-    qos_ids = _qos_names_to_ids(vals, data)
-    make_char_list(in_list, qos_ids)
-
-
 cdef class QualitiesOfService(list):
 
     def __init__(self):
         pass
 
-    def as_dict(self, name_is_key=True):
+    def as_dict(self, recursive=False, name_is_key=True):
         identifier = QualityOfService.name
         if not name_is_key:
             identifier = QualityOfService.id
 
-        return collection_to_dict(self, False, True, identifier)
+        return collection_to_dict(self, True, identifier, recursive)
 
     @staticmethod
     def load(QualityOfServiceFilter db_filter=None, db_connection=None):
@@ -200,10 +179,10 @@ cdef class QualityOfService:
         """
         qfilter = QualityOfServiceFilter(names=[name])
         qos_data = QualitiesOfService.load(qfilter)
-        if not qos_data or name not in qos_data:
+        if not qos_data:
             raise RPCError(msg=f"QualityOfService {name} does not exist")
 
-        return qos_data[name]
+        return qos_data[0]
 
     @property
     def name(self):
@@ -220,3 +199,24 @@ cdef class QualityOfService:
     @property
     def id(self):
         return self.ptr.id
+
+
+def _qos_names_to_ids(qos_list, QualitiesOfService data):
+    cdef list out = []
+    if not qos_list:
+        return None
+
+    return [_validate_qos_single(qid, data) for qid in qos_list]
+
+
+def _validate_qos_single(qid, QualitiesOfService data):
+    for item in data:
+        if qid == item.id or qid == item.name:
+            return item.id
+
+    raise ValueError(f"Invalid QOS specified: {qid}")
+
+
+cdef _set_qos_list(List *in_list, vals, QualitiesOfService data):
+    qos_ids = _qos_names_to_ids(vals, data)
+    make_char_list(in_list, qos_ids)

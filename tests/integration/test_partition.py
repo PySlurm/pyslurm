@@ -28,7 +28,7 @@ from pyslurm import Partition, Partitions, RPCError
 
 
 def test_load():
-    part = Partitions.load().as_list()[0]
+    part = Partitions.load()[0]
 
     assert part.name
     assert part.state
@@ -49,7 +49,7 @@ def test_create_delete():
 
 
 def test_modify():
-    part = Partitions.load().as_list()[0]
+    part = Partitions.load()[0]
 
     part.modify(Partition(default_time=120))
     assert Partition.load(part.name).default_time == 120
@@ -68,22 +68,23 @@ def test_modify():
 
 
 def test_parse_all():
-    Partitions.load().as_list()[0].as_dict()
+    Partitions.load()[0].as_dict()
 
 
 def test_reload():
     _partnames = [util.randstr() for i in range(3)]
     _tmp_parts = Partitions(_partnames)
-    for part in _tmp_parts.values():
+    for part in _tmp_parts:
         part.create()
 
     all_parts = Partitions.load()
     assert len(all_parts) >= 3
 
     my_parts = Partitions(_partnames[1:]).reload()
+    print(my_parts)
     assert len(my_parts) == 2
-    for part in my_parts.as_list():
+    for part in my_parts:
         assert part.state != "UNKNOWN"
     
-    for part in _tmp_parts.values():
+    for part in _tmp_parts:
         part.delete()

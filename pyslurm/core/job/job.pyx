@@ -34,6 +34,7 @@ from typing import Union
 from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.core.error import (
     RPCError,
     verify_rpc,
@@ -68,9 +69,9 @@ cdef class Jobs(list):
         if isinstance(jobs, list):
             for job in jobs:
                 if isinstance(job, int):
-                    self.extend(Job(job))
+                    self.append(Job(job))
                 else:
-                    self.extend(job)
+                    self.append(job)
         elif isinstance(jobs, str):
             joblist = jobs.split(",")
             self.extend([Job(int(job)) for job in joblist])
@@ -79,8 +80,9 @@ cdef class Jobs(list):
         elif jobs is not None:
             raise TypeError("Invalid Type: {type(jobs)}")
 
-    def as_dict(self):
-        return collection_to_dict(self, False, False, Job.id)
+    def as_dict(self, recursive=False):
+        col = collection_to_dict(self, False, Job.id, recursive)
+        return col.get(LOCAL_CLUSTER, {})
 
     def group_by_cluster(self):
         return group_collection_by_cluster(self)
@@ -165,7 +167,7 @@ cdef class Jobs(list):
             return self
 
         reloaded_jobs = Jobs.load().as_dict()
-        for jid, idx in enumerate(self):
+        for idx, jid in enumerate(self):
             if jid in reloaded_jobs:
                 # Put the new data in.
                 new_jobs.append(reloaded_jobs[jid])
@@ -230,6 +232,7 @@ cdef class Job:
         self.ptr.job_id = job_id
         self.passwd = {}
         self.groups = {}
+        cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
         self.steps = JobSteps.__new__(JobSteps)
 
     def _alloc_impl(self):

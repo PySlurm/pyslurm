@@ -27,6 +27,7 @@ from pyslurm.core.error import RPCError, PyslurmError
 from pyslurm.core import slurmctld
 from typing import Any
 from pyslurm.utils.uint import *
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,
@@ -104,11 +105,9 @@ cdef class JobFilter:
 
     def _parse_clusters(self):
         if not self.clusters:
-            # Get the local cluster name
             # This is a requirement for some other parameters to function
             # correctly, like self.nodelist
-            slurm_conf = slurmctld.Config.load()
-            return [slurm_conf.cluster]
+            return [LOCAL_CLUSTER]
         elif self.clusters == "all":
             return None
         else:
@@ -196,9 +195,9 @@ cdef class Jobs(list):
         if isinstance(jobs, list):
             for job in jobs:
                 if isinstance(job, int):
-                    self.extend(Job(job))
+                    self.append(Job(job))
                 else:
-                    self.extend(job)
+                    self.append(job)
         elif isinstance(jobs, str):
             joblist = jobs.split(",")
             self.extend([Job(job) for job in joblist])
@@ -207,8 +206,12 @@ cdef class Jobs(list):
         elif jobs is not None:
             raise TypeError("Invalid Type: {type(jobs)}")
 
-    def as_dict(self, by_cluster=False):
-        return collection_to_dict(self, by_cluster, False, Job.id)
+    def as_dict(self, recursive=False, group_by_cluster=False):
+        col = collection_to_dict(self, False, Job.id, recursive)
+        if not group_by_cluster:
+            return col.get(LOCAL_CLUSTER, {})
+
+        return col
 
     def group_by_cluster(self):
         return group_collection_by_cluster(self)
@@ -419,9 +422,10 @@ cdef class Job:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, job_id=0, **kwargs):
+    def __init__(self, job_id=0, cluster=LOCAL_CLUSTER, **kwargs):
         self._alloc_impl()
         self.ptr.jobid = int(job_id)
+        cstr.fmalloc(&self.ptr.cluster, cluster)
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -445,7 +449,7 @@ cdef class Job:
         return wrap
 
     @staticmethod
-    def load(job_id, with_script=False, with_env=False):
+    def load(job_id, cluster=LOCAL_CLUSTER, with_script=False, with_env=False):
         """Load the information for a specific Job from the Database.
 
         Args:
@@ -472,13 +476,15 @@ cdef class Job:
             >>> print(db_job.script)
 
         """
-        jfilter = JobFilter(ids=[int(job_id)],
-                                  with_script=with_script, with_env=with_env)
+        jfilter = JobFilter(ids=[int(job_id)], clusters=[cluster],
+                            with_script=with_script, with_env=with_env)
         jobs = Jobs.load(jfilter)
-        if not jobs or job_id not in jobs:
-            raise RPCError(msg=f"Job {job_id} does not exist")
+        if not jobs:
+            raise RPCError(msg=f"Job {job_id} does not exist on "
+                           f"Cluster {cluster}")
 
-        return jobs[job_id]
+        # TODO: There might be multiple entries when job ids were reset.
+        return jobs[0]
 
     def _create_steps(self):
         cdef:

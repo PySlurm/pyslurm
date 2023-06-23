@@ -30,6 +30,7 @@ from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -60,9 +61,9 @@ cdef class Partitions(list):
         if isinstance(partitions, list):
             for part in partitions:
                 if isinstance(part, str):
-                    self.extend(Partition(part))
+                    self.append(Partition(part))
                 else:
-                    self.extend(part)
+                    self.append(part)
         elif isinstance(partitions, str):
             partlist = partitions.split(",")
             self.extend([Partition(part) for part in partlist])
@@ -71,8 +72,9 @@ cdef class Partitions(list):
         elif partitions is not None:
             raise TypeError("Invalid Type: {type(partitions)}")
 
-    def as_dict(self):
-        return collection_to_dict(self, False, False, Partition.name)
+    def as_dict(self, recursive=False):
+        col = collection_to_dict(self, False, Partition.name, recursive)
+        return col.get(LOCAL_CLUSTER, {})
 
     def group_by_cluster(self):
         return group_collection_by_cluster(self)
@@ -114,7 +116,6 @@ cdef class Partitions(list):
 
             partition.power_save_enabled = power_save_enabled
             partition.slurm_conf = slurm_conf
-            partition.cluster = slurm_conf.cluster
             partitions.append(partition)
 
         # At this point we memcpy'd all the memory for the Partitions. Setting
@@ -147,7 +148,7 @@ cdef class Partitions(list):
             return self
 
         reloaded_parts = Partitions.load().as_dict()
-        for part, idx in enumerate(self):
+        for idx, part in enumerate(self):
             part_name = part.name
             if part_name in reloaded_parts:
                 # Put the new data in.
@@ -196,6 +197,7 @@ cdef class Partition:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
+        self.cluster = LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -218,6 +220,7 @@ cdef class Partition:
     cdef Partition from_ptr(partition_info_t *in_ptr):
         cdef Partition wrap = Partition.__new__(Partition)
         wrap._alloc_impl()
+        wrap.cluster = LOCAL_CLUSTER
         memcpy(wrap.ptr, in_ptr, sizeof(partition_info_t))
         return wrap
 
@@ -259,7 +262,7 @@ cdef class Partition:
             >>> import pyslurm
             >>> part = pyslurm.Partition.load("normal")
         """
-        partitions = Partitions.load()
+        partitions = Partitions.load().as_dict()
         if name not in partitions:
             raise RPCError(msg=f"Partition '{name}' doesn't exist")
 

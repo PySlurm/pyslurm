@@ -233,6 +233,8 @@ cdef class Node:
         dict passwd
         dict groups
 
+    cdef readonly cluster
+
     @staticmethod
     cdef _swap_data(Node dst, Node src)
 

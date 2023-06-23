@@ -1,5 +1,5 @@
 #########################################################################
-# db/__init__.py - pyslurm database api
+# cluster.pxd - pyslurm slurmdbd cluster api
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -18,28 +18,10 @@
 # You should have received a copy of the GNU General Public License along
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# cython: c_string_type=unicode, c_string_encoding=default
+# cython: language_level=3
 
-from .connection import Connection
-from .step import JobStep, JobSteps
-from .stats import JobStatistics
-from .job import (
-    Job,
-    Jobs,
-    JobFilter,
-    JobSearchFilter,
-)
-from .tres import (
-    TrackableResource,
-    TrackableResources,
-)
-from .qos import (
-    QualitiesOfService,
-    QualityOfService,
-    QualityOfServiceFilter,
-)
-from .assoc import (
-    Associations,
-    Association,
-    AssociationFilter,
-)
-from . import cluster
+
+from pyslurm cimport slurm
+from pyslurm.utils cimport cstr
