@@ -81,7 +81,18 @@ cdef class Jobs(list):
             raise TypeError("Invalid Type: {type(jobs)}")
 
     def as_dict(self, recursive=False):
-        col = collection_to_dict(self, False, Job.id, recursive)
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        col = collection_to_dict(self, identifier=Job.id, recursive=recursive)
         return col.get(LOCAL_CLUSTER, {})
 
     def group_by_cluster(self):
@@ -185,7 +196,7 @@ cdef class Jobs(list):
     def load_steps(self):
         """Load all Job steps for this collection of Jobs.
 
-        This function fills in the "steps" attribute for all Jobs in the
+        This function fills in the `steps` attribute for all Jobs in the
         collection.
 
         !!! note
@@ -196,14 +207,16 @@ cdef class Jobs(list):
             RPCError: When retrieving the Job information for all the Steps
                 failed.
         """
-        cdef dict step_info = JobSteps.load_all()
+        cdef dict steps = JobSteps.load().as_dict()
 
-        for job, idx in enumerate(self):
+        for idx, job in enumerate(self):
             # Ignore any Steps from Jobs which do not exist in this
             # collection.
             jid = job.id
-            if jid in step_info:
-                self[idx].steps = step_info[jid]
+            if jid in steps:
+                job_steps = self[idx].steps
+                job_steps.clear()
+                job_steps.extend(steps[jid].values())
 
     @property
     def memory(self):
@@ -295,7 +308,7 @@ cdef class Job:
                 if not slurm.IS_JOB_PENDING(wrap.ptr):
                     # Just ignore if the steps couldn't be loaded here.
                     try:
-                        wrap.steps = JobSteps._load(wrap)
+                        wrap.steps = JobSteps._load_single(wrap)
                     except RPCError:
                         pass
             else:

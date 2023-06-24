@@ -73,7 +73,19 @@ cdef class Partitions(list):
             raise TypeError("Invalid Type: {type(partitions)}")
 
     def as_dict(self, recursive=False):
-        col = collection_to_dict(self, False, Partition.name, recursive)
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        col = collection_to_dict(self, identifier=Partition.name,
+                                 recursive=recursive)
         return col.get(LOCAL_CLUSTER, {})
 
     def group_by_cluster(self):

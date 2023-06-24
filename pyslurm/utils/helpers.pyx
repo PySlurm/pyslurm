@@ -341,14 +341,8 @@ def instance_to_dict(inst):
     return out
 
 
-def collection_to_dict(collection, is_global_data, identifier, recursive=False):
+def collection_to_dict(collection, identifier, recursive=False, group_id=None):
     cdef dict out = {}
-
-    if is_global_data:
-        for item in collection:
-            _id = identifier.__get__(item)
-            out[_id] = item if not recursive else item.as_dict()
-        return out
 
     for item in collection:
         cluster = item.cluster
@@ -356,8 +350,24 @@ def collection_to_dict(collection, is_global_data, identifier, recursive=False):
             out[cluster] = {}
 
         _id = identifier.__get__(item)
-        out[cluster][_id] = item if not recursive else item.as_dict()
+        data = item if not recursive else item.as_dict()
 
+        if group_id:
+            grp_id = group_id.__get__(item)
+            if grp_id not in out[cluster]:
+                out[cluster][grp_id] = {}
+            out[cluster][grp_id].update({_id: data})
+        else:
+            out[cluster][_id] = data
+
+    return out
+
+
+def collection_to_dict_global(collection, identifier, recursive=False):
+    cdef dict out = {}
+    for item in collection:
+        _id = identifier.__get__(item)
+        out[_id] = item if not recursive else item.as_dict()
     return out
 
 
