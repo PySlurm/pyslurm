@@ -25,7 +25,7 @@
 from pyslurm.utils.uint import *
 from pyslurm.constants import UNLIMITED
 from pyslurm.core.error import RPCError
-from pyslurm.utils.helpers import instance_to_dict, collection_to_dict
+from pyslurm.utils.helpers import instance_to_dict, collection_to_dict_global
 from pyslurm.utils import cstr
 from pyslurm.db.connection import _open_conn_or_error
 import json
@@ -139,15 +139,31 @@ cdef class TrackableResources(list):
     def __init__(self):
         pass
 
-    def as_dict(self, name_is_key=True):
+    def as_dict(self, recursive=False, name_is_key=True):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+            name_is_key (bool, optional):
+                By default, the keys in this dict are the names of each TRES.
+                If this is set to `False`, then the unique ID of the TRES will
+                be used as dict keys.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
         identifier = TrackableResource.type_and_name
         if not name_is_key:
             identifier = TrackableResource.id
 
-        return collection_to_dict(self, True, identifier)
+        return collection_to_dict_global(self, identifier=identifier,
+                                         recursive=recursive)
 
     @staticmethod
-    def load(Connection db_connection=None, name_is_key=True):
+    def load(Connection db_connection=None):
         cdef:
             TrackableResources out = TrackableResources()
             TrackableResource tres
@@ -229,6 +245,9 @@ cdef class TrackableResource:
         cdef TrackableResource wrap = TrackableResource.__new__(TrackableResource)
         wrap.ptr = in_ptr
         return wrap
+
+    def as_dict(self):
+        return instance_to_dict(self)
 
     @property
     def id(self):

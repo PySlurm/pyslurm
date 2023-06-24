@@ -23,7 +23,7 @@
 # cython: language_level=3
 
 from pyslurm.core.error import RPCError
-from pyslurm.utils.helpers import instance_to_dict, collection_to_dict
+from pyslurm.utils.helpers import instance_to_dict, collection_to_dict_global
 from pyslurm.db.connection import _open_conn_or_error
 
 
@@ -33,14 +33,31 @@ cdef class QualitiesOfService(list):
         pass
 
     def as_dict(self, recursive=False, name_is_key=True):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+            name_is_key (bool, optional):
+                By default, the keys in this dict are the names of each QoS.
+                If this is set to `False`, then the unique ID of the QoS will
+                be used as dict keys.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
         identifier = QualityOfService.name
         if not name_is_key:
             identifier = QualityOfService.id
 
-        return collection_to_dict(self, True, identifier, recursive)
+        return collection_to_dict_global(self, identifier=identifier,
+                                         recursive=recursive)
 
     @staticmethod
-    def load(QualityOfServiceFilter db_filter=None, db_connection=None):
+    def load(QualityOfServiceFilter db_filter=None,
+             Connection db_connection=None):
         cdef:
             QualitiesOfService out = QualitiesOfService()
             QualityOfService qos

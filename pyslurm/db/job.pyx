@@ -207,7 +207,24 @@ cdef class Jobs(list):
             raise TypeError("Invalid Type: {type(jobs)}")
 
     def as_dict(self, recursive=False, group_by_cluster=False):
-        col = collection_to_dict(self, False, Job.id, recursive)
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+            group_by_cluster (bool, optional):
+                By default, only the Jobs from your local Cluster are
+                returned. If this is set to `True`, then all the Jobs in the
+                collection will be grouped by the Cluster - with the name of
+                the cluster as the key and the value being the collection as
+                another dict.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        col = collection_to_dict(self, identifier=Job.id, recursive=recursive)
         if not group_by_cluster:
             return col.get(LOCAL_CLUSTER, {})
 
