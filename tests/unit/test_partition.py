@@ -32,14 +32,14 @@ def test_create_instance():
 
 
 def test_create_collection():
-    parts = Partitions("part1,part2")
+    parts = Partitions("part1,part2").as_dict()
     assert len(parts) == 2
     assert "part1" in parts
     assert "part2" in parts
     assert parts["part1"].name == "part1"
     assert parts["part2"].name == "part2"
 
-    parts = Partitions(["part1", "part2"])
+    parts = Partitions(["part1", "part2"]).as_dict()
     assert len(parts) == 2
     assert "part1" in parts
     assert "part2" in parts
@@ -51,7 +51,7 @@ def test_create_collection():
             "part1": Partition("part1"),
             "part2": Partition("part2"),
         }
-    )
+    ).as_dict()
     assert len(parts) == 2
     assert "part1" in parts
     assert "part2" in parts

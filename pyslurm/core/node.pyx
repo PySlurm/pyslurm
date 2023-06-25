@@ -28,6 +28,7 @@ from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -36,12 +37,15 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
+    collection_to_dict,
+    group_collection_by_cluster,
     _sum_prop,
     nodelist_from_range_str,
+    nodelist_to_range_str,
 )
 
 
-cdef class Nodes(dict):
+cdef class Nodes(list):
 
     def __dealloc__(self):
         slurm_free_node_info_msg(self.info)
@@ -52,17 +56,38 @@ cdef class Nodes(dict):
         self.part_info = NULL
 
     def __init__(self, nodes=None):
-        if isinstance(nodes, dict):
-            self.update(nodes)
-        elif isinstance(nodes, str):
-            nodelist = nodelist_from_range_str(nodes) 
-            self.update({node: Node(node) for node in nodelist})
-        elif nodes is not None:
+        if isinstance(nodes, list):
             for node in nodes:
                 if isinstance(node, str):
-                    self[node] = Node(node)
+                    self.append(Node(node))
                 else:
-                    self[node.name] = node
+                    self.append(node)
+        elif isinstance(nodes, str):
+            nodelist = nodes.split(",")
+            self.extend([Node(node) for node in nodelist])
+        elif isinstance(nodes, dict):
+            self.extend([node for node in nodes.values()])
+        elif nodes is not None:
+            raise TypeError("Invalid Type: {type(nodes)}")
+
+    def as_dict(self, recursive=False):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        col = collection_to_dict(self, identifier=Node.name,
+                                 recursive=recursive)
+        return col.get(LOCAL_CLUSTER, {})
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self)
 
     @staticmethod
     def load(preload_passwd_info=False):
@@ -116,7 +141,7 @@ cdef class Nodes(dict):
                 node.passwd = passwd
                 node.groups = groups
 
-            nodes[node.name] = node
+            nodes.append(node)
 
         # At this point we memcpy'd all the memory for the Nodes. Setting this
         # to 0 will prevent the slurm node free function to deallocate the
@@ -140,27 +165,49 @@ cdef class Nodes(dict):
             RPCError: When getting the Nodes from the slurmctld failed.
         """
         cdef Nodes reloaded_nodes
-        our_nodes = list(self.keys())
 
-        if not our_nodes:
-            return None
+        if not self:
+            return self
 
-        reloaded_nodes = Nodes.load()
-        for node in list(self.keys()):
+        reloaded_nodes = Nodes.load().as_dict()
+        for idx, node in enumerate(self):
+            node_name = node.name
             if node in reloaded_nodes:
                 # Put the new data in.
-                self[node] = reloaded_nodes[node]
+                self[idx] = reloaded_nodes[node_name]
 
         return self
 
-    def as_list(self):
-        """Format the information as list of Node objects.
+    def modify(self, Node changes):
+        """Modify all Nodes in a collection.
 
-        Returns:
-            (list): List of Node objects
+        Args:
+            changes (pyslurm.Node):
+                Another Node object that contains all the changes to apply.
+                Check the `Other Parameters` of the Node class to see which
+                properties can be modified.
+
+        Raises:
+            RPCError: When updating the Node was not successful.
+
+        Examples:
+            >>> import pyslurm
+            >>>
+            >>> nodes = pyslurm.Nodes.load()
+            >>> # Prepare the changes
+            >>> changes = pyslurm.Node(state="DRAIN", reason="DRAIN Reason")
+            >>> # Apply the changes to all the nodes
+            >>> nodes.modify(changes)
         """
-        return list(self.values())
-
+        cdef:
+            Node n = <Node>changes
+            list node_names = [node.name for node in self]
+        
+        node_str = nodelist_to_range_str(node_names)
+        n._alloc_umsg()
+        cstr.fmalloc(&n.umsg.node_names, node_str)
+        verify_rpc(slurm_update_node(n.umsg))
+        
     @property
     def free_memory(self):
         return _sum_prop(self, Node.free_memory)
@@ -186,6 +233,10 @@ cdef class Nodes(dict):
         return _sum_prop(self, Node.allocated_cpus)
     
     @property
+    def effective_cpus(self):
+        return _sum_prop(self, Node.effective_cpus)
+
+    @property
     def current_watts(self):
         return _sum_prop(self, Node.current_watts)
 
@@ -203,6 +254,7 @@ cdef class Node:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
+        self.cluster = LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -250,6 +302,7 @@ cdef class Node:
         wrap._alloc_info()
         wrap.passwd = {}
         wrap.groups = {}
+        wrap.cluster = LOCAL_CLUSTER
         memcpy(wrap.info, in_ptr, sizeof(node_info_t))
         return wrap
 
@@ -304,15 +357,48 @@ cdef class Node:
 
         return wrap
 
-    def modify(self, changes):
+    def create(self, state="future"):
+        """Create a node.
+
+        Implements the slurm_create_node RPC.
+
+        Args:
+            state (str, optional): 
+                An optional state the created Node should have. Allowed values
+                are "future" and "cloud". "future" is the default.
+
+        Returns:
+            (pyslurm.Node): This function returns the current Node-instance
+                object itself.
+
+        Raises:
+            RPCError: If creating the Node was not successful.
+            MemoryError: If malloc failed to allocate memory.
+
+        Examples:
+            >>> import pyslurm
+            >>> node = pyslurm.Node("testnode").create()
+        """
+        if not self.name:
+            raise ValueError("You need to set a node name first.")
+
+        self._alloc_umsg()
+        cstr.fmalloc(&self.umsg.extra,
+                     f"NodeName={self.name} State={state}")
+        verify_rpc(slurm_create_node(self.umsg))
+
+        return self
+
+    def modify(self, Node changes):
         """Modify a node.
 
         Implements the slurm_update_node RPC.
 
         Args:
             changes (pyslurm.Node):
-                Another Node object which contains all the changes that
-                should be applied to this instance.
+                Another Node object that contains all the changes to apply.
+                Check the `Other Parameters` of the Node class to see which
+                properties can be modified.
 
         Raises:
             RPCError: When updating the Node was not successful.
@@ -320,15 +406,32 @@ cdef class Node:
         Examples:
             >>> import pyslurm
             >>>
-            >>> mynode = pyslurm.Node("localhost")
-            >>> changes = pyslurm.Node(weight=100)
-            >>> # Setting the weight to 100 for the "localhost" node
+            >>> mynode = pyslurm.Node.load("localhost")
+            >>> # Prepare the changes
+            >>> changes = pyslurm.Node(state="DRAIN", reason="DRAIN Reason")
+            >>> # Modify it
             >>> mynode.modify(changes)
         """
         cdef Node n = <Node>changes
         n._alloc_umsg()
         cstr.fmalloc(&n.umsg.node_names, self.name)
         verify_rpc(slurm_update_node(n.umsg))
+
+    def delete(self):
+        """Delete a node.
+
+        Implements the slurm_delete_node RPC.
+
+        Raises:
+            RPCError: If deleting the Node was not successful.
+            MemoryError: If malloc failed to allocate memory.
+
+        Examples:
+            >>> import pyslurm
+            >>> pyslurm.Node("localhost").delete()
+        """
+        self._alloc_umsg()
+        verify_rpc(slurm_delete_node(self.umsg))
 
     def as_dict(self):
         """Node information formatted as a dictionary.
@@ -396,6 +499,10 @@ cdef class Node:
     def reason(self):
         return cstr.to_unicode(self.info.reason)
 
+    @reason.setter
+    def reason(self, val):
+        cstr.fmalloc2(&self.info.reason, &self.umsg.reason, val)
+
     @property
     def reason_user(self):
         return uid_to_name(self.info.reason_uid, lookup=self.passwd)
@@ -462,6 +569,10 @@ cdef class Node:
     @weight.setter
     def weight(self, val):
         self.info.weight=self.umsg.weight = u32(val)
+
+    @property
+    def effective_cpus(self):
+        return u16_parse(self.info.cpus_efctv)
 
     @property
     def total_cpus(self):
@@ -554,11 +665,11 @@ cdef class Node:
 
     @property
     def idle_cpus(self):
-        tot = self.total_cpus
-        if not tot:
+        efctv = self.effective_cpus
+        if not efctv:
             return None
 
-        return tot - self.allocated_cpus
+        return efctv - self.allocated_cpus
 
     @property
     def cpu_binding(self):
@@ -611,6 +722,10 @@ cdef class Node:
         xfree(state)
         return state_str
 
+    @state.setter
+    def state(self, val):
+        self.umsg.node_state=self.info.node_state = _node_state_from_str(val)
+
     @property
     def next_state(self):
         if ((self.info.next_state != slurm.NO_VAL)
@@ -620,10 +735,6 @@ cdef class Node:
                     slurm_node_state_string(self.info.next_state))
         else:
             return None
-
-    @state.setter
-    def state(self, val):
-        self.umsg.node_state=self.info.node_state = _node_state_from_str(val)
 
     @property
     def cpu_load(self):
@@ -638,10 +749,36 @@ cdef class Node:
 def _node_state_from_str(state, err_on_invalid=True):
     if not state:
         return slurm.NO_VAL
+    ustate = state.upper()
 
-    for i in range(slurm.NODE_STATE_END):
-        if state == slurm_node_state_string(i):
-            return i
+    # Following states are explicitly possible as per documentation
+    # https://slurm.schedmd.com/scontrol.html#OPT_State_1
+    if ustate == "CANCEL_REBOOT":
+        return slurm.NODE_STATE_CANCEL_REBOOT
+    elif ustate == "DOWN":
+        return slurm.NODE_STATE_DOWN
+    elif ustate == "DRAIN":
+        return slurm.NODE_STATE_DRAIN
+    elif ustate == "FAIL":
+        return slurm.NODE_STATE_FAIL
+    elif ustate == "FUTURE":
+        return slurm.NODE_STATE_FUTURE
+    elif ustate == "NORESP" or ustate == "NO_RESP":
+        return slurm.NODE_STATE_NO_RESPOND
+    elif ustate == "POWER_DOWN":
+        return slurm.NODE_STATE_POWER_DOWN
+    elif ustate == "POWER_DOWN_ASAP":
+        # Drain and mark for power down
+        return slurm.NODE_STATE_POWER_DOWN | slurm.NODE_STATE_POWER_DRAIN
+    elif ustate == "POWER_DOWN_FORCE":
+        # Kill all Jobs and power down
+        return slurm.NODE_STATE_POWER_DOWN | slurm.NODE_STATE_POWERED_DOWN
+    elif ustate == "POWER_UP":
+        return slurm.NODE_STATE_POWER_UP
+    elif ustate == "RESUME":
+        return slurm.NODE_RESUME
+    elif ustate == "UNDRAIN":
+        return slurm.NODE_STATE_UNDRAIN
 
     if err_on_invalid:
         raise ValueError(f"Invalid Node state: {state}")

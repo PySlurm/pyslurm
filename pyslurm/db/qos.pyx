@@ -23,46 +23,72 @@
 # cython: language_level=3
 
 from pyslurm.core.error import RPCError
-from pyslurm.utils.helpers import instance_to_dict
+from pyslurm.utils.helpers import instance_to_dict, collection_to_dict_global
+from pyslurm.db.connection import _open_conn_or_error
 
 
-cdef class QualitiesOfService(dict):
+cdef class QualitiesOfService(list):
 
     def __init__(self):
         pass
 
+    def as_dict(self, recursive=False, name_is_key=True):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+            name_is_key (bool, optional):
+                By default, the keys in this dict are the names of each QoS.
+                If this is set to `False`, then the unique ID of the QoS will
+                be used as dict keys.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        identifier = QualityOfService.name
+        if not name_is_key:
+            identifier = QualityOfService.id
+
+        return collection_to_dict_global(self, identifier=identifier,
+                                         recursive=recursive)
+
     @staticmethod
-    def load(search_filter=None, name_is_key=True, db_connection=None):
+    def load(QualityOfServiceFilter db_filter=None,
+             Connection db_connection=None):
         cdef:
-            QualitiesOfService qos_dict = QualitiesOfService()
+            QualitiesOfService out = QualitiesOfService()
             QualityOfService qos
-            QualityOfServiceSearchFilter cond
+            QualityOfServiceFilter cond = db_filter
+            SlurmList qos_data
             SlurmListItem qos_ptr
-            Connection conn = <Connection>db_connection
+            Connection conn
 
-        if search_filter:
-            cond = <QualityOfServiceSearchFilter>search_filter
-        else:
-            cond = QualityOfServiceSearchFilter()
-
+        # Prepare SQL Filter
+        if not db_filter:
+            cond = QualityOfServiceFilter()
         cond._create()
-        qos_dict.db_conn = Connection.open() if not conn else conn
-        qos_dict.info = SlurmList.wrap(slurmdb_qos_get(qos_dict.db_conn.ptr,
-                                                       cond.ptr))
-        if qos_dict.info.is_null:
+
+        # Setup DB Conn
+        conn = _open_conn_or_error(db_connection)
+
+        # Fetch QoS Data
+        qos_data = SlurmList.wrap(slurmdb_qos_get(conn.ptr, cond.ptr))
+
+        if qos_data.is_null:
             raise RPCError(msg="Failed to get QoS data from slurmdbd")
 
-        for qos_ptr in SlurmList.iter_and_pop(qos_dict.info):
+        # Setup QOS objects
+        for qos_ptr in SlurmList.iter_and_pop(qos_data):
             qos = QualityOfService.from_ptr(<slurmdb_qos_rec_t*>qos_ptr.data)
-            if name_is_key:
-                qos_dict[qos.name] = qos
-            else:
-                qos_dict[qos.id] = qos
+            out.append(qos)
 
-        return qos_dict
+        return out
 
 
-cdef class QualityOfServiceSearchFilter:
+cdef class QualityOfServiceFilter:
 
     def __cinit__(self):
         self.ptr = NULL
@@ -165,12 +191,12 @@ cdef class QualityOfService:
             RPCError: If requesting the information from the database was not
                 sucessful.
         """
-        qfilter = QualityOfServiceSearchFilter(names=[name])
+        qfilter = QualityOfServiceFilter(names=[name])
         qos_data = QualitiesOfService.load(qfilter)
-        if not qos_data or name not in qos_data:
+        if not qos_data:
             raise RPCError(msg=f"QualityOfService {name} does not exist")
 
-        return qos_data[name]
+        return qos_data[0]
 
     @property
     def name(self):
@@ -187,3 +213,24 @@ cdef class QualityOfService:
     @property
     def id(self):
         return self.ptr.id
+
+
+def _qos_names_to_ids(qos_list, QualitiesOfService data):
+    cdef list out = []
+    if not qos_list:
+        return None
+
+    return [_validate_qos_single(qid, data) for qid in qos_list]
+
+
+def _validate_qos_single(qid, QualitiesOfService data):
+    for item in data:
+        if qid == item.id or qid == item.name:
+            return item.id
+
+    raise ValueError(f"Invalid QOS specified: {qid}")
+
+
+cdef _set_qos_list(List *in_list, vals, QualitiesOfService data):
+    qos_ids = _qos_names_to_ids(vals, data)
+    make_char_list(in_list, qos_ids)

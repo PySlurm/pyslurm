@@ -55,7 +55,7 @@ from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
 
 
-cdef class Nodes(dict):
+cdef class Nodes(list):
     """A collection of [pyslurm.Node][] objects.
 
     Args:
@@ -226,6 +226,8 @@ cdef class Node:
         update_node_msg_t *umsg
         dict passwd
         dict groups
+
+    cdef readonly cluster
 
     @staticmethod
     cdef _swap_data(Node dst, Node src)

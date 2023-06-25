@@ -32,9 +32,9 @@ from pyslurm.utils.helpers import (
     uid_to_name,
     instance_to_dict,
     _get_exit_code,
+    humanize_step_id,
 )
 from pyslurm.core.job.util import cpu_freq_int_to_str
-from pyslurm.core.job.step import humanize_step_id
 
 
 cdef class JobStep:

@@ -9,11 +9,15 @@ import sys
 
 sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
+# Initialize slurm api
+from pyslurm.api import slurm_init, slurm_fini
+slurm_init()
+
 from .pyslurm import *
 from .__version__ import __version__
 
-from pyslurm import utils
 from pyslurm import db
+from pyslurm import utils
 from pyslurm import constants
 
 from pyslurm.core.job import (
@@ -31,10 +35,6 @@ from pyslurm.core.error import (
     RPCError,
 )
 from pyslurm.core import slurmctld
-
-# Initialize slurm api
-from pyslurm.api import slurm_init, slurm_fini
-slurm_init()
 
 
 def version():
