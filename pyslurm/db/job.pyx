@@ -231,6 +231,11 @@ cdef class Jobs(list):
         return col
 
     def group_by_cluster(self):
+        """Group Jobs by cluster name
+
+        Returns:
+            (dict[str, Jobs]): Jobs grouped by cluster.
+        """
         return group_collection_by_cluster(self)
 
     @staticmethod
