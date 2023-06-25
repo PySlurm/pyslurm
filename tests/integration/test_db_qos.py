@@ -50,6 +50,6 @@ def test_load_all():
 
 
 def test_load_with_filter_name():
-    qfilter = pyslurm.db.QualityOfServiceSearchFilter(names=["non_existent"])
+    qfilter = pyslurm.db.QualityOfServiceFilter(names=["non_existent"])
     qos = pyslurm.db.QualitiesOfService.load(qfilter)
     assert not qos

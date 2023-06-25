@@ -49,7 +49,7 @@ from pyslurm.utils.ctime cimport time_t
 from pyslurm.core.job.task_dist cimport TaskDistribution
 
 
-cdef class JobSteps(dict):
+cdef class JobSteps(list):
     """A collection of [pyslurm.JobStep][] objects for a given Job.
 
     Args:
@@ -64,11 +64,12 @@ cdef class JobSteps(dict):
     cdef:
         job_step_info_response_msg_t *info
         job_step_info_t tmp_info
+        _job_id
 
     @staticmethod
-    cdef JobSteps _load(Job job)
+    cdef JobSteps _load_single(Job job)
 
-    cdef dict _get_info(self, uint32_t job_id, int flags)
+    cdef _load_data(self, uint32_t job_id, int flags)
         
 
 cdef class JobStep:

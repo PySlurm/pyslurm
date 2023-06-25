@@ -55,7 +55,7 @@ from pyslurm.db.qos cimport QualitiesOfService
 from pyslurm.db.tres cimport TrackableResources, TrackableResource
 
 
-cdef class JobSearchFilter:
+cdef class JobFilter:
     """Query-Conditions for Jobs in the Slurm Database.
 
     Args:
@@ -150,11 +150,9 @@ cdef class JobSearchFilter:
         with_env
 
 
-cdef class Jobs(dict):
+cdef class Jobs(list):
     """A collection of [pyslurm.db.Job][] objects."""
-    cdef:
-        SlurmList info
-        Connection db_conn
+    pass
 
 
 cdef class Job:
@@ -285,7 +283,7 @@ cdef class Job:
     """
     cdef:
         slurmdb_job_rec_t *ptr
-        QualitiesOfService qos_data
+        dict qos_data
 
     cdef public:
         JobSteps steps

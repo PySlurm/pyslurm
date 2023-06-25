@@ -25,17 +25,58 @@ from pyslurm.utils cimport cstr
 from libc.stdint cimport uint64_t
 from pyslurm.slurm cimport (
     slurmdb_tres_rec_t,
+    slurmdb_tres_cond_t,
+    slurmdb_destroy_tres_cond,
+    slurmdb_init_tres_cond,
     slurmdb_destroy_tres_rec,
     slurmdb_find_tres_count_in_string,
+    slurmdb_tres_get,
     try_xmalloc,
 )
+from pyslurm.db.util cimport (
+    SlurmList,
+    SlurmListItem,
+)
+from pyslurm.db.connection cimport Connection
+
+cdef find_tres_count(char *tres_str, typ, on_noval=*, on_inf=*)
+cdef find_tres_limit(char *tres_str, typ)
+cdef merge_tres_str(char **tres_str, typ, val)
+cdef _tres_ids_to_names(char *tres_str, dict tres_data)
+cdef _set_tres_limits(char **dest, TrackableResourceLimits src,
+                          TrackableResources tres_data)
 
 
-cdef class TrackableResources(dict):
+cdef class TrackableResourceLimits:
+
+    cdef public:
+        cpu
+        mem
+        energy
+        node
+        billing
+        fs
+        vmem
+        pages
+        gres
+        license
+
+    @staticmethod
+    cdef from_ids(char *tres_id_str, dict tres_data)
+
+
+cdef class TrackableResourceFilter:
+    cdef slurmdb_tres_cond_t *ptr
+
+
+cdef class TrackableResources(list):
     cdef public raw_str
 
     @staticmethod
     cdef TrackableResources from_str(char *tres_str)
+
+    @staticmethod
+    cdef find_count_in_str(char *tres_str, typ, on_noval=*, on_inf=*)
 
 
 cdef class TrackableResource:

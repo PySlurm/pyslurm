@@ -25,6 +25,16 @@
 from pyslurm.core.error import RPCError
 
 
+def _open_conn_or_error(conn):
+    if not conn:
+        conn = Connection.open()
+
+    if not conn.is_open:
+        raise ValueError("Database connection is not open")
+
+    return conn
+
+
 cdef class Connection:
 
     def __cinit__(self):

@@ -341,6 +341,50 @@ def instance_to_dict(inst):
     return out
 
 
+def collection_to_dict(collection, identifier, recursive=False, group_id=None):
+    cdef dict out = {}
+
+    for item in collection:
+        cluster = item.cluster
+        if cluster not in out:
+            out[cluster] = {}
+
+        _id = identifier.__get__(item)
+        data = item if not recursive else item.as_dict()
+
+        if group_id:
+            grp_id = group_id.__get__(item)
+            if grp_id not in out[cluster]:
+                out[cluster][grp_id] = {}
+            out[cluster][grp_id].update({_id: data})
+        else:
+            out[cluster][_id] = data
+
+    return out
+
+
+def collection_to_dict_global(collection, identifier, recursive=False):
+    cdef dict out = {}
+    for item in collection:
+        _id = identifier.__get__(item)
+        out[_id] = item if not recursive else item.as_dict()
+    return out
+
+
+def group_collection_by_cluster(collection):
+    cdef dict out = {}
+    collection_type = type(collection)
+
+    for item in collection:
+        cluster = item.cluster
+        if cluster not in out:
+            out[cluster] = collection_type()
+
+        out[cluster].append(item)
+    
+    return out
+
+
 def _sum_prop(obj, name, startval=0):
     val = startval
     for n in obj.values():
@@ -362,3 +406,29 @@ def _get_exit_code(exit_code):
                 exit_state -= 128
 
     return exit_state, sig
+
+
+def humanize_step_id(sid):
+    if sid == slurm.SLURM_BATCH_SCRIPT:
+        return "batch"
+    elif sid == slurm.SLURM_EXTERN_CONT:
+        return "extern"
+    elif sid == slurm.SLURM_INTERACTIVE_STEP:
+        return "interactive"
+    elif sid == slurm.SLURM_PENDING_STEP:
+        return "pending"
+    else:
+        return sid
+
+
+def dehumanize_step_id(sid):
+    if sid == "batch":
+        return slurm.SLURM_BATCH_SCRIPT
+    elif sid == "extern":
+        return slurm.SLURM_EXTERN_CONT
+    elif sid == "interactive":
+        return slurm.SLURM_INTERACTIVE_STEP
+    elif sid == "pending":
+        return slurm.SLURM_PENDING_STEP
+    else:
+        return int(sid)

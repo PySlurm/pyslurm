@@ -39,6 +39,7 @@ from pyslurm.slurm cimport (
 
 cdef slurm_list_to_pylist(List in_list)
 cdef make_char_list(List *in_list, vals)
+cdef qos_list_to_pylist(List in_list, qos_data)
 
 
 cdef class SlurmListItem:

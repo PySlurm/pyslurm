@@ -1,5 +1,5 @@
 #########################################################################
-# qos.pxd - pyslurm slurmdbd qos api
+# assoc.pxd - pyslurm slurmdbd association api
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -24,43 +24,64 @@
 
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
-    slurmdb_qos_rec_t,
-    slurmdb_qos_cond_t,
-    slurmdb_destroy_qos_rec,
-    slurmdb_destroy_qos_cond,
-    slurmdb_qos_get,
-    slurm_preempt_mode_num,
-    List,
+    slurmdb_assoc_rec_t,
+    slurmdb_assoc_cond_t,
+    slurmdb_associations_get,
+    slurmdb_destroy_assoc_rec,
+    slurmdb_destroy_assoc_cond,
+    slurmdb_init_assoc_rec,
+    slurmdb_associations_modify,
     try_xmalloc,
 )
 from pyslurm.db.util cimport (
     SlurmList,
     SlurmListItem,
     make_char_list,
+    slurm_list_to_pylist,
+    qos_list_to_pylist,
+)
+from pyslurm.db.tres cimport (
+    _set_tres_limits,
+    TrackableResources,
+    TrackableResourceLimits,
 )
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
+from pyslurm.utils.uint cimport *
+from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
 
-cdef _set_qos_list(List *in_list, vals, QualitiesOfService data)
+cdef _parse_assoc_ptr(Association ass)
+cdef _create_assoc_ptr(Association ass, conn=*)
 
 
-cdef class QualitiesOfService(list):
+cdef class Associations(list):
     pass
 
 
-cdef class QualityOfServiceFilter:
-   cdef slurmdb_qos_cond_t *ptr
+cdef class AssociationFilter:
+    cdef slurmdb_assoc_cond_t *ptr
 
-   cdef public:
-       names
-       ids
-       descriptions
-       preempt_modes
-       with_deleted
+    cdef public:
+        users
+        ids
 
 
-cdef class QualityOfService:
-    cdef slurmdb_qos_rec_t *ptr
+cdef class Association:
+    cdef:
+        slurmdb_assoc_rec_t *ptr
+        dict qos_data
+        dict tres_data
+
+    cdef public:
+        group_tres
+        group_tres_mins
+        group_tres_run_mins
+        max_tres_mins_per_job
+        max_tres_run_mins_per_user
+        max_tres_per_job
+        max_tres_per_node
+        qos
 
     @staticmethod
-    cdef QualityOfService from_ptr(slurmdb_qos_rec_t *in_ptr)
+    cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr)
+

@@ -30,6 +30,7 @@ from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -37,6 +38,8 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
+    collection_to_dict,
+    group_collection_by_cluster,
     _sum_prop,
     dehumanize,
 )
@@ -46,7 +49,8 @@ from pyslurm.utils.ctime import (
 )
 
 
-cdef class Partitions(dict):
+cdef class Partitions(list):
+
     def __dealloc__(self):
         slurm_free_partition_info_msg(self.info)
 
@@ -54,17 +58,38 @@ cdef class Partitions(dict):
         self.info = NULL
 
     def __init__(self, partitions=None):
-        if isinstance(partitions, dict):
-            self.update(partitions)
-        elif isinstance(partitions, str):
-            partlist = partitions.split(",")
-            self.update({part: Partition(part) for part in partlist})
-        elif partitions is not None:
+        if isinstance(partitions, list):
             for part in partitions:
                 if isinstance(part, str):
-                    self[part] = Partition(part)
+                    self.append(Partition(part))
                 else:
-                    self[part.name] = part
+                    self.append(part)
+        elif isinstance(partitions, str):
+            partlist = partitions.split(",")
+            self.extend([Partition(part) for part in partlist])
+        elif isinstance(partitions, dict):
+            self.extend([part for part in partitions.values()])
+        elif partitions is not None:
+            raise TypeError("Invalid Type: {type(partitions)}")
+
+    def as_dict(self, recursive=False):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        col = collection_to_dict(self, identifier=Partition.name,
+                                 recursive=recursive)
+        return col.get(LOCAL_CLUSTER, {})
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self)
 
     @staticmethod
     def load():
@@ -103,7 +128,7 @@ cdef class Partitions(dict):
 
             partition.power_save_enabled = power_save_enabled
             partition.slurm_conf = slurm_conf
-            partitions[partition.name] = partition
+            partitions.append(partition)
 
         # At this point we memcpy'd all the memory for the Partitions. Setting
         # this to 0 will prevent the slurm partition free function to
@@ -129,17 +154,17 @@ cdef class Partitions(dict):
         Raises:
             RPCError: When getting the Partitions from the slurmctld failed.
         """
-        cdef Partitions reloaded_parts
-        our_parts = list(self.keys())
+        cdef dict reloaded_parts
 
-        if not our_parts:
+        if not self:
             return self
 
-        reloaded_parts = Partitions.load()
-        for part in our_parts:
-            if part in reloaded_parts:
+        reloaded_parts = Partitions.load().as_dict()
+        for idx, part in enumerate(self):
+            part_name = part.name
+            if part_name in reloaded_parts:
                 # Put the new data in.
-                self[part] = reloaded_parts[part]
+                self[idx] = reloaded_parts[part_name]
 
         return self
 
@@ -164,16 +189,8 @@ cdef class Partitions(dict):
             >>> # Apply the changes to all the partitions
             >>> parts.modify(changes)
         """
-        for part in self.values():
+        for part in self:
             part.modify(changes)
-
-    def as_list(self):
-        """Format the information as list of Partition objects.
-
-        Returns:
-            (list): List of Partition objects
-        """
-        return list(self.values())
 
     @property
     def total_cpus(self):
@@ -192,6 +209,7 @@ cdef class Partition:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
+        self.cluster = LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -214,6 +232,7 @@ cdef class Partition:
     cdef Partition from_ptr(partition_info_t *in_ptr):
         cdef Partition wrap = Partition.__new__(Partition)
         wrap._alloc_impl()
+        wrap.cluster = LOCAL_CLUSTER
         memcpy(wrap.ptr, in_ptr, sizeof(partition_info_t))
         return wrap
 
@@ -255,7 +274,7 @@ cdef class Partition:
             >>> import pyslurm
             >>> part = pyslurm.Partition.load("normal")
         """
-        partitions = Partitions.load()
+        partitions = Partitions.load().as_dict()
         if name not in partitions:
             raise RPCError(msg=f"Partition '{name}' doesn't exist")
 
