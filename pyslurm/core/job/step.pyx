@@ -33,6 +33,8 @@ from pyslurm.utils.helpers import (
     uid_to_name,
     collection_to_dict,
     group_collection_by_cluster,
+    humanize_step_id,
+    dehumanize_step_id,
 )
 from pyslurm.core.job.util import cpu_freq_int_to_str
 from pyslurm.utils.ctime import (
@@ -74,7 +76,7 @@ cdef class JobSteps(list):
                                  recursive=recursive, group_id=JobStep.job_id)
         col = col.get(LOCAL_CLUSTER, {})
         if self._job_id:
-            return col.get(self._job_id)
+            return col.get(self._job_id, {})
 
         return col
 
@@ -442,29 +444,3 @@ cdef class JobStep:
     @property
     def slurm_protocol_version(self):
         return u32_parse(self.ptr.start_protocol_ver)
-
-
-def humanize_step_id(sid):
-    if sid == slurm.SLURM_BATCH_SCRIPT:
-        return "batch"
-    elif sid == slurm.SLURM_EXTERN_CONT:
-        return "extern"
-    elif sid == slurm.SLURM_INTERACTIVE_STEP:
-        return "interactive"
-    elif sid == slurm.SLURM_PENDING_STEP:
-        return "pending"
-    else:
-        return sid
-
-
-def dehumanize_step_id(sid):
-    if sid == "batch":
-        return slurm.SLURM_BATCH_SCRIPT
-    elif sid == "extern":
-        return slurm.SLURM_EXTERN_CONT
-    elif sid == "interactive":
-        return slurm.SLURM_INTERACTIVE_STEP
-    elif sid == "pending":
-        return slurm.SLURM_PENDING_STEP
-    else:
-        return int(sid)

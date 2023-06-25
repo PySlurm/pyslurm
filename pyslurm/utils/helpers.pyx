@@ -406,3 +406,29 @@ def _get_exit_code(exit_code):
                 exit_state -= 128
 
     return exit_state, sig
+
+
+def humanize_step_id(sid):
+    if sid == slurm.SLURM_BATCH_SCRIPT:
+        return "batch"
+    elif sid == slurm.SLURM_EXTERN_CONT:
+        return "extern"
+    elif sid == slurm.SLURM_INTERACTIVE_STEP:
+        return "interactive"
+    elif sid == slurm.SLURM_PENDING_STEP:
+        return "pending"
+    else:
+        return sid
+
+
+def dehumanize_step_id(sid):
+    if sid == "batch":
+        return slurm.SLURM_BATCH_SCRIPT
+    elif sid == "extern":
+        return slurm.SLURM_EXTERN_CONT
+    elif sid == "interactive":
+        return slurm.SLURM_INTERACTIVE_STEP
+    elif sid == "pending":
+        return slurm.SLURM_PENDING_STEP
+    else:
+        return int(sid)

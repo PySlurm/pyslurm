@@ -104,7 +104,7 @@ def test_collection(submit_job):
     time.sleep(util.WAIT_SECS_SLURMCTLD)
     steps = JobSteps.load(job).as_dict()
 
-    assert steps != {}
+    assert steps
     # We have 3 Steps: batch, 0 and 1
     assert len(steps) == 3
     assert ("batch" in steps and

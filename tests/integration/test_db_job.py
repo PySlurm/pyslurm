@@ -42,7 +42,7 @@ def test_load_single(submit_job):
     assert db_job.id == job.id
 
     with pytest.raises(pyslurm.RPCError):
-        pyslurm.db.Job.load(1000)
+        pyslurm.db.Job.load(0)
 
 
 def test_parse_all(submit_job):
