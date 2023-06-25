@@ -34,6 +34,7 @@ from typing import Union
 from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.core.error import (
     RPCError,
     verify_rpc,
@@ -47,12 +48,14 @@ from pyslurm.utils.helpers import (
     _getgrall_to_dict,
     _getpwall_to_dict,
     instance_to_dict,
+    collection_to_dict,
+    group_collection_by_cluster,
     _sum_prop,
     _get_exit_code,
 )
 
 
-cdef class Jobs(dict):
+cdef class Jobs(list):
 
     def __cinit__(self):
         self.info = NULL
@@ -63,14 +66,37 @@ cdef class Jobs(dict):
     def __init__(self, jobs=None, frozen=False):
         self.frozen = frozen
 
-        if isinstance(jobs, dict):
-            self.update(jobs)
-        elif jobs is not None:
+        if isinstance(jobs, list):
             for job in jobs:
                 if isinstance(job, int):
-                    self[job] = Job(job)
+                    self.append(Job(job))
                 else:
-                    self[job.id] = job
+                    self.append(job)
+        elif isinstance(jobs, str):
+            joblist = jobs.split(",")
+            self.extend([Job(int(job)) for job in joblist])
+        elif isinstance(jobs, dict):
+            self.extend([job for job in jobs.values()])
+        elif jobs is not None:
+            raise TypeError("Invalid Type: {type(jobs)}")
+
+    def as_dict(self, recursive=False):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        col = collection_to_dict(self, identifier=Job.id, recursive=recursive)
+        return col.get(LOCAL_CLUSTER, {})
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self)
 
     @staticmethod
     def load(preload_passwd_info=False, frozen=False):
@@ -124,7 +150,7 @@ cdef class Jobs(dict):
                 job.passwd = passwd
                 job.groups = groups
 
-            jobs[job.id] = job
+            jobs.append(job)
 
         # At this point we memcpy'd all the memory for the Jobs. Setting this
         # to 0 will prevent the slurm job free function to deallocate the
@@ -143,28 +169,34 @@ cdef class Jobs(dict):
         Raises:
             RPCError: When getting the Jobs from the slurmctld failed.
         """
-        cdef Jobs reloaded_jobs = Jobs.load()
+        cdef:
+            Jobs reloaded_jobs
+            Jobs new_jobs = Jobs()
+            dict self_dict
 
-        for jid in list(self.keys()):
+        if not self:
+            return self
+
+        reloaded_jobs = Jobs.load().as_dict()
+        for idx, jid in enumerate(self):
             if jid in reloaded_jobs:
                 # Put the new data in.
-                self[jid] = reloaded_jobs[jid]
-            elif not self.frozen:
-                # Remove this instance from the current collection, as the Job
-                # doesn't exist anymore.
-                del self[jid]
+                new_jobs.append(reloaded_jobs[jid])
 
         if not self.frozen:
+            self_dict = self.as_dict()
             for jid in reloaded_jobs:
-                if jid not in self:
-                    self[jid] = reloaded_jobs[jid]
+                if jid not in self_dict:
+                    new_jobs.append(reloaded_jobs[jid])
 
+        self.clear()
+        self.extend(new_jobs)
         return self
 
     def load_steps(self):
         """Load all Job steps for this collection of Jobs.
 
-        This function fills in the "steps" attribute for all Jobs in the
+        This function fills in the `steps` attribute for all Jobs in the
         collection.
 
         !!! note
@@ -175,21 +207,16 @@ cdef class Jobs(dict):
             RPCError: When retrieving the Job information for all the Steps
                 failed.
         """
-        cdef dict step_info = JobSteps.load_all()
+        cdef dict steps = JobSteps.load().as_dict()
 
-        for jid in self:
+        for idx, job in enumerate(self):
             # Ignore any Steps from Jobs which do not exist in this
             # collection.
-            if jid in step_info:
-                self[jid].steps = step_info[jid]
-
-    def as_list(self):
-        """Format the information as list of Job objects.
-
-        Returns:
-            (list[pyslurm.Job]): List of Job objects
-        """
-        return list(self.values())
+            jid = job.id
+            if jid in steps:
+                job_steps = self[idx].steps
+                job_steps.clear()
+                job_steps.extend(steps[jid].values())
 
     @property
     def memory(self):
@@ -218,6 +245,7 @@ cdef class Job:
         self.ptr.job_id = job_id
         self.passwd = {}
         self.groups = {}
+        cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
         self.steps = JobSteps.__new__(JobSteps)
 
     def _alloc_impl(self):
@@ -234,7 +262,9 @@ cdef class Job:
         self._dealloc_impl()
 
     def __eq__(self, other):
-        return isinstance(other, Job) and self.id == other.id
+        if isinstance(other, Job):
+            return self.id == other.id and self.cluster == other.cluster
+        return NotImplemented
 
     @staticmethod
     def load(job_id):
@@ -278,7 +308,7 @@ cdef class Job:
                 if not slurm.IS_JOB_PENDING(wrap.ptr):
                     # Just ignore if the steps couldn't be loaded here.
                     try:
-                        wrap.steps = JobSteps._load(wrap)
+                        wrap.steps = JobSteps._load_single(wrap)
                     except RPCError:
                         pass
             else:

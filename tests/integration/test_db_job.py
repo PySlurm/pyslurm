@@ -42,7 +42,7 @@ def test_load_single(submit_job):
     assert db_job.id == job.id
 
     with pytest.raises(pyslurm.RPCError):
-        pyslurm.db.Job.load(1000)
+        pyslurm.db.Job.load(0)
 
 
 def test_parse_all(submit_job):
@@ -59,7 +59,7 @@ def test_modify(submit_job):
     job = submit_job()
     util.wait(5)
 
-    jfilter = pyslurm.db.JobSearchFilter(ids=[job.id])
+    jfilter = pyslurm.db.JobFilter(ids=[job.id])
     changes = pyslurm.db.Job(comment="test comment")
     pyslurm.db.Jobs.modify(jfilter, changes)
 
@@ -72,7 +72,7 @@ def test_modify_with_existing_conn(submit_job):
     util.wait(5)
 
     conn = pyslurm.db.Connection.open()
-    jfilter = pyslurm.db.JobSearchFilter(ids=[job.id])
+    jfilter = pyslurm.db.JobFilter(ids=[job.id])
     changes = pyslurm.db.Job(comment="test comment")
     pyslurm.db.Jobs.modify(jfilter, changes, conn)
 

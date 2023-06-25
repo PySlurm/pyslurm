@@ -26,10 +26,15 @@ from typing import Union
 from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.helpers import (
     signal_to_num,
     instance_to_dict, 
     uid_to_name,
+    collection_to_dict,
+    group_collection_by_cluster,
+    humanize_step_id,
+    dehumanize_step_id,
 )
 from pyslurm.core.job.util import cpu_freq_int_to_str
 from pyslurm.utils.ctime import (
@@ -41,7 +46,7 @@ from pyslurm.utils.ctime import (
 )
 
 
-cdef class JobSteps(dict):
+cdef class JobSteps(list):
 
     def __dealloc__(self):
         slurm_free_job_step_info_response_msg(self.info)
@@ -49,44 +54,74 @@ cdef class JobSteps(dict):
     def __cinit__(self):
         self.info = NULL
 
-    def __init__(self):
-        pass
+    def __init__(self, steps=None):
+        if isinstance(steps, list):
+            self.extend(steps)
+        elif steps is not None:
+            raise TypeError("Invalid Type: {type(steps)}")
 
-    @staticmethod
-    def load(job):
-        """Load the Steps for a specific Job
+    def as_dict(self, recursive=False):
+        """Convert the collection data to a dict.
 
         Args:
-            job (Union[Job, int]):
-                The Job for which the Steps should be loaded
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        col = collection_to_dict(self, identifier=JobStep.id,
+                                 recursive=recursive, group_id=JobStep.job_id)
+        col = col.get(LOCAL_CLUSTER, {})
+        if self._job_id:
+            return col.get(self._job_id, {})
+
+        return col
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self)
+
+    @staticmethod
+    def load(job_id=0):
+        """Load the Job Steps from the system.
+
+        Args:
+            job_id (Union[Job, int]):
+                The Job for which the Steps should be loaded.
 
         Returns:
             (pyslurm.JobSteps): JobSteps of the Job
         """
-        cdef Job _job
-        _job = Job.load(job.id) if isinstance(job, Job) else Job.load(job)
-        return JobSteps._load(_job)
+        cdef:
+            Job job
+            JobSteps steps
+
+        if job_id:
+            job = Job.load(job_id.id if isinstance(job_id, Job) else job_id)
+            steps = JobSteps._load_single(job)
+            steps._job_id = job.id
+            return steps
+        else:
+            steps = JobSteps()
+            return steps._load_data(0, slurm.SHOW_ALL)
 
     @staticmethod
-    cdef JobSteps _load(Job job):
-        cdef JobSteps steps = JobSteps.__new__(JobSteps)
+    cdef JobSteps _load_single(Job job):
+        cdef JobSteps steps = JobSteps()
 
-        step_info = steps._get_info(job.id, slurm.SHOW_ALL)
-        if not step_info and not slurm.IS_JOB_PENDING(job.ptr):
+        steps._load_data(job.id, slurm.SHOW_ALL)
+        if not steps and not slurm.IS_JOB_PENDING(job.ptr):
             msg = f"Failed to load step info for Job {job.id}."
             raise RPCError(msg=msg)
 
-        # No super().__init__() needed? Cython probably already initialized
-        # the dict automatically.
-        steps.update(step_info[job.id])
         return steps
          
-    cdef dict _get_info(self, uint32_t job_id, int flags):
+    cdef _load_data(self, uint32_t job_id, int flags):
         cdef:
             JobStep step
-            JobSteps steps
             uint32_t cnt = 0
-            dict out = {}
 
         rc = slurm_get_job_steps(<time_t>0, job_id, slurm.NO_VAL, &self.info,
                                  flags)
@@ -102,12 +137,7 @@ cdef class JobSteps(dict):
             # Prevent double free if xmalloc fails mid-loop and a MemoryError
             # is raised by replacing it with a zeroed-out job_step_info_t.
             self.info.job_steps[cnt] = self.tmp_info
-
-            if not step.job_id in out:
-                steps = JobSteps.__new__(JobSteps)
-                out[step.job_id] = steps
-
-            out[step.job_id].update({step.id: step})
+            self.append(step)
 
         # At this point we memcpy'd all the memory for the Steps. Setting this
         # to 0 will prevent the slurm step free function to deallocate the
@@ -117,18 +147,7 @@ cdef class JobSteps(dict):
         # instance.
         self.info.job_step_count = 0
 
-        return out
-
-    @staticmethod
-    def load_all():
-        """Loads all the steps in the system.
-
-        Returns:
-            (dict): A dict where every JobID (key) is mapped with an instance
-                of its JobSteps (value).
-        """
-        cdef JobSteps steps = JobSteps.__new__(JobSteps)
-        return steps._get_info(slurm.NO_VAL, slurm.SHOW_ALL)
+        return self
 
 
 cdef class JobStep:
@@ -425,29 +444,3 @@ cdef class JobStep:
     @property
     def slurm_protocol_version(self):
         return u32_parse(self.ptr.start_protocol_ver)
-
-
-def humanize_step_id(sid):
-    if sid == slurm.SLURM_BATCH_SCRIPT:
-        return "batch"
-    elif sid == slurm.SLURM_EXTERN_CONT:
-        return "extern"
-    elif sid == slurm.SLURM_INTERACTIVE_STEP:
-        return "interactive"
-    elif sid == slurm.SLURM_PENDING_STEP:
-        return "pending"
-    else:
-        return sid
-
-
-def dehumanize_step_id(sid):
-    if sid == "batch":
-        return slurm.SLURM_BATCH_SCRIPT
-    elif sid == "extern":
-        return slurm.SLURM_EXTERN_CONT
-    elif sid == "interactive":
-        return slurm.SLURM_INTERACTIVE_STEP
-    elif sid == "pending":
-        return slurm.SLURM_PENDING_STEP
-    else:
-        return int(sid)

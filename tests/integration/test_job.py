@@ -150,7 +150,7 @@ def test_get_job_queue(submit_job):
     # Submit 10 jobs, gather the job_ids in a list
     job_list = [submit_job() for i in range(10)]
 
-    jobs = Jobs.load()
+    jobs = Jobs.load().as_dict()
     for job in job_list:
         # Check to see if all the Jobs we submitted exist
         assert job.id in jobs

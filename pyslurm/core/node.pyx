@@ -28,6 +28,7 @@ from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
+from pyslurm.db.cluster import LOCAL_CLUSTER
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -36,13 +37,15 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
+    collection_to_dict,
+    group_collection_by_cluster,
     _sum_prop,
     nodelist_from_range_str,
     nodelist_to_range_str,
 )
 
 
-cdef class Nodes(dict):
+cdef class Nodes(list):
 
     def __dealloc__(self):
         slurm_free_node_info_msg(self.info)
@@ -53,17 +56,38 @@ cdef class Nodes(dict):
         self.part_info = NULL
 
     def __init__(self, nodes=None):
-        if isinstance(nodes, dict):
-            self.update(nodes)
-        elif isinstance(nodes, str):
-            nodelist = nodelist_from_range_str(nodes) 
-            self.update({node: Node(node) for node in nodelist})
-        elif nodes is not None:
+        if isinstance(nodes, list):
             for node in nodes:
                 if isinstance(node, str):
-                    self[node] = Node(node)
+                    self.append(Node(node))
                 else:
-                    self[node.name] = node
+                    self.append(node)
+        elif isinstance(nodes, str):
+            nodelist = nodes.split(",")
+            self.extend([Node(node) for node in nodelist])
+        elif isinstance(nodes, dict):
+            self.extend([node for node in nodes.values()])
+        elif nodes is not None:
+            raise TypeError("Invalid Type: {type(nodes)}")
+
+    def as_dict(self, recursive=False):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        col = collection_to_dict(self, identifier=Node.name,
+                                 recursive=recursive)
+        return col.get(LOCAL_CLUSTER, {})
+
+    def group_by_cluster(self):
+        return group_collection_by_cluster(self)
 
     @staticmethod
     def load(preload_passwd_info=False):
@@ -117,7 +141,7 @@ cdef class Nodes(dict):
                 node.passwd = passwd
                 node.groups = groups
 
-            nodes[node.name] = node
+            nodes.append(node)
 
         # At this point we memcpy'd all the memory for the Nodes. Setting this
         # to 0 will prevent the slurm node free function to deallocate the
@@ -141,26 +165,18 @@ cdef class Nodes(dict):
             RPCError: When getting the Nodes from the slurmctld failed.
         """
         cdef Nodes reloaded_nodes
-        our_nodes = list(self.keys())
 
-        if not our_nodes:
-            return None
+        if not self:
+            return self
 
-        reloaded_nodes = Nodes.load()
-        for node in list(self.keys()):
+        reloaded_nodes = Nodes.load().as_dict()
+        for idx, node in enumerate(self):
+            node_name = node.name
             if node in reloaded_nodes:
                 # Put the new data in.
-                self[node] = reloaded_nodes[node]
+                self[idx] = reloaded_nodes[node_name]
 
         return self
-
-    def as_list(self):
-        """Format the information as list of Node objects.
-
-        Returns:
-            (list[pyslurm.Node]): List of Node objects
-        """
-        return list(self.values())
 
     def modify(self, Node changes):
         """Modify all Nodes in a collection.
@@ -183,8 +199,11 @@ cdef class Nodes(dict):
             >>> # Apply the changes to all the nodes
             >>> nodes.modify(changes)
         """
-        cdef Node n = <Node>changes
-        node_str = nodelist_to_range_str(list(self.keys()))
+        cdef:
+            Node n = <Node>changes
+            list node_names = [node.name for node in self]
+        
+        node_str = nodelist_to_range_str(node_names)
         n._alloc_umsg()
         cstr.fmalloc(&n.umsg.node_names, node_str)
         verify_rpc(slurm_update_node(n.umsg))
@@ -235,6 +254,7 @@ cdef class Node:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
+        self.cluster = LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -282,6 +302,7 @@ cdef class Node:
         wrap._alloc_info()
         wrap.passwd = {}
         wrap.groups = {}
+        wrap.cluster = LOCAL_CLUSTER
         memcpy(wrap.info, in_ptr, sizeof(node_info_t))
         return wrap
 

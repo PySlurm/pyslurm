@@ -22,7 +22,7 @@
 
 import pytest
 from pyslurm import JobStep, Job
-from pyslurm.core.job.step import (
+from pyslurm.utils.helpers import (
     humanize_step_id,
     dehumanize_step_id,
 )

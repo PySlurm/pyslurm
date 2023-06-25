@@ -25,7 +25,7 @@ import pyslurm
 
 
 def test_filter():
-    job_filter = pyslurm.db.JobSearchFilter()
+    job_filter = pyslurm.db.JobFilter()
 
     job_filter.clusters = ["test1"]
     job_filter.partitions = ["partition1", "partition2"]
@@ -45,6 +45,7 @@ def test_filter():
 def test_create_collection():
     jobs = pyslurm.db.Jobs("101,102")
     assert len(jobs) == 2
+    jobs = jobs.as_dict()
     assert 101 in jobs
     assert 102 in jobs
     assert jobs[101].id == 101
@@ -52,6 +53,7 @@ def test_create_collection():
 
     jobs = pyslurm.db.Jobs([101, 102])
     assert len(jobs) == 2
+    jobs = jobs.as_dict()
     assert 101 in jobs
     assert 102 in jobs
     assert jobs[101].id == 101
@@ -64,6 +66,7 @@ def test_create_collection():
         }
     )
     assert len(jobs) == 2
+    jobs = jobs.as_dict()
     assert 101 in jobs
     assert 102 in jobs
     assert jobs[101].id == 101

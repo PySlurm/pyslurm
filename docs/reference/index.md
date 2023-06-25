@@ -37,7 +37,7 @@ The `pyslurm` package is a wrapper around the Slurm C-API
     * [pyslurm.db.Job][]
     * [pyslurm.db.JobStep][]
     * [pyslurm.db.Jobs][]
-    * [pyslurm.db.JobSearchFilter][]
+    * [pyslurm.db.JobFilter][]
 * Node API
     * [pyslurm.Node][]
     * [pyslurm.Nodes][]
