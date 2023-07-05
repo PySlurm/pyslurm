@@ -56,9 +56,10 @@ from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
 from pyslurm.core cimport slurmctld
+from pyslurm.utils.collections cimport MultiClusterCollection
 
 
-cdef class Partitions(list):
+cdef class Partitions(MultiClusterCollection):
     """A collection of [pyslurm.Partition][] objects.
 
     Args:

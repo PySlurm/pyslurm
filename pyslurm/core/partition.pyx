@@ -49,7 +49,7 @@ from pyslurm.utils.ctime import (
 )
 
 
-cdef class Partitions(list):
+cdef class Partitions(MultiClusterCollection):
 
     def __dealloc__(self):
         slurm_free_partition_info_msg(self.info)
@@ -58,35 +58,26 @@ cdef class Partitions(list):
         self.info = NULL
 
     def __init__(self, partitions=None):
-        if isinstance(partitions, list):
-            for part in partitions:
-                if isinstance(part, str):
-                    self.append(Partition(part))
-                else:
-                    self.append(part)
-        elif isinstance(partitions, str):
-            partlist = partitions.split(",")
-            self.extend([Partition(part) for part in partlist])
-        elif isinstance(partitions, dict):
-            self.extend([part for part in partitions.values()])
-        elif partitions is not None:
-            raise TypeError("Invalid Type: {type(partitions)}")
+        super().__init__(data=partitions,
+                         col_type="Partitions",
+                         col_val_type=Partition,
+                         col_key_type=str)
 
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
+#   def as_dict(self, recursive=False):
+#       """Convert the collection data to a dict.
 
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
+#       Args:
+#           recursive (bool, optional):
+#               By default, the objects will not be converted to a dict. If
+#               this is set to `True`, then additionally all objects are
+#               converted to dicts.
 
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Partition.name,
-                                 recursive=recursive)
-        return col.get(LOCAL_CLUSTER, {})
+#       Returns:
+#           (dict): Collection as a dict.
+#       """
+#       col = collection_to_dict(self, identifier=Partition.name,
+#                                recursive=recursive)
+#       return col.get(LOCAL_CLUSTER, {})
 
     def group_by_cluster(self):
         return group_collection_by_cluster(self)
@@ -103,7 +94,7 @@ cdef class Partitions(list):
                 failed.
         """
         cdef:
-            Partitions partitions = Partitions.__new__(Partitions)
+            Partitions partitions = Partitions()
             int flags = slurm.SHOW_ALL
             Partition partition
             slurmctld.Config slurm_conf
@@ -128,7 +119,7 @@ cdef class Partitions(list):
 
             partition.power_save_enabled = power_save_enabled
             partition.slurm_conf = slurm_conf
-            partitions.append(partition)
+            partitions.data[LOCAL_CLUSTER][partition.name] = partition
 
         # At this point we memcpy'd all the memory for the Partitions. Setting
         # this to 0 will prevent the slurm partition free function to
@@ -356,6 +347,10 @@ cdef class Partition:
     @property
     def name(self):
         return cstr.to_unicode(self.ptr.name)
+
+    @property
+    def _id(self):
+        return self.name
 
     @name.setter
     def name(self, val):

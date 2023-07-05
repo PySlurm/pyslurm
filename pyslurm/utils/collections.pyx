@@ -1,0 +1,225 @@
+#########################################################################
+# collections.pyx - pyslurm custom collections
+#########################################################################
+# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+#
+# This file is part of PySlurm
+#
+# PySlurm is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# PySlurm is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with PySlurm; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# cython: c_string_type=unicode, c_string_encoding=default
+# cython: language_level=3
+
+from pyslurm.db.cluster import LOCAL_CLUSTER
+import copy
+
+
+class MCValuesView:
+
+    def __init__(self, mcm):
+        self._mcm = mcm
+
+    def __len__(self):
+        return sum(len(data) for data in self._mcm.data.values())
+
+    def __contains__(self, val):
+        for item in self._mcm:
+            if item is val or item == val:
+                return True
+        return False
+
+    def __iter__(self):
+        for item in self._mcm:
+            yield item
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({", ".join(map(repr, self))})'
+
+
+class MCItemsView:
+
+    def __init__(self, mcm):
+        self._mcm = mcm
+
+    def __len__(self):
+        return len(self._mcm.values())
+
+    def __contains__(self, item):
+        cluster = LOCAL_CLUSTER
+        if len(item) == 3:
+            cluster, key, val = item
+        else:
+            key, val = item
+
+        try:
+            out = self._mcm.data[cluster][key]
+        except KeyError:
+            return False
+        else:
+            return out is val or out == val
+
+    def __iter__(self):
+        for cluster, data in self._mcm.data.items():
+            for key in data:
+                yield (cluster, key, data[key])
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({", ".join(map(repr, MCValuesView(self._mcm)))})'
+    
+
+cdef class MultiClusterCollection:
+
+    def __init__(self, data, col_type=None,
+                 col_val_type=None, col_key_type=None, init_data=True):
+        self.data = data if data else {LOCAL_CLUSTER: {}}
+        self._col_type = col_type
+        self._col_key_type = col_key_type
+        self._col_val_type = col_val_type
+        if init_data:
+            self._init_data(data)
+
+    def _init_data(self, data):
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, self._col_key_type):
+                    item = self._col_val_type(item)
+                self.data[LOCAL_CLUSTER].update({item._id: item})
+        elif isinstance(data, str):
+            itemlist = data.split(",")
+            items = {item:self._col_val_type(item) for item in itemlist}
+            self.data[LOCAL_CLUSTER].update(items)
+        #elif isinstance(data, dict):
+        #    self.extend([item for item in data.values()])
+        elif data is not None:
+            raise TypeError("Invalid Type: {type(data)}")
+
+    def __getitem__(self, item):
+        cluster = LOCAL_CLUSTER
+        key = item
+
+        if isinstance(item, self._col_val_type):
+            cluster, key = item.cluster, item._id
+        if isinstance(item, tuple) and len(item) == 2:
+            cluster, key = item
+        return self.data[cluster][key]
+
+    def __setitem__(self, where, item):
+        cluster = LOCAL_CLUSTER
+        key = where
+
+        if isinstance(where, tuple) and len(where) == 2:
+            cluster, key = where
+        self.data[cluster][key] = item
+
+    def __delitem__(self, item):
+        cluster = LOCAL_CLUSTER
+        key = item
+
+        if isinstance(item, self._col_val_type):
+            cluster, key = item.cluster, item._id
+        if isinstance(item, tuple) and len(item) == 2:
+            cluster, key = item
+
+        del self.data[cluster][key]
+
+    def __len__(self):
+        sum(len(data) for data in self.data.values())
+
+    def __repr__(self):
+        return f'{self._col_type}([{", ".join(map(repr, self))}])'
+
+    def __contains__(self, item):
+        if isinstance(item, self._col_val_type):
+            return self._check_for_value(item._id, item.cluster)
+        elif isinstance(item, self._col_key_type):
+            return self._check_for_value(item, LOCAL_CLUSTER)
+        elif isinstance(item, tuple):
+            cluster, item = item
+            return self._check_for_value(item, cluster)
+
+        return False
+
+    def _check_for_value(self, val_id, cluster):
+        cluster_data = self.data.get(cluster)
+        if cluster_data and val_id in cluster_data:
+            return True
+        return False
+
+#   def __copy__(self):
+#       return self.copy()
+
+#   def copy(self):
+#       return MultiClusterMap(
+#           data=self.data.copy(),
+#           col_type=self._col_type,
+#           col_key_type=self._col_key_type,
+#       )
+
+    def __iter__(self):
+        for cluster in self.data.values():
+            for item in cluster.values():
+                yield item
+
+    def get(self, key, default=None, cluster=None):
+        cluster = LOCAL_CLUSTER if not cluster else cluster
+        cluster_data = self.data.get(cluster, {})
+        return cluster_data.get(key, default)
+
+    def add(self, item):
+        if item.cluster not in self.data:
+            self.data[item.cluster] = {}
+        self.data[item.cluster][item._id] = item
+
+    def remove(self, item):
+        cluster = LOCAL_CLUSTER
+        key = item
+
+        if isinstance(item, tuple) and len(item) == 2:
+            cluster, key = item
+            del self.data[cluster][key]
+        elif isinstance(item, self._col_val_type):
+            if item.cluster in self.data and item._id in self.data[item.cluster]:
+                del self.data[item.cluster][item._id]
+        elif isinstance(item, self._col_key_type):
+            del self.data[cluster][key]
+
+    def as_dict(self, recursive=False):
+        return self.data
+                
+    def items(self):
+        return MCItemsView(self)
+
+    def values(self):
+        return self
+
+    def popitem(self):
+        try:
+            item = next(iter(self))
+        except StopIteration:
+            raise KeyError from None
+
+        del self.data[item.cluster][item._id]
+        return item
+
+    def clear(self):
+        self.data.clear()
+
+    def pop(self, key, default=None, cluster=None):
+        item = self.get(key, default, cluster)
+        if not item:
+            return default
+    
+        del self.data[cluster][key]
+        return item
