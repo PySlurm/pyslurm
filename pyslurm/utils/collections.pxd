@@ -25,10 +25,9 @@
 
 cdef class MultiClusterCollection:
 
-    cdef readonly dict data
+    cdef public dict data
 
     cdef:
         _col_type
         _col_key_type
         _col_val_type
-        id_attr
