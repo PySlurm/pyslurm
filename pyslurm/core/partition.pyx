@@ -31,6 +31,7 @@ from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
 from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm.utils import collections
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -38,8 +39,6 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
     _sum_prop,
     dehumanize,
 )
@@ -62,25 +61,6 @@ cdef class Partitions(MultiClusterCollection):
                          col_type="Partitions",
                          col_val_type=Partition,
                          col_key_type=str)
-
-#   def as_dict(self, recursive=False):
-#       """Convert the collection data to a dict.
-
-#       Args:
-#           recursive (bool, optional):
-#               By default, the objects will not be converted to a dict. If
-#               this is set to `True`, then additionally all objects are
-#               converted to dicts.
-
-#       Returns:
-#           (dict): Collection as a dict.
-#       """
-#       col = collection_to_dict(self, identifier=Partition.name,
-#                                recursive=recursive)
-#       return col.get(LOCAL_CLUSTER, {})
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self)
 
     @staticmethod
     def load():
@@ -117,9 +97,13 @@ cdef class Partitions(MultiClusterCollection):
             # is raised by replacing it with a zeroed-out partition_info_t.
             partitions.info.partition_array[cnt] = partitions.tmp_info
 
+            cluster = partition.cluster
+            if cluster not in partitions.data:
+                partitions.data[cluster] = {}
+
             partition.power_save_enabled = power_save_enabled
             partition.slurm_conf = slurm_conf
-            partitions.data[LOCAL_CLUSTER][partition.name] = partition
+            partitions.data[cluster][partition.name] = partition
 
         # At this point we memcpy'd all the memory for the Partitions. Setting
         # this to 0 will prevent the slurm partition free function to
@@ -145,19 +129,7 @@ cdef class Partitions(MultiClusterCollection):
         Raises:
             RPCError: When getting the Partitions from the slurmctld failed.
         """
-        cdef dict reloaded_parts
-
-        if not self:
-            return self
-
-        reloaded_parts = Partitions.load().as_dict()
-        for idx, part in enumerate(self):
-            part_name = part.name
-            if part_name in reloaded_parts:
-                # Put the new data in.
-                self[idx] = reloaded_parts[part_name]
-
-        return self
+        return collections.multi_reload(self)
 
     def modify(self, changes):
         """Modify all Partitions in a Collection.
@@ -180,7 +152,7 @@ cdef class Partitions(MultiClusterCollection):
             >>> # Apply the changes to all the partitions
             >>> parts.modify(changes)
         """
-        for part in self:
+        for part in self.values():
             part.modify(changes)
 
     @property
@@ -218,6 +190,9 @@ cdef class Partition:
 
     def __dealloc__(self):
         self._dealloc_impl() 
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.name})'
 
     @staticmethod
     cdef Partition from_ptr(partition_info_t *in_ptr):
@@ -332,7 +307,6 @@ cdef class Partition:
         """
         cdef delete_part_msg_t del_part_msg
         memset(&del_part_msg, 0, sizeof(del_part_msg))
-
         del_part_msg.name = cstr.from_unicode(self._error_or_name())
         verify_rpc(slurm_delete_partition(&del_part_msg))
 

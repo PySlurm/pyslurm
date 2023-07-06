@@ -121,7 +121,7 @@ cdef class MultiClusterCollection:
 
     def __init__(self, data, col_type=None,
                  col_val_type=None, col_key_type=None, init_data=True):
-        self.data = data if data else {LOCAL_CLUSTER: {}}
+        self.data = data if data else {}
         self._col_type = col_type
         self._col_key_type = col_key_type
         self._col_val_type = col_val_type
@@ -133,11 +133,14 @@ cdef class MultiClusterCollection:
             for item in data:
                 if isinstance(item, self._col_key_type):
                     item = self._col_val_type(item)
+                    if LOCAL_CLUSTER not in self.data:
+                        self.data[LOCAL_CLUSTER] = {}
+
                 self.data[LOCAL_CLUSTER].update({item._id: item})
         elif isinstance(data, str):
             itemlist = data.split(",")
             items = {item:self._col_val_type(item) for item in itemlist}
-            self.data[LOCAL_CLUSTER].update(items)
+            self.data[LOCAL_CLUSTER] = items
         #elif isinstance(data, dict):
         #    self.extend([item for item in data.values()])
         elif data is not None:
@@ -189,7 +192,7 @@ cdef class MultiClusterCollection:
         return False
 
     def _get_cluster(self):
-        if LOCAL_CLUSTER in self.data:
+        if not self.data or LOCAL_CLUSTER in self.data:
             return LOCAL_CLUSTER
         else:
             return next(iter(self.keys()))
@@ -198,18 +201,23 @@ cdef class MultiClusterCollection:
         return self.copy()
 
     def copy(self):
-        return MultiClusterCollection(
+        out = self.__class__.__new__(self.__class__)
+        super(self.__class__, out).__init__(
             data=self.data.copy(),
             col_type=self._col_type,
             col_key_type=self._col_key_type,
             col_val_type=self._col_val_type,
             init_data=False,
         )
+        return out
 
     def __iter__(self):
         for cluster in self.data.values():
             for item in cluster.values():
                 yield item
+
+    def __bool__(self):
+        return bool(self.data)
 
     def get(self, key, cluster=None, default=None):
         cluster = self._get_cluster() if not cluster else cluster
@@ -238,8 +246,17 @@ cdef class MultiClusterCollection:
         if not self.data[cluster]:
             del self.data[cluster]
 
-    def as_dict(self, recursive=False):
-        return self.data
+    def as_dict(self, recursive=False, multi_cluster=False):
+        cdef dict out = self.data.get(self._get_cluster(), {})
+
+        if multi_cluster:
+            if recursive:
+                return multi_dict_recursive(self)
+            return self.data
+        elif recursive:
+            return dict_recursive(out)
+
+        return out
 
     def keys(self):
         return KeysView(self)
@@ -263,9 +280,42 @@ cdef class MultiClusterCollection:
         self.data.clear()
 
     def pop(self, key, cluster=None, default=None):
-        item = self.get(key, default, cluster)
+        item = self.get(key, cluster=cluster, default=default)
         if not item:
             return default
     
         del self.data[cluster][key]
         return item
+
+
+def multi_reload(collection):
+    if not collection:
+        return collection
+
+    new_data = collection.__class__.load()
+    for cluster, item in collection.keys().with_cluster():
+        if (cluster, item) in new_data.keys().with_cluster():
+            collection.data[cluster][item] = new_data.data[cluster][item]
+    return collection
+    
+
+def dict_recursive(collection):
+    cdef dict out = {}
+    for item_id, item in collection.items():
+        out[item_id] = item.as_dict()
+    return out
+
+
+def multi_dict_recursive(collection):
+    cdef dict out = collection.data.copy()
+    for cluster, data in collection.data.items():
+        out[cluster] = dict_recursive(data)
+#       if group_id:
+#           grp_id = group_id.__get__(item)
+#           if grp_id not in out[cluster]:
+#               out[cluster][grp_id] = {}
+#           out[cluster][grp_id].update({_id: data})
+#       else:
+#           out[cluster][_id] = data
+
+    return out
