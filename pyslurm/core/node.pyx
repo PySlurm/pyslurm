@@ -29,6 +29,7 @@ from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm import collections
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -39,13 +40,12 @@ from pyslurm.utils.helpers import (
     instance_to_dict,
     collection_to_dict,
     group_collection_by_cluster,
-    _sum_prop,
     nodelist_from_range_str,
     nodelist_to_range_str,
 )
 
 
-cdef class Nodes(list):
+cdef class Nodes(MultiClusterMap):
 
     def __dealloc__(self):
         slurm_free_node_info_msg(self.info)
@@ -56,38 +56,11 @@ cdef class Nodes(list):
         self.part_info = NULL
 
     def __init__(self, nodes=None):
-        if isinstance(nodes, list):
-            for node in nodes:
-                if isinstance(node, str):
-                    self.append(Node(node))
-                else:
-                    self.append(node)
-        elif isinstance(nodes, str):
-            nodelist = nodes.split(",")
-            self.extend([Node(node) for node in nodelist])
-        elif isinstance(nodes, dict):
-            self.extend([node for node in nodes.values()])
-        elif nodes is not None:
-            raise TypeError("Invalid Type: {type(nodes)}")
-
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Node.name,
-                                 recursive=recursive)
-        return col.get(LOCAL_CLUSTER, {})
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self)
+        super().__init__(data=nodes,
+                         typ="Nodes",
+                         val_type=Node,
+                         id_attr=Node.name,
+                         key_type=str)
 
     @staticmethod
     def load(preload_passwd_info=False):
@@ -164,19 +137,7 @@ cdef class Nodes(list):
         Raises:
             RPCError: When getting the Nodes from the slurmctld failed.
         """
-        cdef Nodes reloaded_nodes
-
-        if not self:
-            return self
-
-        reloaded_nodes = Nodes.load().as_dict()
-        for idx, node in enumerate(self):
-            node_name = node.name
-            if node in reloaded_nodes:
-                # Put the new data in.
-                self[idx] = reloaded_nodes[node_name]
-
-        return self
+        return collections.multi_reload(self)
 
     def modify(self, Node changes):
         """Modify all Nodes in a collection.
@@ -199,50 +160,47 @@ cdef class Nodes(list):
             >>> # Apply the changes to all the nodes
             >>> nodes.modify(changes)
         """
-        cdef:
-            Node n = <Node>changes
-            list node_names = [node.name for node in self]
-        
-        node_str = nodelist_to_range_str(node_names)
+        cdef Node n = <Node>changes
+        node_str = nodelist_to_range_str(list(self.keys()))
         n._alloc_umsg()
         cstr.fmalloc(&n.umsg.node_names, node_str)
         verify_rpc(slurm_update_node(n.umsg))
         
     @property
     def free_memory(self):
-        return _sum_prop(self, Node.free_memory)
+        return collections.sum_property(self, Node.free_memory)
 
     @property
     def real_memory(self):
-        return _sum_prop(self, Node.real_memory)
+        return collections.sum_property(self, Node.real_memory)
 
     @property
     def allocated_memory(self):
-        return _sum_prop(self, Node.allocated_memory)
+        return collections.sum_property(self, Node.allocated_memory)
 
     @property
     def total_cpus(self):
-        return _sum_prop(self, Node.total_cpus)
+        return collections.sum_property(self, Node.total_cpus)
 
     @property
     def idle_cpus(self):
-        return _sum_prop(self, Node.idle_cpus)
+        return collections.sum_property(self, Node.idle_cpus)
 
     @property
     def allocated_cpus(self):
-        return _sum_prop(self, Node.allocated_cpus)
+        return collections.sum_property(self, Node.allocated_cpus)
     
     @property
     def effective_cpus(self):
-        return _sum_prop(self, Node.effective_cpus)
+        return collections.sum_property(self, Node.effective_cpus)
 
     @property
     def current_watts(self):
-        return _sum_prop(self, Node.current_watts)
+        return collections.sum_property(self, Node.current_watts)
 
     @property
     def avg_watts(self):
-        return _sum_prop(self, Node.avg_watts)
+        return collections.sum_property(self, Node.avg_watts)
 
 
 cdef class Node:

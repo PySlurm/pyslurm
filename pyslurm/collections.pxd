@@ -23,11 +23,12 @@
 # cython: language_level=3
 
 
-cdef class MultiClusterCollection:
+cdef class MultiClusterMap:
 
     cdef public dict data
 
     cdef:
-        _col_type
-        _col_key_type
-        _col_val_type
+        _typ
+        _key_type
+        _val_type
+        _id_attr

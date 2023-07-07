@@ -25,14 +25,12 @@
 from pyslurm.utils cimport cstr, ctime
 from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
-
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 from libc.stdlib cimport free
-
 from pyslurm.core.job.submission cimport JobSubmitDescription
 from pyslurm.core.job.step cimport JobSteps, JobStep
-
+from pyslurm.collections cimport MultiClusterMap
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     working_cluster_rec,
@@ -67,7 +65,7 @@ from pyslurm.slurm cimport (
 )
 
 
-cdef class Jobs(list):
+cdef class Jobs(MultiClusterMap):
     """A collection of [pyslurm.Job][] objects.
 
     Args:

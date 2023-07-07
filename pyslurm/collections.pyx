@@ -117,29 +117,30 @@ class MCItemsView(BaseView):
                 yield (cluster, key, data[key])
 
 
-cdef class MultiClusterCollection:
+cdef class MultiClusterMap:
 
-    def __init__(self, data, col_type=None,
-                 col_val_type=None, col_key_type=None, init_data=True):
+    def __init__(self, data, typ=None,
+                 val_type=None, key_type=None, id_attr=None, init_data=True):
         self.data = data if data else {}
-        self._col_type = col_type
-        self._col_key_type = col_key_type
-        self._col_val_type = col_val_type
+        self._typ = typ
+        self._key_type = key_type
+        self._val_type = val_type
+        self._id_attr = id_attr
         if init_data:
             self._init_data(data)
 
     def _init_data(self, data):
         if isinstance(data, list):
             for item in data:
-                if isinstance(item, self._col_key_type):
-                    item = self._col_val_type(item)
+                if isinstance(item, self._key_type):
+                    item = self._val_type(item)
                     if LOCAL_CLUSTER not in self.data:
                         self.data[LOCAL_CLUSTER] = {}
 
-                self.data[LOCAL_CLUSTER].update({item._id: item})
+                self.data[LOCAL_CLUSTER].update({self._item_id(item): item})
         elif isinstance(data, str):
             itemlist = data.split(",")
-            items = {item:self._col_val_type(item) for item in itemlist}
+            items = {item:self._val_type(item) for item in itemlist}
             self.data[LOCAL_CLUSTER] = items
         #elif isinstance(data, dict):
         #    self.extend([item for item in data.values()])
@@ -150,34 +151,46 @@ cdef class MultiClusterCollection:
         cluster = self._get_cluster()
         key = item
 
-        if isinstance(item, self._col_val_type):
-            cluster, key = item.cluster, item._id
+        if isinstance(item, self._val_type):
+            cluster, key = item.cluster, self._item_id(item)
         elif isinstance(item, tuple) and len(item) == 2:
             cluster, key = item
         return cluster, key
 
+    def _item_id(self, item):
+        return self._id_attr.__get__(item)
+
     def __getitem__(self, item):
+        if item in self.data:
+            return self.data[item]
+
         cluster, key = self._get_key_and_cluster(item)
         return self.data[cluster][key]
 
     def __setitem__(self, where, item):
-        cluster, key = self._get_key_and_cluster(where)
-        self.data[cluster][key] = item
+        if where in self.data:
+            self.data[where] = item
+        else:
+            cluster, key = self._get_key_and_cluster(where)
+            self.data[cluster][key] = item
 
     def __delitem__(self, item):
-        cluster, key = self._get_key_and_cluster(item)
-        del self.data[cluster][key]
+        if item in self.data:
+            del self.data[item]
+        else:
+            cluster, key = self._get_key_and_cluster(item)
+            del self.data[cluster][key]
 
     def __len__(self):
         sum(len(data) for data in self.data.values())
 
     def __repr__(self):
-        return f'{self._col_type}([{", ".join(map(repr, self))}])'
+        return f'{self._typ}([{", ".join(map(repr, self))}])'
 
     def __contains__(self, item):
-        if isinstance(item, self._col_val_type):
-            return self._check_for_value(item._id, item.cluster)
-        elif isinstance(item, self._col_key_type):
+        if isinstance(item, self._val_type):
+            return self._check_for_value(self._item_id(item), item.cluster)
+        elif isinstance(item, self._key_type):
             return self._check_for_value(item, self._get_cluster())
         elif isinstance(item, tuple):
             cluster, item = item
@@ -204,9 +217,9 @@ cdef class MultiClusterCollection:
         out = self.__class__.__new__(self.__class__)
         super(self.__class__, out).__init__(
             data=self.data.copy(),
-            col_type=self._col_type,
-            col_key_type=self._col_key_type,
-            col_val_type=self._col_val_type,
+            typ=self._typ,
+            key_type=self._key_type,
+            val_type=self._val_type,
             init_data=False,
         )
         return out
@@ -221,26 +234,25 @@ cdef class MultiClusterCollection:
 
     def get(self, key, cluster=None, default=None):
         cluster = self._get_cluster() if not cluster else cluster
-        cluster_data = self.data.get(cluster, {})
-        return cluster_data.get(key, default)
+        return self.data.get(cluster, {}).get(key, default)
 
     def add(self, item):
         if item.cluster not in self.data:
             self.data[item.cluster] = {}
-        self.data[item.cluster][item._id] = item
+        self.data[item.cluster][self._item_id(item)] = item
 
     def remove(self, item):
         cluster = self._get_cluster()
         key = item
 
-        if isinstance(item, self._col_val_type):
-            if self._check_for_value(item._id, item.cluster):
+        if isinstance(item, self._val_type):
+            if self._check_for_value(self._item_id(item), item.cluster):
                 cluster = item.cluster
-                del self.data[item.cluster][item._id]
+                del self.data[item.cluster][self._item_id(item)]
         elif isinstance(item, tuple) and len(item) == 2:
             cluster, key = item
             del self.data[cluster][key]
-        elif isinstance(item, self._col_key_type):
+        elif isinstance(item, self._key_type):
             del self.data[cluster][key]
 
         if not self.data[cluster]:
@@ -273,7 +285,7 @@ cdef class MultiClusterCollection:
         except StopIteration:
             raise KeyError from None
 
-        del self.data[item.cluster][item._id]
+        del self.data[item.cluster][self._item_id(item)]
         return item
 
     def clear(self):
@@ -288,16 +300,24 @@ cdef class MultiClusterCollection:
         return item
 
 
-def multi_reload(collection):
-    if not collection:
-        return collection
+def multi_reload(cur, frozen=True):
+    if not cur:
+        return cur
 
-    new_data = collection.__class__.load()
-    for cluster, item in collection.keys().with_cluster():
-        if (cluster, item) in new_data.keys().with_cluster():
-            collection.data[cluster][item] = new_data.data[cluster][item]
-    return collection
-    
+    new = cur.__class__.load()
+    for cluster, item in list(cur.keys().with_cluster()):
+        if (cluster, item) in new.keys().with_cluster():
+            cur[cluster][item] = new.pop(item, cluster)
+        elif not frozen:
+            del cur[cluster][item]
+
+    if not frozen:
+        for cluster, item in new.keys().with_cluster():
+            if (cluster, item) not in cur.keys().with_cluster():
+                cur[cluster][item] = new[cluster][item]
+                
+    return cur
+
 
 def dict_recursive(collection):
     cdef dict out = {}
@@ -317,5 +337,15 @@ def multi_dict_recursive(collection):
 #           out[cluster][grp_id].update({_id: data})
 #       else:
 #           out[cluster][_id] = data
+
+    return out
+
+
+def sum_property(collection, prop, startval=0):
+    out = startval
+    for item in collection.values():
+        data = prop.__get__(item)
+        if data is not None:
+            out += data
 
     return out

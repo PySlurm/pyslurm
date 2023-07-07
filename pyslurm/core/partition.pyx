@@ -31,7 +31,7 @@ from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
 from pyslurm.db.cluster import LOCAL_CLUSTER
-from pyslurm.utils import collections
+from pyslurm import collections
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -39,7 +39,6 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
-    _sum_prop,
     dehumanize,
 )
 from pyslurm.utils.ctime import (
@@ -48,7 +47,7 @@ from pyslurm.utils.ctime import (
 )
 
 
-cdef class Partitions(MultiClusterCollection):
+cdef class Partitions(MultiClusterMap):
 
     def __dealloc__(self):
         slurm_free_partition_info_msg(self.info)
@@ -58,9 +57,10 @@ cdef class Partitions(MultiClusterCollection):
 
     def __init__(self, partitions=None):
         super().__init__(data=partitions,
-                         col_type="Partitions",
-                         col_val_type=Partition,
-                         col_key_type=str)
+                         typ="Partitions",
+                         val_type=Partition,
+                         id_attr=Partition.name,
+                         key_type=str)
 
     @staticmethod
     def load():
@@ -157,11 +157,11 @@ cdef class Partitions(MultiClusterCollection):
 
     @property
     def total_cpus(self):
-        return _sum_prop(self, Partition.total_cpus)
+        return collections.sum_property(self, Partition.total_cpus)
 
     @property
     def total_nodes(self):
-        return _sum_prop(self, Partition.total_nodes)
+        return collections.sum_property(self, Partition.total_nodes)
     
 
 cdef class Partition:

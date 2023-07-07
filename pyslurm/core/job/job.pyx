@@ -35,6 +35,7 @@ from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
 from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm import collections
 from pyslurm.core.error import (
     RPCError,
     verify_rpc,
@@ -48,14 +49,11 @@ from pyslurm.utils.helpers import (
     _getgrall_to_dict,
     _getpwall_to_dict,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
-    _sum_prop,
     _get_exit_code,
 )
 
 
-cdef class Jobs(list):
+cdef class Jobs(MultiClusterMap):
 
     def __cinit__(self):
         self.info = NULL
@@ -65,20 +63,11 @@ cdef class Jobs(list):
 
     def __init__(self, jobs=None, frozen=False):
         self.frozen = frozen
-
-        if isinstance(jobs, list):
-            for job in jobs:
-                if isinstance(job, int):
-                    self.append(Job(job))
-                else:
-                    self.append(job)
-        elif isinstance(jobs, str):
-            joblist = jobs.split(",")
-            self.extend([Job(int(job)) for job in joblist])
-        elif isinstance(jobs, dict):
-            self.extend([job for job in jobs.values()])
-        elif jobs is not None:
-            raise TypeError("Invalid Type: {type(jobs)}")
+        super().__init__(data=jobs,
+                         typ="Jobs",
+                         val_type=Job,
+                         id_attr=Job.id,
+                         key_type=int)
 
     def as_dict(self, recursive=False):
         """Convert the collection data to a dict.
@@ -92,11 +81,7 @@ cdef class Jobs(list):
         Returns:
             (dict): Collection as a dict.
         """
-        col = collection_to_dict(self, identifier=Job.id, recursive=recursive)
-        return col.get(LOCAL_CLUSTER, {})
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self)
+        return super().as_dict(recursive)
 
     @staticmethod
     def load(preload_passwd_info=False, frozen=False):
@@ -122,7 +107,7 @@ cdef class Jobs(list):
         cdef:
             dict passwd = {}
             dict groups = {}
-            Jobs jobs = Jobs.__new__(Jobs)
+            Jobs jobs = Jobs(frozen=frozen)
             int flags = slurm.SHOW_ALL | slurm.SHOW_DETAIL
             Job job
 
@@ -150,7 +135,10 @@ cdef class Jobs(list):
                 job.passwd = passwd
                 job.groups = groups
 
-            jobs.append(job)
+            cluster = job.cluster
+            if cluster not in jobs.data:
+                jobs.data[cluster] = {}
+            jobs[cluster][job.id] = job
 
         # At this point we memcpy'd all the memory for the Jobs. Setting this
         # to 0 will prevent the slurm job free function to deallocate the
@@ -169,29 +157,7 @@ cdef class Jobs(list):
         Raises:
             RPCError: When getting the Jobs from the slurmctld failed.
         """
-        cdef:
-            Jobs reloaded_jobs
-            Jobs new_jobs = Jobs()
-            dict self_dict
-
-        if not self:
-            return self
-
-        reloaded_jobs = Jobs.load().as_dict()
-        for idx, jid in enumerate(self):
-            if jid in reloaded_jobs:
-                # Put the new data in.
-                new_jobs.append(reloaded_jobs[jid])
-
-        if not self.frozen:
-            self_dict = self.as_dict()
-            for jid in reloaded_jobs:
-                if jid not in self_dict:
-                    new_jobs.append(reloaded_jobs[jid])
-
-        self.clear()
-        self.extend(new_jobs)
-        return self
+        return collections.multi_reload(self, frozen=self.frozen)
 
     def load_steps(self):
         """Load all Job steps for this collection of Jobs.
@@ -220,19 +186,19 @@ cdef class Jobs(list):
 
     @property
     def memory(self):
-        return _sum_prop(self, Job.memory)
+        return collections.sum_property(self, Job.memory)
 
     @property
     def cpus(self):
-        return _sum_prop(self, Job.cpus)
+        return collections.sum_property(self, Job.cpus)
 
     @property
     def ntasks(self):
-        return _sum_prop(self, Job.ntasks)
+        return collections.sum_property(self, Job.ntasks)
 
     @property
     def cpu_time(self):
-        return _sum_prop(self, Job.cpu_time)
+        return collections.sum_property(self, Job.cpu_time)
 
 
 cdef class Job:

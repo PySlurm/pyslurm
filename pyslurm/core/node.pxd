@@ -55,9 +55,10 @@ from pyslurm.utils cimport cstr
 from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
+from pyslurm.collections cimport MultiClusterMap
 
 
-cdef class Nodes(list):
+cdef class Nodes(MultiClusterMap):
     """A collection of [pyslurm.Node][] objects.
 
     Args:
