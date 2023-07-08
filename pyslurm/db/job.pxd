@@ -53,6 +53,7 @@ from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.db.qos cimport QualitiesOfService
 from pyslurm.db.tres cimport TrackableResources, TrackableResource
+from pyslurm.collections cimport MultiClusterMap
 
 
 cdef class JobFilter:
@@ -150,7 +151,7 @@ cdef class JobFilter:
         with_env
 
 
-cdef class Jobs(list):
+cdef class Jobs(MultiClusterMap):
     """A collection of [pyslurm.db.Job][] objects."""
     pass
 
@@ -283,7 +284,7 @@ cdef class Job:
     """
     cdef:
         slurmdb_job_rec_t *ptr
-        dict qos_data
+        QualitiesOfService qos_data
 
     cdef public:
         JobSteps steps

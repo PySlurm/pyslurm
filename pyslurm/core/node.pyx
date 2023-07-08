@@ -62,6 +62,20 @@ cdef class Nodes(MultiClusterMap):
                          id_attr=Node.name,
                          key_type=str)
 
+    def as_dict(self, recursive=False):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        return super().as_dict(recursive)
+
     @staticmethod
     def load(preload_passwd_info=False):
         """Load all nodes in the system.
@@ -114,16 +128,13 @@ cdef class Nodes(MultiClusterMap):
                 node.passwd = passwd
                 node.groups = groups
 
-            nodes.append(node)
+            cluster = node.cluster
+            if cluster not in nodes.data:
+                nodes.data[cluster] = {}
+            nodes.data[cluster][node.name] = node
 
-        # At this point we memcpy'd all the memory for the Nodes. Setting this
-        # to 0 will prevent the slurm node free function to deallocate the
-        # memory for the individual nodes. This should be fine, because they
-        # are free'd automatically in __dealloc__ since the lifetime of each
-        # node-pointer is tied to the lifetime of its corresponding "Node"
-        # instance.
+        # We have extracted all pointers
         nodes.info.record_count = 0
-
         return nodes
 
     def reload(self):

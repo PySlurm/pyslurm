@@ -121,7 +121,7 @@ cdef class MultiClusterMap:
 
     def __init__(self, data, typ=None,
                  val_type=None, key_type=None, id_attr=None, init_data=True):
-        self.data = data if data else {}
+        self.data = {} if init_data else data
         self._typ = typ
         self._key_type = key_type
         self._val_type = val_type
@@ -140,12 +140,13 @@ cdef class MultiClusterMap:
                 self.data[LOCAL_CLUSTER].update({self._item_id(item): item})
         elif isinstance(data, str):
             itemlist = data.split(",")
-            items = {item:self._val_type(item) for item in itemlist}
+            items = {self._key_type(item):self._val_type(item)
+                     for item in itemlist}
             self.data[LOCAL_CLUSTER] = items
-        #elif isinstance(data, dict):
-        #    self.extend([item for item in data.values()])
+        elif isinstance(data, dict):
+            self.update(data)
         elif data is not None:
-            raise TypeError("Invalid Type: {type(data)}")
+            raise TypeError(f"Invalid Type: {type(data)}")
 
     def _get_key_and_cluster(self, item):
         cluster = self._get_cluster()
@@ -182,7 +183,7 @@ cdef class MultiClusterMap:
             del self.data[cluster][key]
 
     def __len__(self):
-        sum(len(data) for data in self.data.values())
+        return sum(len(data) for data in self.data.values())
 
     def __repr__(self):
         return f'{self._typ}([{", ".join(map(repr, self))}])'
@@ -298,6 +299,43 @@ cdef class MultiClusterMap:
     
         del self.data[cluster][key]
         return item
+
+    def _check_val_type(self, item):
+        if not isinstance(item, self._val_type):
+            raise TypeError(f"Invalid Type: {type(item).__name__}. "
+                            f"{self._val_type}.__name__ is required.")
+        
+
+    def _update(self, data, clus):
+        for key in data:
+            try:
+                iterator = iter(data[key])
+            except TypeError as e:
+                cluster = self._get_cluster() if not clus else clus
+                if not cluster in self.data:
+                    self.data[cluster] = {}
+                self.data[cluster].update(data)
+                break
+            else:
+                cluster = key
+                if not cluster in self.data:
+                    self.data[cluster] = {}
+                self.data[cluster].update(data[cluster])
+#                col = data[cluster]
+#               if hasattr(col, "keys") and callable(col.keys):
+#                   for k in col.keys():
+
+#               else:
+#                   for item in col:
+#                       k, v = item
+
+
+    def update(self, data=None, cluster=None, **kwargs):
+        if data:
+            self._update(data, cluster)
+        
+        if kwargs:
+            self._update(kwargs, cluster)
 
 
 def multi_reload(cur, frozen=True):

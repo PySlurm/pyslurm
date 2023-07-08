@@ -42,7 +42,7 @@ from pyslurm.db.connection cimport Connection
 cdef find_tres_count(char *tres_str, typ, on_noval=*, on_inf=*)
 cdef find_tres_limit(char *tres_str, typ)
 cdef merge_tres_str(char **tres_str, typ, val)
-cdef _tres_ids_to_names(char *tres_str, dict tres_data)
+cdef _tres_ids_to_names(char *tres_str, TrackableResources tres_data)
 cdef _set_tres_limits(char **dest, TrackableResourceLimits src,
                           TrackableResources tres_data)
 
@@ -62,7 +62,7 @@ cdef class TrackableResourceLimits:
         license
 
     @staticmethod
-    cdef from_ids(char *tres_id_str, dict tres_data)
+    cdef from_ids(char *tres_id_str, TrackableResources tres_data)
 
 
 cdef class TrackableResourceFilter:

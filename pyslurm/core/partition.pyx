@@ -62,6 +62,20 @@ cdef class Partitions(MultiClusterMap):
                          id_attr=Partition.name,
                          key_type=str)
 
+    def as_dict(self, recursive=False):
+        """Convert the collection data to a dict.
+
+        Args:
+            recursive (bool, optional):
+                By default, the objects will not be converted to a dict. If
+                this is set to `True`, then additionally all objects are
+                converted to dicts.
+
+        Returns:
+            (dict): Collection as a dict.
+        """
+        return super().as_dict(recursive)
+
     @staticmethod
     def load():
         """Load all Partitions in the system.
@@ -105,14 +119,8 @@ cdef class Partitions(MultiClusterMap):
             partition.slurm_conf = slurm_conf
             partitions.data[cluster][partition.name] = partition
 
-        # At this point we memcpy'd all the memory for the Partitions. Setting
-        # this to 0 will prevent the slurm partition free function to
-        # deallocate the memory for the individual partitions. This should be
-        # fine, because they are free'd automatically in __dealloc__ since the
-        # lifetime of each partition-pointer is tied to the lifetime of its
-        # corresponding "Partition" instance.
+        # We have extracted all pointers
         partitions.info.record_count = 0
-
         return partitions
 
     def reload(self):

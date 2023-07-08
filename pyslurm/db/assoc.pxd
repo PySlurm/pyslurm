@@ -49,12 +49,13 @@ from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.utils.uint cimport *
 from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
+from pyslurm.collections cimport MultiClusterMap
 
 cdef _parse_assoc_ptr(Association ass)
 cdef _create_assoc_ptr(Association ass, conn=*)
 
 
-cdef class Associations(list):
+cdef class Associations(MultiClusterMap):
     pass
 
 
@@ -69,8 +70,8 @@ cdef class AssociationFilter:
 cdef class Association:
     cdef:
         slurmdb_assoc_rec_t *ptr
-        dict qos_data
-        dict tres_data
+        QualitiesOfService qos_data
+        TrackableResources tres_data
 
     cdef public:
         group_tres

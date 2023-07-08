@@ -28,6 +28,7 @@ from pyslurm.core import slurmctld
 from typing import Any
 from pyslurm.utils.uint import *
 from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm import collections
 from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,
@@ -80,7 +81,7 @@ cdef class JobFilter:
         qos_data = QualitiesOfService.load()
         for user_input in self.qos:
             found = False
-            for qos in qos_data:
+            for qos in qos_data.values():
                 if (qos.id == user_input
                         or qos.name == user_input
                         or qos == user_input):
@@ -189,24 +190,16 @@ cdef class JobFilter:
 JobSearchFilter = JobFilter
 
 
-cdef class Jobs(list):
+cdef class Jobs(MultiClusterMap):
 
     def __init__(self, jobs=None):
-        if isinstance(jobs, list):
-            for job in jobs:
-                if isinstance(job, int):
-                    self.append(Job(job))
-                else:
-                    self.append(job)
-        elif isinstance(jobs, str):
-            joblist = jobs.split(",")
-            self.extend([Job(job) for job in joblist])
-        elif isinstance(jobs, dict):
-            self.extend([job for job in jobs.values()])
-        elif jobs is not None:
-            raise TypeError("Invalid Type: {type(jobs)}")
+        super().__init__(data=jobs,
+                         typ="Jobs",
+                         val_type=Job,
+                         id_attr=Job.id,
+                         key_type=int)
 
-    def as_dict(self, recursive=False, group_by_cluster=False):
+    def as_dict(self, recursive=False):
         """Convert the collection data to a dict.
 
         Args:
@@ -214,29 +207,11 @@ cdef class Jobs(list):
                 By default, the objects will not be converted to a dict. If
                 this is set to `True`, then additionally all objects are
                 converted to dicts.
-            group_by_cluster (bool, optional):
-                By default, only the Jobs from your local Cluster are
-                returned. If this is set to `True`, then all the Jobs in the
-                collection will be grouped by the Cluster - with the name of
-                the cluster as the key and the value being the collection as
-                another dict.
 
         Returns:
             (dict): Collection as a dict.
         """
-        col = collection_to_dict(self, identifier=Job.id, recursive=recursive)
-        if not group_by_cluster:
-            return col.get(LOCAL_CLUSTER, {})
-
-        return col
-
-    def group_by_cluster(self):
-        """Group Jobs by cluster name
-
-        Returns:
-            (dict[str, Jobs]): Jobs grouped by cluster.
-        """
-        return group_collection_by_cluster(self)
+        return super().as_dict(recursive)
 
     @staticmethod
     def load(JobFilter db_filter=None, Connection db_connection=None):
@@ -280,7 +255,7 @@ cdef class Jobs(list):
             SlurmList job_data
             SlurmListItem job_ptr
             Connection conn
-            dict qos_data
+            QualitiesOfService qos_data
 
         # Prepare SQL Filter
         if not db_filter:
@@ -297,15 +272,14 @@ cdef class Jobs(list):
 
         # Fetch other necessary dependencies needed for translating some
         # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(db_connection=conn).as_dict(
-                name_is_key=False)
+        qos_data = QualitiesOfService.load(db_connection=conn,
+                                           name_is_key=False)
 
         # TODO: also get trackable resources with slurmdb_tres_get and store
         # it in each job instance. tres_alloc_str and tres_req_str only
         # contain the numeric tres ids, but it probably makes more sense to
         # convert them to its type name for the user in advance.
 
-        # TODO: For multi-cluster support, remove duplicate federation jobs
         # TODO: How to handle the possibility of duplicate job ids that could
         # appear if IDs on a cluster are resetted?
         for job_ptr in SlurmList.iter_and_pop(job_data):
@@ -313,7 +287,11 @@ cdef class Jobs(list):
             job.qos_data = qos_data
             job._create_steps()
             JobStatistics._sum_step_stats_for_job(job, job.steps)
-            out.append(job)
+
+            cluster = job.cluster
+            if cluster not in out.data:
+                out.data[cluster] = {}
+            out[cluster][job.id] = job
 
         return out
 
@@ -420,7 +398,7 @@ cdef class Jobs(list):
                 #
                 # "<job_id> submitted at <timestamp>"
                 #
-                # We are just interest in the Job-ID, so extract it
+                # We are just interested in the Job-ID, so extract it
                 job_id = response_str.split(" ")[0]
                 if job_id and job_id.isdigit():
                     out.append(int(job_id))
@@ -444,10 +422,11 @@ cdef class Job:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, job_id=0, cluster=LOCAL_CLUSTER, **kwargs):
+    def __init__(self, job_id=0, cluster=None, **kwargs):
         self._alloc_impl()
         self.ptr.jobid = int(job_id)
-        cstr.fmalloc(&self.ptr.cluster, cluster)
+        cstr.fmalloc(&self.ptr.cluster,
+                     LOCAL_CLUSTER if not cluster else cluster)
         for k, v in kwargs.items():
             setattr(self, k, v)
 

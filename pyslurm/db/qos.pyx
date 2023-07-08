@@ -25,14 +25,15 @@
 from pyslurm.core.error import RPCError
 from pyslurm.utils.helpers import instance_to_dict, collection_to_dict_global
 from pyslurm.db.connection import _open_conn_or_error
+from pyslurm import collections
 
 
-cdef class QualitiesOfService(list):
+cdef class QualitiesOfService(dict):
 
     def __init__(self):
         pass
 
-    def as_dict(self, recursive=False, name_is_key=True):
+    def as_dict(self, recursive=False):
         """Convert the collection data to a dict.
 
         Args:
@@ -40,24 +41,24 @@ cdef class QualitiesOfService(list):
                 By default, the objects will not be converted to a dict. If
                 this is set to `True`, then additionally all objects are
                 converted to dicts.
-            name_is_key (bool, optional):
-                By default, the keys in this dict are the names of each QoS.
-                If this is set to `False`, then the unique ID of the QoS will
-                be used as dict keys.
 
         Returns:
             (dict): Collection as a dict.
         """
-        identifier = QualityOfService.name
-        if not name_is_key:
-            identifier = QualityOfService.id
+        return self if not recursive else collections.dict_recursive(self)
 
-        return collection_to_dict_global(self, identifier=identifier,
-                                         recursive=recursive)
 
     @staticmethod
     def load(QualityOfServiceFilter db_filter=None,
-             Connection db_connection=None):
+             Connection db_connection=None, name_is_key=True):
+        """Load QoS data from the Database
+
+        Args:
+            name_is_key (bool, optional):
+                By default, the keys in this dict are the names of each QoS.
+                If this is set to `False`, then the unique ID of the QoS will
+                be used as dict keys.
+        """
         cdef:
             QualitiesOfService out = QualitiesOfService()
             QualityOfService qos
@@ -83,7 +84,8 @@ cdef class QualitiesOfService(list):
         # Setup QOS objects
         for qos_ptr in SlurmList.iter_and_pop(qos_data):
             qos = QualityOfService.from_ptr(<slurmdb_qos_rec_t*>qos_ptr.data)
-            out.append(qos)
+            _id = qos.name if name_is_key else qos.id
+            out[_id] = qos
 
         return out
 
@@ -227,7 +229,7 @@ def _qos_names_to_ids(qos_list, QualitiesOfService data):
 
 
 def _validate_qos_single(qid, QualitiesOfService data):
-    for item in data:
+    for item in data.values():
         if qid == item.id or qid == item.name:
             return item.id
 

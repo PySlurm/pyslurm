@@ -140,14 +140,8 @@ cdef class Jobs(MultiClusterMap):
                 jobs.data[cluster] = {}
             jobs[cluster][job.id] = job
 
-        # At this point we memcpy'd all the memory for the Jobs. Setting this
-        # to 0 will prevent the slurm job free function to deallocate the
-        # memory for the individual jobs. This should be fine, because they
-        # are free'd automatically in __dealloc__ since the lifetime of each
-        # job-pointer is tied to the lifetime of its corresponding "Job"
-        # instance.
+        # We have extracted all pointers
         jobs.info.record_count = 0
-
         jobs.frozen = frozen
         return jobs
 
@@ -173,16 +167,11 @@ cdef class Jobs(MultiClusterMap):
             RPCError: When retrieving the Job information for all the Steps
                 failed.
         """
-        cdef dict steps = JobSteps.load().as_dict()
-
-        for idx, job in enumerate(self):
-            # Ignore any Steps from Jobs which do not exist in this
-            # collection.
+        cdef dict steps = JobSteps.load_all()
+        for job in self.values():
             jid = job.id
             if jid in steps:
-                job_steps = self[idx].steps
-                job_steps.clear()
-                job_steps.extend(steps[jid].values())
+                job.steps = steps[jid]
 
     @property
     def memory(self):
