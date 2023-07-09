@@ -427,6 +427,9 @@ cdef class Job:
         self.ptr.jobid = int(job_id)
         cstr.fmalloc(&self.ptr.cluster,
                      LOCAL_CLUSTER if not cluster else cluster)
+        self.qos_data = QualitiesOfService()
+        self.steps = JobSteps()
+        self.stats = JobStatistics()
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -450,12 +453,14 @@ cdef class Job:
         return wrap
 
     @staticmethod
-    def load(job_id, cluster=LOCAL_CLUSTER, with_script=False, with_env=False):
+    def load(job_id, cluster=None, with_script=False, with_env=False):
         """Load the information for a specific Job from the Database.
 
         Args:
             job_id (int):
                 ID of the Job to be loaded.
+            cluster (str):
+                Name of the Cluster to search in.
 
         Returns:
             (pyslurm.db.Job): Returns a new Database Job instance
@@ -477,15 +482,16 @@ cdef class Job:
             >>> print(db_job.script)
 
         """
+        cluster = LOCAL_CLUSTER if not cluster else cluster
         jfilter = JobFilter(ids=[int(job_id)], clusters=[cluster],
                             with_script=with_script, with_env=with_env)
-        jobs = Jobs.load(jfilter)
-        if not jobs:
+        job = Jobs.load(jfilter).get(int(job_id), cluster=cluster)
+        if not job:
             raise RPCError(msg=f"Job {job_id} does not exist on "
                            f"Cluster {cluster}")
 
         # TODO: There might be multiple entries when job ids were reset.
-        return jobs[0]
+        return job
 
     def _create_steps(self):
         cdef:
@@ -520,6 +526,9 @@ cdef class Job:
             out["steps"][step_id] = step.as_dict() 
 
         return out
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.id})'
 
     def modify(self, changes, db_connection=None):
         """Modify a Slurm database Job.

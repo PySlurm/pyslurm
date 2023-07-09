@@ -23,6 +23,7 @@
 # cython: language_level=3
 
 from pyslurm.db.cluster import LOCAL_CLUSTER
+import json
 
 
 class BaseView:
@@ -42,14 +43,18 @@ class BaseView:
 class ValuesView(BaseView):
 
     def __contains__(self, val):
-        for item in self._mcm:
+        # for item in self._mcm
+        for item in self:
             if item is val or item == val:
                 return True
         return False
 
     def __iter__(self):
-        for item in self._mcm:
-            yield item
+#       for item in self._mcm:
+#           yield item
+        for cluster in self._mcm.data.values():
+            for item in cluster.values():
+                yield item
 
 
 class MCKeysView(BaseView):
@@ -62,6 +67,18 @@ class MCKeysView(BaseView):
         for cluster, keys in self._data.items():
             for key in keys:
                 yield (cluster, key)
+
+
+class ClustersView(BaseView):
+
+    def __contains__(self, item):
+        return item in self._data
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        yield from self._data
 
 
 class KeysView(BaseView):
@@ -161,6 +178,11 @@ cdef class MultiClusterMap:
     def _item_id(self, item):
         return self._id_attr.__get__(item)
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.data == other.data
+        return NotImplemented
+
     def __getitem__(self, item):
         if item in self.data:
             return self.data[item]
@@ -186,13 +208,18 @@ cdef class MultiClusterMap:
         return sum(len(data) for data in self.data.values())
 
     def __repr__(self):
-        return f'{self._typ}([{", ".join(map(repr, self))}])'
+        return f'{self._typ}([{", ".join(map(repr, self.values()))}])'
 
     def __contains__(self, item):
         if isinstance(item, self._val_type):
             return self._check_for_value(self._item_id(item), item.cluster)
         elif isinstance(item, self._key_type):
-            return self._check_for_value(item, self._get_cluster())
+            found = False
+            for cluster, data in self.data.items():
+                if item in data:
+                    found = True
+            return found
+            #return self._check_for_value(item, self._get_cluster())
         elif isinstance(item, tuple):
             cluster, item = item
             return self._check_for_value(item, cluster)
@@ -226,9 +253,7 @@ cdef class MultiClusterMap:
         return out
 
     def __iter__(self):
-        for cluster in self.data.values():
-            for item in cluster.values():
-                yield item
+        return iter(self.keys())
 
     def __bool__(self):
         return bool(self.data)
@@ -259,17 +284,25 @@ cdef class MultiClusterMap:
         if not self.data[cluster]:
             del self.data[cluster]
 
-    def as_dict(self, recursive=False, multi_cluster=False):
-        cdef dict out = self.data.get(self._get_cluster(), {})
+#   def as_dict(self, recursive=False, multi_cluster=False):
+#       cdef dict out = self.data.get(self._get_cluster(), {})
 
+#       if multi_cluster:
+#           if recursive:
+#               return multi_dict_recursive(self)
+#           return self.data
+#       elif recursive:
+#           return dict_recursive(out)
+
+#       return out
+
+    def to_json(self, multi_cluster=False):
+        data = multi_dict_recursive(self)
         if multi_cluster:
-            if recursive:
-                return multi_dict_recursive(self)
-            return self.data
-        elif recursive:
-            return dict_recursive(out)
-
-        return out
+            return json.dumps(data)
+        else:
+            cluster = self._get_cluster()
+            return json.dumps(data[cluster])
 
     def keys(self):
         return KeysView(self)
@@ -278,11 +311,14 @@ cdef class MultiClusterMap:
         return ItemsView(self)
 
     def values(self):
-        return self
+        return ValuesView(self)
+
+    def clusters(self):
+        return ClustersView(self)
 
     def popitem(self):
         try:
-            item = next(iter(self))
+            item = next(iter(self.values()))
         except StopIteration:
             raise KeyError from None
 
@@ -294,10 +330,10 @@ cdef class MultiClusterMap:
 
     def pop(self, key, cluster=None, default=None):
         item = self.get(key, cluster=cluster, default=default)
-        if not item:
+        if item is default or item == default:
             return default
     
-        del self.data[cluster][key]
+        del self.data[item.cluster][key]
         return item
 
     def _check_val_type(self, item):
@@ -333,7 +369,6 @@ cdef class MultiClusterMap:
     def update(self, data=None, cluster=None, **kwargs):
         if data:
             self._update(data, cluster)
-        
         if kwargs:
             self._update(kwargs, cluster)
 
@@ -364,18 +399,14 @@ def dict_recursive(collection):
     return out
 
 
+def to_json(collection):
+    return json.dumps(dict_recursive(collection))
+
+
 def multi_dict_recursive(collection):
     cdef dict out = collection.data.copy()
     for cluster, data in collection.data.items():
         out[cluster] = dict_recursive(data)
-#       if group_id:
-#           grp_id = group_id.__get__(item)
-#           if grp_id not in out[cluster]:
-#               out[cluster][grp_id] = {}
-#           out[cluster][grp_id].update({_id: data})
-#       else:
-#           out[cluster][_id] = data
-
     return out
 
 

@@ -62,20 +62,6 @@ cdef class Nodes(MultiClusterMap):
                          id_attr=Node.name,
                          key_type=str)
 
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        return super().as_dict(recursive)
-
     @staticmethod
     def load(preload_passwd_info=False):
         """Load all nodes in the system.
@@ -99,7 +85,7 @@ cdef class Nodes(MultiClusterMap):
         cdef:
             dict passwd = {}
             dict groups = {}
-            Nodes nodes = Nodes.__new__(Nodes)
+            Nodes nodes = Nodes()
             int flags = slurm.SHOW_ALL
             Node node
 
@@ -262,8 +248,8 @@ cdef class Node:
         # Call descriptors __set__ directly
         Node.__dict__[name].__set__(self, val)
 
-    def __eq__(self, other):
-        return isinstance(other, Node) and self.name == other.name
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.name})'
 
     @staticmethod
     cdef Node from_ptr(node_info_t *in_ptr):

@@ -35,34 +35,6 @@ def test_parse_all():
     Node("localhost").as_dict()
 
 
-def test_create_nodes_collection():
-    nodes = Nodes("node1,node2").as_dict()
-    assert len(nodes) == 2
-    assert "node1" in nodes
-    assert "node2" in nodes
-    assert nodes["node1"].name == "node1"
-    assert nodes["node2"].name == "node2"
-
-    nodes = Nodes(["node1", "node2"]).as_dict()
-    assert len(nodes) == 2
-    assert "node1" in nodes
-    assert "node2" in nodes
-    assert nodes["node1"].name == "node1"
-    assert nodes["node2"].name == "node2"
-    
-    nodes = Nodes(
-        {
-            "node1": Node("node1"),
-            "node2": Node("node2"),
-        }
-    ).as_dict()
-    assert len(nodes) == 2
-    assert "node1" in nodes
-    assert "node2" in nodes
-    assert nodes["node1"].name == "node1"
-    assert nodes["node2"].name == "node2"
-
-
 def test_set_node_state():
     assert _node_state_from_str("RESUME")
     assert _node_state_from_str("undrain")

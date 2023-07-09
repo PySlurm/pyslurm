@@ -168,7 +168,7 @@ cdef class Partition:
             This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         min_nodes (int):
             Minimum number of Nodes that must be requested by Jobs 
-        max_time_limit (int):
+        max_time (int):
             Max Time-Limit in minutes that Jobs can request
 
             This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]

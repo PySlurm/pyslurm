@@ -39,11 +39,6 @@ def test_search_filter():
         qos_filter._create()
 
 
-def test_create_collection_instance():
-    # TODO
-    assert True
-
-
 def test_create_instance():
     qos = pyslurm.db.QualityOfService("test")
     assert qos.name == "test"

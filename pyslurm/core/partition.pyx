@@ -62,20 +62,6 @@ cdef class Partitions(MultiClusterMap):
                          id_attr=Partition.name,
                          key_type=str)
 
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        return super().as_dict(recursive)
-
     @staticmethod
     def load():
         """Load all Partitions in the system.
@@ -248,11 +234,11 @@ cdef class Partition:
             >>> import pyslurm
             >>> part = pyslurm.Partition.load("normal")
         """
-        partitions = Partitions.load().as_dict()
-        if name not in partitions:
+        part = Partitions.load().get(name)
+        if not part:
             raise RPCError(msg=f"Partition '{name}' doesn't exist")
 
-        return partitions[name]
+        return part
 
     def create(self):
         """Create a Partition.
@@ -523,11 +509,11 @@ cdef class Partition:
         self.ptr.min_nodes = u32(val, zero_is_noval=False)
 
     @property
-    def max_time_limit(self):
+    def max_time(self):
         return _raw_time(self.ptr.max_time, on_inf=UNLIMITED)
 
-    @max_time_limit.setter
-    def max_time_limit(self, val):
+    @max_time.setter
+    def max_time(self, val):
         self.ptr.max_time = timestr_to_mins(val)
 
     @property

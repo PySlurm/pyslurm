@@ -172,6 +172,9 @@ cdef class QualityOfService:
         wrap.ptr = in_ptr
         return wrap
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.name})'
+
     def as_dict(self):
         """Database QualityOfService information formatted as a dictionary.
 
@@ -197,11 +200,11 @@ cdef class QualityOfService:
                 sucessful.
         """
         qfilter = QualityOfServiceFilter(names=[name])
-        qos_data = QualitiesOfService.load(qfilter)
-        if not qos_data:
+        qos = QualitiesOfService.load(qfilter).get(name)
+        if not qos:
             raise RPCError(msg=f"QualityOfService {name} does not exist")
 
-        return qos_data[0]
+        return qos
 
     @property
     def name(self):

@@ -69,20 +69,6 @@ cdef class Jobs(MultiClusterMap):
                          id_attr=Job.id,
                          key_type=int)
 
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        return super().as_dict(recursive)
-
     @staticmethod
     def load(preload_passwd_info=False, frozen=False):
         """Retrieve all Jobs from the Slurm controller
@@ -201,7 +187,7 @@ cdef class Job:
         self.passwd = {}
         self.groups = {}
         cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
-        self.steps = JobSteps.__new__(JobSteps)
+        self.steps = JobSteps()
 
     def _alloc_impl(self):
         if not self.ptr:
@@ -216,10 +202,8 @@ cdef class Job:
     def __dealloc__(self):
         self._dealloc_impl()
 
-    def __eq__(self, other):
-        if isinstance(other, Job):
-            return self.id == other.id and self.cluster == other.cluster
-        return NotImplemented
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.id})'
 
     @staticmethod
     def load(job_id):
@@ -284,7 +268,6 @@ cdef class Job:
         wrap.groups = {}
         wrap.steps = JobSteps.__new__(JobSteps)
         memcpy(wrap.ptr, in_ptr, sizeof(slurm_job_info_t))
-
         return wrap
 
     cdef _swap_data(Job dst, Job src):

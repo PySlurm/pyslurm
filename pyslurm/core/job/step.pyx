@@ -156,6 +156,7 @@ cdef class JobStep:
         self._alloc_impl()
         self.job_id = job_id.id if isinstance(job_id, Job) else job_id
         self.id = step_id
+        cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
 
         # Initialize attributes, if any were provided
         for k, v in kwargs.items():
@@ -198,6 +199,9 @@ cdef class JobStep:
         self._alloc_umsg()
         # Call descriptors __set__ directly
         JobStep.__dict__[name].__set__(self, val)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.id})'
 
     @staticmethod
     def load(job_id, step_id):
