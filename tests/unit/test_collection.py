@@ -88,16 +88,6 @@ class TestMultiClusterMap:
         assert len(col[LOCAL_CLUSTER]) == 3
         assert len(col) == col_len+2
 
-    def test_remove(self):
-        col = self._create_collection()
-        col_len = len(col)
-
-        item = pyslurm.db.Job(1)
-        col.remove(item)
-
-        assert len(col[LOCAL_CLUSTER]) == 1
-        assert len(col) == col_len-1
-
     def test_get(self):
         col = self._create_collection()
 
@@ -106,7 +96,7 @@ class TestMultiClusterMap:
         assert isinstance(item, pyslurm.db.Job)
         assert item.cluster == LOCAL_CLUSTER
 
-        item = col.get(1, cluster=OTHER_CLUSTER)
+        item = col.get((OTHER_CLUSTER, 1))
         assert item is not None
         assert isinstance(item, pyslurm.db.Job)
         assert item.cluster == OTHER_CLUSTER

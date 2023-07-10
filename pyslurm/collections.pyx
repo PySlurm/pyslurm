@@ -24,10 +24,12 @@
 
 from pyslurm.db.cluster import LOCAL_CLUSTER
 import json
+import typing
+from typing import Union
 
 
 class BaseView:
-
+    """Base View for all other Views"""
     def __init__(self, mcm):
         self._mcm = mcm
         self._data = mcm.data
@@ -41,36 +43,35 @@ class BaseView:
 
 
 class ValuesView(BaseView):
+    """A simple Value View
 
+    When iterating over an instance of this View, this will yield all values
+    from all clusters.
+    """
     def __contains__(self, val):
-        # for item in self._mcm
-        for item in self:
-            if item is val or item == val:
-                return True
+        try:
+            item = self._mcm.get(
+                key=self._mcm._item_id(val),
+                cluster=val.cluster
+            )
+            return item is val or item == val
+        except AttributeError:
+            pass
+
         return False
 
     def __iter__(self):
-#       for item in self._mcm:
-#           yield item
         for cluster in self._mcm.data.values():
             for item in cluster.values():
                 yield item
 
 
-class MCKeysView(BaseView):
-
-    def __contains__(self, item):
-        cluster, key, = item
-        return key in self._data[cluster]
-
-    def __iter__(self):
-        for cluster, keys in self._data.items():
-            for key in keys:
-                yield (cluster, key)
-
-
 class ClustersView(BaseView):
+    """A simple Cluster-Keys View
 
+    When iterating over an instance of this View, it will yield all the
+    Cluster names of the collection.
+    """
     def __contains__(self, item):
         return item in self._data
 
@@ -81,8 +82,35 @@ class ClustersView(BaseView):
         yield from self._data
 
 
-class KeysView(BaseView):
+class MCKeysView(BaseView):
+    """A Multi-Cluster Keys View
 
+    Unlike KeysView, when iterating over an MCKeysView instance, this will
+    yield a 2-tuple in the form (cluster, key).
+
+    Similarly, when checking whether this View contains a Key with the `in`
+    operator, a 2-tuple must be used in the form described above.
+    """
+    def __contains__(self, item):
+        cluster, key, = item
+        return key in self._data[cluster]
+
+    def __iter__(self):
+        for cluster, keys in self._data.items():
+            for key in keys:
+                yield (cluster, key)
+
+
+class KeysView(BaseView):
+    """A simple Keys View of a collection
+
+    When iterating, this yields all the keys found from each Cluster in the
+    collection. Note that unlike the KeysView from a `dict`, the keys here
+    aren't unique and may appear multiple times.
+
+    If you indeed have multiple Clusters in a collection and need to tell the
+    keys apart, use the `with_cluster()` function.
+    """
     def __contains__(self, item):
         return item in self._mcm
 
@@ -91,18 +119,28 @@ class KeysView(BaseView):
             yield from keys
 
     def with_cluster(self):
+        """Return a Multi-Cluster Keys View.
+
+        Returns:
+            (MCKeysView): Multi-Cluster Keys View.
+        """
         return MCKeysView(self._mcm)
 
 
 class ItemsView(BaseView):
+    """A simple Items View of a collection.
 
+    Returns a 2-tuple in the form of (key, value) when iterating.
+
+    Similarly, when checking whether this View contains an Item with the `in`
+    operator, a 2-tuple must be used.
+    """
     def __contains__(self, item):
         key, val = item
-        cluster = self._mcm._get_cluster()
 
         try:
-            out = self._mcm.data[cluster][key]
-        except KeyError:
+            out = self._mcm.data[item.cluster][key]
+        except (KeyError, AttributeError):
             return False
         else:
             return out is val or out == val
@@ -113,11 +151,23 @@ class ItemsView(BaseView):
                 yield (key, data[key])
 
     def with_cluster(self):
+        """Return a Multi-Cluster Items View.
+
+        Returns:
+            (MCItemsView): Multi-Cluster Items View.
+        """
         return MCItemsView(self._mcm)
 
     
 class MCItemsView(BaseView):
+    """A Multi-Cluster Items View.
 
+    This differs from ItemsView in that it returns a 3-tuple in the form of
+    (cluster, key, value) when iterating.
+
+    Similarly, when checking whether this View contains an Item with the `in`
+    operator, a 3-tuple must be used.
+    """
     def __contains__(self, item):
         cluster, key, val = item
 
@@ -163,17 +213,40 @@ cdef class MultiClusterMap:
         elif isinstance(data, dict):
             self.update(data)
         elif data is not None:
-            raise TypeError(f"Invalid Type: {type(data)}")
+            raise TypeError(f"Invalid Type: {type(data).__name__}")
+
+    def _check_for_value(self, val_id, cluster):
+        cluster_data = self.data.get(cluster)
+        if cluster_data and val_id in cluster_data:
+            return True
+        return False
+
+    def _get_cluster(self):
+        cluster = None
+        if not self.data or LOCAL_CLUSTER in self.data:
+            cluster = LOCAL_CLUSTER
+        else:
+            try:
+                cluster = next(iter(self.keys()))
+            except StopIteration:
+                raise KeyError("Collection is Empty") from None
+
+        return cluster
 
     def _get_key_and_cluster(self, item):
-        cluster = self._get_cluster()
-        key = item
-
         if isinstance(item, self._val_type):
             cluster, key = item.cluster, self._item_id(item)
         elif isinstance(item, tuple) and len(item) == 2:
             cluster, key = item
+        else:
+            cluster, key = self._get_cluster(), item
+            
         return cluster, key
+
+    def _check_val_type(self, item):
+        if not isinstance(item, self._val_type):
+            raise TypeError(f"Invalid Type: {type(item).__name__}. "
+                            f"{self._val_type}.__name__ is required.")
 
     def _item_id(self, item):
         return self._id_attr.__get__(item)
@@ -212,36 +285,32 @@ cdef class MultiClusterMap:
 
     def __contains__(self, item):
         if isinstance(item, self._val_type):
-            return self._check_for_value(self._item_id(item), item.cluster)
+            item = (item.cluster, self._item_id(item))
+            return self.get(item, default=None) is not None
+            # return self._check_for_value(self._item_id(item), item.cluster)
         elif isinstance(item, self._key_type):
             found = False
             for cluster, data in self.data.items():
                 if item in data:
                     found = True
             return found
-            #return self._check_for_value(item, self._get_cluster())
         elif isinstance(item, tuple):
-            cluster, item = item
-            return self._check_for_value(item, cluster)
+            return self.get(item, default=None) is not None
+            # return self._check_for_value(item, cluster)
 
         return False
 
-    def _check_for_value(self, val_id, cluster):
-        cluster_data = self.data.get(cluster)
-        if cluster_data and val_id in cluster_data:
-            return True
-        return False
+    def __iter__(self):
+        return iter(self.keys())
 
-    def _get_cluster(self):
-        if not self.data or LOCAL_CLUSTER in self.data:
-            return LOCAL_CLUSTER
-        else:
-            return next(iter(self.keys()))
+    def __bool__(self):
+        return bool(self.data)
 
     def __copy__(self):
         return self.copy()
 
     def copy(self):
+        """Return a Copy of this instance."""
         out = self.__class__.__new__(self.__class__)
         super(self.__class__, out).__init__(
             data=self.data.copy(),
@@ -252,51 +321,48 @@ cdef class MultiClusterMap:
         )
         return out
 
-    def __iter__(self):
-        return iter(self.keys())
-
-    def __bool__(self):
-        return bool(self.data)
-
-    def get(self, key, cluster=None, default=None):
-        cluster = self._get_cluster() if not cluster else cluster
+    def get(self, key, default=None):
+        """Get the specific value for a Key"""
+        cluster, key = self._get_key_and_cluster(key)
         return self.data.get(cluster, {}).get(key, default)
 
     def add(self, item):
+        """An Item to add to the collection
+
+        Note that a collection can only hold its specific type.
+        For example, a collection of `pyslurm.Jobs` can only hold
+        `pyslurm.Job` objects. Trying to add anything other than the accepted
+        type will raise a TypeError.
+
+        Args:
+            item (typing.Any):
+                Item to add to the collection.
+
+        Raises:
+            TypeError: When an item with an unexpected type not belonging to
+                the collection was added.
+
+        Examples:
+            # Add a `pyslurm.Job` instance to the `Jobs` collection.
+
+            >>> data = pyslurm.Jobs()
+            >>> job = pyslurm.Job(1)
+            >>> data.add(job)
+            >>> print(data)
+            Jobs([Job(1)])
+        """
         if item.cluster not in self.data:
             self.data[item.cluster] = {}
+
+        self._check_val_type(item)
         self.data[item.cluster][self._item_id(item)] = item
 
-    def remove(self, item):
-        cluster = self._get_cluster()
-        key = item
-
-        if isinstance(item, self._val_type):
-            if self._check_for_value(self._item_id(item), item.cluster):
-                cluster = item.cluster
-                del self.data[item.cluster][self._item_id(item)]
-        elif isinstance(item, tuple) and len(item) == 2:
-            cluster, key = item
-            del self.data[cluster][key]
-        elif isinstance(item, self._key_type):
-            del self.data[cluster][key]
-
-        if not self.data[cluster]:
-            del self.data[cluster]
-
-#   def as_dict(self, recursive=False, multi_cluster=False):
-#       cdef dict out = self.data.get(self._get_cluster(), {})
-
-#       if multi_cluster:
-#           if recursive:
-#               return multi_dict_recursive(self)
-#           return self.data
-#       elif recursive:
-#           return dict_recursive(out)
-
-#       return out
-
     def to_json(self, multi_cluster=False):
+        """Convert all the whole collection to JSON.
+
+        Returns:
+            (str): JSON formatted string from `json.dumps()`
+        """
         data = multi_dict_recursive(self)
         if multi_cluster:
             return json.dumps(data)
@@ -305,18 +371,39 @@ cdef class MultiClusterMap:
             return json.dumps(data[cluster])
 
     def keys(self):
+        """Return a View of all the Keys in this collection
+
+        Returns:
+            (KeysView): View of all Keys
+        """
         return KeysView(self)
                 
     def items(self):
+        """Return a View of all the Values in this collection
+
+        Returns:
+            (ItemsView): View of all Items
+        """
         return ItemsView(self)
 
     def values(self):
+        """Return a View of all the Values in this collection
+
+        Returns:
+            (ValuesView): View of all Values
+        """
         return ValuesView(self)
 
     def clusters(self):
+        """Return a View of all the Clusters in this collection
+
+        Returns:
+            (ClustersView): View of Cluster keys
+        """
         return ClustersView(self)
 
     def popitem(self):
+        """Remove and return some item in the collection"""
         try:
             item = next(iter(self.values()))
         except StopIteration:
@@ -326,21 +413,21 @@ cdef class MultiClusterMap:
         return item
 
     def clear(self):
+        """Clear the collection"""
         self.data.clear()
 
-    def pop(self, key, cluster=None, default=None):
-        item = self.get(key, cluster=cluster, default=default)
+    def pop(self, key, default=None):
+        """Remove key from the collection and return the value"""
+        item = self.get(key, default=default)
         if item is default or item == default:
             return default
     
-        del self.data[item.cluster][key]
-        return item
-
-    def _check_val_type(self, item):
-        if not isinstance(item, self._val_type):
-            raise TypeError(f"Invalid Type: {type(item).__name__}. "
-                            f"{self._val_type}.__name__ is required.")
+        cluster = item.cluster
+        del self.data[cluster][key]
+        if not self.data[cluster]:
+            del self.data[cluster]
         
+        return item
 
     def _update(self, data, clus):
         for key in data:
@@ -367,6 +454,10 @@ cdef class MultiClusterMap:
 
 
     def update(self, data=None, cluster=None, **kwargs):
+        """Update the collection.
+
+        Functions just like `dict`'s update method.
+        """
         if data:
             self._update(data, cluster)
         if kwargs:
