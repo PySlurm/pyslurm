@@ -24,7 +24,60 @@
 
 
 cdef class MultiClusterMap:
+    """Mapping of Multi-Cluster Data for a Collection.
 
+    !!! note "TL;DR"
+
+        If you have no need to write Multi-Cluster capable code and just work
+        on a single Cluster, Collections inheriting from this Class behave
+        just like a normal `dict`.
+
+    This class enables collections to hold data from multiple Clusters if
+    applicable.
+    For quite a few Entities in Slurm it is possible to gather data from
+    multiple Clusters. For example, with `squeue`, you can easily list Jobs
+    running on different Clusters - provided your Cluster is joined in a
+    Federation or simply part of a multi Cluster Setup.
+
+    Collections like `pyslurm.Jobs` inherit from this Class to enable holding
+    such data from multiple Clusters.
+    Internally, the data is structured in a `dict` like this (with
+    `pyslurm.Jobs` as an example):
+
+    data = {
+        "LOCAL_CLUSTER":
+            1: pyslurm.Job,
+            2: pyslurm.Job,
+            ...
+        "OTHER_REMOTE_CLUSTER":
+            100: pyslurm.Job,
+            101, pyslurm.Job
+            ...
+        ...
+    }
+
+    When a collection inherits from this class, its functionality will
+    basically simulate a standard `dict` - with a few extensions to enable
+    multi-cluster code.
+    By default, even if your Collections contains Data from multiple Clusters,
+    any operation will be targeted on the local Cluster data, if available.
+
+    For example, with the data from above:
+
+    >>> job = data[1]
+
+    `job` would then hold the instance for Job 1 from the `LOCAL_CLUSTER`
+    data.
+    Alternatively, data can also be accessed like this:
+
+    >>> job = data["OTHER_REMOTE_CLUSTER"][100]
+
+    Here, you are directly specifying which Cluster data you want to access.
+
+    Similarly, every method (where applicable) from a standard dict is
+    extended with multi-cluster functionality (check out the examples on the
+    methods)
+    """
     cdef public dict data
 
     cdef:

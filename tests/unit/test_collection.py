@@ -41,7 +41,7 @@ class TestMultiClusterMap:
             }
         }
         col = pyslurm.db.Jobs()
-        col.data = data
+        col.update(data)
         return col
 
     def test_create(self):
@@ -263,7 +263,7 @@ class TestMultiClusterMap:
             200: pyslurm.db.Job(200, cluster=OTHER_CLUSTER),
             300: pyslurm.db.Job(300, cluster=OTHER_CLUSTER),
         }
-        col.update(col_update, cluster=OTHER_CLUSTER)
+        col.update({OTHER_CLUSTER: col_update})
         assert len(col) == col_len+6
         assert len(col[OTHER_CLUSTER]) == 4
         assert 200 in col

@@ -162,6 +162,8 @@ cdef class Job:
     Args:
         job_id (int, optional=0):
             An Integer representing a Job-ID.
+        cluster (str, optional=None):
+            Name of the Cluster for this Job.
 
     Other Parameters:
         admin_comment (str):

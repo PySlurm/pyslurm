@@ -461,6 +461,12 @@ cdef class Job:
                 ID of the Job to be loaded.
             cluster (str):
                 Name of the Cluster to search in.
+            with_script (bool):
+                Whether the Job-Script should also be loaded. Mutually
+                exclusive with `with_env`.
+            with_env (bool):
+                Whether the Job Environment should also be loaded. Mutually
+                exclusive with `with_script`.
 
         Returns:
             (pyslurm.db.Job): Returns a new Database Job instance
@@ -480,7 +486,6 @@ cdef class Job:
             >>> import pyslurm
             >>> db_job = pyslurm.db.Job.load(10000, with_script=True)
             >>> print(db_job.script)
-
         """
         cluster = LOCAL_CLUSTER if not cluster else cluster
         jfilter = JobFilter(ids=[int(job_id)], clusters=[cluster],

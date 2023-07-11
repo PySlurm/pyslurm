@@ -21,6 +21,7 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
+"""Custom Collection utilities""" 
 
 from pyslurm.db.cluster import LOCAL_CLUSTER
 import json
@@ -186,8 +187,8 @@ class MCItemsView(BaseView):
 
 cdef class MultiClusterMap:
 
-    def __init__(self, data, typ=None,
-                 val_type=None, key_type=None, id_attr=None, init_data=True):
+    def __init__(self, data, typ=None, val_type=None,
+                 key_type=None, id_attr=None, init_data=True):
         self.data = {} if init_data else data
         self._typ = typ
         self._key_type = key_type
@@ -322,7 +323,30 @@ cdef class MultiClusterMap:
         return out
 
     def get(self, key, default=None):
-        """Get the specific value for a Key"""
+        """Get the specific value for a Key
+
+        This behaves like `dict`'s `get` method, with the difference that you
+        can additionally pass in a 2-tuple in the form of `(cluster, key)` as
+        the key, which can be helpful if this collection contains data from
+        multiple Clusters.
+
+        If just a key without notion of the Cluster is given, access to the
+        local cluster data is implied. If this collection does however not
+        contain data from the local cluster, the first cluster detected
+        according to `next(iter(self.keys()))` will be used.
+
+        Examples:
+            Get a Job from the LOCAL_CLUSTER
+
+            >>> job_id = 1
+            >>> job = data.get(job_id)
+
+            Get a Job from another Cluster in the Collection, by providing a
+            2-tuple with the cluster identifier:
+
+            >>> job_id = 1
+            >>> job = data.get(("REMOTE_CLUSTER", job_id))
+        """
         cluster, key = self._get_key_and_cluster(key)
         return self.data.get(cluster, {}).get(key, default)
 
@@ -343,7 +367,7 @@ cdef class MultiClusterMap:
                 the collection was added.
 
         Examples:
-            # Add a `pyslurm.Job` instance to the `Jobs` collection.
+            Add a `pyslurm.Job` instance to the `Jobs` collection.
 
             >>> data = pyslurm.Jobs()
             >>> job = pyslurm.Job(1)
@@ -375,6 +399,18 @@ cdef class MultiClusterMap:
 
         Returns:
             (KeysView): View of all Keys
+
+        Examples:
+            Iterate over all Keys from all Clusters:
+
+            >>> for key in collection.keys()
+            ...     print(key)
+
+            Iterate over all Keys from all Clusters with the name of the
+            Cluster additionally provided:
+
+            >>> for cluster, key in collection.keys().with_cluster()
+            ...     print(cluster, key)
         """
         return KeysView(self)
                 
@@ -383,6 +419,18 @@ cdef class MultiClusterMap:
 
         Returns:
             (ItemsView): View of all Items
+
+        Examples:
+            Iterate over all Items from all Clusters:
+
+            >>> for key, value in collection.items()
+            ...     print(key, value)
+
+            Iterate over all Items from all Clusters with the name of the
+            Cluster additionally provided:
+
+            >>> for cluster, key, value in collection.items().with_cluster()
+            ...     print(cluster, key, value)
         """
         return ItemsView(self)
 
@@ -391,6 +439,12 @@ cdef class MultiClusterMap:
 
         Returns:
             (ValuesView): View of all Values
+
+        Examples:
+            Iterate over all Values from all Clusters:
+
+            >>> for value in collection.values()
+            ...     print(value)
         """
         return ValuesView(self)
 
@@ -399,6 +453,12 @@ cdef class MultiClusterMap:
 
         Returns:
             (ClustersView): View of Cluster keys
+
+        Examples:
+            Iterate over all Cluster-Names the Collection contains:
+
+            >>> for cluster in collection.clusters()
+            ...     print(cluster)
         """
         return ClustersView(self)
 
@@ -417,7 +477,18 @@ cdef class MultiClusterMap:
         self.data.clear()
 
     def pop(self, key, default=None):
-        """Remove key from the collection and return the value"""
+        """Remove key from the collection and return the value
+
+        This behaves like `dict`'s `pop` method, with the difference that you
+        can additionally pass in a 2-tuple in the form of `(cluster, key)` as
+        the key, which can be helpful if this collection contains data from
+        multiple Clusters.
+
+        If just a key without notion of the Cluster is given, access to the
+        local cluster data is implied. If this collection does however not
+        contain data from the local cluster, the first cluster detected
+        according to `next(iter(self.keys()))` will be used.
+        """
         item = self.get(key, default=default)
         if item is default or item == default:
             return default
@@ -429,12 +500,12 @@ cdef class MultiClusterMap:
         
         return item
 
-    def _update(self, data, clus):
+    def _update(self, data):
         for key in data:
             try:
                 iterator = iter(data[key])
             except TypeError as e:
-                cluster = self._get_cluster() if not clus else clus
+                cluster = self._get_cluster()
                 if not cluster in self.data:
                     self.data[cluster] = {}
                 self.data[cluster].update(data)
@@ -453,15 +524,13 @@ cdef class MultiClusterMap:
 #                       k, v = item
 
 
-    def update(self, data=None, cluster=None, **kwargs):
+    def update(self, data={}, **kwargs):
         """Update the collection.
 
-        Functions just like `dict`'s update method.
+        This functions like `dict`'s `update` method.
         """
-        if data:
-            self._update(data, cluster)
-        if kwargs:
-            self._update(kwargs, cluster)
+        self._update(data)
+        self._update(kwargs)
 
 
 def multi_reload(cur, frozen=True):

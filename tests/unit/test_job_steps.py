@@ -39,6 +39,4 @@ def test_create_instance():
 
 
 def test_parse_all():
-    # Use the as_dict() function to test if parsing works for all
-    # properties on a simple JobStep without error.
-    JobStep(9999, 1).as_dict()
+    assert JobStep(9999, 1).as_dict()
