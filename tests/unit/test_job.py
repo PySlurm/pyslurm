@@ -31,7 +31,7 @@ def test_create_instance():
 
 
 def test_parse_all():
-    assert Job(9999).as_dict()
+    assert Job(9999).to_dict()
 
 
 def test_parse_dependencies_to_dict():

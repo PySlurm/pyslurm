@@ -32,7 +32,7 @@ def test_create_instance():
 
 
 def test_parse_all():
-    assert Node("localhost").as_dict()
+    assert Node("localhost").to_dict()
 
 
 def test_set_node_state():

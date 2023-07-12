@@ -7,7 +7,4 @@ title: JobStep
     will be removed in a future release
 
 ::: pyslurm.JobStep
-    handler: python
-
 ::: pyslurm.JobSteps
-    handler: python

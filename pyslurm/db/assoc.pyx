@@ -25,14 +25,12 @@
 from pyslurm.core.error import RPCError
 from pyslurm.utils.helpers import (
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
     user_to_uid,
 )
 from pyslurm.utils.uint import *
 from pyslurm.db.connection import _open_conn_or_error
 from pyslurm.db.cluster import LOCAL_CLUSTER
-from pyslurm import collections
+import pyslurm.collections as collections
 
 
 cdef class Associations(MultiClusterMap):
@@ -43,20 +41,6 @@ cdef class Associations(MultiClusterMap):
                          val_type=Association,
                          id_attr=Association.id,
                          key_type=int)
-
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        return super().as_dict(recursive)
 
     @staticmethod
     def load(AssociationFilter db_filter=None, Connection db_connection=None):
@@ -230,7 +214,7 @@ cdef class Association:
         wrap.ptr = in_ptr
         return wrap
 
-    def as_dict(self):
+    def to_dict(self):
         """Database Association information formatted as a dictionary.
 
         Returns:

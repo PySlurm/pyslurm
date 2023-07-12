@@ -22,6 +22,8 @@
 
 import pytest
 import pyslurm
+import pyslurm.collections
+from pyslurm.collections import sum_property
 
 LOCAL_CLUSTER = pyslurm.db.cluster.LOCAL_CLUSTER
 OTHER_CLUSTER = "other_cluster"
@@ -306,3 +308,21 @@ class TestMultiClusterMap:
         assert len(col.clusters()) == 2
         for c in col.clusters():
             assert c
+
+    def test_sum_property(self):
+        class TestObject:
+            @property
+            def memory(self):
+                return 10240
+
+            @property
+            def cpus(self):
+                return None
+
+        object_dict = {i: TestObject() for i in range(10)}
+
+        expected = 10240 * 10
+        assert sum_property(object_dict, TestObject.memory) == expected
+
+        expected = 0
+        assert sum_property(object_dict, TestObject.cpus) == expected

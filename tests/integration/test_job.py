@@ -35,9 +35,7 @@ from pyslurm import (
 
 def test_parse_all(submit_job):
     job = submit_job()
-    # Use the as_dict() function to test if parsing works for all
-    # properties on a simple Job without error.
-    Job.load(job.id).as_dict()
+    Job.load(job.id).to_dict()
 
 
 def test_load(submit_job):

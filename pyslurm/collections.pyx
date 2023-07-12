@@ -25,8 +25,7 @@
 
 from pyslurm.db.cluster import LOCAL_CLUSTER
 import json
-import typing
-from typing import Union
+from typing import Union, Any
 
 
 class BaseView:
@@ -359,7 +358,7 @@ cdef class MultiClusterMap:
         type will raise a TypeError.
 
         Args:
-            item (typing.Any):
+            item (Any):
                 Item to add to the collection.
 
         Raises:
@@ -382,7 +381,7 @@ cdef class MultiClusterMap:
         self.data[item.cluster][self._item_id(item)] = item
 
     def to_json(self, multi_cluster=False):
-        """Convert all the whole collection to JSON.
+        """Convert the collection to JSON.
 
         Returns:
             (str): JSON formatted string from `json.dumps()`
@@ -555,7 +554,8 @@ def multi_reload(cur, frozen=True):
 def dict_recursive(collection):
     cdef dict out = {}
     for item_id, item in collection.items():
-        out[item_id] = item.as_dict()
+        if hasattr(item, "to_dict"):
+            out[item_id] = item.to_dict()
     return out
 
 

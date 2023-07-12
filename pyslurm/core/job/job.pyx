@@ -278,6 +278,9 @@ cdef class Job:
             src.ptr = tmp
 
     def as_dict(self):
+        return self.to_dict()
+
+    def to_dict(self):
         """Job information formatted as a dictionary.
 
         Returns:

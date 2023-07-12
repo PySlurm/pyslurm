@@ -60,7 +60,7 @@ from pyslurm.collections cimport MultiClusterMap
 
 
 cdef class Partitions(MultiClusterMap):
-    """A collection of [pyslurm.Partition][] objects.
+    """A [`Multi Cluster`][pyslurm.collections.MultiClusterMap] collection of [pyslurm.Partition][] objects.
 
     Args:
         partitions (Union[list[str], dict[str, Partition], str], optional=None):

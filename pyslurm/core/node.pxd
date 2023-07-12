@@ -59,7 +59,7 @@ from pyslurm.collections cimport MultiClusterMap
 
 
 cdef class Nodes(MultiClusterMap):
-    """A collection of [pyslurm.Node][] objects.
+    """A [`Multi Cluster`][pyslurm.collections.MultiClusterMap] collection of [pyslurm.Node][] objects.
 
     Args:
         nodes (Union[list, dict, str], optional=None):

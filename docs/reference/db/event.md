@@ -7,4 +7,3 @@ title: Event
     removed in the future when a replacement is introduced
 
 ::: pyslurm.slurmdb_events
-    handler: python

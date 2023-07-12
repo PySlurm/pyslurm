@@ -68,7 +68,7 @@ def test_modify():
 
 
 def test_parse_all():
-    Partitions.load().popitem().as_dict()
+    Partitions.load().popitem().to_dict()
 
 
 def test_reload():

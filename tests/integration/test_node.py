@@ -69,4 +69,4 @@ def test_modify():
 
 
 def test_parse_all():
-    Nodes.load().popitem().as_dict()
+    Nodes.load().popitem().to_dict()

@@ -7,4 +7,3 @@ title: Topology
     removed in the future when a replacement is introduced
 
 ::: pyslurm.topology
-    handler: python

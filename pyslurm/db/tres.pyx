@@ -25,7 +25,7 @@
 from pyslurm.utils.uint import *
 from pyslurm.constants import UNLIMITED
 from pyslurm.core.error import RPCError
-from pyslurm.utils.helpers import instance_to_dict, collection_to_dict_global
+from pyslurm.utils.helpers import instance_to_dict
 from pyslurm.utils import cstr
 from pyslurm.db.connection import _open_conn_or_error
 import json
@@ -76,7 +76,7 @@ cdef class TrackableResourceLimits:
         return out
 
     def _validate(self, TrackableResources tres_data):
-        id_dict = _tres_names_to_ids(self.as_dict(flatten_limits=True),
+        id_dict = _tres_names_to_ids(self.to_dict(flatten_limits=True),
                                     tres_data)
         return id_dict
 
@@ -91,7 +91,7 @@ cdef class TrackableResourceLimits:
 
         return out
 
-    def as_dict(self, flatten_limits=False):
+    def to_dict(self, flatten_limits=False):
         cdef dict inst_dict = instance_to_dict(self)
 
         if flatten_limits:
@@ -134,24 +134,10 @@ cdef class TrackableResourceFilter:
         self._alloc()
 
 
-cdef class TrackableResources(list):
+cdef class TrackableResources(dict):
 
     def __init__(self):
         pass
-
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        return self if not recursive else collections.dict_recursive(self)
 
     @staticmethod
     def load(Connection db_connection=None, name_is_key=True):
@@ -246,7 +232,7 @@ cdef class TrackableResource:
         wrap.ptr = in_ptr
         return wrap
 
-    def as_dict(self):
+    def to_dict(self):
         return instance_to_dict(self)
 
     @property

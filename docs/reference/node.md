@@ -7,7 +7,4 @@ title: Node
     removed in a future release
 
 ::: pyslurm.Node
-    handler: python
-
 ::: pyslurm.Nodes
-    handler: python

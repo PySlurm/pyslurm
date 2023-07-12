@@ -66,7 +66,7 @@ from pyslurm.slurm cimport (
 
 
 cdef class Jobs(MultiClusterMap):
-    """A collection of [pyslurm.Job][] objects.
+    """A [`Multi Cluster`][pyslurm.collections.MultiClusterMap] collection of [pyslurm.Job][] objects.
 
     Args:
         jobs (Union[list, dict], optional=None):

@@ -152,7 +152,7 @@ cdef class JobFilter:
 
 
 cdef class Jobs(MultiClusterMap):
-    """A collection of [pyslurm.db.Job][] objects."""
+    """A [`Multi Cluster`][pyslurm.collections.MultiClusterMap] collection of [pyslurm.db.Job][] objects."""
     pass
 
 

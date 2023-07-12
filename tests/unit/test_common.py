@@ -55,12 +55,11 @@ from pyslurm.utils.helpers import (
     nodelist_from_range_str,
     nodelist_to_range_str,
     instance_to_dict,
-    collection_to_dict,
-    collection_to_dict_global,
-    group_collection_by_cluster,
-    _sum_prop,
 )
 from pyslurm.utils import cstr
+from pyslurm.collections import (
+    sum_property,
+)
 
 
 class TestStrings:
@@ -414,75 +413,3 @@ class TestMiscUtil:
         assert "node[001,007-009]" == nodelist_to_range_str(nodelist)
         assert "node[001,007-009]" == nodelist_to_range_str(nodelist_str)
 
-    def test_summarize_property(self):
-        class TestObject:
-            @property
-            def memory(self):
-                return 10240
-
-            @property
-            def cpus(self):
-                return None
-
-        object_dict = {i: TestObject() for i in range(10)}
-
-        expected = 10240 * 10
-        assert _sum_prop(object_dict, TestObject.memory) == expected
-
-        expected = 0
-        assert _sum_prop(object_dict, TestObject.cpus) == expected
-
-    def test_collection_to_dict(self):
-        class TestObject:
-
-            def __init__(self, _id, _grp_id, cluster):
-                self._id = _id
-                self._grp_id = _grp_id
-                self.cluster = cluster
-
-            @property
-            def id(self):
-                return self._id
-
-            @property
-            def group_id(self):
-                return self._grp_id
-
-            def as_dict(self):
-                return instance_to_dict(self)
-
-        class TestCollection(list):
-
-            def __init__(self, data):
-                super().__init__()
-                self.extend(data)
-
-        OFFSET = 100
-        RANGE = 10
-
-        data = [TestObject(x, x+OFFSET, "TestCluster") for x in range(RANGE)]
-        collection = TestCollection(data)
-
-        coldict = collection_to_dict(collection, identifier=TestObject.id)
-        coldict = coldict.get("TestCluster", {})
-
-        assert len(coldict) == RANGE
-        for i in range(RANGE):
-            assert i in coldict
-            assert isinstance(coldict[i], TestObject)
-
-        coldict = collection_to_dict(collection, identifier=TestObject.id,
-                                     group_id=TestObject.group_id)
-        coldict = coldict.get("TestCluster", {})
-
-        assert len(coldict) == RANGE
-        for i in range(RANGE):
-            assert i+OFFSET in coldict
-            assert i in coldict[i+OFFSET]
-
-        coldict = collection_to_dict(collection, identifier=TestObject.id,
-                                    recursive=True)
-        coldict = coldict.get("TestCluster", {})
-
-        for item in coldict.values():
-            assert isinstance(item, dict)

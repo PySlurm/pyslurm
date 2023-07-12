@@ -38,8 +38,6 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
     nodelist_from_range_str,
     nodelist_to_range_str,
 )
@@ -389,6 +387,9 @@ cdef class Node:
         verify_rpc(slurm_delete_node(self.umsg))
 
     def as_dict(self):
+        return self.to_dict()
+
+    def to_dict(self):
         """Node information formatted as a dictionary.
 
         Returns:
@@ -397,7 +398,7 @@ cdef class Node:
         Examples:
             >>> import pyslurm
             >>> mynode = pyslurm.Node.load("mynode")
-            >>> mynode_dict = mynode.as_dict()
+            >>> mynode_dict = mynode.to_dict()
         """
         return instance_to_dict(self)
 

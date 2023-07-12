@@ -32,7 +32,7 @@ def test_create_instance():
 
 
 def test_parse_all():
-    assert Partition("normal").as_dict()
+    assert Partition("normal").to_dict()
 
 
 def test_parse_memory():

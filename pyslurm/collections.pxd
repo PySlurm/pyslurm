@@ -44,6 +44,7 @@ cdef class MultiClusterMap:
     Internally, the data is structured in a `dict` like this (with
     `pyslurm.Jobs` as an example):
 
+    ```python
     data = {
         "LOCAL_CLUSTER":
             1: pyslurm.Job,
@@ -55,6 +56,7 @@ cdef class MultiClusterMap:
             ...
         ...
     }
+    ```
 
     When a collection inherits from this class, its functionality will
     basically simulate a standard `dict` - with a few extensions to enable
@@ -64,13 +66,17 @@ cdef class MultiClusterMap:
 
     For example, with the data from above:
 
-    >>> job = data[1]
+    ```python
+    job = data[1]
+    ```
 
     `job` would then hold the instance for Job 1 from the `LOCAL_CLUSTER`
     data.
     Alternatively, data can also be accessed like this:
 
-    >>> job = data["OTHER_REMOTE_CLUSTER"][100]
+    ```python
+    job = data["OTHER_REMOTE_CLUSTER"][100]
+    ```
 
     Here, you are directly specifying which Cluster data you want to access.
 

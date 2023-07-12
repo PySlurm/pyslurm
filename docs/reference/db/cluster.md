@@ -7,4 +7,3 @@ title: Cluster
     removed in the future when a replacement is introduced
 
 ::: pyslurm.slurmdb_clusters
-    handler: python

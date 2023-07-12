@@ -7,4 +7,3 @@ title: Frontend
     removed in the future when a replacement is introduced
 
 ::: pyslurm.front_end
-    handler: python

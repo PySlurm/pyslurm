@@ -7,4 +7,3 @@ title: Trigger
     removed in the future when a replacement is introduced
 
 ::: pyslurm.trigger
-    handler: python

@@ -59,20 +59,6 @@ cdef class JobSteps(dict):
         elif steps is not None:
             raise TypeError("Invalid Type: {type(steps)}")
 
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        return self if not recursive else collections.dict_recursive(self)
-
     @staticmethod
     def load(job):
         """Load the Job Steps from the system.
@@ -326,6 +312,9 @@ cdef class JobStep:
         verify_rpc(slurm_update_step(js.umsg))
 
     def as_dict(self):
+        return self.to_dict()
+
+    def to_dict(self):
         """JobStep information formatted as a dictionary.
 
         Returns:

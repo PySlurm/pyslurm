@@ -39,4 +39,4 @@ def test_create_instance():
 
 
 def test_parse_all():
-    assert JobStep(9999, 1).as_dict()
+    assert JobStep(9999, 1).to_dict()

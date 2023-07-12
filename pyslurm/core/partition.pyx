@@ -203,6 +203,9 @@ cdef class Partition:
         return self.name
 
     def as_dict(self):
+        return self.to_dict()
+
+    def to_dict(self):
         """Partition information formatted as a dictionary.
 
         Returns:
@@ -211,7 +214,7 @@ cdef class Partition:
         Examples:
             >>> import pyslurm
             >>> mypart = pyslurm.Partition.load("mypart")
-            >>> mypart_dict = mypart.as_dict()
+            >>> mypart_dict = mypart.to_dict()
         """
         return instance_to_dict(self)
 

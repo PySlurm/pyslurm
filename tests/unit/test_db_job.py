@@ -49,4 +49,4 @@ def test_create_instance():
 
 def test_parse_all():
     job = pyslurm.db.Job(9999)
-    assert job.as_dict()
+    assert job.to_dict()

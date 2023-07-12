@@ -28,7 +28,7 @@ from pyslurm.core import slurmctld
 from typing import Any
 from pyslurm.utils.uint import *
 from pyslurm.db.cluster import LOCAL_CLUSTER
-from pyslurm import collections
+import pyslurm.collections as collections
 from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,
@@ -41,8 +41,6 @@ from pyslurm.utils.helpers import (
     uid_to_name,
     nodelist_to_range_str,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
     _get_exit_code,
 )
 from pyslurm.db.connection import _open_conn_or_error
@@ -198,20 +196,6 @@ cdef class Jobs(MultiClusterMap):
                          val_type=Job,
                          id_attr=Job.id,
                          key_type=int)
-
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        return super().as_dict(recursive)
 
     @staticmethod
     def load(JobFilter db_filter=None, Connection db_connection=None):
@@ -510,7 +494,10 @@ cdef class Job:
             self.steps[step.id] = step
 
     def as_dict(self):
-        """Database Job information formatted as a dictionary.
+        return self.to_dict()
+
+    def to_dict(self):
+        """Convert Database Job information to a dictionary.
 
         Returns:
             (dict): Database Job information as dict
@@ -518,17 +505,17 @@ cdef class Job:
         Examples:
             >>> import pyslurm
             >>> myjob = pyslurm.db.Job.load(10000)
-            >>> myjob_dict = myjob.as_dict()
+            >>> myjob_dict = myjob.to_dict()
         """
         cdef dict out = instance_to_dict(self)
 
         if self.stats:
-            out["stats"] = self.stats.as_dict()
+            out["stats"] = self.stats.to_dict()
 
         steps = out.pop("steps", {})
         out["steps"] = {}
         for step_id, step in steps.items():
-            out["steps"][step_id] = step.as_dict() 
+            out["steps"][step_id] = step.to_dict() 
 
         return out
 
