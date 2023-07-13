@@ -22,10 +22,9 @@
 
 import pytest
 import pyslurm
-import pyslurm.xcollections
 from pyslurm.xcollections import sum_property
 
-LOCAL_CLUSTER = pyslurm.db.cluster.LOCAL_CLUSTER
+LOCAL_CLUSTER = pyslurm.settings.LOCAL_CLUSTER
 OTHER_CLUSTER = "other_cluster"
 
 

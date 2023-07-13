@@ -27,8 +27,8 @@ from pyslurm.core.error import RPCError, PyslurmError
 from pyslurm.core import slurmctld
 from typing import Any
 from pyslurm.utils.uint import *
-from pyslurm.db.cluster import LOCAL_CLUSTER
-import pyslurm.xcollections as xcollections
+from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import xcollections
 from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,

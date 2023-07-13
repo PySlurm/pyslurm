@@ -23,7 +23,7 @@
 # cython: language_level=3
 """Custom Collection utilities""" 
 
-from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm.settings import LOCAL_CLUSTER
 import json
 from typing import Union, Any
 
