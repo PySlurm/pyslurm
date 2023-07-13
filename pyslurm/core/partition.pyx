@@ -30,7 +30,8 @@ from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
-from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -38,9 +39,6 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
-    _sum_prop,
     dehumanize,
 )
 from pyslurm.utils.ctime import (
@@ -49,7 +47,7 @@ from pyslurm.utils.ctime import (
 )
 
 
-cdef class Partitions(list):
+cdef class Partitions(MultiClusterMap):
 
     def __dealloc__(self):
         slurm_free_partition_info_msg(self.info)
@@ -58,38 +56,11 @@ cdef class Partitions(list):
         self.info = NULL
 
     def __init__(self, partitions=None):
-        if isinstance(partitions, list):
-            for part in partitions:
-                if isinstance(part, str):
-                    self.append(Partition(part))
-                else:
-                    self.append(part)
-        elif isinstance(partitions, str):
-            partlist = partitions.split(",")
-            self.extend([Partition(part) for part in partlist])
-        elif isinstance(partitions, dict):
-            self.extend([part for part in partitions.values()])
-        elif partitions is not None:
-            raise TypeError("Invalid Type: {type(partitions)}")
-
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Partition.name,
-                                 recursive=recursive)
-        return col.get(LOCAL_CLUSTER, {})
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self)
+        super().__init__(data=partitions,
+                         typ="Partitions",
+                         val_type=Partition,
+                         id_attr=Partition.name,
+                         key_type=str)
 
     @staticmethod
     def load():
@@ -103,7 +74,7 @@ cdef class Partitions(list):
                 failed.
         """
         cdef:
-            Partitions partitions = Partitions.__new__(Partitions)
+            Partitions partitions = Partitions()
             int flags = slurm.SHOW_ALL
             Partition partition
             slurmctld.Config slurm_conf
@@ -126,18 +97,16 @@ cdef class Partitions(list):
             # is raised by replacing it with a zeroed-out partition_info_t.
             partitions.info.partition_array[cnt] = partitions.tmp_info
 
+            cluster = partition.cluster
+            if cluster not in partitions.data:
+                partitions.data[cluster] = {}
+
             partition.power_save_enabled = power_save_enabled
             partition.slurm_conf = slurm_conf
-            partitions.append(partition)
+            partitions.data[cluster][partition.name] = partition
 
-        # At this point we memcpy'd all the memory for the Partitions. Setting
-        # this to 0 will prevent the slurm partition free function to
-        # deallocate the memory for the individual partitions. This should be
-        # fine, because they are free'd automatically in __dealloc__ since the
-        # lifetime of each partition-pointer is tied to the lifetime of its
-        # corresponding "Partition" instance.
+        # We have extracted all pointers
         partitions.info.record_count = 0
-
         return partitions
 
     def reload(self):
@@ -154,19 +123,7 @@ cdef class Partitions(list):
         Raises:
             RPCError: When getting the Partitions from the slurmctld failed.
         """
-        cdef dict reloaded_parts
-
-        if not self:
-            return self
-
-        reloaded_parts = Partitions.load().as_dict()
-        for idx, part in enumerate(self):
-            part_name = part.name
-            if part_name in reloaded_parts:
-                # Put the new data in.
-                self[idx] = reloaded_parts[part_name]
-
-        return self
+        return xcollections.multi_reload(self)
 
     def modify(self, changes):
         """Modify all Partitions in a Collection.
@@ -189,16 +146,16 @@ cdef class Partitions(list):
             >>> # Apply the changes to all the partitions
             >>> parts.modify(changes)
         """
-        for part in self:
+        for part in self.values():
             part.modify(changes)
 
     @property
     def total_cpus(self):
-        return _sum_prop(self, Partition.total_cpus)
+        return xcollections.sum_property(self, Partition.total_cpus)
 
     @property
     def total_nodes(self):
-        return _sum_prop(self, Partition.total_nodes)
+        return xcollections.sum_property(self, Partition.total_nodes)
     
 
 cdef class Partition:
@@ -228,6 +185,9 @@ cdef class Partition:
     def __dealloc__(self):
         self._dealloc_impl() 
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.name})'
+
     @staticmethod
     cdef Partition from_ptr(partition_info_t *in_ptr):
         cdef Partition wrap = Partition.__new__(Partition)
@@ -243,6 +203,9 @@ cdef class Partition:
         return self.name
 
     def as_dict(self):
+        return self.to_dict()
+
+    def to_dict(self):
         """Partition information formatted as a dictionary.
 
         Returns:
@@ -251,7 +214,7 @@ cdef class Partition:
         Examples:
             >>> import pyslurm
             >>> mypart = pyslurm.Partition.load("mypart")
-            >>> mypart_dict = mypart.as_dict()
+            >>> mypart_dict = mypart.to_dict()
         """
         return instance_to_dict(self)
 
@@ -274,11 +237,11 @@ cdef class Partition:
             >>> import pyslurm
             >>> part = pyslurm.Partition.load("normal")
         """
-        partitions = Partitions.load().as_dict()
-        if name not in partitions:
+        part = Partitions.load().get(name)
+        if not part:
             raise RPCError(msg=f"Partition '{name}' doesn't exist")
 
-        return partitions[name]
+        return part
 
     def create(self):
         """Create a Partition.
@@ -341,7 +304,6 @@ cdef class Partition:
         """
         cdef delete_part_msg_t del_part_msg
         memset(&del_part_msg, 0, sizeof(del_part_msg))
-
         del_part_msg.name = cstr.from_unicode(self._error_or_name())
         verify_rpc(slurm_delete_partition(&del_part_msg))
 
@@ -356,6 +318,10 @@ cdef class Partition:
     @property
     def name(self):
         return cstr.to_unicode(self.ptr.name)
+
+    @property
+    def _id(self):
+        return self.name
 
     @name.setter
     def name(self, val):
@@ -546,11 +512,11 @@ cdef class Partition:
         self.ptr.min_nodes = u32(val, zero_is_noval=False)
 
     @property
-    def max_time_limit(self):
+    def max_time(self):
         return _raw_time(self.ptr.max_time, on_inf=UNLIMITED)
 
-    @max_time_limit.setter
-    def max_time_limit(self, val):
+    @max_time.setter
+    def max_time(self, val):
         self.ptr.max_time = timestr_to_mins(val)
 
     @property

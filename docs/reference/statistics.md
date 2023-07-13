@@ -7,4 +7,3 @@ title: Statistics
     removed in the future when a replacement is introduced
 
 ::: pyslurm.statistics
-    handler: python

@@ -7,7 +7,4 @@ title: Job
     removed in a future release
 
 ::: pyslurm.Job
-    handler: python
-
 ::: pyslurm.Jobs
-    handler: python

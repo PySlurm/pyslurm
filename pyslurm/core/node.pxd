@@ -55,10 +55,11 @@ from pyslurm.utils cimport cstr
 from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
+from pyslurm.xcollections cimport MultiClusterMap
 
 
-cdef class Nodes(list):
-    """A collection of [pyslurm.Node][] objects.
+cdef class Nodes(MultiClusterMap):
+    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Node][] objects.
 
     Args:
         nodes (Union[list, dict, str], optional=None):
@@ -83,9 +84,6 @@ cdef class Nodes(list):
             Total amount of Watts consumed in this node collection.
         avg_watts (int):
             Amount of average watts consumed in this node collection.
-
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
     """
     cdef:
         node_info_msg_t *info
@@ -165,7 +163,7 @@ cdef class Node:
         memory_reserved_for_system (int):
             Raw Memory in Mebibytes reserved for the System not usable by
             Jobs.
-        temporary_disk_space_per_node (int):
+        temporary_disk (int):
             Amount of temporary disk space this node has, in Mebibytes.
         weight (int):
             Weight of the node in scheduling.
@@ -223,9 +221,6 @@ cdef class Node:
             CPU Load on the Node.
         slurmd_port (int):
             Port the slurmd is listening on the node.
-
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
     """
     cdef:
         node_info_t *info

@@ -56,10 +56,11 @@ from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
 from pyslurm.core cimport slurmctld
+from pyslurm.xcollections cimport MultiClusterMap
 
 
-cdef class Partitions(list):
-    """A collection of [pyslurm.Partition][] objects.
+cdef class Partitions(MultiClusterMap):
+    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Partition][] objects.
 
     Args:
         partitions (Union[list[str], dict[str, Partition], str], optional=None):
@@ -167,7 +168,7 @@ cdef class Partition:
             This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         min_nodes (int):
             Minimum number of Nodes that must be requested by Jobs 
-        max_time_limit (int):
+        max_time (int):
             Max Time-Limit in minutes that Jobs can request
 
             This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]

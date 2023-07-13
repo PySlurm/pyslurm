@@ -38,7 +38,7 @@ def test_load_single():
 
 def test_parse_all(submit_job):
     qos = pyslurm.db.QualityOfService.load("normal")
-    qos_dict = qos.as_dict()
+    qos_dict = qos.to_dict()
 
     assert qos_dict
     assert qos_dict["name"] == qos.name

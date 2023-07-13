@@ -47,7 +47,7 @@ cdef class JobStatistics:
         self.min_cpu_time_node = None
         self.min_cpu_time_task = None
 
-    def as_dict(self):
+    def to_dict(self):
         return instance_to_dict(self)
 
     @staticmethod

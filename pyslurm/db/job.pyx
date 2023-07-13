@@ -27,7 +27,8 @@ from pyslurm.core.error import RPCError, PyslurmError
 from pyslurm.core import slurmctld
 from typing import Any
 from pyslurm.utils.uint import *
-from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import xcollections
 from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,
@@ -40,8 +41,6 @@ from pyslurm.utils.helpers import (
     uid_to_name,
     nodelist_to_range_str,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
     _get_exit_code,
 )
 from pyslurm.db.connection import _open_conn_or_error
@@ -80,7 +79,7 @@ cdef class JobFilter:
         qos_data = QualitiesOfService.load()
         for user_input in self.qos:
             found = False
-            for qos in qos_data:
+            for qos in qos_data.values():
                 if (qos.id == user_input
                         or qos.name == user_input
                         or qos == user_input):
@@ -189,54 +188,14 @@ cdef class JobFilter:
 JobSearchFilter = JobFilter
 
 
-cdef class Jobs(list):
+cdef class Jobs(MultiClusterMap):
 
     def __init__(self, jobs=None):
-        if isinstance(jobs, list):
-            for job in jobs:
-                if isinstance(job, int):
-                    self.append(Job(job))
-                else:
-                    self.append(job)
-        elif isinstance(jobs, str):
-            joblist = jobs.split(",")
-            self.extend([Job(job) for job in joblist])
-        elif isinstance(jobs, dict):
-            self.extend([job for job in jobs.values()])
-        elif jobs is not None:
-            raise TypeError("Invalid Type: {type(jobs)}")
-
-    def as_dict(self, recursive=False, group_by_cluster=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-            group_by_cluster (bool, optional):
-                By default, only the Jobs from your local Cluster are
-                returned. If this is set to `True`, then all the Jobs in the
-                collection will be grouped by the Cluster - with the name of
-                the cluster as the key and the value being the collection as
-                another dict.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Job.id, recursive=recursive)
-        if not group_by_cluster:
-            return col.get(LOCAL_CLUSTER, {})
-
-        return col
-
-    def group_by_cluster(self):
-        """Group Jobs by cluster name
-
-        Returns:
-            (dict[str, Jobs]): Jobs grouped by cluster.
-        """
-        return group_collection_by_cluster(self)
+        super().__init__(data=jobs,
+                         typ="Jobs",
+                         val_type=Job,
+                         id_attr=Job.id,
+                         key_type=int)
 
     @staticmethod
     def load(JobFilter db_filter=None, Connection db_connection=None):
@@ -280,7 +239,7 @@ cdef class Jobs(list):
             SlurmList job_data
             SlurmListItem job_ptr
             Connection conn
-            dict qos_data
+            QualitiesOfService qos_data
 
         # Prepare SQL Filter
         if not db_filter:
@@ -297,15 +256,14 @@ cdef class Jobs(list):
 
         # Fetch other necessary dependencies needed for translating some
         # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(db_connection=conn).as_dict(
-                name_is_key=False)
+        qos_data = QualitiesOfService.load(db_connection=conn,
+                                           name_is_key=False)
 
         # TODO: also get trackable resources with slurmdb_tres_get and store
         # it in each job instance. tres_alloc_str and tres_req_str only
         # contain the numeric tres ids, but it probably makes more sense to
         # convert them to its type name for the user in advance.
 
-        # TODO: For multi-cluster support, remove duplicate federation jobs
         # TODO: How to handle the possibility of duplicate job ids that could
         # appear if IDs on a cluster are resetted?
         for job_ptr in SlurmList.iter_and_pop(job_data):
@@ -313,7 +271,11 @@ cdef class Jobs(list):
             job.qos_data = qos_data
             job._create_steps()
             JobStatistics._sum_step_stats_for_job(job, job.steps)
-            out.append(job)
+
+            cluster = job.cluster
+            if cluster not in out.data:
+                out.data[cluster] = {}
+            out[cluster][job.id] = job
 
         return out
 
@@ -363,7 +325,7 @@ cdef class Jobs(list):
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(db_filter, changes)
             >>> print(modified_jobs)
-            >>> [9999]
+            [9999]
 
             In the above example, the changes will be automatically committed
             if successful.
@@ -380,7 +342,7 @@ cdef class Jobs(list):
             >>> 
             >>> # Now you can first examine which Jobs have been modified
             >>> print(modified_jobs)
-            >>> [9999]
+            [9999]
             >>> # And then you can actually commit (or even rollback) the
             >>> # changes
             >>> db_conn.commit()
@@ -420,7 +382,7 @@ cdef class Jobs(list):
                 #
                 # "<job_id> submitted at <timestamp>"
                 #
-                # We are just interest in the Job-ID, so extract it
+                # We are just interested in the Job-ID, so extract it
                 job_id = response_str.split(" ")[0]
                 if job_id and job_id.isdigit():
                     out.append(int(job_id))
@@ -444,10 +406,14 @@ cdef class Job:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, job_id=0, cluster=LOCAL_CLUSTER, **kwargs):
+    def __init__(self, job_id=0, cluster=None, **kwargs):
         self._alloc_impl()
         self.ptr.jobid = int(job_id)
-        cstr.fmalloc(&self.ptr.cluster, cluster)
+        cstr.fmalloc(&self.ptr.cluster,
+                     LOCAL_CLUSTER if not cluster else cluster)
+        self.qos_data = QualitiesOfService()
+        self.steps = JobSteps()
+        self.stats = JobStatistics()
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -471,12 +437,20 @@ cdef class Job:
         return wrap
 
     @staticmethod
-    def load(job_id, cluster=LOCAL_CLUSTER, with_script=False, with_env=False):
+    def load(job_id, cluster=None, with_script=False, with_env=False):
         """Load the information for a specific Job from the Database.
 
         Args:
             job_id (int):
                 ID of the Job to be loaded.
+            cluster (str):
+                Name of the Cluster to search in.
+            with_script (bool):
+                Whether the Job-Script should also be loaded. Mutually
+                exclusive with `with_env`.
+            with_env (bool):
+                Whether the Job Environment should also be loaded. Mutually
+                exclusive with `with_script`.
 
         Returns:
             (pyslurm.db.Job): Returns a new Database Job instance
@@ -489,24 +463,24 @@ cdef class Job:
             >>> import pyslurm
             >>> db_job = pyslurm.db.Job.load(10000)
 
-            In the above example, attribute like "script" and "environment"
+            In the above example, attributes like `script` and `environment`
             are not populated. You must explicitly request one of them to be
             loaded:
 
             >>> import pyslurm
             >>> db_job = pyslurm.db.Job.load(10000, with_script=True)
             >>> print(db_job.script)
-
         """
+        cluster = LOCAL_CLUSTER if not cluster else cluster
         jfilter = JobFilter(ids=[int(job_id)], clusters=[cluster],
                             with_script=with_script, with_env=with_env)
-        jobs = Jobs.load(jfilter)
-        if not jobs:
+        job = Jobs.load(jfilter).get((cluster, int(job_id)))
+        if not job:
             raise RPCError(msg=f"Job {job_id} does not exist on "
                            f"Cluster {cluster}")
 
         # TODO: There might be multiple entries when job ids were reset.
-        return jobs[0]
+        return job
 
     def _create_steps(self):
         cdef:
@@ -520,7 +494,10 @@ cdef class Job:
             self.steps[step.id] = step
 
     def as_dict(self):
-        """Database Job information formatted as a dictionary.
+        return self.to_dict()
+
+    def to_dict(self):
+        """Convert Database Job information to a dictionary.
 
         Returns:
             (dict): Database Job information as dict
@@ -528,19 +505,22 @@ cdef class Job:
         Examples:
             >>> import pyslurm
             >>> myjob = pyslurm.db.Job.load(10000)
-            >>> myjob_dict = myjob.as_dict()
+            >>> myjob_dict = myjob.to_dict()
         """
         cdef dict out = instance_to_dict(self)
 
         if self.stats:
-            out["stats"] = self.stats.as_dict()
+            out["stats"] = self.stats.to_dict()
 
         steps = out.pop("steps", {})
         out["steps"] = {}
         for step_id, step in steps.items():
-            out["steps"][step_id] = step.as_dict() 
+            out["steps"][step_id] = step.to_dict() 
 
         return out
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.id})'
 
     def modify(self, changes, db_connection=None):
         """Modify a Slurm database Job.

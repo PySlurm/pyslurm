@@ -7,4 +7,3 @@ title: Reservation
     removed in the future when a replacement is introduced
 
 ::: pyslurm.slurmdb_reservations
-    handler: python

@@ -49,7 +49,7 @@ def test_parse_all(submit_job):
     job = submit_job()
     util.wait()
     db_job = pyslurm.db.Job.load(job.id)
-    job_dict = db_job.as_dict()
+    job_dict = db_job.to_dict()
 
     assert job_dict["stats"]
     assert job_dict["steps"]

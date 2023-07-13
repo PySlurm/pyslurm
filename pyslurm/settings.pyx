@@ -1,5 +1,5 @@
 #########################################################################
-# cluster.pxd - pyslurm slurmdbd cluster api
+# settings.pyx - pyslurm global settings
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -22,6 +22,12 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-
+from pyslurm.core import slurmctld
 from pyslurm cimport slurm
 from pyslurm.utils cimport cstr
+
+
+LOCAL_CLUSTER = cstr.to_unicode(slurm.slurm_conf.cluster_name)
+if not LOCAL_CLUSTER:
+    slurm_conf = slurmctld.Config.load()
+    LOCAL_CLUSTER = slurm_conf.cluster

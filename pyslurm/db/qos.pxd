@@ -44,7 +44,7 @@ from pyslurm.utils cimport cstr
 cdef _set_qos_list(List *in_list, vals, QualitiesOfService data)
 
 
-cdef class QualitiesOfService(list):
+cdef class QualitiesOfService(dict):
     pass
 
 

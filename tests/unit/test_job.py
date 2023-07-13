@@ -31,9 +31,7 @@ def test_create_instance():
 
 
 def test_parse_all():
-    # Use the as_dict() function to test if parsing works for all
-    # properties on a simple Job without error.
-    Job(9999).as_dict()
+    assert Job(9999).to_dict()
 
 
 def test_parse_dependencies_to_dict():
