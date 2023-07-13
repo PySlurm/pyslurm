@@ -28,7 +28,7 @@ from pyslurm import Partition, Partitions, RPCError
 
 
 def test_load():
-    part = Partitions.load()[0]
+    name, part = Partitions.load().popitem()
 
     assert part.name
     assert part.state
@@ -49,7 +49,7 @@ def test_create_delete():
 
 
 def test_modify():
-    part = Partitions.load()[0]
+    _, part = Partitions.load().popitem()
 
     part.modify(Partition(default_time=120))
     assert Partition.load(part.name).default_time == 120
@@ -57,8 +57,8 @@ def test_modify():
     part.modify(Partition(default_time="1-00:00:00"))
     assert Partition.load(part.name).default_time == 24*60
 
-    part.modify(Partition(default_time="UNLIMITED"))
-    assert Partition.load(part.name).default_time == "UNLIMITED"
+    part.modify(Partition(max_time="UNLIMITED"))
+    assert Partition.load(part.name).max_time == "UNLIMITED"
 
     part.modify(Partition(state="DRAIN"))
     assert Partition.load(part.name).state == "DRAIN"
@@ -68,23 +68,23 @@ def test_modify():
 
 
 def test_parse_all():
-    Partitions.load()[0].as_dict()
+    _, part = Partitions.load().popitem()
+    assert part.to_dict()
 
 
 def test_reload():
     _partnames = [util.randstr() for i in range(3)]
     _tmp_parts = Partitions(_partnames)
-    for part in _tmp_parts:
+    for part in _tmp_parts.values():
         part.create()
 
     all_parts = Partitions.load()
     assert len(all_parts) >= 3
 
     my_parts = Partitions(_partnames[1:]).reload()
-    print(my_parts)
     assert len(my_parts) == 2
-    for part in my_parts:
+    for part in my_parts.values():
         assert part.state != "UNKNOWN"
     
-    for part in _tmp_parts:
+    for part in _tmp_parts.values():
         part.delete()

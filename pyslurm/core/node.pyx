@@ -28,7 +28,8 @@ from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
-from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -37,15 +38,12 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
-    _sum_prop,
     nodelist_from_range_str,
     nodelist_to_range_str,
 )
 
 
-cdef class Nodes(list):
+cdef class Nodes(MultiClusterMap):
 
     def __dealloc__(self):
         slurm_free_node_info_msg(self.info)
@@ -56,38 +54,11 @@ cdef class Nodes(list):
         self.part_info = NULL
 
     def __init__(self, nodes=None):
-        if isinstance(nodes, list):
-            for node in nodes:
-                if isinstance(node, str):
-                    self.append(Node(node))
-                else:
-                    self.append(node)
-        elif isinstance(nodes, str):
-            nodelist = nodes.split(",")
-            self.extend([Node(node) for node in nodelist])
-        elif isinstance(nodes, dict):
-            self.extend([node for node in nodes.values()])
-        elif nodes is not None:
-            raise TypeError("Invalid Type: {type(nodes)}")
-
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Node.name,
-                                 recursive=recursive)
-        return col.get(LOCAL_CLUSTER, {})
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self)
+        super().__init__(data=nodes,
+                         typ="Nodes",
+                         val_type=Node,
+                         id_attr=Node.name,
+                         key_type=str)
 
     @staticmethod
     def load(preload_passwd_info=False):
@@ -107,12 +78,11 @@ cdef class Nodes(list):
 
         Raises:
             RPCError: When getting all the Nodes from the slurmctld failed.
-            MemoryError: If malloc fails to allocate memory.
         """
         cdef:
             dict passwd = {}
             dict groups = {}
-            Nodes nodes = Nodes.__new__(Nodes)
+            Nodes nodes = Nodes()
             int flags = slurm.SHOW_ALL
             Node node
 
@@ -141,16 +111,13 @@ cdef class Nodes(list):
                 node.passwd = passwd
                 node.groups = groups
 
-            nodes.append(node)
+            cluster = node.cluster
+            if cluster not in nodes.data:
+                nodes.data[cluster] = {}
+            nodes.data[cluster][node.name] = node
 
-        # At this point we memcpy'd all the memory for the Nodes. Setting this
-        # to 0 will prevent the slurm node free function to deallocate the
-        # memory for the individual nodes. This should be fine, because they
-        # are free'd automatically in __dealloc__ since the lifetime of each
-        # node-pointer is tied to the lifetime of its corresponding "Node"
-        # instance.
+        # We have extracted all pointers
         nodes.info.record_count = 0
-
         return nodes
 
     def reload(self):
@@ -164,19 +131,7 @@ cdef class Nodes(list):
         Raises:
             RPCError: When getting the Nodes from the slurmctld failed.
         """
-        cdef Nodes reloaded_nodes
-
-        if not self:
-            return self
-
-        reloaded_nodes = Nodes.load().as_dict()
-        for idx, node in enumerate(self):
-            node_name = node.name
-            if node in reloaded_nodes:
-                # Put the new data in.
-                self[idx] = reloaded_nodes[node_name]
-
-        return self
+        return xcollections.multi_reload(self)
 
     def modify(self, Node changes):
         """Modify all Nodes in a collection.
@@ -199,50 +154,47 @@ cdef class Nodes(list):
             >>> # Apply the changes to all the nodes
             >>> nodes.modify(changes)
         """
-        cdef:
-            Node n = <Node>changes
-            list node_names = [node.name for node in self]
-        
-        node_str = nodelist_to_range_str(node_names)
+        cdef Node n = <Node>changes
+        node_str = nodelist_to_range_str(list(self.keys()))
         n._alloc_umsg()
         cstr.fmalloc(&n.umsg.node_names, node_str)
         verify_rpc(slurm_update_node(n.umsg))
         
     @property
     def free_memory(self):
-        return _sum_prop(self, Node.free_memory)
+        return xcollections.sum_property(self, Node.free_memory)
 
     @property
     def real_memory(self):
-        return _sum_prop(self, Node.real_memory)
+        return xcollections.sum_property(self, Node.real_memory)
 
     @property
     def allocated_memory(self):
-        return _sum_prop(self, Node.allocated_memory)
+        return xcollections.sum_property(self, Node.allocated_memory)
 
     @property
     def total_cpus(self):
-        return _sum_prop(self, Node.total_cpus)
+        return xcollections.sum_property(self, Node.total_cpus)
 
     @property
     def idle_cpus(self):
-        return _sum_prop(self, Node.idle_cpus)
+        return xcollections.sum_property(self, Node.idle_cpus)
 
     @property
     def allocated_cpus(self):
-        return _sum_prop(self, Node.allocated_cpus)
+        return xcollections.sum_property(self, Node.allocated_cpus)
     
     @property
     def effective_cpus(self):
-        return _sum_prop(self, Node.effective_cpus)
+        return xcollections.sum_property(self, Node.effective_cpus)
 
     @property
     def current_watts(self):
-        return _sum_prop(self, Node.current_watts)
+        return xcollections.sum_property(self, Node.current_watts)
 
     @property
     def avg_watts(self):
-        return _sum_prop(self, Node.avg_watts)
+        return xcollections.sum_property(self, Node.avg_watts)
 
 
 cdef class Node:
@@ -293,8 +245,8 @@ cdef class Node:
         # Call descriptors __set__ directly
         Node.__dict__[name].__set__(self, val)
 
-    def __eq__(self, other):
-        return isinstance(other, Node) and self.name == other.name
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.name})'
 
     @staticmethod
     cdef Node from_ptr(node_info_t *in_ptr):
@@ -325,7 +277,6 @@ cdef class Node:
         Raises:
             RPCError: If requesting the Node information from the slurmctld
                 was not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
@@ -365,7 +316,7 @@ cdef class Node:
         Args:
             state (str, optional): 
                 An optional state the created Node should have. Allowed values
-                are "future" and "cloud". "future" is the default.
+                are `future` and `cloud`. `future` is the default.
 
         Returns:
             (pyslurm.Node): This function returns the current Node-instance
@@ -373,7 +324,6 @@ cdef class Node:
 
         Raises:
             RPCError: If creating the Node was not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
@@ -424,7 +374,6 @@ cdef class Node:
 
         Raises:
             RPCError: If deleting the Node was not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
@@ -434,6 +383,9 @@ cdef class Node:
         verify_rpc(slurm_delete_node(self.umsg))
 
     def as_dict(self):
+        return self.to_dict()
+
+    def to_dict(self):
         """Node information formatted as a dictionary.
 
         Returns:
@@ -442,7 +394,7 @@ cdef class Node:
         Examples:
             >>> import pyslurm
             >>> mynode = pyslurm.Node.load("mynode")
-            >>> mynode_dict = mynode.as_dict()
+            >>> mynode_dict = mynode.to_dict()
         """
         return instance_to_dict(self)
 
@@ -559,7 +511,7 @@ cdef class Node:
         return u64_parse(self.info.mem_spec_limit)
 
     @property
-    def temporary_disk_space(self):
+    def temporary_disk(self):
         return u32_parse(self.info.tmp_disk)
 
     @property

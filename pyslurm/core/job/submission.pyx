@@ -81,7 +81,6 @@ cdef class JobSubmitDescription:
 
         Raises:
             RPCError: When the job submission was not successful.
-            MemoryError: If malloc failed to allocate enough memory.
 
         Examples:
             >>> import pyslurm

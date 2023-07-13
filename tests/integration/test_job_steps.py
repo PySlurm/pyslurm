@@ -102,7 +102,7 @@ def test_collection(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
     time.sleep(util.WAIT_SECS_SLURMCTLD)
-    steps = JobSteps.load(job).as_dict()
+    steps = JobSteps.load(job)
 
     assert steps
     # We have 3 Steps: batch, 0 and 1
@@ -116,7 +116,7 @@ def test_cancel(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
     time.sleep(util.WAIT_SECS_SLURMCTLD)
-    steps = JobSteps.load(job).as_dict()
+    steps = JobSteps.load(job)
     assert len(steps) == 3
     assert ("batch" in steps and
             0 in steps and
@@ -125,7 +125,7 @@ def test_cancel(submit_job):
     steps[0].cancel()
     
     time.sleep(util.WAIT_SECS_SLURMCTLD)
-    steps = JobSteps.load(job).as_dict()
+    steps = JobSteps.load(job)
     assert len(steps) == 2
     assert ("batch" in steps and
             1 in steps)
@@ -173,8 +173,5 @@ def test_load_with_wrong_step_id(submit_job):
 
 def test_parse_all(submit_job):
     job = submit_job()
-
-    # Use the as_dict() function to test if parsing works for all
-    # properties on a simple JobStep without error.
     time.sleep(util.WAIT_SECS_SLURMCTLD)
-    JobStep.load(job, "batch").as_dict()
+    JobStep.load(job, "batch").to_dict()

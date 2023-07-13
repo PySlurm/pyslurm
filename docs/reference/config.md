@@ -7,4 +7,3 @@ title: Config
     removed in the future when a replacement is introduced
 
 ::: pyslurm.config
-    handler: python

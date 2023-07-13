@@ -31,36 +31,8 @@ def test_create_instance():
     assert part.name == "normal"
 
 
-def test_create_collection():
-    parts = Partitions("part1,part2").as_dict()
-    assert len(parts) == 2
-    assert "part1" in parts
-    assert "part2" in parts
-    assert parts["part1"].name == "part1"
-    assert parts["part2"].name == "part2"
-
-    parts = Partitions(["part1", "part2"]).as_dict()
-    assert len(parts) == 2
-    assert "part1" in parts
-    assert "part2" in parts
-    assert parts["part1"].name == "part1"
-    assert parts["part2"].name == "part2"
-    
-    parts = Partitions(
-        {
-            "part1": Partition("part1"),
-            "part2": Partition("part2"),
-        }
-    ).as_dict()
-    assert len(parts) == 2
-    assert "part1" in parts
-    assert "part2" in parts
-    assert parts["part1"].name == "part1"
-    assert parts["part2"].name == "part2"
-
-
 def test_parse_all():
-    Partition("normal").as_dict()
+    assert Partition("normal").to_dict()
 
 
 def test_parse_memory():

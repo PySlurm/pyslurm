@@ -49,16 +49,11 @@ from pyslurm.utils.ctime cimport time_t
 from pyslurm.core.job.task_dist cimport TaskDistribution
 
 
-cdef class JobSteps(list):
-    """A collection of [pyslurm.JobStep][] objects for a given Job.
-
-    Args:
-        job (Union[Job, int]):
-            A Job for which the Steps should be loaded.
+cdef class JobSteps(dict):
+    """A [dict][] of [pyslurm.JobStep][] objects for a given Job.
 
     Raises:
         RPCError: When getting the Job steps from the slurmctld failed.
-        MemoryError: If malloc fails to allocate memory.
     """
 
     cdef:
@@ -68,8 +63,7 @@ cdef class JobSteps(list):
 
     @staticmethod
     cdef JobSteps _load_single(Job job)
-
-    cdef _load_data(self, uint32_t job_id, int flags)
+    cdef dict _load_data(self, uint32_t job_id, int flags)
         
 
 cdef class JobStep:
@@ -84,9 +78,6 @@ cdef class JobStep:
     Other Parameters:
         time_limit (int):
             Time limit in Minutes for this step.
-
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
 
     Attributes:
         id (Union[str, int]):

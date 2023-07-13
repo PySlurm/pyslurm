@@ -35,9 +35,7 @@ from pyslurm import (
 
 def test_parse_all(submit_job):
     job = submit_job()
-    # Use the as_dict() function to test if parsing works for all
-    # properties on a simple Job without error.
-    Job.load(job.id).as_dict()
+    Job.load(job.id).to_dict()
 
 
 def test_load(submit_job):
@@ -150,7 +148,7 @@ def test_get_job_queue(submit_job):
     # Submit 10 jobs, gather the job_ids in a list
     job_list = [submit_job() for i in range(10)]
 
-    jobs = Jobs.load().as_dict()
+    jobs = Jobs.load()
     for job in job_list:
         # Check to see if all the Jobs we submitted exist
         assert job.id in jobs

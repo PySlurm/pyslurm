@@ -42,38 +42,11 @@ def test_filter():
         job_filter._create()
 
 
-def test_create_collection():
-    jobs = pyslurm.db.Jobs("101,102")
-    assert len(jobs) == 2
-    jobs = jobs.as_dict()
-    assert 101 in jobs
-    assert 102 in jobs
-    assert jobs[101].id == 101
-    assert jobs[102].id == 102
-
-    jobs = pyslurm.db.Jobs([101, 102])
-    assert len(jobs) == 2
-    jobs = jobs.as_dict()
-    assert 101 in jobs
-    assert 102 in jobs
-    assert jobs[101].id == 101
-    assert jobs[102].id == 102
-    
-    jobs = pyslurm.db.Jobs(
-        {
-            101: pyslurm.db.Job(101),
-            102: pyslurm.db.Job(102),
-        }
-    )
-    assert len(jobs) == 2
-    jobs = jobs.as_dict()
-    assert 101 in jobs
-    assert 102 in jobs
-    assert jobs[101].id == 101
-    assert jobs[102].id == 102
-    assert True
-
-
 def test_create_instance():
     job = pyslurm.db.Job(9999)
     assert job.id == 9999
+
+
+def test_parse_all():
+    job = pyslurm.db.Job(9999)
+    assert job.to_dict()
