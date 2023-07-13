@@ -7,4 +7,3 @@ title: Hostlist
     removed in the future when a replacement is introduced
 
 ::: pyslurm.hostlist
-    handler: python

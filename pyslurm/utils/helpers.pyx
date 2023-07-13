@@ -341,60 +341,6 @@ def instance_to_dict(inst):
     return out
 
 
-def collection_to_dict(collection, identifier, recursive=False, group_id=None):
-    cdef dict out = {}
-
-    for item in collection:
-        cluster = item.cluster
-        if cluster not in out:
-            out[cluster] = {}
-
-        _id = identifier.__get__(item)
-        data = item if not recursive else item.as_dict()
-
-        if group_id:
-            grp_id = group_id.__get__(item)
-            if grp_id not in out[cluster]:
-                out[cluster][grp_id] = {}
-            out[cluster][grp_id].update({_id: data})
-        else:
-            out[cluster][_id] = data
-
-    return out
-
-
-def collection_to_dict_global(collection, identifier, recursive=False):
-    cdef dict out = {}
-    for item in collection:
-        _id = identifier.__get__(item)
-        out[_id] = item if not recursive else item.as_dict()
-    return out
-
-
-def group_collection_by_cluster(collection):
-    cdef dict out = {}
-    collection_type = type(collection)
-
-    for item in collection:
-        cluster = item.cluster
-        if cluster not in out:
-            out[cluster] = collection_type()
-
-        out[cluster].append(item)
-    
-    return out
-
-
-def _sum_prop(obj, name, startval=0):
-    val = startval
-    for n in obj.values():
-        v = name.__get__(n)
-        if v is not None:
-            val += v
-
-    return val
-
-
 def _get_exit_code(exit_code):
     exit_state=sig = 0
     if exit_code != slurm.NO_VAL:

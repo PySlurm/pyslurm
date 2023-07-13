@@ -50,6 +50,8 @@ plugins:
             docstring_style: google
             show_signature: true
             show_root_heading: true
+            show_symbol_type_toc: true
+            show_symbol_type_heading: true
 
 markdown_extensions:
   - admonition

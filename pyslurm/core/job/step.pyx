@@ -26,13 +26,12 @@ from typing import Union
 from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
-from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     signal_to_num,
     instance_to_dict, 
     uid_to_name,
-    collection_to_dict,
-    group_collection_by_cluster,
     humanize_step_id,
     dehumanize_step_id,
 )
@@ -46,7 +45,7 @@ from pyslurm.utils.ctime import (
 )
 
 
-cdef class JobSteps(list):
+cdef class JobSteps(dict):
 
     def __dealloc__(self):
         slurm_free_job_step_info_response_msg(self.info)
@@ -55,73 +54,48 @@ cdef class JobSteps(list):
         self.info = NULL
 
     def __init__(self, steps=None):
-        if isinstance(steps, list):
-            self.extend(steps)
+        if isinstance(steps, dict):
+            self.update(steps)
         elif steps is not None:
             raise TypeError("Invalid Type: {type(steps)}")
 
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=JobStep.id,
-                                 recursive=recursive, group_id=JobStep.job_id)
-        col = col.get(LOCAL_CLUSTER, {})
-        if self._job_id:
-            return col.get(self._job_id, {})
-
-        return col
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self)
-
     @staticmethod
-    def load(job_id=0):
+    def load(job):
         """Load the Job Steps from the system.
 
         Args:
-            job_id (Union[Job, int]):
+            job (Union[Job, int]):
                 The Job for which the Steps should be loaded.
 
         Returns:
             (pyslurm.JobSteps): JobSteps of the Job
         """
         cdef:
-            Job job
+            Job _job
             JobSteps steps
 
-        if job_id:
-            job = Job.load(job_id.id if isinstance(job_id, Job) else job_id)
-            steps = JobSteps._load_single(job)
-            steps._job_id = job.id
-            return steps
-        else:
-            steps = JobSteps()
-            return steps._load_data(0, slurm.SHOW_ALL)
+        _job = Job.load(job.id if isinstance(job, Job) else job)
+        steps = JobSteps._load_single(_job)
+        steps._job_id = _job.id
+        return steps
 
     @staticmethod
     cdef JobSteps _load_single(Job job):
         cdef JobSteps steps = JobSteps()
 
-        steps._load_data(job.id, slurm.SHOW_ALL)
-        if not steps and not slurm.IS_JOB_PENDING(job.ptr):
+        data = steps._load_data(job.id, slurm.SHOW_ALL)
+        if not data and not slurm.IS_JOB_PENDING(job.ptr):
             msg = f"Failed to load step info for Job {job.id}."
             raise RPCError(msg=msg)
 
+        steps.update(data[job.id])
         return steps
-         
-    cdef _load_data(self, uint32_t job_id, int flags):
+
+    cdef dict _load_data(self, uint32_t job_id, int flags):
         cdef:
             JobStep step
             uint32_t cnt = 0
+            dict steps = {}
 
         rc = slurm_get_job_steps(<time_t>0, job_id, slurm.NO_VAL, &self.info,
                                  flags)
@@ -133,21 +107,29 @@ cdef class JobSteps(list):
         # Put each job-step pointer into its own "JobStep" instance.
         for cnt in range(self.info.job_step_count):
             step = JobStep.from_ptr(&self.info.job_steps[cnt])
-
             # Prevent double free if xmalloc fails mid-loop and a MemoryError
             # is raised by replacing it with a zeroed-out job_step_info_t.
             self.info.job_steps[cnt] = self.tmp_info
-            self.append(step)
 
-        # At this point we memcpy'd all the memory for the Steps. Setting this
-        # to 0 will prevent the slurm step free function to deallocate the
-        # memory for the individual steps. This should be fine, because they
-        # are free'd automatically in __dealloc__ since the lifetime of each
-        # step-pointer is tied to the lifetime of its corresponding JobStep
-        # instance.
+            job_id = step.job_id
+            if not job_id in steps:
+                steps[job_id] = JobSteps()
+            steps[job_id][step.id] = step
+
+        # We have extracted all pointers
         self.info.job_step_count = 0
+        return steps
 
-        return self
+    @staticmethod
+    def load_all():
+        """Loads all the steps in the system.
+
+        Returns:
+            (dict): A dict where every JobID (key) is mapped with an instance
+                of its JobSteps (value).
+        """
+        cdef JobSteps steps = JobSteps()
+        return steps._load_data(slurm.NO_VAL, slurm.SHOW_ALL)
 
 
 cdef class JobStep:
@@ -160,6 +142,7 @@ cdef class JobStep:
         self._alloc_impl()
         self.job_id = job_id.id if isinstance(job_id, Job) else job_id
         self.id = step_id
+        cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
 
         # Initialize attributes, if any were provided
         for k, v in kwargs.items():
@@ -203,6 +186,9 @@ cdef class JobStep:
         # Call descriptors __set__ directly
         JobStep.__dict__[name].__set__(self, val)
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.id})'
+
     @staticmethod
     def load(job_id, step_id):
         """Load information for a specific job step.
@@ -221,7 +207,6 @@ cdef class JobStep:
         Raises:
             RPCError: When retrieving Step information from the slurmctld was
                 not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
@@ -264,7 +249,7 @@ cdef class JobStep:
         Args:
             signal (Union[str, int]): 
                 Any valid signal which will be sent to the Job. Can be either
-                a str like 'SIGUSR1', or simply an int.
+                a str like `SIGUSR1`, or simply an [int][].
 
         Raises:
             RPCError: When sending the signal was not successful.
@@ -326,6 +311,9 @@ cdef class JobStep:
         verify_rpc(slurm_update_step(js.umsg))
 
     def as_dict(self):
+        return self.to_dict()
+
+    def to_dict(self):
         """JobStep information formatted as a dictionary.
 
         Returns:

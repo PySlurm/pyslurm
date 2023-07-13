@@ -7,7 +7,4 @@ title: Partition
     will be removed in a future release
 
 ::: pyslurm.Partition
-    handler: python
-
 ::: pyslurm.Partitions
-    handler: python

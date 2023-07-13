@@ -25,47 +25,22 @@
 from pyslurm.core.error import RPCError
 from pyslurm.utils.helpers import (
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
     user_to_uid,
 )
 from pyslurm.utils.uint import *
 from pyslurm.db.connection import _open_conn_or_error
-from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import xcollections
 
 
-cdef class Associations(list):
+cdef class Associations(MultiClusterMap):
 
-    def __init__(self):
-        pass
-
-    def as_dict(self, recursive=False, group_by_cluster=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-            group_by_cluster (bool, optional):
-                By default, only the Jobs from your local Cluster are
-                returned. If this is set to `True`, then all the Jobs in the
-                collection will be grouped by the Cluster - with the name of
-                the cluster as the key and the value being the collection as
-                another dict.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Association.id,
-                                 recursive=recursive)
-        if not group_by_cluster:
-            return col.get(LOCAL_CLUSTER, {})
-
-        return col
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self) 
+    def __init__(self, assocs=None):
+        super().__init__(data=assocs,
+                         typ="Associations",
+                         val_type=Association,
+                         id_attr=Association.id,
+                         key_type=int)
 
     @staticmethod
     def load(AssociationFilter db_filter=None, Connection db_connection=None):
@@ -76,8 +51,8 @@ cdef class Associations(list):
             SlurmList assoc_data
             SlurmListItem assoc_ptr
             Connection conn
-            dict qos_data
-            dict tres_data
+            QualitiesOfService qos_data
+            TrackableResources tres_data
 
         # Prepare SQL Filter
         if not db_filter:
@@ -96,10 +71,10 @@ cdef class Associations(list):
 
         # Fetch other necessary dependencies needed for translating some
         # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(db_connection=conn).as_dict(
-                name_is_key=False)
-        tres_data = TrackableResources.load(db_connection=conn).as_dict(
-                name_is_key=False)
+        qos_data = QualitiesOfService.load(db_connection=conn,
+                                           name_is_key=False)
+        tres_data = TrackableResources.load(db_connection=conn,
+                                            name_is_key=False)
 
         # Setup Association objects
         for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
@@ -107,7 +82,11 @@ cdef class Associations(list):
             assoc.qos_data = qos_data
             assoc.tres_data = tres_data
             _parse_assoc_ptr(assoc)
-            out.append(assoc)
+
+            cluster = assoc.cluster
+            if cluster not in out.data:
+                out.data[cluster] = {}
+            out.data[cluster][assoc.id] = assoc
 
         return out
 
@@ -226,13 +205,16 @@ cdef class Association:
 
             slurmdb_init_assoc_rec(self.ptr, 0)
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.id})'
+
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr):
         cdef Association wrap = Association.__new__(Association)
         wrap.ptr = in_ptr
         return wrap
 
-    def as_dict(self):
+    def to_dict(self):
         """Database Association information formatted as a dictionary.
 
         Returns:
@@ -408,8 +390,8 @@ cdef class Association:
 
 cdef _parse_assoc_ptr(Association ass):
     cdef:
-        dict tres = ass.tres_data
-        dict qos = ass.qos_data
+        TrackableResources tres = ass.tres_data
+        QualitiesOfService qos = ass.qos_data
 
     ass.group_tres = TrackableResourceLimits.from_ids(
             ass.ptr.grp_tres, tres)

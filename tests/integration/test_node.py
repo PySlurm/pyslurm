@@ -29,7 +29,7 @@ from pyslurm import Node, Nodes, RPCError
 
 
 def test_load():
-    name = Nodes.load()[0].name
+    name, _ = Nodes.load().popitem()
 
     # Now load the node info
     node = Node.load(name)
@@ -43,7 +43,7 @@ def test_load():
 
 
 def test_modify():
-    node = Node(Nodes.load()[0].name)
+    _, node = Nodes.load().popitem()
 
     node.modify(Node(weight=10000))
     assert Node.load(node.name).weight == 10000
@@ -56,4 +56,5 @@ def test_modify():
 
 
 def test_parse_all():
-    Node.load(Nodes.load()[0].name).as_dict()
+    _, node = Nodes.load().popitem()
+    assert node.to_dict()

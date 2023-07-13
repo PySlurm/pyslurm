@@ -34,7 +34,8 @@ from typing import Union
 from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
-from pyslurm.db.cluster import LOCAL_CLUSTER
+from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import xcollections
 from pyslurm.core.error import (
     RPCError,
     verify_rpc,
@@ -48,14 +49,11 @@ from pyslurm.utils.helpers import (
     _getgrall_to_dict,
     _getpwall_to_dict,
     instance_to_dict,
-    collection_to_dict,
-    group_collection_by_cluster,
-    _sum_prop,
     _get_exit_code,
 )
 
 
-cdef class Jobs(list):
+cdef class Jobs(MultiClusterMap):
 
     def __cinit__(self):
         self.info = NULL
@@ -65,38 +63,11 @@ cdef class Jobs(list):
 
     def __init__(self, jobs=None, frozen=False):
         self.frozen = frozen
-
-        if isinstance(jobs, list):
-            for job in jobs:
-                if isinstance(job, int):
-                    self.append(Job(job))
-                else:
-                    self.append(job)
-        elif isinstance(jobs, str):
-            joblist = jobs.split(",")
-            self.extend([Job(int(job)) for job in joblist])
-        elif isinstance(jobs, dict):
-            self.extend([job for job in jobs.values()])
-        elif jobs is not None:
-            raise TypeError("Invalid Type: {type(jobs)}")
-
-    def as_dict(self, recursive=False):
-        """Convert the collection data to a dict.
-
-        Args:
-            recursive (bool, optional):
-                By default, the objects will not be converted to a dict. If
-                this is set to `True`, then additionally all objects are
-                converted to dicts.
-
-        Returns:
-            (dict): Collection as a dict.
-        """
-        col = collection_to_dict(self, identifier=Job.id, recursive=recursive)
-        return col.get(LOCAL_CLUSTER, {})
-
-    def group_by_cluster(self):
-        return group_collection_by_cluster(self)
+        super().__init__(data=jobs,
+                         typ="Jobs",
+                         val_type=Job,
+                         id_attr=Job.id,
+                         key_type=int)
 
     @staticmethod
     def load(preload_passwd_info=False, frozen=False):
@@ -122,7 +93,7 @@ cdef class Jobs(list):
         cdef:
             dict passwd = {}
             dict groups = {}
-            Jobs jobs = Jobs.__new__(Jobs)
+            Jobs jobs = Jobs(frozen=frozen)
             int flags = slurm.SHOW_ALL | slurm.SHOW_DETAIL
             Job job
 
@@ -150,16 +121,13 @@ cdef class Jobs(list):
                 job.passwd = passwd
                 job.groups = groups
 
-            jobs.append(job)
+            cluster = job.cluster
+            if cluster not in jobs.data:
+                jobs.data[cluster] = {}
+            jobs[cluster][job.id] = job
 
-        # At this point we memcpy'd all the memory for the Jobs. Setting this
-        # to 0 will prevent the slurm job free function to deallocate the
-        # memory for the individual jobs. This should be fine, because they
-        # are free'd automatically in __dealloc__ since the lifetime of each
-        # job-pointer is tied to the lifetime of its corresponding "Job"
-        # instance.
+        # We have extracted all pointers
         jobs.info.record_count = 0
-
         jobs.frozen = frozen
         return jobs
 
@@ -169,29 +137,7 @@ cdef class Jobs(list):
         Raises:
             RPCError: When getting the Jobs from the slurmctld failed.
         """
-        cdef:
-            Jobs reloaded_jobs
-            Jobs new_jobs = Jobs()
-            dict self_dict
-
-        if not self:
-            return self
-
-        reloaded_jobs = Jobs.load().as_dict()
-        for idx, jid in enumerate(self):
-            if jid in reloaded_jobs:
-                # Put the new data in.
-                new_jobs.append(reloaded_jobs[jid])
-
-        if not self.frozen:
-            self_dict = self.as_dict()
-            for jid in reloaded_jobs:
-                if jid not in self_dict:
-                    new_jobs.append(reloaded_jobs[jid])
-
-        self.clear()
-        self.extend(new_jobs)
-        return self
+        return xcollections.multi_reload(self, frozen=self.frozen)
 
     def load_steps(self):
         """Load all Job steps for this collection of Jobs.
@@ -207,32 +153,27 @@ cdef class Jobs(list):
             RPCError: When retrieving the Job information for all the Steps
                 failed.
         """
-        cdef dict steps = JobSteps.load().as_dict()
-
-        for idx, job in enumerate(self):
-            # Ignore any Steps from Jobs which do not exist in this
-            # collection.
+        cdef dict steps = JobSteps.load_all()
+        for job in self.values():
             jid = job.id
             if jid in steps:
-                job_steps = self[idx].steps
-                job_steps.clear()
-                job_steps.extend(steps[jid].values())
+                job.steps = steps[jid]
 
     @property
     def memory(self):
-        return _sum_prop(self, Job.memory)
+        return xcollections.sum_property(self, Job.memory)
 
     @property
     def cpus(self):
-        return _sum_prop(self, Job.cpus)
+        return xcollections.sum_property(self, Job.cpus)
 
     @property
     def ntasks(self):
-        return _sum_prop(self, Job.ntasks)
+        return xcollections.sum_property(self, Job.ntasks)
 
     @property
     def cpu_time(self):
-        return _sum_prop(self, Job.cpu_time)
+        return xcollections.sum_property(self, Job.cpu_time)
 
 
 cdef class Job:
@@ -246,7 +187,7 @@ cdef class Job:
         self.passwd = {}
         self.groups = {}
         cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
-        self.steps = JobSteps.__new__(JobSteps)
+        self.steps = JobSteps()
 
     def _alloc_impl(self):
         if not self.ptr:
@@ -261,10 +202,8 @@ cdef class Job:
     def __dealloc__(self):
         self._dealloc_impl()
 
-    def __eq__(self, other):
-        if isinstance(other, Job):
-            return self.id == other.id and self.cluster == other.cluster
-        return NotImplemented
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.id})'
 
     @staticmethod
     def load(job_id):
@@ -329,7 +268,6 @@ cdef class Job:
         wrap.groups = {}
         wrap.steps = JobSteps.__new__(JobSteps)
         memcpy(wrap.ptr, in_ptr, sizeof(slurm_job_info_t))
-
         return wrap
 
     cdef _swap_data(Job dst, Job src):
@@ -340,6 +278,9 @@ cdef class Job:
             src.ptr = tmp
 
     def as_dict(self):
+        return self.to_dict()
+
+    def to_dict(self):
         """Job information formatted as a dictionary.
 
         Returns:
@@ -355,14 +296,14 @@ cdef class Job:
         Args:
             signal (Union[str, int]): 
                 Any valid signal which will be sent to the Job. Can be either
-                a str like 'SIGUSR1', or simply an int.
+                a str like `SIGUSR1`, or simply an [int][].
             steps (str):
                 Selects which steps should be signaled. Valid values for this
-                are: "all", "batch" and "children". The default value is
-                "children", where all steps except the batch-step will be
+                are: `all`, `batch` and `children`. The default value is
+                `children`, where all steps except the batch-step will be
                 signaled.
-                The value "batch" in contrast means, that only the batch-step
-                will be signaled. With "all" every step is signaled.
+                The value `batch` in contrast means, that only the batch-step
+                will be signaled. With `all` every step is signaled.
             hurry (bool): 
                 If True, no burst buffer data will be staged out. The default
                 value is False.
@@ -480,9 +421,9 @@ cdef class Job:
         Args:
             mode (str):
                 Determines in which mode the Job should be held. Possible
-                values are "user" or "admin". By default, the Job is held in
-                "admin" mode, meaning only an Administrator will be able to
-                release the Job again. If you specify the mode as "user", the
+                values are `user` or `admin`. By default, the Job is held in
+                `admin` mode, meaning only an Administrator will be able to
+                release the Job again. If you specify the mode as `user`, the
                 User will also be able to release the job.
 
         Raises:
@@ -524,7 +465,7 @@ cdef class Job:
         Args:
             hold (bool, optional):
                 Controls whether the Job should be put in a held state or not.
-                Default for this is 'False', so it will not be held.
+                Default for this is `False`, so it will not be held.
 
         Raises:
             RPCError: When requeing the Job was not successful.
@@ -1242,8 +1183,9 @@ cdef class Job:
             Return type may still be subject to change in the future
 
         Returns:
-            (dict): Resource layout, where the key is the name of the name and
-                its value another dict with the CPU-ids, memory and gres.
+            (dict): Resource layout, where the key is the name of the node and
+                the value another dict with the keys `cpu_ids`, `memory` and
+                `gres`.
         """
         # The code for this function is a modified reimplementation from here:
         # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L739

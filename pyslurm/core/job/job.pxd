@@ -25,14 +25,12 @@
 from pyslurm.utils cimport cstr, ctime
 from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
-
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 from libc.stdlib cimport free
-
 from pyslurm.core.job.submission cimport JobSubmitDescription
 from pyslurm.core.job.step cimport JobSteps, JobStep
-
+from pyslurm.xcollections cimport MultiClusterMap
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     working_cluster_rec,
@@ -67,8 +65,8 @@ from pyslurm.slurm cimport (
 )
 
 
-cdef class Jobs(list):
-    """A collection of [pyslurm.Job][] objects.
+cdef class Jobs(MultiClusterMap):
+    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Job][] objects.
 
     Args:
         jobs (Union[list, dict], optional=None):
@@ -90,7 +88,7 @@ cdef class Jobs(list):
             This is the result of multiplying the run_time with the amount of
             cpus for each job.
         frozen (bool):
-            If this is set to True and the reload() method is called, then
+            If this is set to True and the `reload()` method is called, then
             *ONLY* Jobs that already exist in this collection will be
             reloaded. New Jobs that are discovered will not be added to this
             collection, but old Jobs which have already been purged from the
@@ -115,15 +113,12 @@ cdef class Job:
         job_id (int):
             An Integer representing a Job-ID.
 
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
-
     Attributes:
         steps (JobSteps):
             Steps this Job has.
             Before you can access the Steps data for a Job, you have to call
-            the reload() method of a Job instance or the load_steps() method
-            of a Jobs collection.
+            the `reload()` method of a Job instance or the `load_steps()`
+            method of a Jobs collection.
         name (str):
             Name of the Job
         id (int):

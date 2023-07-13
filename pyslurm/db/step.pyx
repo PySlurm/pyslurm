@@ -57,9 +57,14 @@ cdef class JobStep:
         wrap.stats = JobStatistics.from_step(wrap)
         return wrap
 
-    def as_dict(self):
+    def to_dict(self):
+        """Convert Database JobStep information to a dictionary.
+
+        Returns:
+            (dict): Database JobStep information as dict
+        """
         cdef dict out = instance_to_dict(self)
-        out["stats"] = self.stats.as_dict()
+        out["stats"] = self.stats.to_dict()
         return out
 
     @property
