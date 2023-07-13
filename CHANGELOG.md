@@ -16,9 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New attributes for a Database Job:
     - extra
     - failed_node
-- Now possible to initialize a pyslurm.db.Jobs collection with existing job
+- Now possible to initialize a [pyslurm.db.Jobs][] collection with existing job
   ids or pyslurm.db.Job objects
 - Added `as_dict` function to all Collections
+- Added a new Base Class [MultiClusterMap][pyslurm.xcollections.MultiClusterMap] that some Collections inherit from.
 
 ### Fixed
 
@@ -28,8 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - the Job was older than a day
 
 ### Changed
-
-- All Collections (like [pyslurm.Jobs](https://pyslurm.github.io/23.2/reference/job/#pyslurm.Jobs)) inherit from `list` now instead of `dict`
+ 
 - `JobSearchFilter` has been renamed to `JobFilter`
 - Renamed `as_dict` Function of some classes to `to_dict`
 
