@@ -30,7 +30,7 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 from libc.stdlib cimport free
 from pyslurm.core.job.submission cimport JobSubmitDescription
 from pyslurm.core.job.step cimport JobSteps, JobStep
-from pyslurm.collections cimport MultiClusterMap
+from pyslurm.xcollections cimport MultiClusterMap
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     working_cluster_rec,
@@ -66,7 +66,7 @@ from pyslurm.slurm cimport (
 
 
 cdef class Jobs(MultiClusterMap):
-    """A [`Multi Cluster`][pyslurm.collections.MultiClusterMap] collection of [pyslurm.Job][] objects.
+    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Job][] objects.
 
     Args:
         jobs (Union[list, dict], optional=None):

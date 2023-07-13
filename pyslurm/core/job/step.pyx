@@ -27,7 +27,7 @@ from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.db.cluster import LOCAL_CLUSTER
-from pyslurm import collections
+from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     signal_to_num,
     instance_to_dict, 

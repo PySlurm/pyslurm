@@ -53,7 +53,7 @@ from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.db.qos cimport QualitiesOfService
 from pyslurm.db.tres cimport TrackableResources, TrackableResource
-from pyslurm.collections cimport MultiClusterMap
+from pyslurm.xcollections cimport MultiClusterMap
 
 
 cdef class JobFilter:
@@ -152,7 +152,7 @@ cdef class JobFilter:
 
 
 cdef class Jobs(MultiClusterMap):
-    """A [`Multi Cluster`][pyslurm.collections.MultiClusterMap] collection of [pyslurm.db.Job][] objects."""
+    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.db.Job][] objects."""
     pass
 
 

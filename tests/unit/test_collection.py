@@ -22,8 +22,8 @@
 
 import pytest
 import pyslurm
-import pyslurm.collections
-from pyslurm.collections import sum_property
+import pyslurm.xcollections
+from pyslurm.xcollections import sum_property
 
 LOCAL_CLUSTER = pyslurm.db.cluster.LOCAL_CLUSTER
 OTHER_CLUSTER = "other_cluster"

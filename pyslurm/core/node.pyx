@@ -29,7 +29,7 @@ from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.db.cluster import LOCAL_CLUSTER
-from pyslurm import collections
+from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -132,7 +132,7 @@ cdef class Nodes(MultiClusterMap):
         Raises:
             RPCError: When getting the Nodes from the slurmctld failed.
         """
-        return collections.multi_reload(self)
+        return xcollections.multi_reload(self)
 
     def modify(self, Node changes):
         """Modify all Nodes in a collection.
@@ -163,39 +163,39 @@ cdef class Nodes(MultiClusterMap):
         
     @property
     def free_memory(self):
-        return collections.sum_property(self, Node.free_memory)
+        return xcollections.sum_property(self, Node.free_memory)
 
     @property
     def real_memory(self):
-        return collections.sum_property(self, Node.real_memory)
+        return xcollections.sum_property(self, Node.real_memory)
 
     @property
     def allocated_memory(self):
-        return collections.sum_property(self, Node.allocated_memory)
+        return xcollections.sum_property(self, Node.allocated_memory)
 
     @property
     def total_cpus(self):
-        return collections.sum_property(self, Node.total_cpus)
+        return xcollections.sum_property(self, Node.total_cpus)
 
     @property
     def idle_cpus(self):
-        return collections.sum_property(self, Node.idle_cpus)
+        return xcollections.sum_property(self, Node.idle_cpus)
 
     @property
     def allocated_cpus(self):
-        return collections.sum_property(self, Node.allocated_cpus)
+        return xcollections.sum_property(self, Node.allocated_cpus)
     
     @property
     def effective_cpus(self):
-        return collections.sum_property(self, Node.effective_cpus)
+        return xcollections.sum_property(self, Node.effective_cpus)
 
     @property
     def current_watts(self):
-        return collections.sum_property(self, Node.current_watts)
+        return xcollections.sum_property(self, Node.current_watts)
 
     @property
     def avg_watts(self):
-        return collections.sum_property(self, Node.avg_watts)
+        return xcollections.sum_property(self, Node.avg_watts)
 
 
 cdef class Node:

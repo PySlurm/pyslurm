@@ -28,7 +28,7 @@ from pyslurm.core import slurmctld
 from typing import Any
 from pyslurm.utils.uint import *
 from pyslurm.db.cluster import LOCAL_CLUSTER
-import pyslurm.collections as collections
+import pyslurm.xcollections as xcollections
 from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,
@@ -474,7 +474,7 @@ cdef class Job:
         cluster = LOCAL_CLUSTER if not cluster else cluster
         jfilter = JobFilter(ids=[int(job_id)], clusters=[cluster],
                             with_script=with_script, with_env=with_env)
-        job = Jobs.load(jfilter).get(int(job_id), cluster=cluster)
+        job = Jobs.load(jfilter).get((cluster, int(job_id)))
         if not job:
             raise RPCError(msg=f"Job {job_id} does not exist on "
                            f"Cluster {cluster}")

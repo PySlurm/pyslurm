@@ -56,11 +56,11 @@ from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
 from pyslurm.core cimport slurmctld
-from pyslurm.collections cimport MultiClusterMap
+from pyslurm.xcollections cimport MultiClusterMap
 
 
 cdef class Partitions(MultiClusterMap):
-    """A [`Multi Cluster`][pyslurm.collections.MultiClusterMap] collection of [pyslurm.Partition][] objects.
+    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Partition][] objects.
 
     Args:
         partitions (Union[list[str], dict[str, Partition], str], optional=None):

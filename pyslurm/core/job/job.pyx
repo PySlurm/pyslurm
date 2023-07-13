@@ -35,7 +35,7 @@ from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
 from pyslurm.db.cluster import LOCAL_CLUSTER
-from pyslurm import collections
+from pyslurm import xcollections
 from pyslurm.core.error import (
     RPCError,
     verify_rpc,
@@ -137,7 +137,7 @@ cdef class Jobs(MultiClusterMap):
         Raises:
             RPCError: When getting the Jobs from the slurmctld failed.
         """
-        return collections.multi_reload(self, frozen=self.frozen)
+        return xcollections.multi_reload(self, frozen=self.frozen)
 
     def load_steps(self):
         """Load all Job steps for this collection of Jobs.
@@ -161,19 +161,19 @@ cdef class Jobs(MultiClusterMap):
 
     @property
     def memory(self):
-        return collections.sum_property(self, Job.memory)
+        return xcollections.sum_property(self, Job.memory)
 
     @property
     def cpus(self):
-        return collections.sum_property(self, Job.cpus)
+        return xcollections.sum_property(self, Job.cpus)
 
     @property
     def ntasks(self):
-        return collections.sum_property(self, Job.ntasks)
+        return xcollections.sum_property(self, Job.ntasks)
 
     @property
     def cpu_time(self):
-        return collections.sum_property(self, Job.cpu_time)
+        return xcollections.sum_property(self, Job.cpu_time)
 
 
 cdef class Job:

@@ -31,7 +31,7 @@ from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
 from pyslurm.db.cluster import LOCAL_CLUSTER
-from pyslurm import collections
+from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     uid_to_name,
     gid_to_name,
@@ -123,7 +123,7 @@ cdef class Partitions(MultiClusterMap):
         Raises:
             RPCError: When getting the Partitions from the slurmctld failed.
         """
-        return collections.multi_reload(self)
+        return xcollections.multi_reload(self)
 
     def modify(self, changes):
         """Modify all Partitions in a Collection.
@@ -151,11 +151,11 @@ cdef class Partitions(MultiClusterMap):
 
     @property
     def total_cpus(self):
-        return collections.sum_property(self, Partition.total_cpus)
+        return xcollections.sum_property(self, Partition.total_cpus)
 
     @property
     def total_nodes(self):
-        return collections.sum_property(self, Partition.total_nodes)
+        return xcollections.sum_property(self, Partition.total_nodes)
     
 
 cdef class Partition:

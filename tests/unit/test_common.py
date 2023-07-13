@@ -57,7 +57,7 @@ from pyslurm.utils.helpers import (
     instance_to_dict,
 )
 from pyslurm.utils import cstr
-from pyslurm.collections import (
+from pyslurm.xcollections import (
     sum_property,
 )
 

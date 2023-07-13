@@ -1,8 +1,8 @@
 ---
-title: collections
+title: xcollections
 ---
 
-::: pyslurm.collections
+::: pyslurm.xcollections
     handler: python
     options:
         members:

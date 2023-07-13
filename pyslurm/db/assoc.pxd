@@ -49,7 +49,7 @@ from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.utils.uint cimport *
 from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
-from pyslurm.collections cimport MultiClusterMap
+from pyslurm.xcollections cimport MultiClusterMap
 
 cdef _parse_assoc_ptr(Association ass)
 cdef _create_assoc_ptr(Association ass, conn=*)
