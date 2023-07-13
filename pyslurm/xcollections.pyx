@@ -86,7 +86,7 @@ class MCKeysView(BaseView):
     """A Multi-Cluster Keys View
 
     Unlike KeysView, when iterating over an MCKeysView instance, this will
-    yield a 2-tuple in the form (cluster, key).
+    yield a 2-tuple in the form `(cluster, key)`.
 
     Similarly, when checking whether this View contains a Key with the `in`
     operator, a 2-tuple must be used in the form described above.
@@ -163,7 +163,7 @@ class MCItemsView(BaseView):
     """A Multi-Cluster Items View.
 
     This differs from ItemsView in that it returns a 3-tuple in the form of
-    (cluster, key, value) when iterating.
+    `(cluster, key, value)` when iterating.
 
     Similarly, when checking whether this View contains an Item with the `in`
     operator, a 3-tuple must be used.
@@ -462,7 +462,7 @@ cdef class MultiClusterMap:
         return ClustersView(self)
 
     def popitem(self):
-        """Remove and return a (key, value) pair as a 2-tuple"""
+        """Remove and return a `(key, value)` pair as a 2-tuple"""
         try:
             item = next(iter(self.values()))
         except StopIteration:
