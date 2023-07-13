@@ -207,7 +207,6 @@ cdef class JobStep:
         Raises:
             RPCError: When retrieving Step information from the slurmctld was
                 not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
@@ -250,7 +249,7 @@ cdef class JobStep:
         Args:
             signal (Union[str, int]): 
                 Any valid signal which will be sent to the Job. Can be either
-                a str like 'SIGUSR1', or simply an int.
+                a str like `SIGUSR1`, or simply an [int][].
 
         Raises:
             RPCError: When sending the signal was not successful.

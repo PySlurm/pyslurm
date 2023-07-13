@@ -50,7 +50,7 @@ from pyslurm.core.job.task_dist cimport TaskDistribution
 
 
 cdef class JobSteps(dict):
-    """A collection of [pyslurm.JobStep][] objects for a given Job.
+    """A [dict][] of [pyslurm.JobStep][] objects for a given Job.
 
     Raises:
         RPCError: When getting the Job steps from the slurmctld failed.
@@ -78,9 +78,6 @@ cdef class JobStep:
     Other Parameters:
         time_limit (int):
             Time limit in Minutes for this step.
-
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
 
     Attributes:
         id (Union[str, int]):

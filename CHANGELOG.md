@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All Collections (like [pyslurm.Jobs](https://pyslurm.github.io/23.2/reference/job/#pyslurm.Jobs)) inherit from `list` now instead of `dict`
 - `JobSearchFilter` has been renamed to `JobFilter`
+- Renamed `as_dict` Function of some classes to `to_dict`
 
 ## [23.2.1](https://github.com/PySlurm/pyslurm/releases/tag/v23.2.1) - 2023-05-18
 

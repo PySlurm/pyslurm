@@ -78,7 +78,6 @@ cdef class Nodes(MultiClusterMap):
 
         Raises:
             RPCError: When getting all the Nodes from the slurmctld failed.
-            MemoryError: If malloc fails to allocate memory.
         """
         cdef:
             dict passwd = {}
@@ -278,7 +277,6 @@ cdef class Node:
         Raises:
             RPCError: If requesting the Node information from the slurmctld
                 was not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
@@ -318,7 +316,7 @@ cdef class Node:
         Args:
             state (str, optional): 
                 An optional state the created Node should have. Allowed values
-                are "future" and "cloud". "future" is the default.
+                are `future` and `cloud`. `future` is the default.
 
         Returns:
             (pyslurm.Node): This function returns the current Node-instance
@@ -326,7 +324,6 @@ cdef class Node:
 
         Raises:
             RPCError: If creating the Node was not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
@@ -377,7 +374,6 @@ cdef class Node:
 
         Raises:
             RPCError: If deleting the Node was not successful.
-            MemoryError: If malloc failed to allocate memory.
 
         Examples:
             >>> import pyslurm
@@ -515,7 +511,7 @@ cdef class Node:
         return u64_parse(self.info.mem_spec_limit)
 
     @property
-    def temporary_disk_space(self):
+    def temporary_disk(self):
         return u32_parse(self.info.tmp_disk)
 
     @property

@@ -88,7 +88,7 @@ cdef class Jobs(MultiClusterMap):
             This is the result of multiplying the run_time with the amount of
             cpus for each job.
         frozen (bool):
-            If this is set to True and the reload() method is called, then
+            If this is set to True and the `reload()` method is called, then
             *ONLY* Jobs that already exist in this collection will be
             reloaded. New Jobs that are discovered will not be added to this
             collection, but old Jobs which have already been purged from the
@@ -113,15 +113,12 @@ cdef class Job:
         job_id (int):
             An Integer representing a Job-ID.
 
-    Raises:
-        MemoryError: If malloc fails to allocate memory.
-
     Attributes:
         steps (JobSteps):
             Steps this Job has.
             Before you can access the Steps data for a Job, you have to call
-            the reload() method of a Job instance or the load_steps() method
-            of a Jobs collection.
+            the `reload()` method of a Job instance or the `load_steps()`
+            method of a Jobs collection.
         name (str):
             Name of the Job
         id (int):

@@ -325,7 +325,7 @@ cdef class Jobs(MultiClusterMap):
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(db_filter, changes)
             >>> print(modified_jobs)
-            >>> [9999]
+            [9999]
 
             In the above example, the changes will be automatically committed
             if successful.
@@ -342,7 +342,7 @@ cdef class Jobs(MultiClusterMap):
             >>> 
             >>> # Now you can first examine which Jobs have been modified
             >>> print(modified_jobs)
-            >>> [9999]
+            [9999]
             >>> # And then you can actually commit (or even rollback) the
             >>> # changes
             >>> db_conn.commit()
@@ -463,7 +463,7 @@ cdef class Job:
             >>> import pyslurm
             >>> db_job = pyslurm.db.Job.load(10000)
 
-            In the above example, attribute like "script" and "environment"
+            In the above example, attributes like `script` and `environment`
             are not populated. You must explicitly request one of them to be
             loaded:
 

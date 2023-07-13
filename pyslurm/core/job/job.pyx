@@ -296,14 +296,14 @@ cdef class Job:
         Args:
             signal (Union[str, int]): 
                 Any valid signal which will be sent to the Job. Can be either
-                a str like 'SIGUSR1', or simply an int.
+                a str like `SIGUSR1`, or simply an [int][].
             steps (str):
                 Selects which steps should be signaled. Valid values for this
-                are: "all", "batch" and "children". The default value is
-                "children", where all steps except the batch-step will be
+                are: `all`, `batch` and `children`. The default value is
+                `children`, where all steps except the batch-step will be
                 signaled.
-                The value "batch" in contrast means, that only the batch-step
-                will be signaled. With "all" every step is signaled.
+                The value `batch` in contrast means, that only the batch-step
+                will be signaled. With `all` every step is signaled.
             hurry (bool): 
                 If True, no burst buffer data will be staged out. The default
                 value is False.
@@ -421,9 +421,9 @@ cdef class Job:
         Args:
             mode (str):
                 Determines in which mode the Job should be held. Possible
-                values are "user" or "admin". By default, the Job is held in
-                "admin" mode, meaning only an Administrator will be able to
-                release the Job again. If you specify the mode as "user", the
+                values are `user` or `admin`. By default, the Job is held in
+                `admin` mode, meaning only an Administrator will be able to
+                release the Job again. If you specify the mode as `user`, the
                 User will also be able to release the job.
 
         Raises:
@@ -465,7 +465,7 @@ cdef class Job:
         Args:
             hold (bool, optional):
                 Controls whether the Job should be put in a held state or not.
-                Default for this is 'False', so it will not be held.
+                Default for this is `False`, so it will not be held.
 
         Raises:
             RPCError: When requeing the Job was not successful.
@@ -1183,8 +1183,9 @@ cdef class Job:
             Return type may still be subject to change in the future
 
         Returns:
-            (dict): Resource layout, where the key is the name of the name and
-                its value another dict with the CPU-ids, memory and gres.
+            (dict): Resource layout, where the key is the name of the node and
+                the value another dict with the keys `cpu_ids`, `memory` and
+                `gres`.
         """
         # The code for this function is a modified reimplementation from here:
         # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L739

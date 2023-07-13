@@ -130,7 +130,7 @@ class KeysView(BaseView):
 class ItemsView(BaseView):
     """A simple Items View of a collection.
 
-    Returns a 2-tuple in the form of (key, value) when iterating.
+    Returns a 2-tuple in the form of `(key, value)` when iterating.
 
     Similarly, when checking whether this View contains an Item with the `in`
     operator, a 2-tuple must be used.
