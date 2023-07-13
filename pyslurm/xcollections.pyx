@@ -462,14 +462,15 @@ cdef class MultiClusterMap:
         return ClustersView(self)
 
     def popitem(self):
-        """Remove and return some item in the collection"""
+        """Remove and return a (key, value) pair as a 2-tuple"""
         try:
             item = next(iter(self.values()))
         except StopIteration:
             raise KeyError from None
 
-        del self.data[item.cluster][self._item_id(item)]
-        return item
+        key = self._item_id(item)
+        del self.data[item.cluster][key]
+        return (key, item)
 
     def clear(self):
         """Clear the collection"""

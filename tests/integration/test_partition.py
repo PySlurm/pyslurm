@@ -28,7 +28,7 @@ from pyslurm import Partition, Partitions, RPCError
 
 
 def test_load():
-    part = Partitions.load().popitem()
+    name, part = Partitions.load().popitem()
 
     assert part.name
     assert part.state
@@ -49,7 +49,7 @@ def test_create_delete():
 
 
 def test_modify():
-    part = Partitions.load().popitem()
+    _, part = Partitions.load().popitem()
 
     part.modify(Partition(default_time=120))
     assert Partition.load(part.name).default_time == 120
@@ -68,7 +68,8 @@ def test_modify():
 
 
 def test_parse_all():
-    Partitions.load().popitem().to_dict()
+    _, part = Partitions.load().popitem()
+    assert part.to_dict()
 
 
 def test_reload():

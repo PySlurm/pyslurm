@@ -228,8 +228,9 @@ class TestMultiClusterMap:
         col = self._create_collection()
         col_len = len(col)
 
-        item = col.popitem()
+        key, item = col.popitem()
         assert item
+        assert key
         assert isinstance(item, pyslurm.db.Job)
         assert len(col) == col_len-1
 
