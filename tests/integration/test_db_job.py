@@ -24,6 +24,7 @@ import pytest
 import pyslurm
 import time
 import util
+import json
 
 
 # TODO: Instead of submitting new Jobs and waiting to test Database API
@@ -53,6 +54,20 @@ def test_parse_all(submit_job):
 
     assert job_dict["stats"]
     assert job_dict["steps"]
+
+
+def test_to_json(submit_job):
+    job = submit_job()
+    util.wait()
+
+    jfilter = pyslurm.db.JobFilter(ids=[job.id])
+    jobs = pyslurm.db.Jobs.load(jfilter)
+
+    json_data = jobs.to_json()
+    dict_data = json.loads(json_data)
+    assert dict_data
+    assert json_data
+    assert len(dict_data) == 1
 
 
 def test_modify(submit_job):

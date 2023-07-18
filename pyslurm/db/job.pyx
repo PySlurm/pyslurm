@@ -524,11 +524,8 @@ cdef class Job:
 
         if self.stats:
             out["stats"] = self.stats.to_dict()
-
-        steps = out.pop("steps", {})
-        out["steps"] = {}
-        for step_id, step in steps.items():
-            out["steps"][step_id] = step.to_dict() 
+        if self.steps:
+            out["steps"] = self.steps.to_dict()
 
         return out
 

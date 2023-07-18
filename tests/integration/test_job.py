@@ -23,6 +23,7 @@
 import time
 import pytest
 import pyslurm
+import json
 import util
 from util import create_simple_job_desc
 from pyslurm import (
@@ -64,34 +65,34 @@ def test_cancel(submit_job):
     job = submit_job()
     job.cancel()
     # make sure the job is actually cancelled
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     assert Job.load(job.id).state == "CANCELLED"
 
 
 def test_send_signal(submit_job):
     job = submit_job()
 
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     assert Job.load(job.id).state == "RUNNING"
 
     # Send a SIGKILL (basically cancelling the Job)
     job.send_signal(9)
 
     # make sure the job is actually cancelled
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     assert Job.load(job.id).state == "CANCELLED"
 
 
 def test_suspend_unsuspend(submit_job):
     job = submit_job()
 
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     job.suspend()
     assert Job.load(job.id).state == "SUSPENDED"
 
     job.unsuspend()
     # make sure the job is actually running again
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     assert Job.load(job.id).state == "RUNNING"
 
 
@@ -121,7 +122,7 @@ def test_requeue(submit_job):
 
     assert job.requeue_count == 0
 
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     job.requeue()
     job = Job.load(job.id)
 
@@ -130,7 +131,7 @@ def test_requeue(submit_job):
 
 def test_notify(submit_job):
     job = submit_job()
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
 
     # Could check the logfile, but we just assume for now
     # that when this function raises no Exception, everything worked.
@@ -153,6 +154,35 @@ def test_get_job_queue(submit_job):
         # Check to see if all the Jobs we submitted exist
         assert job.id in jobs
         assert isinstance(jobs[job.id], Job)
+
+
+def test_load_steps(submit_job):
+    job_list = [submit_job() for i in range(3)]
+    util.wait()
+
+    jobs = Jobs.load()
+    jobs.load_steps()
+
+    for _job in job_list:
+        job = jobs[_job.id]
+        assert job.state == "RUNNING"
+        assert job.steps
+        assert isinstance(job.steps, pyslurm.JobSteps)
+        assert job.steps.get("batch")
+
+
+def test_to_json(submit_job):
+    job_list = [submit_job() for i in range(3)]
+    util.wait()
+
+    jobs = Jobs.load()
+    jobs.load_steps()
+
+    json_data = jobs.to_json()
+    dict_data = json.loads(json_data)
+    assert dict_data
+    assert json_data
+    assert len(dict_data) >= 3
 
 
 def test_get_resource_layout_per_node(submit_job):

@@ -23,6 +23,7 @@
 
 import pytest
 import pyslurm
+import json
 import util
 from pyslurm import Partition, Partitions, RPCError
 
@@ -70,6 +71,16 @@ def test_modify():
 def test_parse_all():
     _, part = Partitions.load().popitem()
     assert part.to_dict()
+
+
+def test_to_json():
+    parts = Partitions.load()
+    json_data = parts.to_json()
+    dict_data = json.loads(json_data)
+
+    assert dict_data
+    assert len(dict_data) >= 1
+    assert json_data
 
 
 def test_reload():

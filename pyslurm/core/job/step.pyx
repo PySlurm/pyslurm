@@ -143,6 +143,9 @@ cdef class JobSteps(dict):
         cdef JobSteps steps = JobSteps()
         return steps._load_data(slurm.NO_VAL, slurm.SHOW_ALL)
 
+    def to_dict(self):
+        return xcollections.dict_recursive(self)
+
 
 cdef class JobStep:
 
@@ -329,7 +332,13 @@ cdef class JobStep:
         Returns:
             (dict): JobStep information as dict
         """
-        return instance_to_dict(self)
+        cdef dict out = instance_to_dict(self)
+
+        dist = self.distribution
+        if dist:
+            out["distribution"] = dist.to_dict()
+
+        return out
 
     @property
     def id(self):
