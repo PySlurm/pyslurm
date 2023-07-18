@@ -57,7 +57,7 @@ def test_load(submit_job):
 
     # Load the step info, waiting one second to make sure the Step
     # actually exists.
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     step = JobStep.load(job.id, "batch")
 
     assert step.id == "batch"
@@ -101,7 +101,7 @@ def test_load(submit_job):
 def test_collection(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     steps = JobSteps.load(job)
 
     assert steps
@@ -115,7 +115,7 @@ def test_collection(submit_job):
 def test_cancel(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     steps = JobSteps.load(job)
     assert len(steps) == 3
     assert ("batch" in steps and
@@ -124,7 +124,7 @@ def test_cancel(submit_job):
 
     steps[0].cancel()
     
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     steps = JobSteps.load(job)
     assert len(steps) == 2
     assert ("batch" in steps and
@@ -135,7 +135,7 @@ def test_modify(submit_job):
     steps = "srun -t 20 sleep 100"
     job = submit_job(script=create_job_script_multi_step(steps))
 
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     step = JobStep.load(job, 0)
     assert step.time_limit == 20
 
@@ -150,7 +150,7 @@ def test_send_signal(submit_job):
     steps = "srun -t 10 sleep 100"
     job = submit_job(script=create_job_script_multi_step(steps))
 
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     step = JobStep.load(job, 0)
     assert step.state == "RUNNING"
 
@@ -159,7 +159,7 @@ def test_send_signal(submit_job):
 
     # Make sure the job is actually cancelled.
     # If a RPCError is raised, this means the Step got cancelled.
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     with pytest.raises(RPCError):
         step = JobStep.load(job, 0)
 
@@ -173,5 +173,5 @@ def test_load_with_wrong_step_id(submit_job):
 
 def test_parse_all(submit_job):
     job = submit_job()
-    time.sleep(util.WAIT_SECS_SLURMCTLD)
+    util.wait()
     JobStep.load(job, "batch").to_dict()

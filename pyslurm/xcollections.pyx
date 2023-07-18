@@ -447,6 +447,9 @@ cdef class MultiClusterMap:
         Returns:
             (str): JSON formatted string from `json.dumps()`
         """
+        if not self.data:
+            return '{}'
+
         data = multi_dict_recursive(self)
         if multi_cluster:
             return json.dumps(data)
