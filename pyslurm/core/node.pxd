@@ -160,9 +160,8 @@ cdef class Node:
             Real Memory in Mebibytes configured for this node.
         free_memory (int):
             Free Memory in Mebibytes on the node.
-        system_memory (int):
-            Raw Memory in Mebibytes reserved for the System not usable by
-            Jobs.
+        memory_reserved_for_system (int):
+            Memory in Mebibytes reserved for the System not usable by Jobs.
         temporary_disk (int):
             Amount of temporary disk space this node has, in Mebibytes.
         weight (int):
@@ -173,7 +172,7 @@ cdef class Node:
             Total amount of CPUs the node has.
         sockets (int):
             Number of sockets the node has.
-        system_cores (int):
+        cores_reserved_for_system (int):
             Number of cores reserved for the System not usable by Jobs.
         boards (int):
             Number of boards the node has.

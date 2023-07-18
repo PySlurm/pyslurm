@@ -510,7 +510,7 @@ cdef class Node:
         return u64_parse(self.info.free_mem)
 
     @property
-    def system_memory(self):
+    def memory_reserved_for_system(self):
         return u64_parse(self.info.mem_spec_limit)
 
     @property
@@ -538,7 +538,7 @@ cdef class Node:
         return u16_parse(self.info.sockets, on_noval=0)
 
     @property
-    def system_cores(self):
+    def cores_reserved_for_system(self):
         return u16_parse(self.info.core_spec_cnt)
 
     @property

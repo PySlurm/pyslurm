@@ -31,8 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved Docs
 - Renamed `JobSearchFilter` to [pyslurm.db.JobFilter][]
 - Renamed `as_dict` function of some classes to `to_dict`
-- Renamed `memory_reserved_for_system` attribute in [pyslurm.Node][] to `system_memory`
-- Renamed `cores_reserved_for_system` attribute in [pyslurm.Node][] to `system_cores`
 
 ## [23.2.1](https://github.com/PySlurm/pyslurm/releases/tag/v23.2.1) - 2023-05-18
 
