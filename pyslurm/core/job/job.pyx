@@ -295,7 +295,9 @@ cdef class Job:
         Returns:
             (dict): Job information as dict
         """
-        return instance_to_dict(self)
+        cdef dict out = instance_to_dict(self)
+        out["steps"] = self.steps.to_dict()
+        return out
 
     def send_signal(self, signal, steps="children", hurry=False):
         """Send a signal to a running Job.

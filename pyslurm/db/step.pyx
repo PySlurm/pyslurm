@@ -27,6 +27,7 @@ from pyslurm.core.error import RPCError
 from typing import Union
 from pyslurm.utils.uint import *
 from pyslurm.utils.ctime import _raw_time
+from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     gid_to_name,
     uid_to_name,
@@ -42,6 +43,9 @@ cdef class JobSteps(dict):
     def __repr__(self):
         data = super().__repr__()
         return f'pyslurm.db.{self.__class__.__name__}({data})'
+
+    def to_dict(self):
+        return xcollections.dict_recursive(self)
 
 
 cdef class JobStep:
