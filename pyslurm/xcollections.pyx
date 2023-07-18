@@ -281,7 +281,8 @@ cdef class MultiClusterMap:
         return sum(len(data) for data in self.data.values())
 
     def __repr__(self):
-        return f'{self._typ}([{", ".join(map(repr, self.values()))}])'
+        data = ", ".join(map(repr, self.data.values()))
+        return f'pyslurm.{self._typ}({data})'
 
     def __contains__(self, item):
         if isinstance(item, self._val_type):

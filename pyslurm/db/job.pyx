@@ -192,7 +192,7 @@ cdef class Jobs(MultiClusterMap):
 
     def __init__(self, jobs=None):
         super().__init__(data=jobs,
-                         typ="Jobs",
+                         typ="db.Jobs",
                          val_type=Job,
                          id_attr=Job.id,
                          key_type=int)
@@ -208,7 +208,8 @@ cdef class Jobs(MultiClusterMap):
                 A search filter that the slurmdbd will apply when retrieving
                 Jobs from the database.
             db_connection (pyslurm.db.Connection):
-                An open database connection.
+                An open database connection. By default if none is specified,
+                one will be opened automatically.
 
         Returns:
             (pyslurm.db.Jobs): A Collection of database Jobs.
@@ -223,6 +224,10 @@ cdef class Jobs(MultiClusterMap):
 
             >>> import pyslurm
             >>> db_jobs = pyslurm.db.Jobs.load()
+            >>> print(db_jobs)
+            pyslurm.db.Jobs({1: pyslurm.db.Job(1), 2: pyslurm.db.Job(2)})
+            >>> print(db_jobs[1])
+            pyslurm.db.Job(1)
 
             Now with a Job Filter, so only Jobs that have specific Accounts
             are returned:
@@ -339,13 +344,20 @@ cdef class Jobs(MultiClusterMap):
             >>> changes = pyslurm.db.Job(comment="A comment for the job")
             >>> modified_jobs = pyslurm.db.Jobs.modify(
             ...             db_filter, changes, db_conn)
-            >>> 
-            >>> # Now you can first examine which Jobs have been modified
+
+            Now you can first examine which Jobs have been modified:
+
             >>> print(modified_jobs)
             [9999]
-            >>> # And then you can actually commit (or even rollback) the
-            >>> # changes
+
+            And then you can actually commit the changes:
+
             >>> db_conn.commit()
+
+            You can also explicitly rollback these changes instead of
+            committing, so they will not become active:
+
+            >>> db_conn.rollback()
         """
         cdef:
             JobFilter cond
@@ -444,7 +456,8 @@ cdef class Job:
             job_id (int):
                 ID of the Job to be loaded.
             cluster (str):
-                Name of the Cluster to search in.
+                Name of the Cluster to search in. Default is the local
+                Cluster.
             with_script (bool):
                 Whether the Job-Script should also be loaded. Mutually
                 exclusive with `with_env`.
@@ -520,7 +533,7 @@ cdef class Job:
         return out
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.id})'
+        return f'pyslurm.db.{self.__class__.__name__}({self.id})'
 
     def modify(self, changes, db_connection=None):
         """Modify a Slurm database Job.

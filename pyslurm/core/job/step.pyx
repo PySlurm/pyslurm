@@ -59,6 +59,10 @@ cdef class JobSteps(dict):
         elif steps is not None:
             raise TypeError("Invalid Type: {type(steps)}")
 
+    def __repr__(self):
+        data = super().__repr__()
+        return f'pyslurm.{self.__class__.__name__}({data})'
+
     @staticmethod
     def load(job):
         """Load the Job Steps from the system.
@@ -69,6 +73,14 @@ cdef class JobSteps(dict):
 
         Returns:
             (pyslurm.JobSteps): JobSteps of the Job
+
+        Examples:
+            >>> import pyslurm
+            >>> steps = pyslurm.JobSteps.load(1)
+            >>> print(steps)
+            pyslurm.JobSteps({'batch': pyslurm.JobStep('batch')})
+            >>> print(steps[1])
+            pyslurm.JobStep('batch')
         """
         cdef:
             Job _job
@@ -187,7 +199,7 @@ cdef class JobStep:
         JobStep.__dict__[name].__set__(self, val)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.id})'
+        return f'pyslurm.{self.__class__.__name__}({self.id})'
 
     @staticmethod
     def load(job_id, step_id):

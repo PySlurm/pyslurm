@@ -11,15 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ability to modify Database Jobs
 - New classes to interact with the Partition API
-    - [pyslurm.Partition](https://pyslurm.github.io/23.2/reference/partition/#pyslurm.Partition)
-    - [pyslurm.Partitions](https://pyslurm.github.io/23.2/reference/partition/#pyslurm.Partitions)
+    - [pyslurm.Partition][]
+    - [pyslurm.Partitions][]
 - New attributes for a Database Job:
-    - extra
-    - failed_node
-- Now possible to initialize a [pyslurm.db.Jobs][] collection with existing job
-  ids or pyslurm.db.Job objects
-- Added `as_dict` function to all Collections
+    - `extra`
+    - `failed_node`
 - Added a new Base Class [MultiClusterMap][pyslurm.xcollections.MultiClusterMap] that some Collections inherit from.
+- Added `to_json` function to all Collections
 
 ### Fixed
 
@@ -29,9 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - the Job was older than a day
 
 ### Changed
- 
-- `JobSearchFilter` has been renamed to `JobFilter`
-- Renamed `as_dict` Function of some classes to `to_dict`
+
+- Improved Docs
+- Renamed `JobSearchFilter` to [pyslurm.db.JobFilter][]
+- Renamed `as_dict` function of some classes to `to_dict`
+- Renamed `memory_reserved_for_system` attribute in [pyslurm.Node][] to `system_memory`
+- Renamed `cores_reserved_for_system` attribute in [pyslurm.Node][] to `system_cores`
 
 ## [23.2.1](https://github.com/PySlurm/pyslurm/releases/tag/v23.2.1) - 2023-05-18
 

@@ -495,9 +495,9 @@ cdef class JobSubmitDescription:
         standard_in (str):
             Path to a File acting as standard_in for the batch-script.
             This is the same as -i/--input from sbatch.
-        standard_in (str):
-            Path to a File acting as standard_in for the batch-script.
-            This is the same as -i/--input from sbatch.
+        standard_error (str):
+            Path to a File acting as standard_error for the batch-script.
+            This is the same as -e/--error from sbatch.
         standard_output (str):
             Path to a File to write the Jobs standard_output.
             This is the same as -o/--output from sbatch.

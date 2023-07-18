@@ -206,7 +206,7 @@ cdef class Association:
             slurmdb_init_assoc_rec(self.ptr, 0)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.id})'
+        return f'pyslurm.db.{self.__class__.__name__}({self.id})'
 
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr):

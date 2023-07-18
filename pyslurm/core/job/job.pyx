@@ -89,6 +89,14 @@ cdef class Jobs(MultiClusterMap):
 
         Raises:
             RPCError: When getting all the Jobs from the slurmctld failed.
+
+        Examples:
+            >>> import pyslurm
+            >>> jobs = pyslurm.Jobs.load()
+            >>> print(jobs)
+            pyslurm.Jobs({1: pyslurm.Job(1), 2: pyslurm.Job(2)})
+            >>> print(jobs[1])
+            pyslurm.Job(1)
         """
         cdef:
             dict passwd = {}
@@ -133,6 +141,9 @@ cdef class Jobs(MultiClusterMap):
 
     def reload(self):
         """Reload the information for jobs in a collection.
+
+        Returns:
+            (pyslurm.Partitions): Returns self
 
         Raises:
             RPCError: When getting the Jobs from the slurmctld failed.
@@ -203,7 +214,7 @@ cdef class Job:
         self._dealloc_impl()
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.id})'
+        return f'pyslurm.{self.__class__.__name__}({self.id})'
 
     @staticmethod
     def load(job_id):

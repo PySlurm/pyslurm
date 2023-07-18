@@ -37,6 +37,13 @@ from pyslurm.utils.helpers import (
 from pyslurm.core.job.util import cpu_freq_int_to_str
 
 
+cdef class JobSteps(dict):
+
+    def __repr__(self):
+        data = super().__repr__()
+        return f'pyslurm.db.{self.__class__.__name__}({data})'
+
+
 cdef class JobStep:
 
     def __cinit__(self):
@@ -66,6 +73,9 @@ cdef class JobStep:
         cdef dict out = instance_to_dict(self)
         out["stats"] = self.stats.to_dict()
         return out
+
+    def __repr__(self):
+        return f'pyslurm.db.{self.__class__.__name__}({self.id})'
 
     @property
     def num_nodes(self):

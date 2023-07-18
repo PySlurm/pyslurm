@@ -163,7 +163,8 @@ cdef class Job:
         job_id (int, optional=0):
             An Integer representing a Job-ID.
         cluster (str, optional=None):
-            Name of the Cluster for this Job.
+            Name of the Cluster for this Job. Default is the name of the local
+            Cluster.
 
     Other Parameters:
         admin_comment (str):

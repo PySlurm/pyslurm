@@ -121,12 +121,15 @@ cdef class Nodes(MultiClusterMap):
         return nodes
 
     def reload(self):
-        """Reload the information for nodes in a collection.
+        """Reload the information for Nodes in a collection.
 
         !!! note
 
             Only information for nodes which are already in the collection at
             the time of calling this method will be reloaded.
+
+        Returns:
+            (pyslurm.Nodes): Returns self
 
         Raises:
             RPCError: When getting the Nodes from the slurmctld failed.
@@ -246,7 +249,7 @@ cdef class Node:
         Node.__dict__[name].__set__(self, val)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name})'
+        return f'pyslurm.{self.__class__.__name__}({self.name})'
 
     @staticmethod
     cdef Node from_ptr(node_info_t *in_ptr):
@@ -507,7 +510,7 @@ cdef class Node:
         return u64_parse(self.info.free_mem)
 
     @property
-    def memory_reserved_for_system(self):
+    def system_memory(self):
         return u64_parse(self.info.mem_spec_limit)
 
     @property
@@ -535,7 +538,7 @@ cdef class Node:
         return u16_parse(self.info.sockets, on_noval=0)
 
     @property
-    def cores_reserved_for_system(self):
+    def system_cores(self):
         return u16_parse(self.info.core_spec_cnt)
 
     @property

@@ -62,7 +62,7 @@ cdef class Nodes(MultiClusterMap):
     """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Node][] objects.
 
     Args:
-        nodes (Union[list, dict, str], optional=None):
+        nodes (Union[list[str], dict[str, Node], str], optional=None):
             Nodes to initialize this collection with.
 
     Attributes:
@@ -160,7 +160,7 @@ cdef class Node:
             Real Memory in Mebibytes configured for this node.
         free_memory (int):
             Free Memory in Mebibytes on the node.
-        memory_reserved_for_system (int):
+        system_memory (int):
             Raw Memory in Mebibytes reserved for the System not usable by
             Jobs.
         temporary_disk (int):
@@ -173,7 +173,7 @@ cdef class Node:
             Total amount of CPUs the node has.
         sockets (int):
             Number of sockets the node has.
-        cores_reserved_for_system (int):
+        system_cores (int):
             Number of cores reserved for the System not usable by Jobs.
         boards (int):
             Number of boards the node has.
@@ -210,9 +210,10 @@ cdef class Node:
         external_sensors (dict):
             External Sensor info for the Node.
             The dict returned contains the following information:
-                * joules_total (int)
-                * current_watts (int)
-                * temperature (int)
+
+            * `joules_total` (int)
+            * `current_watts` (int)
+            * `temperature` (int)
         state (str):
             State the node is currently in.
         next_state (str):
