@@ -73,6 +73,9 @@ cdef class JobSubmitDescription:
 
         slurm_init_job_desc_msg(self.ptr)
 
+    def __repr__(self):
+        return f'pyslurm.{self.__class__.__name__}'
+
     def submit(self):
         """Submit a batch job description.
 
@@ -87,9 +90,12 @@ cdef class JobSubmitDescription:
             >>> desc = pyslurm.JobSubmitDescription(
             ...     name="test-job",
             ...     cpus_per_task=1,
-            ...     time_limit="10-00:00:00")
+            ...     time_limit="10-00:00:00",
+            ...     script="/path/to/your/submit_script.sh")
             >>> 
             >>> job_id = desc.submit()
+            >>> print(job_id)
+            99
         """
         cdef submit_response_msg_t *resp = NULL
 
@@ -112,9 +118,9 @@ cdef class JobSubmitDescription:
 
         Args:
             overwrite (bool): 
-                If set to True, the value from an option found in the
+                If set to `True`, the value from an option found in the
                 environment will override the current value of the attribute
-                in this instance. Default is False
+                in this instance. Default is `False`
 
         Examples:
             Lets consider you want to set the name of the Job, its Account
@@ -141,13 +147,13 @@ cdef class JobSubmitDescription:
         self._parse_env(overwrite)
 
     def load_sbatch_options(self, overwrite=False):
-        """Load values from #SBATCH options in the batch script.
+        """Load values from `#SBATCH` options in the batch script.
 
         Args:
             overwrite (bool):
-                If set to True, the value from an option found in the in the
+                If set to `True`, the value from an option found in the in the
                 batch script will override the current value of the attribute
-                in this instance. Default is False
+                in this instance. Default is `False`
         """
         if not self.script:
             raise ValueError("You need to set the 'script' attribute first.")
