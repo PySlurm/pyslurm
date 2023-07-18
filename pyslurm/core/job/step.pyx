@@ -226,7 +226,7 @@ cdef class JobStep:
         """
         cdef:
             job_step_info_response_msg_t *info = NULL
-            JobStep wrap = JobStep.__new__(JobStep)
+            JobStep wrap = None
 
         job_id = job_id.id if isinstance(job_id, Job) else job_id
         rc = slurm_get_job_steps(<time_t>0, job_id, dehumanize_step_id(step_id),
@@ -234,9 +234,7 @@ cdef class JobStep:
         verify_rpc(rc)
 
         if info and info.job_step_count == 1:
-            # Copy new info
-            wrap._alloc_impl()
-            memcpy(wrap.ptr, &info.job_steps[0], sizeof(job_step_info_t))
+            wrap = JobStep.from_ptr(&info.job_steps[0])
             info.job_step_count = 0
             slurm_free_job_step_info_response_msg(info)
         else:
