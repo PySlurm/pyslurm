@@ -20,11 +20,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_node.py - Test the node api functions."""
 
-import sys
-import time
 import pytest
 import pyslurm
-import os
+import json
 from pyslurm import Node, Nodes, RPCError
 
 
@@ -51,10 +49,6 @@ def test_create():
         Node("testhostpyslurm2").create("idle")
 
 
-# def test_delete():
-#    node = Node("testhost1").delete()
-
-
 def test_modify():
     _, node = Nodes.load().popitem()
 
@@ -71,3 +65,13 @@ def test_modify():
 def test_parse_all():
     _, node = Nodes.load().popitem()
     assert node.to_dict()
+
+
+def test_to_json():
+    nodes = Nodes.load()
+    json_data = nodes.to_json()
+    dict_data = json.loads(json_data)
+
+    assert dict_data
+    assert len(dict_data) >= 1
+    assert json_data
