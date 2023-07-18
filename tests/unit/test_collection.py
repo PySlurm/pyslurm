@@ -37,8 +37,8 @@ class TestMultiClusterMap:
                 2: pyslurm.db.Job(2),
             },
             OTHER_CLUSTER: {
-                1: pyslurm.db.Job(1, cluster="other_cluster"),
-                10: pyslurm.db.Job(10, cluster="other_cluster"),
+                1: pyslurm.db.Job(1, cluster=OTHER_CLUSTER),
+                10: pyslurm.db.Job(10, cluster=OTHER_CLUSTER),
             }
         }
         col = pyslurm.db.Jobs()
@@ -326,3 +326,73 @@ class TestMultiClusterMap:
 
         expected = 0
         assert sum_property(object_dict, TestObject.cpus) == expected
+
+    def test_ior(self):
+        col = self._create_collection()
+        col_len = len(col)
+
+        other_data = {
+            LOCAL_CLUSTER: {
+                3: pyslurm.db.Job(3),
+                2: pyslurm.db.Job(2),
+            },
+            "test_cluster": {
+                1000: pyslurm.db.Job(1000, cluster="test_cluster"),
+                1001: pyslurm.db.Job(1001, cluster="test_cluster"),
+            }
+        }
+        other_col = pyslurm.db.Jobs()
+        other_col.update(other_data)
+
+        col |= other_col
+        assert isinstance(col, pyslurm.xcollections.MultiClusterMap)
+        assert isinstance(col, pyslurm.db.Jobs)
+        assert len(col.clusters()) == 3
+        assert len(col) == col_len+3 
+
+        dict_data = {
+            10: pyslurm.db.Job(10),
+            11: pyslurm.db.Job(11),
+        }
+
+        col |= dict_data
+        assert isinstance(col, pyslurm.xcollections.MultiClusterMap)
+        assert isinstance(col, pyslurm.db.Jobs)
+        assert len(col.clusters()) == 3
+        assert len(col[LOCAL_CLUSTER]) == 5
+        assert len(col) == col_len+5
+
+    def test_or(self):
+        col = self._create_collection()
+        col_len = len(col)
+
+        other_data = {
+            LOCAL_CLUSTER: {
+                3: pyslurm.db.Job(3),
+                2: pyslurm.db.Job(2),
+            },
+            "test_cluster": {
+                1000: pyslurm.db.Job(1000, cluster="test_cluster"),
+                1001: pyslurm.db.Job(1001, cluster="test_cluster"),
+            }
+        }
+        other_col = pyslurm.db.Jobs()
+        other_col.update(other_data)
+
+        _col = col | other_col
+        assert isinstance(_col, pyslurm.xcollections.MultiClusterMap)
+        assert isinstance(_col, pyslurm.db.Jobs)
+        assert len(_col.clusters()) == 3
+        assert len(_col) == col_len+3 
+
+        dict_data = {
+            10: pyslurm.db.Job(10),
+            11: pyslurm.db.Job(11),
+        }
+
+        _col = _col | dict_data
+        assert isinstance(_col, pyslurm.xcollections.MultiClusterMap)
+        assert isinstance(_col, pyslurm.db.Jobs)
+        assert len(_col.clusters()) == 3
+        assert len(_col[LOCAL_CLUSTER]) == 5
+        assert len(_col) == col_len+5
