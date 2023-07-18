@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased on the [23.2.x](https://github.com/PySlurm/pyslurm/tree/23.2.x) branch
 
+- New Classes to interact with Database Associations (WIP)
+    - `pyslurm.db.Association`
+    - `pyslurm.db.Associations`
+- New Classes to interact with Database QoS (WIP)
+    - `pyslurm.db.QualityOfService`
+    - `pyslurm.db.QualitiesOfService`
+
+## [23.2.2](https://github.com/PySlurm/pyslurm/releases/tag/v23.2.2) - 2023-07-18
+
 ### Added
 
 - Ability to modify Database Jobs
