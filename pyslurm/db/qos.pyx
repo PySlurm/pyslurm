@@ -154,7 +154,7 @@ cdef class QualityOfService:
         return wrap
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name})'
+        return f'pyslurm.db.{self.__class__.__name__}({self.name})'
 
     def to_dict(self):
         """Database QualityOfService information formatted as a dictionary.

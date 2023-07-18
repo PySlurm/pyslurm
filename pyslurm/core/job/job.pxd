@@ -69,10 +69,10 @@ cdef class Jobs(MultiClusterMap):
     """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Job][] objects.
 
     Args:
-        jobs (Union[list, dict], optional=None):
+        jobs (Union[list[int], dict[int, pyslurm.Job], str], optional=None):
             Jobs to initialize this collection with.
         frozen (bool, optional=False):
-            Control whether this collection is "frozen" when reloading Job
+            Control whether this collection is `frozen` when reloading Job
             information.
 
     Attributes:
