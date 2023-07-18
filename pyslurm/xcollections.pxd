@@ -35,25 +35,26 @@ cdef class MultiClusterMap:
     This class enables collections to hold data from multiple Clusters if
     applicable.
     For quite a few Entities in Slurm it is possible to gather data from
-    multiple Clusters. For example, with `squeue`, you can easily list Jobs
+    multiple Clusters. For example, with `sacct`, you can easily query Jobs
     running on different Clusters - provided your Cluster is joined in a
     Federation or simply part of a multi Cluster Setup.
 
-    Collections like `pyslurm.Jobs` inherit from this Class to enable holding
-    such data from multiple Clusters.
-    Internally, the data is structured in a `dict` like this (with
-    `pyslurm.Jobs` as an example):
+    Collections like [pyslurm.db.Jobs][] inherit from this Class to enable
+    holding such data from multiple Clusters. Internally, the data is
+    structured in a `dict` like this (with [pyslurm.db.Jobs][] as an example):
 
     ```python
     data = {
-        "LOCAL_CLUSTER":
-            1: pyslurm.Job,
-            2: pyslurm.Job,
+        "LOCAL_CLUSTER": {
+            1: pyslurm.db.Job(1),
+            2: pyslurm.db.Job(2),
             ...
-        "OTHER_REMOTE_CLUSTER":
-            100: pyslurm.Job,
-            101, pyslurm.Job
+        },
+        "OTHER_REMOTE_CLUSTER": {
+            100: pyslurm.Job(100),
+            101, pyslurm.Job(101)
             ...
+        },
         ...
     }
     ```
@@ -70,15 +71,18 @@ cdef class MultiClusterMap:
     job = data[1]
     ```
 
-    `job` would then hold the instance for Job 1 from the `LOCAL_CLUSTER`
-    data.
+    `job` would then hold the instance for `pyslurm.db.Job(1)` from the
+    `LOCAL_CLUSTER` data.
+
     Alternatively, data can also be accessed like this:
 
     ```python
     job = data["OTHER_REMOTE_CLUSTER"][100]
     ```
 
-    Here, you are directly specifying which Cluster data you want to access.
+    Here, you are directly specifying which Cluster data you want to access,
+    and you will get the instance for `pyslurm.db.Job(100)` from the
+    `OTHER_REMOTE_CLUSTER` data.
 
     Similarly, every method (where applicable) from a standard dict is
     extended with multi-cluster functionality (check out the examples on the
