@@ -251,6 +251,26 @@ cdef class MultiClusterMap:
     def _item_id(self, item):
         return self._id_attr.__get__(item)
 
+    def _iter_clusters_dict(self, other):
+        for key in other:
+            try:
+                iterator = iter(other[key])
+            except TypeError as e:
+                try:
+                    cluster = self._get_cluster()
+                except KeyError:
+                    cluster = LOCAL_CLUSTER
+
+                if not cluster in self.data:
+                    self.data[cluster] = {}
+                yield (cluster, other)
+                break
+            else:
+                cluster = key
+                if not cluster in self.data:
+                    self.data[cluster] = {}
+                yield (cluster, other[cluster])
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.data == other.data
@@ -281,7 +301,8 @@ cdef class MultiClusterMap:
         return sum(len(data) for data in self.data.values())
 
     def __repr__(self):
-        return f'{self._typ}([{", ".join(map(repr, self.values()))}])'
+        data = ", ".join(map(repr, self.data.values()))
+        return f'pyslurm.{self._typ}({data})'
 
     def __contains__(self, item):
         if isinstance(item, self._val_type):
@@ -308,6 +329,44 @@ cdef class MultiClusterMap:
 
     def __copy__(self):
         return self.copy()
+
+    def __or__(self, other):
+        if isinstance(other, MultiClusterMap):
+            if isinstance(self, dict):
+                return NotImplemented
+
+            out = self.copy()
+            out |= other
+            return out
+        elif isinstance(other, dict):
+            out = self.copy()
+            for cluster, data in self._iter_clusters_dict(other):
+                out.data[cluster] = self.data[cluster] | data
+            return out
+        return NotImplemented
+
+    def __ror__(self, other):
+        if isinstance(other, MultiClusterMap):
+            out = other.copy()
+            out |= self
+            return out
+        elif isinstance(other, dict):
+            out = self.copy()
+            for cluster, data in self._iter_clusters_dict(other):
+                out.data[cluster] = data | self.data[cluster]
+            return out
+        return NotImplemented
+
+    def __ior__(self, other):
+        if isinstance(other, MultiClusterMap):
+            for cluster in other.clusters():
+                if not cluster in self.data:
+                    self.data[cluster] = {}
+                self.data[cluster] |= other.data[cluster]
+        else:
+            for cluster, data in self._iter_clusters_dict(other):
+                self.data[cluster] |= data
+        return self
 
     def copy(self):
         """Return a Copy of this instance."""
@@ -353,9 +412,9 @@ cdef class MultiClusterMap:
         """An Item to add to the collection
 
         Note that a collection can only hold its specific type.
-        For example, a collection of `pyslurm.Jobs` can only hold
-        `pyslurm.Job` objects. Trying to add anything other than the accepted
-        type will raise a TypeError.
+        For example, a collection of [pyslurm.db.Jobs][] can only hold
+        [pyslurm.db.Job][] objects. Trying to add anything other than the
+        accepted type will raise a TypeError.
 
         Args:
             item (Any):
@@ -366,13 +425,15 @@ cdef class MultiClusterMap:
                 the collection was added.
 
         Examples:
-            Add a `pyslurm.Job` instance to the `Jobs` collection.
+            Add a `pyslurm.db.Job` instance to the `pyslurm.db.Jobs`
+            collection.
 
-            >>> data = pyslurm.Jobs()
-            >>> job = pyslurm.Job(1)
-            >>> data.add(job)
-            >>> print(data)
-            Jobs([Job(1)])
+            >>> import pyslurm
+            >>> jobs = pyslurm.db.Jobs()
+            >>> job = pyslurm.db.Job(1)
+            >>> jobs.add(job)
+            >>> print(jobs)
+            pyslurm.db.Jobs({1: pyslurm.db.Job(1)})
         """
         if item.cluster not in self.data:
             self.data[item.cluster] = {}
@@ -500,37 +561,16 @@ cdef class MultiClusterMap:
         
         return item
 
-    def _update(self, data):
-        for key in data:
-            try:
-                iterator = iter(data[key])
-            except TypeError as e:
-                cluster = self._get_cluster()
-                if not cluster in self.data:
-                    self.data[cluster] = {}
-                self.data[cluster].update(data)
-                break
-            else:
-                cluster = key
-                if not cluster in self.data:
-                    self.data[cluster] = {}
-                self.data[cluster].update(data[cluster])
-#                col = data[cluster]
-#               if hasattr(col, "keys") and callable(col.keys):
-#                   for k in col.keys():
-
-#               else:
-#                   for item in col:
-#                       k, v = item
-
-
     def update(self, data={}, **kwargs):
         """Update the collection.
 
         This functions like `dict`'s `update` method.
         """
-        self._update(data)
-        self._update(kwargs)
+        for cluster, data in self._iter_clusters_dict(data):
+            self.data[cluster].update(data)
+
+        for cluster, data in self._iter_clusters_dict(kwargs):
+            self.data[cluster].update(data)
 
 
 def multi_reload(cur, frozen=True):

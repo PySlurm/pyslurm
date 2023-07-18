@@ -186,7 +186,7 @@ cdef class Partition:
         self._dealloc_impl() 
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name})'
+        return f'pyslurm.{self.__class__.__name__}({self.name})'
 
     @staticmethod
     cdef Partition from_ptr(partition_info_t *in_ptr):

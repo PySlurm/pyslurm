@@ -48,6 +48,10 @@ cdef class Connection:
     def __dealloc__(self):
         self.close()
 
+    def __repr__(self):
+        state = "open" if self.is_open else "closed"
+        return f'pyslurm.db.{self.__class__.__name__} is {state}'
+
     @staticmethod
     def open():
         """Open a new connection to the slurmdbd
@@ -61,6 +65,8 @@ cdef class Connection:
         Examples:
             >>> import pyslurm
             >>> connection = pyslurm.db.Connection.open()
+            >>> print(connection.is_open)
+            True
         """
         cdef Connection conn = Connection.__new__(Connection)
         conn.ptr = <void*>slurmdb_connection_get(&conn.flags)
@@ -77,6 +83,8 @@ cdef class Connection:
             >>> connection = pyslurm.db.Connection.open()
             >>> ...
             >>> connection.close()
+            >>> print(connection.is_open)
+            False
         """
         if self.is_open:
             slurmdb_connection_close(&self.ptr)

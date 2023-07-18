@@ -25,7 +25,7 @@ The `pyslurm` package is a wrapper around the Slurm C-API
     it!
 
 
-## Functionality already reworked:
+## Reworked Classes
 
 * Job API
     * [pyslurm.Job][]

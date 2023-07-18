@@ -59,6 +59,10 @@ cdef class JobSteps(dict):
         elif steps is not None:
             raise TypeError("Invalid Type: {type(steps)}")
 
+    def __repr__(self):
+        data = super().__repr__()
+        return f'pyslurm.{self.__class__.__name__}({data})'
+
     @staticmethod
     def load(job):
         """Load the Job Steps from the system.
@@ -69,6 +73,14 @@ cdef class JobSteps(dict):
 
         Returns:
             (pyslurm.JobSteps): JobSteps of the Job
+
+        Examples:
+            >>> import pyslurm
+            >>> steps = pyslurm.JobSteps.load(1)
+            >>> print(steps)
+            pyslurm.JobSteps({'batch': pyslurm.JobStep('batch')})
+            >>> print(steps[1])
+            pyslurm.JobStep('batch')
         """
         cdef:
             Job _job
@@ -187,7 +199,7 @@ cdef class JobStep:
         JobStep.__dict__[name].__set__(self, val)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.id})'
+        return f'pyslurm.{self.__class__.__name__}({self.id})'
 
     @staticmethod
     def load(job_id, step_id):
@@ -214,7 +226,7 @@ cdef class JobStep:
         """
         cdef:
             job_step_info_response_msg_t *info = NULL
-            JobStep wrap = JobStep.__new__(JobStep)
+            JobStep wrap = None
 
         job_id = job_id.id if isinstance(job_id, Job) else job_id
         rc = slurm_get_job_steps(<time_t>0, job_id, dehumanize_step_id(step_id),
@@ -222,9 +234,7 @@ cdef class JobStep:
         verify_rpc(rc)
 
         if info and info.job_step_count == 1:
-            # Copy new info
-            wrap._alloc_impl()
-            memcpy(wrap.ptr, &info.job_steps[0], sizeof(job_step_info_t))
+            wrap = JobStep.from_ptr(&info.job_steps[0])
             info.job_step_count = 0
             slurm_free_job_step_info_response_msg(info)
         else:

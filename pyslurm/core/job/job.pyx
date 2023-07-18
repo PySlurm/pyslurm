@@ -89,6 +89,14 @@ cdef class Jobs(MultiClusterMap):
 
         Raises:
             RPCError: When getting all the Jobs from the slurmctld failed.
+
+        Examples:
+            >>> import pyslurm
+            >>> jobs = pyslurm.Jobs.load()
+            >>> print(jobs)
+            pyslurm.Jobs({1: pyslurm.Job(1), 2: pyslurm.Job(2)})
+            >>> print(jobs[1])
+            pyslurm.Job(1)
         """
         cdef:
             dict passwd = {}
@@ -133,6 +141,9 @@ cdef class Jobs(MultiClusterMap):
 
     def reload(self):
         """Reload the information for jobs in a collection.
+
+        Returns:
+            (pyslurm.Partitions): Returns self
 
         Raises:
             RPCError: When getting the Jobs from the slurmctld failed.
@@ -203,7 +214,7 @@ cdef class Job:
         self._dealloc_impl()
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.id})'
+        return f'pyslurm.{self.__class__.__name__}({self.id})'
 
     @staticmethod
     def load(job_id):
@@ -233,15 +244,13 @@ cdef class Job:
         """
         cdef:
             job_info_msg_t *info = NULL
-            Job wrap = Job.__new__(Job)
+            Job wrap = None
 
         try: 
             verify_rpc(slurm_load_job(&info, job_id, slurm.SHOW_DETAIL))
 
             if info and info.record_count:
-                # Copy info
-                wrap._alloc_impl()
-                memcpy(wrap.ptr, &info.job_array[0], sizeof(slurm_job_info_t))
+                wrap = Job.from_ptr(&info.job_array[0])
                 info.record_count = 0
 
                 if not slurm.IS_JOB_PENDING(wrap.ptr):

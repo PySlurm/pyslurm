@@ -121,12 +121,15 @@ cdef class Nodes(MultiClusterMap):
         return nodes
 
     def reload(self):
-        """Reload the information for nodes in a collection.
+        """Reload the information for Nodes in a collection.
 
         !!! note
 
             Only information for nodes which are already in the collection at
             the time of calling this method will be reloaded.
+
+        Returns:
+            (pyslurm.Nodes): Returns self
 
         Raises:
             RPCError: When getting the Nodes from the slurmctld failed.
@@ -246,7 +249,7 @@ cdef class Node:
         Node.__dict__[name].__set__(self, val)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name})'
+        return f'pyslurm.{self.__class__.__name__}({self.name})'
 
     @staticmethod
     cdef Node from_ptr(node_info_t *in_ptr):
@@ -271,6 +274,10 @@ cdef class Node:
 
         Implements the slurm_load_node_single RPC.
 
+        Args:
+            name (str):
+                The name of the Node to load.
+
         Returns:
             (pyslurm.Node): Returns a new Node instance.
 
@@ -285,7 +292,7 @@ cdef class Node:
         cdef:
             node_info_msg_t      *node_info = NULL
             partition_info_msg_t *part_info = NULL
-            Node wrap = Node.__new__(Node)
+            Node wrap = None
 
         try:
             verify_rpc(slurm_load_node_single(&node_info,
@@ -294,9 +301,7 @@ cdef class Node:
             slurm_populate_node_partitions(node_info, part_info)
 
             if node_info and node_info.record_count:
-                # Copy info
-                wrap._alloc_impl()
-                memcpy(wrap.info, &node_info.node_array[0], sizeof(node_info_t))
+                wrap = Node.from_ptr(&node_info.node_array[0])
                 node_info.record_count = 0
             else:
                 raise RPCError(msg=f"Node '{name}' does not exist")
