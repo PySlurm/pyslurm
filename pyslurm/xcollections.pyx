@@ -412,9 +412,9 @@ cdef class MultiClusterMap:
         """An Item to add to the collection
 
         Note that a collection can only hold its specific type.
-        For example, a collection of `pyslurm.Jobs` can only hold
-        `pyslurm.Job` objects. Trying to add anything other than the accepted
-        type will raise a TypeError.
+        For example, a collection of [pyslurm.db.Jobs][] can only hold
+        [pyslurm.db.Job][] objects. Trying to add anything other than the
+        accepted type will raise a TypeError.
 
         Args:
             item (Any):
@@ -425,13 +425,15 @@ cdef class MultiClusterMap:
                 the collection was added.
 
         Examples:
-            Add a `pyslurm.Job` instance to the `Jobs` collection.
+            Add a `pyslurm.db.Job` instance to the `pyslurm.db.Jobs`
+            collection.
 
-            >>> data = pyslurm.Jobs()
-            >>> job = pyslurm.Job(1)
-            >>> data.add(job)
-            >>> print(data)
-            Jobs([Job(1)])
+            >>> import pyslurm
+            >>> jobs = pyslurm.db.Jobs()
+            >>> job = pyslurm.db.Job(1)
+            >>> jobs.add(job)
+            >>> print(jobs)
+            pyslurm.db.Jobs({1: pyslurm.db.Job(1)})
         """
         if item.cluster not in self.data:
             self.data[item.cluster] = {}

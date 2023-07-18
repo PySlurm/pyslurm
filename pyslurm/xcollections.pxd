@@ -51,8 +51,8 @@ cdef class MultiClusterMap:
             ...
         },
         "OTHER_REMOTE_CLUSTER": {
-            100: pyslurm.Job(100),
-            101, pyslurm.Job(101)
+            100: pyslurm.db.Job(100),
+            101, pyslurm.db.Job(101)
             ...
         },
         ...
