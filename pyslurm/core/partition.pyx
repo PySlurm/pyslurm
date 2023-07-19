@@ -488,14 +488,6 @@ cdef class Partition:
         self.ptr.max_cpus_per_node = u32(val)
 
     @property
-    def max_cpus_per_socket(self):
-        return u32_parse(self.ptr.max_cpus_per_socket)
-
-    @max_cpus_per_socket.setter
-    def max_cpus_per_socket(self, val):
-        self.ptr.max_cpus_per_socket = u32(val)
-
-    @property
     def max_nodes(self):
         return u32_parse(self.ptr.max_nodes)
 
