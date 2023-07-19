@@ -220,8 +220,6 @@ cdef class Job:
             When the Job became eligible to run, as a unix timestamp
         end_time (int):
             When the Job ended, as a unix timestamp
-        extra (str):
-            Arbitrary string that can be stored with a Job.
         exit_code (int):
             Exit code of the job script or salloc.
         exit_code_signal (int):
