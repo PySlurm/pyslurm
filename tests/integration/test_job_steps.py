@@ -109,7 +109,7 @@ def test_collection(submit_job):
     assert len(steps) == 3
     assert ("batch" in steps and
             0 in steps and
-            1 in steps)
+            (1 in steps or 'pending' in steps))
 
 
 def test_cancel(submit_job):
@@ -120,7 +120,7 @@ def test_cancel(submit_job):
     assert len(steps) == 3
     assert ("batch" in steps and
             0 in steps and
-            1 in steps)
+            (1 in steps or 'pending' in steps))
 
     steps[0].cancel()
     

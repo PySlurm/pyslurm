@@ -528,14 +528,6 @@ cdef class Partition:
         cstr.from_list(&self.ptr.nodes, val)
 
     @property
-    def nodesets(self):
-        return cstr.to_list(self.ptr.nodesets)
-
-    @nodesets.setter
-    def nodesets(self, val):
-        cstr.from_list(&self.ptr.nodesets, val)
-
-    @property
     def over_time_limit(self):
         return u16_parse(self.ptr.over_time_limit)
 

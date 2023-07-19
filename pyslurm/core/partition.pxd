@@ -172,8 +172,6 @@ cdef class Partition:
             The oversubscribe mode for this Partition
         nodes (str):
             Nodes that are in a Partition
-        nodesets (list[str]):
-            List of Nodesets that a Partition has configured
         over_time_limit (int):
             Limit in minutes that Jobs can exceed their time-limit
 

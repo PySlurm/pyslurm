@@ -188,10 +188,6 @@ cdef class Nodes(MultiClusterMap):
         return xcollections.sum_property(self, Node.allocated_cpus)
     
     @property
-    def effective_cpus(self):
-        return xcollections.sum_property(self, Node.effective_cpus)
-
-    @property
     def current_watts(self):
         return xcollections.sum_property(self, Node.current_watts)
 
@@ -313,37 +309,6 @@ cdef class Node:
 
         return wrap
 
-    def create(self, state="future"):
-        """Create a node.
-
-        Implements the slurm_create_node RPC.
-
-        Args:
-            state (str, optional): 
-                An optional state the created Node should have. Allowed values
-                are `future` and `cloud`. `future` is the default.
-
-        Returns:
-            (pyslurm.Node): This function returns the current Node-instance
-                object itself.
-
-        Raises:
-            RPCError: If creating the Node was not successful.
-
-        Examples:
-            >>> import pyslurm
-            >>> node = pyslurm.Node("testnode").create()
-        """
-        if not self.name:
-            raise ValueError("You need to set a node name first.")
-
-        self._alloc_umsg()
-        cstr.fmalloc(&self.umsg.extra,
-                     f"NodeName={self.name} State={state}")
-        verify_rpc(slurm_create_node(self.umsg))
-
-        return self
-
     def modify(self, Node changes):
         """Modify a node.
 
@@ -371,21 +336,6 @@ cdef class Node:
         n._alloc_umsg()
         cstr.fmalloc(&n.umsg.node_names, self.name)
         verify_rpc(slurm_update_node(n.umsg))
-
-    def delete(self):
-        """Delete a node.
-
-        Implements the slurm_delete_node RPC.
-
-        Raises:
-            RPCError: If deleting the Node was not successful.
-
-        Examples:
-            >>> import pyslurm
-            >>> pyslurm.Node("localhost").delete()
-        """
-        self._alloc_umsg()
-        verify_rpc(slurm_delete_node(self.umsg))
 
     def as_dict(self):
         return self.to_dict()
@@ -528,10 +478,6 @@ cdef class Node:
         self.info.weight=self.umsg.weight = u32(val)
 
     @property
-    def effective_cpus(self):
-        return u16_parse(self.info.cpus_efctv)
-
-    @property
     def total_cpus(self):
         return u16_parse(self.info.cpus, on_noval=0)
 
@@ -622,7 +568,7 @@ cdef class Node:
 
     @property
     def idle_cpus(self):
-        efctv = self.effective_cpus
+        efctv = self.total_cpus
         if not efctv:
             return None
 
