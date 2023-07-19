@@ -71,10 +71,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - Following classes are superseded by new ones:
-    - [pyslurm.job](https://pyslurm.github.io/22.5/reference/old/job/#pyslurm.job)
-    - [pyslurm.node](https://pyslurm.github.io/22.5/reference/old/node/#pyslurm.node)
-    - [pyslurm.jobstep](https://pyslurm.github.io/22.5/reference/old/jobstep/#pyslurm.jobstep)
-    - [pyslurm.slurmdb_jobs](https://pyslurm.github.io/22.5/reference/old/db/job/#pyslurm.slurmdb_jobs)
+    - [pyslurm.job][]
+    - [pyslurm.node][]
+    - [pyslurm.jobstep][]
+    - [pyslurm.slurmdb_jobs][]
 
 ## [21.8.0](https://github.com/PySlurm/pyslurm/releases/tag/v21.8.0) - 2022-03-01
 
