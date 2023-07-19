@@ -9,15 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- New Classes to interact with Database Associations (WIP)
+    - `pyslurm.db.Association`
+    - `pyslurm.db.Associations`
+- New Classes to interact with Database QoS (WIP)
+    - `pyslurm.db.QualityOfService`
+    - `pyslurm.db.QualitiesOfService`
+
+## [22.5.3](https://github.com/PySlurm/pyslurm/releases/tag/v22.5.3) - 2023-07-19
+
+### Added
+
 - Ability to modify Database Jobs
 - New classes to interact with the Partition API
-    - [pyslurm.Partition](https://pyslurm.github.io/23.2/reference/partition/#pyslurm.Partition)
-    - [pyslurm.Partitions](https://pyslurm.github.io/23.2/reference/partition/#pyslurm.Partitions)
+    - [pyslurm.Partition][]
+    - [pyslurm.Partitions][]
 - New attributes for a Database Job:
-    - extra
-    - failed_node
-- Now possible to initialize a pyslurm.db.Jobs collection with existing job
-  ids or pyslurm.db.Job objects
+    - `extra`
+    - `failed_node`
+- Added a new Base Class [MultiClusterMap][pyslurm.xcollections.MultiClusterMap] that some Collections inherit from.
+- Added `to_json` function to all Collections
 
 ### Fixed
 
@@ -25,6 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the following two conditions were met:
     - no start/end time was specified
     - the Job was older than a day
+
+### Changed
+
+- Improved Docs
+- Renamed `JobSearchFilter` to [pyslurm.db.JobFilter][]
+- Renamed `as_dict` function of some classes to `to_dict`
 
 ## [22.5.2](https://github.com/PySlurm/pyslurm/releases/tag/v22.5.2) - 2023-05-21
 
@@ -49,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - [pyslurm.RPCError](https://pyslurm.github.io/22.5/reference/exceptions/#pyslurm.RPCError)
 - [Utility Functions](https://pyslurm.github.io/22.5/reference/utilities/#pyslurm.utils)
 
-### Changes
+### Changed
 
 - Completely overhaul the documentation ([PR #283](https://github.com/PySlurm/pyslurm/pull/283) by [tazend](https://github.com/tazend))
 - Switch to mkdocs for generating documentation ([PR #271](https://github.com/PySlurm/pyslurm/pull/271) by [tazend](https://github.com/tazend),[multimeric](https://github.com/multimeric))
@@ -71,14 +88,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   job is finished ([PR #242](https://github.com/PySlurm/pyslurm/pull/242) by [JonaOtto](https://github.com/JonaOtto))
 - Support updating `end_time` in `slurm_update_reservation` ([PR #255](https://github.com/PySlurm/pyslurm/pull/255) by [pllopsis](https://github.com/pllopis))
 
-### Changes
+### Changed
 
 - Actually retrieve and return the batch script as a string, instead of just
   printing it ([PR #258](https://github.com/PySlurm/pyslurm/pull/258) by [tazend](https://github.com/tazend))
 - Raise `ValueError` on `slurm_update_reservation` instead of just returning the
   error code ([PR #257](https://github.com/PySlurm/pyslurm/pull/257) by [pllopsis](https://github.com/pllopis))
 
-### Fixes
+### Fixed
 
 - Fix some typos in `pyslurm.job` class ([PR #243](https://github.com/PySlurm/pyslurm/pull/243) by [JonaOtto](https://github.com/JonaOtto), [PR #252](https://github.com/PySlurm/pyslurm/pull/252) by [schluenz](https://github.com/schluenz))
 - Fix not being able to create RPMs with `bdist_rpm` ([PR #248](https://github.com/PySlurm/pyslurm/pull/248) by [tazend](https://github.com/tazend))
@@ -94,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `pyproject.toml` file to ease installation ([PR #239](https://github.com/PySlurm/pyslurm/pull/239) by [tazend](https://github.com/tazend))
 - Allow specifying Slurm lib-dir and include-dir via `SLURM_LIB_DIR` and `SLURM_INCLUDE_DIR` environment variables on install ([PR #239](https://github.com/PySlurm/pyslurm/pull/239) by [tazend](https://github.com/tazend))
 
-### Changes
+### Changed
 
 - Now actually link to `libslurm.so` instead of `libslurmfull.so` ([PR #238](https://github.com/PySlurm/pyslurm/pull/238) by [tazend](https://github.com/tazend))
 
