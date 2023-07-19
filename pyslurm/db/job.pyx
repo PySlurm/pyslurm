@@ -662,14 +662,6 @@ cdef class Job:
         return _raw_time(self.ptr.end)
 
     @property
-    def extra(self):
-        return cstr.to_unicode(self.ptr.extra)
-
-    @extra.setter
-    def extra(self, val):
-        cstr.fmalloc(&self.ptr.extra, val)
-
-    @property
     def exit_code(self):
         ec, _ = _get_exit_code(self.ptr.exitcode)
         return ec
@@ -680,10 +672,6 @@ cdef class Job:
         return sig
 
     # uint32_t flags
-
-    @property
-    def failed_node(self):
-        return cstr.to_unicode(self.ptr.failed_node)
 
     def group_id(self):
         return u32_parse(self.ptr.gid, zero_is_noval=False)

@@ -243,14 +243,6 @@ cdef class Association:
     def cluster(self, val):
         cstr.fmalloc(&self.ptr.cluster, val)
 
-    @property
-    def comment(self):
-        return cstr.to_unicode(self.ptr.comment)
-
-    @comment.setter
-    def comment(self, val):
-        cstr.fmalloc(&self.ptr.comment, val)
-
     # uint32_t def_qos_id
 
     # uint16_t flags (ASSOC_FLAG_*)

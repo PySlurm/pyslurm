@@ -158,10 +158,6 @@ cdef class Partition:
             Max CPUs per Node allowed for Jobs in this Partition
 
             This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
-        max_cpus_per_socket (int):
-            Max CPUs per Socket allowed for Jobs in this Partition
-
-            This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         max_nodes (int):
             Max number of Nodes allowed for Jobs
 

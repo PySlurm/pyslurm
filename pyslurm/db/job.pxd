@@ -175,8 +175,6 @@ cdef class Job:
             Name of the WCKey for this Job
         derived_exit_code (int):
             Highest exit code of all the Job steps
-        extra (str):
-            Arbitrary string that can be stored with a Job.
 
     Attributes:
         steps (pyslurm.db.JobSteps):
@@ -228,8 +226,6 @@ cdef class Job:
             Exit code of the job script or salloc.
         exit_code_signal (int):
             Signal of the exit code for this Job.
-        failed_node (str):
-            Name of the failed node that caused the job to get killed.
         group_id (int):
             ID of the group for this Job
         group_name (str):
