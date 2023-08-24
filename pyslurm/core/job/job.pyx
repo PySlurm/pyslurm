@@ -1093,10 +1093,11 @@ cdef class Job:
 
         mem_node = self.memory_per_node
         if mem_node is not None:
-            num_nodes = self.min_nodes
+            num_nodes = self.num_nodes
             if num_nodes is not None:
                 mem_node *= num_nodes
-            return mem_cpu
+            return mem_node
+
 
         # TODO
         #   mem_gpu = self.memory_per_gpu
