@@ -383,7 +383,7 @@ def dehumanize_step_id(sid):
 cpdef gres_from_tres_dict(dict tres_dict):
     gres_prefix = "gres/"
     return {
-        k.replace(gres_prefix, ""):int(v)
+        k.replace(gres_prefix, ""):v
         for k, v in tres_dict.items()
         if gres_prefix in k
     }
