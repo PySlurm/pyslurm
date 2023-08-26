@@ -133,7 +133,7 @@ cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
     which can easily be converted to a dict.
     """
     cdef:
-        str _str_dict = to_unicode(str_dict) 
+        str _str_dict = to_unicode(str_dict)
         str key, val
         dict out = {}
 
@@ -143,7 +143,7 @@ cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
     for kv in _str_dict.split(delim1):
         if delim2 in kv:
             key, val = kv.split(delim2, 1)
-            out[key] = val
+            out[key] = int(val) if val.isdigit() else val
 
     return out
 
@@ -184,10 +184,10 @@ def dict_to_str(vals, prepend=None, delim1=",", delim2="="):
 
     if isinstance(vals, str):
         tmp_dict = validate_str_key_value_format(vals, delim1, delim2)
-    
+
     for k, v in tmp_dict.items():
         if ((delim1 in str(k) or delim2 in str(k)) or
-                delim1 in str(v) or delim2 in str(v)):    
+                delim1 in str(v) or delim2 in str(v)):
             raise ValueError(
                 f"Key or Value cannot contain either {delim1} or {delim2}. "
                 f"Got Key: {k} and Value: {v}."
@@ -208,6 +208,7 @@ cpdef dict to_gres_dict(char *gres):
     cdef:
         dict output = {}
         str gres_str = to_unicode(gres)
+        str gres_delim = "gres:"
 
     if not gres_str or gres_str == "(null)":
         return {}
@@ -215,15 +216,15 @@ cpdef dict to_gres_dict(char *gres):
     for item in re.split(",(?=[^,]+?:)", gres_str):
 
         # Remove the additional "gres" specifier if it exists
-        if "gres:" in item:
-            item = item.replace("gres:", "")
+        if gres_delim in item:
+            item = item.replace(gres_delim, "")
 
         gres_splitted = re.split(
-            ":(?=[^:]+?)", 
+            ":(?=[^:]+?)",
             item.replace("(", ":", 1).replace(")", "")
         )
 
-        name, typ, cnt = gres_splitted[0], gres_splitted[1], 0 
+        name, typ, cnt = gres_splitted[0], gres_splitted[1], 0
 
         # Check if we have a gres type.
         if typ.isdigit():
@@ -243,10 +244,10 @@ cpdef dict to_gres_dict(char *gres):
             # Cover cases with IDX
             idx = gres_splitted[3] if not typ else gres_splitted[4]
             output[name_and_typ] = {
-                "count": cnt,
+                "count": int(cnt),
                 "indexes": idx,
             }
-            
+
     return output
 
 

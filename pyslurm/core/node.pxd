@@ -68,8 +68,12 @@ cdef class Nodes(MultiClusterMap):
     Attributes:
         free_memory (int):
             Amount of free memory in this node collection. (in Mebibytes)
+            Note that this means actual free memory as returned by the `free`
+            command
         real_memory (int):
             Amount of real memory in this node collection. (in Mebibytes)
+        idle_memory (int):
+            Amount of idle memory in this node collection. (in Mebibytes)
         allocated_memory (int):
             Amount of alloc Memory in this node collection. (in Mebibytes)
         total_cpus (int):
@@ -100,7 +104,7 @@ cdef class Node:
 
     Other Parameters:
         configured_gres (dict):
-            Configured GRES for the node 
+            Configured GRES for the node
         address (str):
             Address of the node
         hostname (str):
@@ -160,6 +164,10 @@ cdef class Node:
             Real Memory in Mebibytes configured for this node.
         free_memory (int):
             Free Memory in Mebibytes on the node.
+            Note that this means actual free memory as returned by the `free`
+            command
+        idle_memory (int):
+            Idle Memory in Mebibytes on the node.
         memory_reserved_for_system (int):
             Memory in Mebibytes reserved for the System not usable by Jobs.
         temporary_disk (int):
@@ -194,6 +202,8 @@ cdef class Node:
             Time this node was last busy, as unix timestamp.
         reason_time (int):
             Time the reason was set for the node, as unix timestamp.
+        allocated_tres (dict):
+            Currently allocated Trackable Resources
         allocated_cpus (int):
             Number of allocated CPUs on the node.
         idle_cpus (int):
@@ -235,4 +245,4 @@ cdef class Node:
 
     @staticmethod
     cdef Node from_ptr(node_info_t *in_ptr)
-    
+
