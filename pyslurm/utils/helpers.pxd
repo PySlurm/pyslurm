@@ -30,3 +30,4 @@ from libc.stdlib cimport free
 
 cpdef uid_to_name(uint32_t uid, err_on_invalid=*, dict lookup=*)
 cpdef gid_to_name(uint32_t gid, err_on_invalid=*, dict lookup=*)
+cpdef gres_from_tres_dict(dict tres_dict)
