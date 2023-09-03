@@ -123,6 +123,12 @@ cdef class JobFilter:
             Instruct the slurmdbd to also send the job environment(s)
             Note: This requires specifying explictiy job ids, and is mutually
             exclusive with `with_script`
+        truncate_time (bool):
+            Truncate start and end time.
+            For example, when a Job has actually started before the requested
+            `start_time`, the time will be truncated to `start_time`. Same
+            logic applies for `end_time`. This is like the `-T` / `--truncate`
+            option from `sacct`.
     """
     cdef slurmdb_job_cond_t *ptr
 
@@ -149,11 +155,25 @@ cdef class JobFilter:
         nodelist
         with_script
         with_env
+        truncate_time
 
 
 cdef class Jobs(MultiClusterMap):
     """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.db.Job][] objects."""
-    pass
+    cdef public:
+        consumed_energy
+        disk_read
+        disk_write
+        page_faults
+        resident_memory
+        virtual_memory
+        elapsed_cpu_time
+        total_cpu_time
+        user_cpu_time
+        system_cpu_time
+        cpus
+        nodes
+        memory
 
 
 cdef class Job:
