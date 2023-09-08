@@ -159,7 +159,42 @@ cdef class JobFilter:
 
 
 cdef class Jobs(MultiClusterMap):
-    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.db.Job][] objects."""
+    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.db.Job][] objects.
+
+    Args:
+        jobs (Union[list[int], dict[int, pyslurm.db.Job], str], optional=None):
+            Jobs to initialize this collection with.
+
+    Attributes:
+        consumed_energy (int):
+            Total amount of energy consumed, in joules.
+        disk_read (int):
+             Total amount of bytes read.
+        disk_write (int):
+             Total amount of bytes written.
+        page_faults (int):
+            Total amount of page faults.
+        resident_memory (int):
+            Total Resident Set Size (RSS) used in bytes.
+        virtual_memory (int):
+            Total Virtual Memory Size (VSZ) used in bytes.
+        elapsed_cpu_time (int):
+            Total amount of time used (Elapsed time * cpu count) in seconds.
+            This is not the real CPU-Efficiency, but rather the total amount
+            of cpu-time the CPUs were occupied for.
+        total_cpu_time (int):
+            Sum of `user_cpu_time` and `system_cpu_time`, in seconds
+        user_cpu_time (int):
+            Total amount of Time spent in user space, in seconds
+        system_cpu_time (int):
+            Total amount of Time spent in kernel space, in seconds
+        cpus (int):
+            Total amount of cpus.
+        nodes (int):
+            Total amount of nodes.
+        memory (int):
+            Total amount of requested memory in Mebibytes.
+    """
     cdef public:
         consumed_energy
         disk_read
@@ -272,7 +307,7 @@ cdef class Job:
             Amount of CPUs the Job has/had allocated, or, if the Job is still
             pending, this will reflect the amount requested.
         memory (int):
-            Amount of memory the Job requested in total
+            Amount of memory the Job requested in total, in Mebibytes
         reservation (str):
             Name of the Reservation for this Job
         script (str):
