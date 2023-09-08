@@ -28,6 +28,32 @@ from pyslurm.utils.helpers import (
 )
 
 
+def reset_stats_for_job_collection(jobs):
+    jobs.consumed_energy = 0
+    jobs.disk_read = 0
+    jobs.disk_write = 0
+    jobs.page_faults = 0
+    jobs.resident_memory = 0
+    jobs.virtual_memory = 0
+    jobs.elapsed_cpu_time = 0
+    jobs.total_cpu_time = 0
+    jobs.user_cpu_time = 0
+    jobs.system_cpu_time = 0
+
+
+def add_stats_to_job_collection(jobs, JobStatistics js):
+    jobs.consumed_energy += js.consumed_energy
+    jobs.disk_read += js.avg_disk_read
+    jobs.disk_write += js.avg_disk_write
+    jobs.page_faults += js.avg_page_faults
+    jobs.resident_memory += js.avg_resident_memory
+    jobs.virtual_memory += js.avg_virtual_memory
+    jobs.elapsed_cpu_time += js.elapsed_cpu_time
+    jobs.total_cpu_time += js.total_cpu_time
+    jobs.user_cpu_time += js.user_cpu_time
+    jobs.system_cpu_time += js.system_cpu_time
+
+
 cdef class JobStatistics:
 
     def __init__(self):
@@ -49,6 +75,21 @@ cdef class JobStatistics:
 
     def to_dict(self):
         return instance_to_dict(self)
+
+    @staticmethod
+    cdef JobStatistics from_job_steps(Job job):
+        cdef JobStatistics job_stats = JobStatistics()
+
+        for step in job.steps.values():
+            job_stats._add_base_stats(step.stats)
+
+        job_stats._sum_cpu_time(job)
+
+        step_count = len(job.steps)
+        if step_count:
+            job_stats.avg_cpu_frequency /= step_count
+
+        return job_stats
 
     @staticmethod
     cdef JobStatistics from_step(JobStep step):
@@ -140,68 +181,56 @@ cdef class JobStatistics:
 
         return wrap
 
-    @staticmethod
-    def _sum_step_stats_for_job(Job job, JobSteps steps):
-        cdef:
-            JobStatistics job_stats = job.stats
-            JobStatistics step_stats = None
+    def _add_base_stats(self, JobStatistics src):
+        self.consumed_energy += src.consumed_energy
+        self.avg_cpu_time += src.avg_cpu_time
+        self.avg_cpu_frequency += src.avg_cpu_frequency
+        self.avg_disk_read += src.avg_disk_read
+        self.avg_disk_write += src.avg_disk_write
+        self.avg_page_faults += src.avg_page_faults
 
-        for step in steps.values():
-            step_stats = step.stats
+        if src.max_disk_read >= self.max_disk_read:
+            self.max_disk_read = src.max_disk_read
+            self.max_disk_read_node = src.max_disk_read_node
+            self.max_disk_read_task = src.max_disk_read_task
 
-            job_stats.consumed_energy += step_stats.consumed_energy
-            job_stats.avg_cpu_time += step_stats.avg_cpu_time
-            job_stats.avg_cpu_frequency += step_stats.avg_cpu_frequency
-            job_stats.avg_disk_read += step_stats.avg_disk_read
-            job_stats.avg_disk_write += step_stats.avg_disk_write
-            job_stats.avg_page_faults += step_stats.avg_page_faults
+        if src.max_disk_write >= self.max_disk_write:
+            self.max_disk_write = src.max_disk_write
+            self.max_disk_write_node = src.max_disk_write_node
+            self.max_disk_write_task = src.max_disk_write_task
 
-            if step_stats.max_disk_read >= job_stats.max_disk_read:
-                job_stats.max_disk_read = step_stats.max_disk_read
-                job_stats.max_disk_read_node = step_stats.max_disk_read_node
-                job_stats.max_disk_read_task = step_stats.max_disk_read_task
+        if src.max_page_faults >= self.max_page_faults:
+            self.max_page_faults = src.max_page_faults
+            self.max_page_faults_node = src.max_page_faults_node
+            self.max_page_faults_task = src.max_page_faults_task
 
-            if step_stats.max_disk_write >= job_stats.max_disk_write:
-                job_stats.max_disk_write = step_stats.max_disk_write
-                job_stats.max_disk_write_node = step_stats.max_disk_write_node
-                job_stats.max_disk_write_task = step_stats.max_disk_write_task
+        if src.max_resident_memory >= self.max_resident_memory:
+            self.max_resident_memory = src.max_resident_memory
+            self.max_resident_memory_node = src.max_resident_memory_node
+            self.max_resident_memory_task = src.max_resident_memory_task
+            self.avg_resident_memory = self.max_resident_memory
 
-            if step_stats.max_page_faults >= job_stats.max_page_faults:
-                job_stats.max_page_faults = step_stats.max_page_faults
-                job_stats.max_page_faults_node = step_stats.max_page_faults_node
-                job_stats.max_page_faults_task = step_stats.max_page_faults_task
+        if src.max_virtual_memory >= self.max_virtual_memory:
+            self.max_virtual_memory = src.max_virtual_memory
+            self.max_virtual_memory_node = src.max_virtual_memory_node
+            self.max_virtual_memory_task = src.max_virtual_memory_task
+            self.avg_virtual_memory = self.max_virtual_memory
 
-            if step_stats.max_resident_memory >= job_stats.max_resident_memory:
-                job_stats.max_resident_memory = step_stats.max_resident_memory
-                job_stats.max_resident_memory_node = step_stats.max_resident_memory_node
-                job_stats.max_resident_memory_task = step_stats.max_resident_memory_task
-                job_stats.avg_resident_memory = job_stats.max_resident_memory
+        if src.min_cpu_time >= self.min_cpu_time:
+            self.min_cpu_time = src.min_cpu_time
+            self.min_cpu_time_node = src.min_cpu_time_node
+            self.min_cpu_time_task = src.min_cpu_time_task
 
-            if step_stats.max_virtual_memory >= job_stats.max_virtual_memory:
-                job_stats.max_virtual_memory = step_stats.max_virtual_memory
-                job_stats.max_virtual_memory_node = step_stats.max_virtual_memory_node
-                job_stats.max_virtual_memory_task = step_stats.max_virtual_memory_task
-                job_stats.avg_virtual_memory = job_stats.max_virtual_memory
-
-            if step_stats.min_cpu_time >= job_stats.min_cpu_time:
-                job_stats.min_cpu_time = step_stats.min_cpu_time
-                job_stats.min_cpu_time_node = step_stats.min_cpu_time_node
-                job_stats.min_cpu_time_task = step_stats.min_cpu_time_task
-
+    def _sum_cpu_time(self, Job job):
         if job.ptr.tot_cpu_sec != slurm.NO_VAL64:
-            job_stats.total_cpu_time = job.ptr.tot_cpu_sec
+            self.total_cpu_time += job.ptr.tot_cpu_sec
 
         if job.ptr.user_cpu_sec != slurm.NO_VAL64:
-            job_stats.user_cpu_time = job.ptr.user_cpu_sec
+            self.user_cpu_time += job.ptr.user_cpu_sec
 
         if job.ptr.sys_cpu_sec != slurm.NO_VAL64:
-            job_stats.system_cpu_time = job.ptr.sys_cpu_sec
+            self.system_cpu_time += job.ptr.sys_cpu_sec
 
         elapsed = job.elapsed_time if job.elapsed_time else 0
         cpus = job.cpus if job.cpus else 0
-        job_stats.elapsed_cpu_time = elapsed * cpus
-
-        step_count = len(steps)
-        if step_count:
-            job_stats.avg_cpu_frequency /= step_count
-
+        self.elapsed_cpu_time += elapsed * cpus

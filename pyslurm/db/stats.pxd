@@ -140,5 +140,8 @@ cdef class JobStatistics:
         system_cpu_time
 
     @staticmethod
+    cdef JobStatistics from_job_steps(Job job)
+
+    @staticmethod
     cdef JobStatistics from_step(JobStep step)
 
