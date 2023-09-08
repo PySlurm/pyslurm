@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New Classes to interact with Database QoS (WIP)
     - `pyslurm.db.QualityOfService`
     - `pyslurm.db.QualitiesOfService`
+- Add `truncate_time` option to `pyslurm.db.JobFilter`, which is the same as -T /
+  --truncate from sacct.
+- Add new Attributes to `pyslurm.db.Jobs` that help gathering statistics for a
+  collection of Jobs more convenient.
 
 ## [23.2.2](https://github.com/PySlurm/pyslurm/releases/tag/v23.2.2) - 2023-07-18
 
