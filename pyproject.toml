@@ -6,3 +6,9 @@ requires = [
     "Cython>=0.29.30,<3.0",
 ]
 
+
+[tool.codespell]
+skip = '.git,*.pdf,*.svg,*.lock,*.css'
+check-hidden = true
+# ignore-regex = ''
+# ignore-words-list = ''
