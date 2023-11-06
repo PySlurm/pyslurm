@@ -48,7 +48,7 @@ Then, simply generate the header definitions like in this example:
 
 .. code-block:: bash
 
-    scripts/pyslurm_bindgen.py -D /directoy/with/slurm/headers > pyslurm/slurm/header.pxi
+    scripts/pyslurm_bindgen.py -D /directory/with/slurm/headers > pyslurm/slurm/header.pxi
 
 The script outputs everything to `stdout`. Simply redirect the output to the file: :code:`pyslurm/slurm/header.pxi`.
 The headers should now be fully translated.

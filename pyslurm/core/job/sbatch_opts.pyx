@@ -40,7 +40,7 @@ class _SbatchOpt():
         self.has_optional_args = has_optional_args
 
 
-# Sorted by occurence in the sbatch manpage - keep in order.
+# Sorted by occurrence in the sbatch manpage - keep in order.
 SBATCH_OPTIONS = [
     _SbatchOpt("A", "account", "account"),
     _SbatchOpt(None, "acctg-freq", "accounting_gather_frequency"),

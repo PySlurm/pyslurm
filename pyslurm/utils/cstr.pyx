@@ -72,7 +72,7 @@ cdef fmalloc(char **old, val):
         const char *tmp = NULL
         size_t size
 
-    # Free the previous allocation (if neccessary)
+    # Free the previous allocation (if necessary)
     xfree(old[0])
 
     # Consider: Maybe every string containing a \0 should just
@@ -158,7 +158,7 @@ def validate_str_key_value_format(val, delim1=",", delim2="="):
         else:
             raise ValueError(
                 f"Invalid format for key-value pair {kv}. "
-                f"Expected {delim2} as seperator."
+                f"Expected {delim2} as separator."
             )
 
     return out

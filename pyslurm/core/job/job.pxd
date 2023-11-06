@@ -1,5 +1,5 @@
 #########################################################################
-# job.pyx - interface to retrieve slurm job informations
+# job.pyx - interface to retrieve slurm job information
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -353,7 +353,7 @@ cdef class Job:
         kill_on_invalid_dependency (bool):
             Whether the Job should be killed on an invalid dependency.
         spreads_over_nodes (bool):
-            Whether the Job should be spreaded over as many nodes as possible.
+            Whether the Job should be spread over as many nodes as possible.
         power_options (list):
             Options set for Power Management.
         is_cronjob (bool):

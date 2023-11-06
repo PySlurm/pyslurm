@@ -45,7 +45,7 @@ cdef extern from "<sys/resource.h>" nogil:
     int getpriority(int, id_t)
 
 #cdef extern from *:
-#    # deprecated backwards compatiblity declaration
+#    # deprecated backwards compatibility declaration
 #    ctypedef char*  const_char_ptr  "const char*"
 #    ctypedef char** const_char_pptr "const char**"
 
@@ -1807,9 +1807,9 @@ cdef class job:
     cdef _load_single_job(self, jobid):
         """Uses slurm_load_job to setup the self._job_ptr for a single job given by the jobid.
         After calling this, the job pointer can be used in other methods
-        to operate on the informations of the job.
+        to operate on the information of the job.
 
-        This method accepts both string and integer formate of the jobid. It
+        This method accepts both string and integer format of the jobid. It
         calls slurm_xlate_job_id to convert the jobid appropriately.
 
         Raises an value error if the jobid does not correspond to a existing job.
@@ -2307,7 +2307,7 @@ cdef class job:
             bit_str (str): string describing a bitmap (e.g. "0-30,45,50-60")
 
         Returns:
-            (list): List referring to bitmap (empty if not succesful)
+            (list): List referring to bitmap (empty if not successful)
         """
         r_list = []
 

@@ -1,5 +1,5 @@
 #########################################################################
-# job/step.pxd - interface to retrieve slurm job step informations
+# job/step.pxd - interface to retrieve slurm job step information
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #

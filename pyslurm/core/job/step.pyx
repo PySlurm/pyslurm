@@ -1,5 +1,5 @@
 #########################################################################
-# job/step.pyx - interface to retrieve slurm job step informations
+# job/step.pyx - interface to retrieve slurm job step information
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #

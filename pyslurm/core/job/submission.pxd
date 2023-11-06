@@ -342,13 +342,13 @@ cdef class JobSubmitDescription:
             This is the same as --cpus-per-gpu from sbatch.
             This is mutually exclusive with `cpus_per_task`.
         sockets_per_node (int):
-            Restrict Job to nodes with atleast this many sockets.
+            Restrict Job to nodes with at least this many sockets.
             This is the same as --sockets-per-node from sbatch.
         cores_per_socket (int):
-            Restrict Job to nodes with atleast this many cores per socket
+            Restrict Job to nodes with at least this many cores per socket
             This is the same as --cores-per-socket from sbatch.
         threads_per_core (int):
-            Restrict Job to nodes with atleast this many threads per socket
+            Restrict Job to nodes with at least this many threads per socket
             This is the same as --threads-per-core from sbatch.
         gpus (Union[dict, str, int]):
             GPUs for the Job to be allocated in total.
@@ -421,7 +421,7 @@ cdef class JobSubmitDescription:
 
             This is the same as --gres from sbatch. You should also use this
             option if you want to specify GPUs per node (--gpus-per-node).
-            Specifying the type (by seperating GRES name and type with a
+            Specifying the type (by separating GRES name and type with a
             semicolon) is optional. 
 
             For example, specifying it as a dict:
