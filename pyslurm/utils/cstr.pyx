@@ -70,7 +70,7 @@ cdef fmalloc(char **old, val):
     # allow for a denial of service attack on services that use pyslurm.
     cdef:
         const char *tmp = NULL
-        size_t siz
+        size_t size
 
     # Free the previous allocation (if neccessary)
     xfree(old[0])
@@ -85,13 +85,13 @@ cdef fmalloc(char **old, val):
         tmp = val
 
         # Get the length of the char*, include space for NUL character
-        siz = <size_t>strlen(tmp) + 1
+        size = <size_t>strlen(tmp) + 1
 
-        old[0] = <char *>slurm.try_xmalloc(siz)
+        old[0] = <char *>slurm.try_xmalloc(size)
         if not old[0]:
             raise MemoryError("xmalloc failed for char*")
 
-        memcpy(old[0], tmp, siz)
+        memcpy(old[0], tmp, size)
     else:
         old[0] = NULL
 
