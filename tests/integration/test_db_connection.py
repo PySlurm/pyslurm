@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License along
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-"""test_db_connection.py - Test database connectin api functionalities."""
+"""test_db_connection.py - Test database connecting api functionalities."""
 
 import pytest
 import pyslurm
