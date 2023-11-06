@@ -11,4 +11,5 @@ requires = [
 skip = '.git,*.pdf,*.svg,*.lock,*.css'
 check-hidden = true
 # ignore-regex = ''
-# ignore-words-list = ''
+# ignore some variables etc
+ignore-words-list = 'mmaped,splitted'
