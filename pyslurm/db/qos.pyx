@@ -181,7 +181,7 @@ cdef class QualityOfService:
 
         Raises:
             RPCError: If requesting the information from the database was not
-                sucessful.
+                successful.
         """
         qfilter = QualityOfServiceFilter(names=[name])
         qos = QualitiesOfService.load(qfilter).get(name)

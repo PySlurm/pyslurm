@@ -65,39 +65,39 @@ cdef class JobStatistics:
         max_disk_read (int):
             Highest peak number of bytes read by all tasks
         max_disk_read_node (int):
-            Name of the Node where max_disk_read occured
+            Name of the Node where max_disk_read occurred
         max_disk_read_task (int):
-            ID of the Task where max_disk_read occured
+            ID of the Task where max_disk_read occurred
         max_disk_write (int):
             Lowest peak number of bytes written by all tasks
         max_disk_write_node (int):
-            Name of the Node where max_disk_write occured
+            Name of the Node where max_disk_write occurred
         max_disk_write_task (int):
-            ID of the Task where max_disk_write occured
+            ID of the Task where max_disk_write occurred
         max_page_faults (int):
             Highest peak number of page faults by all tasks
         max_page_faults_node (int):
-            Name of the Node where max_page_faults occured
+            Name of the Node where max_page_faults occurred
         max_page_faults_task (int):
-            ID of the Task where max_page_faults occured
+            ID of the Task where max_page_faults occurred
         max_resident_memory (int):
             Highest peak Resident Set Size (RSS) in bytes by all tasks
         max_resident_memory_node (int):
-            Name of the Node where max_resident_memory occured
+            Name of the Node where max_resident_memory occurred
         max_resident_memory_task (int):
-            ID of the Task where max_resident_memory occured
+            ID of the Task where max_resident_memory occurred
         max_virtual_memory (int):
             Highest peak Virtual Memory Size (VSZ) in bytes by all tasks
         max_virtual_memory_node (int):
-            Name of the Node where max_virtual_memory occured
+            Name of the Node where max_virtual_memory occurred
         max_virtual_memory_task (int):
-            ID of the Task where max_virtual_memory occured
+            ID of the Task where max_virtual_memory occurred
         min_cpu_time (int):
             Lowest peak CPU-Time (System + User) in seconds of all tasks
         min_cpu_time_node (int):
-            Name of the Node where min_cpu_time occured
+            Name of the Node where min_cpu_time occurred
         min_cpu_time_task (int):
-            ID of the Task where min_cpu_time occured
+            ID of the Task where min_cpu_time occurred
         total_cpu_time (int):
             Sum of user_cpu_time and system_cpu_time, in seconds
         user_cpu_time (int):

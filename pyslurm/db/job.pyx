@@ -224,7 +224,7 @@ cdef class Jobs(MultiClusterMap):
 
         Raises:
             RPCError: When getting the Jobs from the Database was not
-                sucessful
+                successful
 
         Examples:
             Without a Filter the default behaviour applies, which is
@@ -278,7 +278,7 @@ cdef class Jobs(MultiClusterMap):
         # convert them to its type name for the user in advance.
 
         # TODO: How to handle the possibility of duplicate job ids that could
-        # appear if IDs on a cluster are resetted?
+        # appear if IDs on a cluster are reset?
         for job_ptr in SlurmList.iter_and_pop(job_data):
             job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
             job.qos_data = qos_data
@@ -497,7 +497,7 @@ cdef class Job:
 
         Raises:
             RPCError: If requesting the information for the database Job was
-                not sucessful.
+                not successful.
 
         Examples:
             >>> import pyslurm
@@ -838,7 +838,7 @@ cdef class Job:
 
     @property
     def user_name(self):
-        # Theres also a ptr->user
+        # There's also a ptr->user
         # https://github.com/SchedMD/slurm/blob/6365a8b7c9480c48678eeedef99864d8d3b6a6b5/src/sacct/print.c#L1946
         return uid_to_name(self.ptr.uid)
 

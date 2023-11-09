@@ -51,7 +51,7 @@ def slurm_errno():
 
 
 def get_last_slurm_error():
-    """Get the last slurm error that occured as a tuple of errno and string.
+    """Get the last slurm error that occurred as a tuple of errno and string.
 
     Returns:
         errno (int): The error number

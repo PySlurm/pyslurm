@@ -1,5 +1,5 @@
 #########################################################################
-# job.pyx - interface to retrieve slurm job informations
+# job.pyx - interface to retrieve slurm job information
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
