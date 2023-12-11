@@ -460,7 +460,7 @@ cdef class config:
         """Load the slurm control configuration information.
 
         Returns:
-            int: slurm error code 
+            int: slurm error code
         """
         cdef:
             slurm.slurm_conf_t *slurm_ctl_conf_ptr = NULL
@@ -607,12 +607,6 @@ cdef class config:
             Ctl_dict['job_comp_type'] = slurm.stringOrNone(self.__Config_ptr.job_comp_type, '')
             Ctl_dict['job_comp_user'] = slurm.stringOrNone(self.__Config_ptr.job_comp_user, '')
             Ctl_dict['job_container_plugin'] = slurm.stringOrNone(self.__Config_ptr.job_container_plugin, '')
-            Ctl_dict['job_credential_private_key'] = slurm.stringOrNone(
-                self.__Config_ptr.job_credential_private_key, ''
-            )
-            Ctl_dict['job_credential_public_certificate'] = slurm.stringOrNone(
-                self.__Config_ptr.job_credential_public_certificate, ''
-            )
             # TODO: wrap with job_defaults_str()
             #Ctl_dict['job_defaults_list'] = slurm.stringOrNone(self.__Config_ptr.job_defaults_list, ',')
 
@@ -698,7 +692,6 @@ cdef class config:
             Ctl_dict['resv_over_run'] = self.__Config_ptr.resv_over_run
             Ctl_dict['resv_prolog'] = slurm.stringOrNone(self.__Config_ptr.resv_prolog, '')
             Ctl_dict['ret2service'] = self.__Config_ptr.ret2service
-            Ctl_dict['route_plugin'] = slurm.stringOrNone(self.__Config_ptr.route_plugin, '')
             Ctl_dict['sched_logfile'] = slurm.stringOrNone(self.__Config_ptr.sched_logfile, '')
             Ctl_dict['sched_log_level'] = self.__Config_ptr.sched_log_level
             Ctl_dict['sched_params'] = slurm.stringOrNone(self.__Config_ptr.sched_params, '')
@@ -1296,7 +1289,7 @@ cpdef int slurm_ping(int Controller=0) except? -1:
 
     Args:
         Controller (int, optional): 0 for primary (Default=0), 1 for backup, 2
-            for backup2, ... 
+            for backup2, ...
 
     Returns:
         0 for success or slurm error code
@@ -1337,7 +1330,7 @@ cpdef int slurm_shutdown(uint16_t Options=0) except? -1:
             0 - All slurm daemons (default)
             1 - slurmctld generates a core file
             2 - slurmctld is shutdown (no core file)
-            
+
     Returns:
         int: 0 for success or slurm error code
     """
@@ -1370,7 +1363,7 @@ cpdef int slurm_set_debug_level(uint32_t DebugLevel=0) except? -1:
 
     Args:
         DebugLevel (int, optional): The debug level. Possible values are from
-            0 to 6. 
+            0 to 6.
 
     Returns:
         int: 0 for success, -1 for error and set slurm error number
@@ -1577,7 +1570,7 @@ cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0,
         Signal (int, optional): Signal to send.
 
     Returns:
-        int: 0 for success or -1 for error and set the slurm errno. 
+        int: 0 for success or -1 for error and set the slurm errno.
     """
     cdef int apiError = 0
     cdef int errCode = slurm.slurm_signal_job_step(JobID, JobStep, Signal)
@@ -1624,7 +1617,7 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
         int: 0 for success or -1 for error, and slurm errno is set.
     """
     cdef int apiError = 0
-    cdef int errCode = slurm.slurm_kill_job_step(JobID, JobStep, Signal)
+    cdef int errCode = slurm.slurm_kill_job_step(JobID, JobStep, Signal, 0)
 
     if errCode != 0:
         apiError = slurm.slurm_get_errno()
@@ -1838,7 +1831,7 @@ cdef class job:
 
     def find_id(self, jobid):
         """Retrieve job ID data.
-        
+
         This method accepts both string and integer formats of the jobid.
         This works for single jobs and job arrays. It uses the internal
         helper _load_single_job to do slurm_load_job. If the job corresponding
@@ -1855,7 +1848,7 @@ cdef class job:
 
     def find_user(self, user):
         """Retrieve a user's job data.
-        
+
         This method calls slurm_load_job_user to get all job_table records
         associated with a specific user.
 
@@ -1894,7 +1887,7 @@ cdef class job:
 
         Returns:
             (dict): Data where key is the job name, each entry contains a
-                dictionary of job attributes 
+                dictionary of job attributes
         """
         cdef:
             int apiError
@@ -2353,7 +2346,7 @@ cdef class job:
 
     def slurm_job_batch_script(self, jobid):
         """Return the contents of the batch-script for a Job.
-        
+
         The string returned also includes all the "\\n" characters (new-line).
 
         Args:
@@ -2793,7 +2786,7 @@ cdef class job:
         names.
 
         Args:
-            job_opts (dict): Job information. 
+            job_opts (dict): Job information.
 
         Returns:
             (int): The job id of the submitted job.
@@ -3132,7 +3125,7 @@ def slurm_seterrno(int Errno=0):
 
 def slurm_perror(char* Msg=''):
     """Print to standard error the supplied header.
-    
+
     Header is followed by a colon, followed by a text description of the last
     Slurm error code generated.
 
@@ -3308,7 +3301,7 @@ cdef class node:
             Host_dict['cores_per_socket'] = record.cores
             # TODO: cpu_alloc, cpu_tot
             Host_dict['cpus'] = record.cpus
-            
+
             # FIXME
             #if record.cpu_bind:
             #    slurm.slurm_sprint_cpu_bind_type(tmp_str, record.cpu_bind)
@@ -3459,7 +3452,7 @@ cdef class node:
         Args:
             node_dict (dict): A populated node dictionary, an empty one is
                 created by create_node_dict
-            
+
         Returns:
             (int): 0 for success or -1 for error, and the slurm error code is
                 set appropriately.
@@ -3544,7 +3537,7 @@ def slurm_update_node(dict node_dict):
 
 def create_node_dict():
     """Return a an update_node dictionary
-    
+
     This dictionary can be populated by the user and used for the update_node
     call.
 
@@ -3759,7 +3752,7 @@ cdef class jobstep:
         """Get the slurm job step layout from a given job and step id.
 
         Args:
-            JobID (int): The job id. 
+            JobID (int): The job id.
             StepID (int): The id of the job step.
 
         Returns:
@@ -3819,7 +3812,7 @@ cdef class jobstep:
 cdef class hostlist:
     """Wrapper for Slurm hostlist functions."""
 
-    cdef slurm.hostlist_t hl
+    cdef slurm.hostlist_t *hl
 
     def __cinit__(self):
         self.hl = NULL
@@ -3856,7 +3849,7 @@ cdef class hostlist:
             (list): The list of hostnames in case of success or None on error.
         """
         cdef:
-            slurm.hostlist_t hlist = NULL
+            slurm.hostlist_t *hlist = NULL
             char *hostlist_s = NULL
             char *tmp_str = NULL
             list host_list = None
@@ -3902,7 +3895,7 @@ cdef class hostlist:
 
     def ranged_string(self):
         if self.hl is not NULL:
-            return slurm.stringOrNone(slurm.slurm_hostlist_ranged_string_malloc(self.hl), '')
+            return slurm.stringOrNone(slurm.slurm_hostlist_ranged_string_xmalloc(self.hl), '')
 
     def find(self, hostname):
         if self.hl is not NULL:
@@ -4318,15 +4311,10 @@ def slurm_create_reservation(dict reservation_dict={}):
         resv_msg.end_time = reservation_dict['end_time']
 
     if reservation_dict.get('node_cnt'):
-        int_value = reservation_dict['node_cnt']
-        resv_msg.node_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * 2)
-        resv_msg.node_cnt[0] = int_value
-        resv_msg.node_cnt[1] = 0
+        resv_msg.node_cnt = <uint32_t>reservation_dict['node_cnt']
 
     if reservation_dict.get('core_cnt') and not reservation_dict.get('node_list'):
-        uint32_value = reservation_dict['core_cnt'][0]
-        resv_msg.core_cnt = <uint32_t*>xmalloc(sizeof(uint32_t))
-        resv_msg.core_cnt[0] = uint32_value
+        resv_msg.core_cnt = <uint32_t>reservation_dict['core_cnt'][0]
 
     if reservation_dict.get('node_list'):
         b_node_list = reservation_dict['node_list'].encode("UTF-8", "replace")
@@ -4336,12 +4324,7 @@ def slurm_create_reservation(dict reservation_dict={}):
             hl.create(b_node_list)
             if len(reservation_dict['core_cnt']) != hl.count():
                 raise ValueError("core_cnt list must have the same # elements as the expanded hostlist")
-            resv_msg.core_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * hl.count())
-            int_value = 0
-            for cores in reservation_dict['core_cnt']:
-                uint32_value = cores
-                resv_msg.core_cnt[int_value] = uint32_value
-                int_value += 1
+            resv_msg.core_cnt = <uint32_t>len(reservation_dict['core_cnt'])
 
     if reservation_dict.get('users'):
         b_users = reservation_dict['users'].encode("UTF-8", "replace")
@@ -4422,15 +4405,10 @@ def slurm_update_reservation(dict reservation_dict={}):
         resv_msg.name = b_name
 
     if reservation_dict.get('node_cnt'):
-        int_value = reservation_dict['node_cnt']
-        resv_msg.node_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * 2)
-        resv_msg.node_cnt[0] = int_value
-        resv_msg.node_cnt[1] = 0
+        resv_msg.node_cnt = <uint32_t>reservation_dict['node_cnt']
 
     if reservation_dict.get('core_cnt') and not reservation_dict.get('node_list'):
-        uint32_value = reservation_dict['core_cnt'][0]
-        resv_msg.core_cnt = <uint32_t*>xmalloc(sizeof(uint32_t))
-        resv_msg.core_cnt[0] = uint32_value
+        resv_msg.core_cnt = <uint32_t>reservation_dict['core_cnt'][0]
 
     if reservation_dict.get('node_list'):
         b_node_list = reservation_dict['node_list']
@@ -4440,12 +4418,7 @@ def slurm_update_reservation(dict reservation_dict={}):
             hl.create(b_node_list)
             if len(reservation_dict['core_cnt']) != hl.count():
                 raise ValueError("core_cnt list must have the same # elements as the expanded hostlist")
-            resv_msg.core_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * hl.count())
-            int_value = 0
-            for cores in reservation_dict['core_cnt']:
-                uint32_value = cores
-                resv_msg.core_cnt[int_value] = uint32_value
-                int_value += 1
+            resv_msg.core_cnt = <uint32_t>len(reservation_dict['core_cnt'])
 
     if reservation_dict.get('users'):
         b_users = reservation_dict['users'].encode("UTF-8", "replace")
@@ -4509,7 +4482,7 @@ def slurm_delete_reservation(ResID):
 
 def create_reservation_dict():
     """Create and empty dict for use with create_reservation method.
-    
+
     Returns a dictionary that can be populated by the user an used for
     the update_reservation and create_reservation calls.
 
@@ -4628,6 +4601,7 @@ cdef class topology:
         if self._topo_info_ptr is not NULL:
             slurm.slurm_print_topo_info_msg(slurm.stdout,
                                             self._topo_info_ptr,
+                                            NULL,
                                             self._ShowFlags)
 
 
@@ -5296,7 +5270,7 @@ cdef class slurmdb_jobs:
     def get(self, jobids=[], userids=[], starttime=0, endtime=0, flags = None,
             db_flags = None, clusters = []):
         """Get Slurmdb information about some jobs.
-        
+
         Input formats for start and end times:
             *   today or tomorrow
             *   midnight, noon, teatime (4PM)
@@ -5331,7 +5305,7 @@ cdef class slurmdb_jobs:
             slurm.List JOBSList
             slurm.ListIterator iters = NULL
 
-       
+
         if clusters:
             self.job_cond.cluster_list = slurm.slurm_list_create(NULL)
             for _cluster in clusters:
@@ -5436,7 +5410,7 @@ cdef class slurmdb_jobs:
                 JOBS_info['start'] = job.start
                 JOBS_info['state'] = job.state
                 JOBS_info['state_str'] = slurm.stringOrNone(slurm.slurm_job_state_string(job.state), '')
-                
+
                 # TRES are reported as strings in the format `TRESID=value` where TRESID is one of:
                 # TRES_CPU=1, TRES_MEM=2, TRES_ENERGY=3, TRES_NODE=4, TRES_BILLING=5, TRES_FS_DISK=6, TRES_VMEM=7, TRES_PAGES=8
                 # Example: '1=0,2=745472,3=0,6=1949,7=7966720,8=0'
@@ -5458,7 +5432,7 @@ cdef class slurmdb_jobs:
                         step_info['end'] = step.end
                         step_info['exitcode'] = step.exitcode
 
-                        # Don't add this unless you want to create an endless recursive structure 
+                        # Don't add this unless you want to create an endless recursive structure
                         # step_info['job_ptr'] = JOBS_Info # job's record
 
                         step_info['nnodes'] = step.nnodes
@@ -6014,7 +5988,7 @@ def get_trigger_res_type(uint16_t inx):
     """Returns a string that represents the slurm trigger res type.
 
     Args:
-        ResType (int): Slurm trigger res state 
+        ResType (int): Slurm trigger res state
             * TRIGGER_RES_TYPE_JOB        1
             * TRIGGER_RES_TYPE_NODE       2
             * TRIGGER_RES_TYPE_SLURMCTLD  3
@@ -6147,7 +6121,6 @@ cdef inline object __get_trigger_type(uint32_t TriggerType):
 #        - RESERVE_FLAG_NO_PART_NODES    0x00002000
 #        - RESERVE_FLAG_OVERLAP          0x00004000
 #        - RESERVE_FLAG_SPEC_NODES       0x00008000
-#        - RESERVE_FLAG_FIRST_CORES      0x00010000
 #        - RESERVE_FLAG_TIME_FLOAT       0x00020000
 #        - RESERVE_FLAG_REPLACE          0x00040000
 #    :returns: Reservation state string
@@ -6628,7 +6601,7 @@ cdef class licenses:
 
     def ids(self):
         """Return the current license names from retrieved license data.
-        
+
         This method calls slurm_load_licenses to retrieve license information
         from the controller.  slurm_free_license_info_msg is used to free the
         license message buffer.

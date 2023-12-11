@@ -86,7 +86,6 @@ SLURMDB_REMOVE_ASSOC_USAGE              = slurm.SLURMDB_REMOVE_ASSOC_USAGE
 SLURMDB_ADD_RES                         = slurm.SLURMDB_ADD_RES
 SLURMDB_REMOVE_RES                      = slurm.SLURMDB_REMOVE_RES
 SLURMDB_MODIFY_RES                      = slurm.SLURMDB_MODIFY_RES
-SLURMDB_REMOVE_QOS_USAGE                = slurm.SLURMDB_REMOVE_QOS_USAGE
 SLURMDB_ADD_TRES                        = slurm.SLURMDB_ADD_TRES
 SLURMDB_UPDATE_FEDS                     = slurm.SLURMDB_UPDATE_FEDS
 
