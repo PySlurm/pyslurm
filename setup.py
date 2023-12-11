@@ -14,7 +14,7 @@ except ImportError:
     from setuptools._vendor.packaging.version import Version
 
 
-CYTHON_VERSION_MIN = "0.29.30" # Keep in sync with pyproject.toml
+CYTHON_VERSION_MIN = "0.29.36" # Keep in sync with pyproject.toml
 SLURM_LIB = "libslurm"
 TOPDIR = Path(__file__).parent
 PYTHON_MIN_REQUIRED = (3, 6)

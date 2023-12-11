@@ -6,7 +6,7 @@ pyslurm is the Python client library for the [Slurm Workload Manager](https://sl
 
 * [Slurm](https://slurm.schedmd.com) - Slurm shared library and header files
 * [Python](https://www.python.org) - >= 3.6
-* [Cython](https://cython.org) - >= 0.29.30 but < 3.0
+* [Cython](https://cython.org) - >= 0.29.36
 
 This Version is for Slurm 23.02.x
 

@@ -40,3 +40,6 @@ pyslurm.egg-info
 # IDE files
 .vscode
 .idea
+
+.python-version
+.tox
