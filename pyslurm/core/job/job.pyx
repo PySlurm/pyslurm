@@ -74,7 +74,7 @@ cdef class Jobs(MultiClusterMap):
         """Retrieve all Jobs from the Slurm controller
 
         Args:
-            preload_passwd_info (bool, optional): 
+            preload_passwd_info (bool, optional):
                 Decides whether to query passwd and groups information from
                 the system.
                 Could potentially speed up access to attributes of the Job
@@ -246,7 +246,7 @@ cdef class Job:
             job_info_msg_t *info = NULL
             Job wrap = None
 
-        try: 
+        try:
             verify_rpc(slurm_load_job(&info, job_id, slurm.SHOW_DETAIL))
 
             if info and info.record_count:
@@ -282,7 +282,7 @@ cdef class Job:
     cdef _swap_data(Job dst, Job src):
         cdef slurm_job_info_t *tmp = NULL
         if dst.ptr and src.ptr:
-            tmp = dst.ptr 
+            tmp = dst.ptr
             dst.ptr = src.ptr
             src.ptr = tmp
 
@@ -305,7 +305,7 @@ cdef class Job:
         Implements the slurm_signal_job RPC.
 
         Args:
-            signal (Union[str, int]): 
+            signal (Union[str, int]):
                 Any valid signal which will be sent to the Job. Can be either
                 a str like `SIGUSR1`, or simply an [int][].
             steps (str):
@@ -315,7 +315,7 @@ cdef class Job:
                 signaled.
                 The value `batch` in contrast means, that only the batch-step
                 will be signaled. With `all` every step is signaled.
-            hurry (bool): 
+            hurry (bool):
                 If True, no burst buffer data will be staged out. The default
                 value is False.
 
@@ -338,7 +338,7 @@ cdef class Job:
             flags |= slurm.KILL_FULL_JOB
         elif steps.casefold() == "batch":
             flags |= slurm.KILL_JOB_BATCH
-        
+
         if hurry:
             flags |= slurm.KILL_HURRY
 
@@ -417,7 +417,7 @@ cdef class Job:
 
         Examples:
             >>> import pyslurm
-            >>> 
+            >>>
             >>> # Setting the new time-limit to 20 days
             >>> changes = pyslurm.JobSubmitDescription(time_limit="20-00:00:00")
             >>> pyslurm.Job(9999).modify(changes)
@@ -442,10 +442,10 @@ cdef class Job:
 
         Examples:
             >>> import pyslurm
-            >>> 
+            >>>
             >>> # Holding a Job (in "admin" mode by default)
             >>> pyslurm.Job(9999).hold()
-            >>> 
+            >>>
             >>> # Holding a Job in "user" mode
             >>> pyslurm.Job(9999).hold(mode="user")
         """
@@ -483,11 +483,11 @@ cdef class Job:
 
         Examples:
             >>> import pyslurm
-            >>> 
+            >>>
             >>> # Requeing a Job while allowing it to be
             >>> # scheduled again immediately
             >>> pyslurm.Job(9999).requeue()
-            >>> 
+            >>>
             >>> # Requeing a Job while putting it in a held state
             >>> pyslurm.Job(9999).requeue(hold=True)
         """
@@ -509,7 +509,7 @@ cdef class Job:
 
         Raises:
             RPCError: When sending the message to the Job was not successful.
-                
+
         Examples:
             >>> import pyslurm
             >>> pyslurm.Job(9999).notify("Hello Friends!")
@@ -539,7 +539,7 @@ cdef class Job:
         #
         # The copyright notices for the file this function was taken from is
         # included below:
-        # 
+        #
         # Portions Copyright (C) 2010-2017 SchedMD LLC <https://www.schedmd.com>.
         # Copyright (C) 2002-2007 The Regents of the University of California.
         # Copyright (C) 2008-2010 Lawrence Livermore National Security.
@@ -621,7 +621,7 @@ cdef class Job:
 
     @property
     def nice(self):
-        if self.ptr.nice == slurm.NO_VAL: 
+        if self.ptr.nice == slurm.NO_VAL:
             return None
 
         return self.ptr.nice - slurm.NICE_OFFSET
@@ -647,7 +647,7 @@ cdef class Job:
 
     @property
     def state_reason(self):
-        if self.ptr.state_desc: 
+        if self.ptr.state_desc:
             return cstr.to_unicode(self.ptr.state_desc)
 
         return cstr.to_unicode(slurm_job_reason_string(self.ptr.state_reason))
@@ -808,7 +808,7 @@ cdef class Job:
     def cpus_per_task(self):
         if self.ptr.cpus_per_tres:
             return None
-        
+
         return u16_parse(self.ptr.cpus_per_task, on_noval=1)
 
     @property
@@ -1031,7 +1031,7 @@ cdef class Job:
         task_str = cstr.to_unicode(self.ptr.array_task_str)
         if not task_str:
             return None
-        
+
         if "%" in task_str:
             # We don't want this % character and everything after it
             # in here, so remove it.
@@ -1042,7 +1042,7 @@ cdef class Job:
     @property
     def end_time(self):
         return _raw_time(self.ptr.end_time)
-    
+
     # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L480
     cdef _calc_run_time(self):
         cdef time_t rtime
@@ -1191,7 +1191,7 @@ cdef class Job:
         """Retrieve the resource layout of this Job on each node.
 
         !!! warning
-        
+
             Return type may still be subject to change in the future
 
         Returns:
@@ -1204,13 +1204,13 @@ cdef class Job:
         #
         # The copyright notices for the file that contains the original code
         # is below:
-        # 
+        #
         # Portions Copyright (C) 2010-2017 SchedMD LLC <https://www.schedmd.com>.
         # Copyright (C) 2002-2007 The Regents of the University of California.
         # Copyright (C) 2008-2010 Lawrence Livermore National Security.
         # Produced at Lawrence Livermore National Laboratory (cf, DISCLAIMER).
         # Written by Morris Jette <jette1@llnl.gov> et. al.
-        # CODE-OCEC-09-009. All rights reserved. 
+        # CODE-OCEC-09-009. All rights reserved.
         #
         # Slurm is licensed under the GNU General Public License. For the full
         # text of Slurm's License, please see here:
@@ -1218,11 +1218,11 @@ cdef class Job:
         #
         # Please, as mentioned above, also have a look at Slurm's DISCLAIMER
         # under pyslurm/slurm/SLURM_DISCLAIMER
-        # 
+        #
         # TODO: Explain the structure of the return value a bit more.
         cdef:
             slurm.job_resources *resources = <slurm.job_resources*>self.ptr.job_resrcs
-            slurm.hostlist_t hl
+            slurm.hostlist_t *hl
             uint32_t rel_node_inx
             int bit_inx = 0
             int bit_reps = 0
@@ -1299,9 +1299,9 @@ cdef class Job:
             free(host)
 
         slurm.slurm_hostlist_destroy(hl)
-        return output    
+        return output
 
-            
+
 # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L99
 cdef _threads_per_core(char *host):
     # TODO
