@@ -176,7 +176,7 @@ cdef extern slurm_conf_t slurm_conf
 cdef extern from "pyslurm/slurm/xmalloc.h" nogil:
     void xfree(void *__p)
     void *xmalloc(size_t __sz)
-    void *try_xmalloc(size_t __sz) 
+    void *try_xmalloc(size_t __sz)
 
 cdef extern void slurm_xfree_ptr(void *)
 
@@ -266,7 +266,7 @@ cdef extern from *:
     void bit_free(bitstr_t *_X)
     void FREE_NULL_BITMAP(bitstr_t *_X)
 
-cdef extern char *slurm_hostlist_deranged_string_malloc(hostlist_t hl)
+cdef extern char *slurm_hostlist_deranged_string_xmalloc(hostlist_t *hl)
 
 #
 # slurmdb functions

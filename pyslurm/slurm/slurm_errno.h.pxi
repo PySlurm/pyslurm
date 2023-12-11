@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2023-05-06T18:02:46.304407
+# Generated on 2023-12-11T22:40:42.328758
 #
 # The Original Copyright notice from slurm_errno.h has been included
 # below:
@@ -119,6 +119,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_DEPENDENCY
         ESLURM_BATCH_ONLY
         ESLURM_LICENSES_UNAVAILABLE
+        ESLURM_TAKEOVER_NO_HEARTBEAT
         ESLURM_JOB_HELD
         ESLURM_INVALID_CRED_TYPE_CHANGE
         ESLURM_INVALID_TASK_MEMORY
@@ -140,6 +141,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_PORTS_INVALID
         ESLURM_PROLOG_RUNNING
         ESLURM_NO_STEPS
+        ESLURM_MISSING_WORK_DIR
         ESLURM_INVALID_QOS
         ESLURM_QOS_PREEMPTION_LOOP
         ESLURM_NODE_NOT_AVAIL
@@ -236,6 +238,16 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_INVALID_HET_STEP_JOB
         ESLURM_JOB_TIMEOUT_KILLED
         ESLURM_JOB_NODE_FAIL_KILLED
+        ESLURM_EMPTY_LIST
+        ESLURM_GROUP_ID_INVALID
+        ESLURM_GROUP_ID_UNKNOWN
+        ESLURM_USER_ID_INVALID
+        ESLURM_USER_ID_UNKNOWN
+        ESLURM_INVALID_ASSOC
+        ESLURM_NODE_ALREADY_EXISTS
+        ESLURM_NODE_TABLE_FULL
+        ESLURM_INVALID_RELATIVE_QOS
+        ESLURM_INVALID_EXTRA
         ESPANK_ERROR
         ESPANK_BAD_ARG
         ESPANK_NOT_TASK
@@ -288,6 +300,8 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_DB_QUERY_TOO_WIDE
         ESLURM_DB_CONNECTION_INVALID
         ESLURM_NO_REMOVE_DEFAULT_ACCOUNT
+        ESLURM_BAD_SQL
+        ESLURM_NO_REMOVE_DEFAULT_QOS
         ESLURM_FED_CLUSTER_MAX_CNT
         ESLURM_FED_CLUSTER_MULTIPLE_ASSIGNMENT
         ESLURM_INVALID_CLUSTER_FEATURE
@@ -300,6 +314,12 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_PLUGIN_INVALID
         ESLURM_PLUGIN_INCOMPLETE
         ESLURM_PLUGIN_NOT_LOADED
+        ESLURM_PLUGIN_NOTFOUND
+        ESLURM_PLUGIN_ACCESS_ERROR
+        ESLURM_PLUGIN_DLOPEN_FAILED
+        ESLURM_PLUGIN_INIT_FAILED
+        ESLURM_PLUGIN_MISSING_NAME
+        ESLURM_PLUGIN_BAD_VERSION
         ESLURM_REST_INVALID_QUERY
         ESLURM_REST_FAIL_PARSING
         ESLURM_REST_INVALID_JOBS_DESC
@@ -319,6 +339,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_DATA_AMBIGUOUS_MODIFY
         ESLURM_DATA_AMBIGUOUS_QUERY
         ESLURM_DATA_PARSE_NOTHING
+        ESLURM_DATA_INVALID_PARSER
         ESLURM_CONTAINER_NOT_CONFIGURED
 
     ctypedef struct slurm_errtab_t:
