@@ -115,7 +115,7 @@ class SlurmConfig():
         if not lib.exists():
             raise RuntimeError(f"Cannot locate Slurm library in {lib_dir}")
 
-        print(f"Found {SLURM_LIB} library in {self.lib_dir}")
+        print(f"Found {SLURM_LIB} library in {lib}")
         return lib_dir
 
     @property
@@ -161,7 +161,8 @@ class SlurmConfig():
 
         if Version(self.version) != Version(SLURM_VERSION):
             raise RuntimeError(
-                f"Incorrect Slurm version detected, requires Slurm {SLURM_VERSION}"
+                "Slurm version mismatch: "
+                f"requires Slurm {SLURM_VERSION}, found {self.version}"
             )
 
 
