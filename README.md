@@ -8,16 +8,16 @@ pyslurm is the Python client library for the [Slurm Workload Manager](https://sl
 * [Python](https://www.python.org) - >= 3.6
 * [Cython](https://cython.org) - >= 0.29.36
 
-This Version is for Slurm 23.02.x
+This Version is for Slurm 23.11.x
 
 ## Versioning
 
 In pyslurm, the versioning scheme follows the official Slurm versioning. The
 first two numbers (`MAJOR.MINOR`) always correspond to Slurms Major-Release,
-for example `23.02`.
+for example `23.11`.
 The last number (`MICRO`) is however not tied in any way to Slurms `MICRO`
 version, but is instead PySlurm's internal Patch-Level. For example, any
-pyslurm 23.02.X version should work with any Slurm 23.02.X release.
+pyslurm 23.11.X version should work with any Slurm 23.11.X release.
 
 ## Installation
 
@@ -29,8 +29,8 @@ the corresponding paths to the necessary files.
 You can specify those with environment variables (recommended), for example:
 
 ```shell
-export SLURM_INCLUDE_DIR=/opt/slurm/23.02/include
-export SLURM_LIB_DIR=/opt/slurm/23.02/lib
+export SLURM_INCLUDE_DIR=/opt/slurm/23.11/include
+export SLURM_LIB_DIR=/opt/slurm/23.11/lib
 ```
 
 Then you can proceed to install pyslurm, for example by cloning the Repository:
