@@ -152,12 +152,32 @@ class TestStrings:
         assert cstr.from_gres_dict("tesla:3,a100:5", "gpu") == expected_str
 
     def test_str_to_gres_dict(self):
-        input_str = "gpu:nvidia-a100:1(IDX:0,1)"
-        expected = {"gpu:nvidia-a100":{"count": 1, "indexes": "0,1"}}
+        input_str = "gpu:nvidia-a100:1(IDX:0)"
+        expected = {"gpu:nvidia-a100": {"count": 1, "indexes": "0"}}
         assert cstr.to_gres_dict(input_str) == expected
 
-        input_str = "gpu:nvidia-a100:1"
-        expected = {"gpu:nvidia-a100": 1}
+        input_str = "gpu:nvidia-a100:2(IDX:0,1)"
+        expected = {"gpu:nvidia-a100": {"count": 2, "indexes": "0,1"}}
+        assert cstr.to_gres_dict(input_str) == expected
+
+        input_str = "gpu:nvidia-a100:5"
+        expected = {"gpu:nvidia-a100": 5}
+        assert cstr.to_gres_dict(input_str) == expected
+
+        input_str = "gpu:nvidia-a100:5,gres:gpu:nvidia-v100:10"
+        expected = {"gpu:nvidia-a100": 5, "gpu:nvidia-v100": 10}
+        assert cstr.to_gres_dict(input_str) == expected
+
+        input_str = "gres:gpu:2"
+        expected = {"gpu": 2}
+        assert cstr.to_gres_dict(input_str) == expected
+
+        input_str = "gres:gpu"
+        expected = {"gpu": 1}
+        assert cstr.to_gres_dict(input_str) == expected
+
+        input_str = "gres:gpu:INVALID_COUNT"
+        expected = {}
         assert cstr.to_gres_dict(input_str) == expected
 
     def test_gres_from_tres_dict(self):
