@@ -214,6 +214,9 @@ cpdef dict to_gres_dict(char *gres):
         return {}
 
     for item in re.split(",(?=[^,]+?:)", gres_str):
+        # char *gres might contain just "gres:gpu", without any count.
+        # If not given, the count is always 1, so default to it.
+        cnt = typ = "1"
 
         # Remove the additional "gres" specifier if it exists
         if gres_delim in item:
@@ -223,15 +226,22 @@ cpdef dict to_gres_dict(char *gres):
             ":(?=[^:]+?)",
             item.replace("(", ":", 1).replace(")", "")
         )
+        gres_splitted_len = len(gres_splitted)
 
-        name, typ, cnt = gres_splitted[0], gres_splitted[1], 0
+        name = gres_splitted[0]
+        if gres_splitted_len > 1:
+            typ = gres_splitted[1]
 
         # Check if we have a gres type.
         if typ.isdigit():
             cnt = typ
             typ = None
-        else:
+        elif gres_splitted_len > 2:
             cnt = gres_splitted[2]
+        else:
+            # String is somehow malformed, should never happen when the input
+            # comes from the slurmctld. Ignore if it happens.
+            continue
 
         # Dict Key-Name depends on if we have a gres type or not
         name_and_typ = f"{name}:{typ}" if typ else name
