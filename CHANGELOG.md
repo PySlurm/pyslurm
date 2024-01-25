@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add new `idle_memory` and `allocated_tres` attributes to `pyslurm.Node` class
 - Fix Node State being displayed as `ALLOCATED` when it should actually be
   `MIXED`.
+- Fix crash for the `gres_per_node` attribute of the `pyslurm.Job` class when
+  the GRES String received from Slurm contains no count.
 
 ## [23.2.2](https://github.com/PySlurm/pyslurm/releases/tag/v23.2.2) - 2023-07-18
 
