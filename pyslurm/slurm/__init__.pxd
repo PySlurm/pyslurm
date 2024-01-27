@@ -1,3 +1,6 @@
+# cython: c_string_type=unicode, c_string_encoding=default
+# cython: language_level=3
+
 from libcpp cimport bool
 from cpython.version cimport PY_MAJOR_VERSION
 
@@ -87,3 +90,10 @@ include "extra.pxi"
 # Just keeping them around here for now. Ideally they shouldn't be
 # within this slurm c-api package, and should be defined somewhere else.
 include "helpers.pxi"
+
+# Additional Features added to the Headers after initial release of the new
+# Major version
+cdef uint8_t ENFORCE_BINDING_GRES
+cdef uint8_t ONE_TASK_PER_SHARING_GRES
+cdef uint64_t GRES_ONE_TASK_PER_SHARING
+cdef uint64_t GRES_MULT_TASKS_PER_SHARING
