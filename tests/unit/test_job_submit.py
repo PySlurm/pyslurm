@@ -350,6 +350,7 @@ def test_parsing_sbatch_options_from_script():
                 #SBATCH --exclusive
                 #SBATCH --ntasks     =    2
                 #SBATCH -c=3 # inline-comments should be ignored
+                #SBATCH --gres-flags=one-task-per-sharing,enforce-binding
 
                 sleep 1000
                 """
@@ -364,8 +365,10 @@ def test_parsing_sbatch_options_from_script():
         assert job.resource_sharing == "no"
         assert job.ntasks == 5
         assert job.cpus_per_task == "3"
+        assert job.gres_tasks_per_sharing == "one-task-per-sharing"
+        assert job.gres_binding == "enforce-binding"
 
-        job = job_desc(ntasks=5)
+        job = job_desc(ntasks=5, gres_binding="disable-binding")
         job.script = path
         job.load_sbatch_options(overwrite=True)
         assert job.time_limit == "20"
@@ -374,6 +377,8 @@ def test_parsing_sbatch_options_from_script():
         assert job.resource_sharing == "no"
         assert job.ntasks == "2"
         assert job.cpus_per_task == "3"
+        assert job.gres_tasks_per_sharing == "one-task-per-sharing"
+        assert job.gres_binding == "enforce-binding"
     finally:
             os.remove(path)
-    
+

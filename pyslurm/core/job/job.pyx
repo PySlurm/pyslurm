@@ -1154,6 +1154,15 @@ cdef class Job:
             return None
 
     @property
+    def gres_tasks_per_sharing(self):
+        if self.ptr.bitflags & slurm.GRES_MULT_TASKS_PER_SHARING:
+            return "multiple"
+        elif self.ptr.bitflags & slurm.GRES_ONE_TASK_PER_SHARING:
+            return "one"
+        else:
+            return None
+
+    @property
     def kill_on_invalid_dependency(self):
         return u64_parse_bool_flag(self.ptr.bitflags, slurm.KILL_INV_DEP)
 
