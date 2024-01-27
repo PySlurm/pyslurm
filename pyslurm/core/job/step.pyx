@@ -30,7 +30,7 @@ from pyslurm.settings import LOCAL_CLUSTER
 from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     signal_to_num,
-    instance_to_dict, 
+    instance_to_dict,
     uid_to_name,
     humanize_step_id,
     dehumanize_step_id,
@@ -260,7 +260,7 @@ cdef class JobStep:
         Implements the slurm_signal_job_step RPC.
 
         Args:
-            signal (Union[str, int]): 
+            signal (Union[str, int]):
                 Any valid signal which will be sent to the Job. Can be either
                 a str like `SIGUSR1`, or simply an [int][].
 
@@ -294,7 +294,7 @@ cdef class JobStep:
             >>> pyslurm.JobStep(9999, 1).cancel()
         """
         step_id = self.ptr.step_id.step_id
-        verify_rpc(slurm_kill_job_step(self.job_id, step_id, 9))
+        verify_rpc(slurm_kill_job_step(self.job_id, step_id, 9, 0))
 
     def modify(self, JobStep changes):
         """Modify a job step.
@@ -312,7 +312,7 @@ cdef class JobStep:
 
         Examples:
             >>> import pyslurm
-            >>> 
+            >>>
             >>> # Setting the new time-limit to 20 days
             >>> changes = pyslurm.JobStep(time_limit="20-00:00:00")
             >>> pyslurm.JobStep(9999, 1).modify(changes)
@@ -399,7 +399,7 @@ cdef class JobStep:
     @property
     def cluster(self):
         return cstr.to_unicode(self.ptr.cluster)
-    
+
     @property
     def srun_host(self):
         return cstr.to_unicode(self.ptr.srun_host)
@@ -439,7 +439,7 @@ cdef class JobStep:
     @property
     def ntasks(self):
         return u32_parse(self.ptr.num_tasks)
-        
+
     @property
     def distribution(self):
         return TaskDistribution.from_int(self.ptr.task_dist)

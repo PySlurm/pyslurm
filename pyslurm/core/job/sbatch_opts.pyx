@@ -28,9 +28,9 @@ from pathlib import Path
 SBATCH_MAGIC = "#SBATCH"
 
 
-class _SbatchOpt():
-    def __init__(self, short_opt, long_opt,
-                 our_attr_name, attr_param=None, is_boolean=False,
+class SbatchOpt():
+    def __init__(self, short_opt=None, long_opt=None,
+                 our_attr_name=None, attr_param=None, is_boolean=False,
                  has_optional_args=False):
         self.short_opt = short_opt
         self.long_opt = long_opt
@@ -39,102 +39,127 @@ class _SbatchOpt():
         self.is_boolean = is_boolean
         self.has_optional_args = has_optional_args
 
+    def set(self, val, desc, overwrite):
+        if self.our_attr_name is None:
+            return None
+
+        if getattr(desc, self.our_attr_name) is None or overwrite:
+            val = self.attr_param if val is None else val
+            setattr(desc, self.our_attr_name, val)
+
+
+class SbatchOptGresFlags(SbatchOpt):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def set(self, val, desc, overwrite):
+        for flag in val.split(","):
+            flag = flag.casefold()
+
+            if flag == "enforce-binding" or flag == "disable-binding":
+                if desc.gres_binding is None or overwrite:
+                    desc.gres_binding = flag
+            elif flag == "one-task-per-sharing" or flag == "multiple-tasks-per-sharing":
+                if desc.gres_tasks_per_sharing is None or overwrite:
+                    desc.gres_tasks_per_sharing = flag
+
 
 # Sorted by occurrence in the sbatch manpage - keep in order.
 SBATCH_OPTIONS = [
-    _SbatchOpt("A", "account", "account"),
-    _SbatchOpt(None, "acctg-freq", "accounting_gather_frequency"),
-    _SbatchOpt("a", "array", "array"),
-    _SbatchOpt(None, "batch", "batch_constraints"),
-    _SbatchOpt(None, "bb", "burst_buffer"),
-    _SbatchOpt(None, "bbf", "burst_buffer_file"),
-    _SbatchOpt("b", "begin", "begin_time"),
-    _SbatchOpt("D", "chdir", "working_directory"),
-    _SbatchOpt(None, "cluster-constraint", "cluster_constraints"),
-    _SbatchOpt("M", "clusters", "clusters"),
-    _SbatchOpt(None, "comment","comment"),
-    _SbatchOpt("C", "constraint", "constraints"),
-    _SbatchOpt(None, "container", "container"),
-    _SbatchOpt(None, "contiguous", "requires_contiguous_nodes"),
-    _SbatchOpt("S", "core-spec", "cores_reserved_for_system"),
-    _SbatchOpt(None, "cores-per-socket", "cores_per_socket"),
-    _SbatchOpt(None, "cpu-freq", "cpu_frequency"),
-    _SbatchOpt(None, "cpus-per-gpu", "cpus_per_gpu"),
-    _SbatchOpt("c", "cpus-per-task", "cpus_per_task"),
-    _SbatchOpt(None, "deadline", "deadline"),
-    _SbatchOpt(None, "delay-boot", "delay_boot_time"),
-    _SbatchOpt("d", "dependency", "dependencies"),
-    _SbatchOpt("m", "distribution", "distribution"),
-    _SbatchOpt("e", "error", "standard_error"),
-    _SbatchOpt("x", "exclude", "excluded_nodes"),
-    _SbatchOpt(None, "exclusive", "resource_sharing", "no"),
-    _SbatchOpt(None, "export", "environment"),
-    _SbatchOpt(None, "export-file", None),
-    _SbatchOpt("B", "extra-node-info", None),
-    _SbatchOpt(None, "get-user-env", "get_user_environment"),
-    _SbatchOpt(None, "gid", "group_id"),
-    _SbatchOpt(None, "gpu-bind", "gpu_binding"),
-    _SbatchOpt(None, "gpu-freq", None),
-    _SbatchOpt("G", "gpus", "gpus"),
-    _SbatchOpt(None, "gpus-per-node", "gpus_per_node"),
-    _SbatchOpt(None, "gpus-per-socket", "gpus_per_socket"),
-    _SbatchOpt(None, "gpus-per-socket", "gpus_per_task"),
-    _SbatchOpt(None, "gres", "gres_per_node"),
-    _SbatchOpt(None, "gres-flags", "gres_binding"),
-    _SbatchOpt(None, "hint", None),
-    _SbatchOpt("H", "hold", "priority", 0),
-    _SbatchOpt(None, "ignore-pbs", None),
-    _SbatchOpt("i", "input", "standard_in"),
-    _SbatchOpt("J", "job-name", "name"),
-    _SbatchOpt(None, "kill-on-invalid-dep", "kill_on_invalid_dependency"),
-    _SbatchOpt("L", "licenses", "licenses"),
-    _SbatchOpt(None, "mail-type", "mail_types"),
-    _SbatchOpt(None, "mail-user", "mail_user"),
-    _SbatchOpt(None, "mcs-label", "mcs_label"),
-    _SbatchOpt(None, "mem", "memory_per_node"),
-    _SbatchOpt(None, "mem-bind", None),
-    _SbatchOpt(None, "mem-per-cpu", "memory_per_cpu"),
-    _SbatchOpt(None, "mem-per-gpu", "memory_per_gpu"),
-    _SbatchOpt(None, "mincpus", "min_cpus_per_node"),
-    _SbatchOpt(None, "network", "network"),
-    _SbatchOpt(None, "nice", "nice"),
-    _SbatchOpt("k", "no-kill", "kill_on_node_fail", False),
-    _SbatchOpt(None, "no-requeue", "is_requeueable", False),
-    _SbatchOpt("F", "nodefile", None),
-    _SbatchOpt("w", "nodelist", "required_nodes"),
-    _SbatchOpt("N", "nodes", "nodes"),
-    _SbatchOpt("n", "ntasks", "ntasks"),
-    _SbatchOpt(None, "ntasks-per-core", "ntasks_per_core"),
-    _SbatchOpt(None, "ntasks-per-gpu", "ntasks_per_gpu"),
-    _SbatchOpt(None, "ntasks-per-node", "ntasks_per_node"),
-    _SbatchOpt(None, "ntasks-per-socket", "ntasks_per_socket"),
-    _SbatchOpt(None, "open-mode", "log_files_open_mode"),
-    _SbatchOpt("o", "output", "standard_output"),
-    _SbatchOpt("O", "overcommit", "overcommit", True),
-    _SbatchOpt("s", "oversubscribe", "resource_sharing", "yes"),
-    _SbatchOpt("p", "partition", "partition"),
-    _SbatchOpt(None, "power", "power_options"),
-    _SbatchOpt(None, "prefer", None),
-    _SbatchOpt(None, "priority", "priority"),
-    _SbatchOpt(None, "profile", "profile_types"),
-    _SbatchOpt(None, "propagate", None),
-    _SbatchOpt("q", "qos", "qos"),
-    _SbatchOpt(None, "reboot", "requires_node_reboot", True),
-    _SbatchOpt(None, "requeue", "is_requeueable", True),
-    _SbatchOpt(None, "reservation", "reservations"),
-    _SbatchOpt(None, "signal", "signal"),
-    _SbatchOpt(None, "sockets-per-node", "sockets_per_node"),
-    _SbatchOpt(None, "spread-job", "spreads_over_nodes", True),
-    _SbatchOpt(None, "switches", "switches"),
-    _SbatchOpt(None, "thread-spec", "threads_reserved_for_system"),
-    _SbatchOpt(None, "threads-per-core", "threads_per_core"),
-    _SbatchOpt("t", "time", "time_limit"),
-    _SbatchOpt(None, "time-min", "time_limit_min"),
-    _SbatchOpt(None, "tmp", "temporary_disk_per_node"),
-    _SbatchOpt(None, "uid", "user_id"),
-    _SbatchOpt(None, "use-min-nodes", "use_min_nodes", True),
-    _SbatchOpt(None, "wait-all-nodes", "wait_all_nodes", True),
-    _SbatchOpt(None, "wckey", "wckey"),
+    SbatchOpt("A", "account", "account"),
+    SbatchOpt(None, "acctg-freq", "accounting_gather_frequency"),
+    SbatchOpt("a", "array", "array"),
+    SbatchOpt(None, "batch", "batch_constraints"),
+    SbatchOpt(None, "bb", "burst_buffer"),
+    SbatchOpt(None, "bbf", "burst_buffer_file"),
+    SbatchOpt("b", "begin", "begin_time"),
+    SbatchOpt("D", "chdir", "working_directory"),
+    SbatchOpt(None, "cluster-constraint", "cluster_constraints"),
+    SbatchOpt("M", "clusters", "clusters"),
+    SbatchOpt(None, "comment","comment"),
+    SbatchOpt("C", "constraint", "constraints"),
+    SbatchOpt(None, "container", "container"),
+    SbatchOpt(None, "contiguous", "requires_contiguous_nodes"),
+    SbatchOpt("S", "core-spec", "cores_reserved_for_system"),
+    SbatchOpt(None, "cores-per-socket", "cores_per_socket"),
+    SbatchOpt(None, "cpu-freq", "cpu_frequency"),
+    SbatchOpt(None, "cpus-per-gpu", "cpus_per_gpu"),
+    SbatchOpt("c", "cpus-per-task", "cpus_per_task"),
+    SbatchOpt(None, "deadline", "deadline"),
+    SbatchOpt(None, "delay-boot", "delay_boot_time"),
+    SbatchOpt("d", "dependency", "dependencies"),
+    SbatchOpt("m", "distribution", "distribution"),
+    SbatchOpt("e", "error", "standard_error"),
+    SbatchOpt("x", "exclude", "excluded_nodes"),
+    SbatchOpt(None, "exclusive", "resource_sharing", "no"),
+    SbatchOpt(None, "export", "environment"),
+    SbatchOpt(None, "export-file", None),
+    SbatchOpt("B", "extra-node-info", None),
+    SbatchOpt(None, "get-user-env", "get_user_environment"),
+    SbatchOpt(None, "gid", "group_id"),
+    SbatchOpt(None, "gpu-bind", "gpu_binding"),
+    SbatchOpt(None, "gpu-freq", None),
+    SbatchOpt("G", "gpus", "gpus"),
+    SbatchOpt(None, "gpus-per-node", "gpus_per_node"),
+    SbatchOpt(None, "gpus-per-socket", "gpus_per_socket"),
+    SbatchOpt(None, "gpus-per-socket", "gpus_per_task"),
+    SbatchOpt(None, "gres", "gres_per_node"),
+    SbatchOptGresFlags(None, "gres-flags"),
+    SbatchOpt(None, "hint", None),
+    SbatchOpt("H", "hold", "priority", 0),
+    SbatchOpt(None, "ignore-pbs", None),
+    SbatchOpt("i", "input", "standard_in"),
+    SbatchOpt("J", "job-name", "name"),
+    SbatchOpt(None, "kill-on-invalid-dep", "kill_on_invalid_dependency"),
+    SbatchOpt("L", "licenses", "licenses"),
+    SbatchOpt(None, "mail-type", "mail_types"),
+    SbatchOpt(None, "mail-user", "mail_user"),
+    SbatchOpt(None, "mcs-label", "mcs_label"),
+    SbatchOpt(None, "mem", "memory_per_node"),
+    SbatchOpt(None, "mem-bind", None),
+    SbatchOpt(None, "mem-per-cpu", "memory_per_cpu"),
+    SbatchOpt(None, "mem-per-gpu", "memory_per_gpu"),
+    SbatchOpt(None, "mincpus", "min_cpus_per_node"),
+    SbatchOpt(None, "network", "network"),
+    SbatchOpt(None, "nice", "nice"),
+    SbatchOpt("k", "no-kill", "kill_on_node_fail", False),
+    SbatchOpt(None, "no-requeue", "is_requeueable", False),
+    SbatchOpt("F", "nodefile", None),
+    SbatchOpt("w", "nodelist", "required_nodes"),
+    SbatchOpt("N", "nodes", "nodes"),
+    SbatchOpt("n", "ntasks", "ntasks"),
+    SbatchOpt(None, "ntasks-per-core", "ntasks_per_core"),
+    SbatchOpt(None, "ntasks-per-gpu", "ntasks_per_gpu"),
+    SbatchOpt(None, "ntasks-per-node", "ntasks_per_node"),
+    SbatchOpt(None, "ntasks-per-socket", "ntasks_per_socket"),
+    SbatchOpt(None, "open-mode", "log_files_open_mode"),
+    SbatchOpt("o", "output", "standard_output"),
+    SbatchOpt("O", "overcommit", "overcommit", True),
+    SbatchOpt("s", "oversubscribe", "resource_sharing", "yes"),
+    SbatchOpt("p", "partition", "partition"),
+    SbatchOpt(None, "power", "power_options"),
+    SbatchOpt(None, "prefer", None),
+    SbatchOpt(None, "priority", "priority"),
+    SbatchOpt(None, "profile", "profile_types"),
+    SbatchOpt(None, "propagate", None),
+    SbatchOpt("q", "qos", "qos"),
+    SbatchOpt(None, "reboot", "requires_node_reboot", True),
+    SbatchOpt(None, "requeue", "is_requeueable", True),
+    SbatchOpt(None, "reservation", "reservations"),
+    SbatchOpt(None, "signal", "signal"),
+    SbatchOpt(None, "sockets-per-node", "sockets_per_node"),
+    SbatchOpt(None, "spread-job", "spreads_over_nodes", True),
+    SbatchOpt(None, "switches", "switches"),
+    SbatchOpt(None, "thread-spec", "threads_reserved_for_system"),
+    SbatchOpt(None, "threads-per-core", "threads_per_core"),
+    SbatchOpt("t", "time", "time_limit"),
+    SbatchOpt(None, "time-min", "time_limit_min"),
+    SbatchOpt(None, "tmp", "temporary_disk_per_node"),
+    SbatchOpt(None, "uid", "user_id"),
+    SbatchOpt(None, "use-min-nodes", "use_min_nodes", True),
+    SbatchOpt(None, "wait-all-nodes", "wait_all_nodes", True),
+    SbatchOpt(None, "wckey", "wckey"),
 ]
 
 
@@ -178,7 +203,7 @@ def _find_opt(opt):
         if opt == sbopt.short_opt or opt == sbopt.long_opt:
             return sbopt
 
-    return None
+    return SbatchOpt()
 
 
 def _parse_opts_from_batch_script(desc, script, overwrite):
@@ -194,11 +219,4 @@ def _parse_opts_from_batch_script(desc, script, overwrite):
         if line.startswith(SBATCH_MAGIC):
             flag, val = _parse_line(line)
             opt = _find_opt(flag)
-
-            if not opt or opt.our_attr_name is None:
-                # Not supported
-                continue
-            
-            if getattr(desc, opt.our_attr_name) is None or overwrite:
-                val = opt.attr_param if val is None else val
-                setattr(desc, opt.our_attr_name, val)
+            opt.set(val, desc, overwrite)

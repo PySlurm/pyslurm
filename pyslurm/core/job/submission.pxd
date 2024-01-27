@@ -55,17 +55,17 @@ cdef class JobSubmitDescription:
         name (str):
             Name of the Job, same as -J/--job-name from sbatch.
         account (str):
-            Account of the job, same as -A/--account from sbatch. 
+            Account of the job, same as -A/--account from sbatch.
         user_id (Union[str, int]):
             Run the job as a different User, same as --uid from sbatch.
             This requires root privileges.
-            You can both specify the name or numeric uid of the User. 
+            You can both specify the name or numeric uid of the User.
         group_id (Union[str, int]):
             Run the job as a different Group, same as --gid from sbatch.
             This requires root privileges.
-            You can both specify the name or numeric gid of the User. 
+            You can both specify the name or numeric gid of the User.
         priority (int):
-            Specific priority the Job will receive. 
+            Specific priority the Job will receive.
             Same as --priority from sbatch.
             You can achieve the behaviour of sbatch's --hold option by
             specifying a priority of 0.
@@ -183,7 +183,7 @@ cdef class JobSubmitDescription:
             An MCS Label for the Job.
             This is the same as --mcs-label from sbatch.
         memory_per_cpu (Union[str, int]):
-            Memory required per allocated CPU. 
+            Memory required per allocated CPU.
 
             The default unit is in Mebibytes. You are also able to specify
             unit suffixes like K|M|G|T.
@@ -237,7 +237,7 @@ cdef class JobSubmitDescription:
             Adjusted scheduling priority for the Job.
             This is the same as --nice from sbatch.
         log_files_open_mode (str):
-            Mode in which standard_output and standard_error log files should be opened. 
+            Mode in which standard_output and standard_error log files should be opened.
             This is the same as --open-mode from sbatch.
 
 
@@ -353,7 +353,7 @@ cdef class JobSubmitDescription:
         gpus (Union[dict, str, int]):
             GPUs for the Job to be allocated in total.
             This is the same as -G/--gpus from sbatch.
-            Specifying the type of the GPU is optional. 
+            Specifying the type of the GPU is optional.
 
 
             For example, specifying the GPU counts as a dict:
@@ -422,7 +422,7 @@ cdef class JobSubmitDescription:
             This is the same as --gres from sbatch. You should also use this
             option if you want to specify GPUs per node (--gpus-per-node).
             Specifying the type (by separating GRES name and type with a
-            semicolon) is optional. 
+            semicolon) is optional.
 
             For example, specifying it as a dict:
 
@@ -463,7 +463,7 @@ cdef class JobSubmitDescription:
             switches.
             This is the same as --switches from sbatch.
 
-            
+
             For example, specifying it as a dict:
 
                 switches = { "count": 5, "max_wait_time": "00:10:00" }
@@ -512,13 +512,22 @@ cdef class JobSubmitDescription:
             This is the same as --use-min-nodes from sbatch.
         gres_binding (str):
             Generic resource task binding options.
-            This is the --gres-flags option from sbatch.
+            This is contained in the --gres-flags option from sbatch.
 
 
             Possible values are:
 
             * `enforce-binding`
             * `disable-binding`
+        gres_tasks_per_sharing (str):
+            Shared GRES Tasks
+            This is contained in the --gres-flags option from sbatch.
+
+
+            Possible values are:
+
+            * `multiple` or `multiple-tasks-per-sharing`
+            * `one` or `one-task-per-sharing`
         temporary_disk_per_node (Union[str, int]):
             Amount of temporary disk space needed per node.
 
@@ -630,6 +639,7 @@ cdef class JobSubmitDescription:
         spreads_over_nodes
         use_min_nodes
         gres_binding
+        gres_tasks_per_sharing
         temporary_disk_per_node
         get_user_environment
         min_cpus_per_node

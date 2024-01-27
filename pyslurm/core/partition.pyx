@@ -156,7 +156,7 @@ cdef class Partitions(MultiClusterMap):
     @property
     def total_nodes(self):
         return xcollections.sum_property(self, Partition.total_nodes)
-    
+
 
 cdef class Partition:
 
@@ -183,7 +183,7 @@ cdef class Partition:
         xfree(self.ptr)
 
     def __dealloc__(self):
-        self._dealloc_impl() 
+        self._dealloc_impl()
 
     def __repr__(self):
         return f'pyslurm.{self.__class__.__name__}({self.name})'
@@ -626,7 +626,7 @@ cdef class Partition:
     def is_user_exclusive(self, val):
         u16_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_EXCLUSIVE_USER,
                           slurm.PART_FLAG_EXC_USER_CLR)
-    
+
     @property
     def is_hidden(self):
         return u16_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_HIDDEN)
@@ -741,9 +741,6 @@ def _select_type_int_to_list(stype):
     # plugin
     out = _select_type_int_to_cons_res(stype)
 
-    if stype & slurm.CR_OTHER_CONS_RES:
-        out.append("OTHER_CONS_RES")
-
     if stype & slurm.CR_ONE_TASK_PER_CORE:
         out.append("ONE_TASK_PER_CORE")
 
@@ -808,7 +805,7 @@ cdef _extract_job_default_item(typ, slurm.List job_defaults_list):
         job_defaults_t *default_item
         SlurmList job_def_list
         SlurmListItem job_def_item
-    
+
     job_def_list = SlurmList.wrap(job_defaults_list, owned=False)
     for job_def_item in job_def_list:
         default_item = <job_defaults_t*>job_def_item.data
@@ -828,7 +825,7 @@ cdef _concat_job_default_str(typ, val, char **job_defaults_str):
         current.update({typ : _val})
 
     cstr.from_dict(job_defaults_str, current)
-    
+
 
 def _get_memory(value, per_cpu):
     if value != slurm.NO_VAL64:
