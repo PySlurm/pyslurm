@@ -14,15 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `pyslurm.db.QualityOfService`
     - `pyslurm.db.QualitiesOfService`
 
-## [23.11.0](https://github.com/PySlurm/pyslurm/releases/tag/v23.11.0) - 2024-01-25
+## [23.11.0](https://github.com/PySlurm/pyslurm/releases/tag/v23.11.0) - 2024-01-27
 
 ### Added
 
-- Support for Slurm 23.11.0 and 23.11.1
+- Support for Slurm 23.11.x
 - Add `truncate_time` option to `pyslurm.db.JobFilter`, which is the same as -T /
   --truncate from sacct.
-- Add new Attributes to `pyslurm.db.Jobs` that help gathering statistics for a
+- Add new attributes to `pyslurm.db.Jobs` that help gathering statistics for a
   collection of Jobs more convenient.
+- Add new attribute `gres_tasks_per_sharing` to `pyslurm.Job` and
+  `pyslurm.JobSubmitDescription`
 
 ### Fixed
 
