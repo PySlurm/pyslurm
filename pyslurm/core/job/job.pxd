@@ -347,9 +347,11 @@ cdef class Job:
         gres_per_node (dict):
             Generic Resources (e.g. GPU) this Job is using per Node.
         profile_types (list):
-            Types for which detailed accounting data is collected. 
+            Types for which detailed accounting data is collected.
         gres_binding (str):
             Binding Enforcement of a Generic Resource (e.g. GPU).
+        gres_tasks_per_sharing (str):
+            Task Sharing of a Generic Resource (e.g. GPU).
         kill_on_invalid_dependency (bool):
             Whether the Job should be killed on an invalid dependency.
         spreads_over_nodes (bool):
