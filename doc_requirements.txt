@@ -1,7 +1,2 @@
-cython>=3.0.0b1
-wheel
-setuptools
-mkdocstrings[python]
-mike
-mkdocs-material
-mkdocs-awesome-pages-plugin
+-i https://pypi.org/simple
+cython==0.29.24
