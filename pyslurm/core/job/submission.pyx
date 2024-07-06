@@ -285,6 +285,9 @@ cdef class JobSubmitDescription:
         self._set_gres_binding()
         self._set_gres_tasks_per_sharing()
         self._set_min_cpus()
+        self._set_core_spec()
+        self._set_signal()
+        self._set_switches()
 
         # TODO
         # burst_buffer
@@ -523,7 +526,7 @@ cdef class JobSubmitDescription:
         if not isinstance(vals, dict):
             vals = _parse_signal_str_to_dict(vals)
 
-        self.ptr.warn_signal = u16(signal_to_num(vals.get("signal")))
+        self.ptr.warn_signal = u16(vals.get("signal"))
         self.ptr.warn_time = u16(vals.get("time"), on_noval=60)
         u16_set_bool_flag(&self.ptr.warn_flags,
                 bool(vals.get("batch_only")), slurm.KILL_JOB_BATCH)
@@ -630,7 +633,7 @@ def _parse_signal_str_to_dict(vals):
         if "@" in str(vals):
             info["time"] = val_list[1]
 
-        info["signal"] = val_list[0]
+        info["signal"] = signal_to_num(val_list[0])
 
     return info
 
