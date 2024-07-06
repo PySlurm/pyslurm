@@ -985,6 +985,13 @@ cdef class Job:
     #       return cstr.to_unicode(self.ptr.tres_freq)
 
     @property
+    def billable_tres(self):
+        if self.ptr.billable_tres == <double>slurm.NO_VAL:
+            return 0.0
+
+        return self.ptr.billable_tres
+
+    @property
     def wckey(self):
         return cstr.to_unicode(self.ptr.wckey)
 
