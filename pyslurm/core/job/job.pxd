@@ -308,6 +308,8 @@ cdef class Job:
             Maximum CPU-Frequency requested.
         cpu_frequency_governor (Union[str, int]):
             CPU-Frequency Governor requested.
+        billable_tres (float):
+            Amount of billable trackable resources.
         wckey (str):
             Name of the WCKey this Job uses.
         mail_user (list):
