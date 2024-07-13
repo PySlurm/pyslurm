@@ -541,7 +541,7 @@ cdef class config:
         cdef:
             void *ret_list = NULL
             slurm.List config_list = NULL
-            slurm.ListIterator iters = NULL
+            slurm.list_itr_t *iters = NULL
 
             config_key_pair_t *keyPairs
 
@@ -587,7 +587,7 @@ cdef class config:
         cdef:
             void *ret_list = NULL
             slurm.List config_list = NULL
-            slurm.ListIterator iters = NULL
+            slurm.list_itr_t *iters = NULL
             char tmp_str[128]
 
             config_key_pair_t *keyPairs
@@ -622,7 +622,6 @@ cdef class config:
             Ctl_dict['bcast_exclude'] = stringOrNone(self.__Config_ptr.bcast_exclude, '')
             Ctl_dict['bcast_parameters'] = stringOrNone(self.__Config_ptr.bcast_parameters, '')
             Ctl_dict['boot_time'] = self.__Config_ptr.boot_time
-            Ctl_dict['core_spec_plugin'] = stringOrNone(self.__Config_ptr.core_spec_plugin, '')
             Ctl_dict['cli_filter_plugins'] = stringOrNone(self.__Config_ptr.cli_filter_plugins, '')
             Ctl_dict['cluster_name'] = stringOrNone(self.__Config_ptr.cluster_name, '')
             Ctl_dict['comm_params'] = stringOrNone(self.__Config_ptr.comm_params, '')
@@ -636,10 +635,9 @@ cdef class config:
             Ctl_dict['dependency_params'] = stringOrNone(self.__Config_ptr.dependency_params, '')
             Ctl_dict['eio_timeout'] = self.__Config_ptr.eio_timeout
             Ctl_dict['enforce_part_limits'] = bool(self.__Config_ptr.enforce_part_limits)
-            Ctl_dict['epilog'] = stringOrNone(self.__Config_ptr.epilog, '')
+            # HvB Ctl_dict['epilog'] = stringOrNone(self.__Config_ptr.epilog, '')
             Ctl_dict['epilog_msg_time'] = self.__Config_ptr.epilog_msg_time
-            Ctl_dict['epilog_slurmctld'] = stringOrNone(self.__Config_ptr.epilog_slurmctld, '')
-            Ctl_dict['ext_sensors_type'] = stringOrNone(self.__Config_ptr.ext_sensors_type, '')
+            # HvB Ctl_dict['epilog_slurmctld'] = stringOrNone(self.__Config_ptr.epilog_slurmctld, '')
             Ctl_dict['federation_parameters'] = stringOrNone(self.__Config_ptr.fed_params, '')
             Ctl_dict['first_job_id'] = self.__Config_ptr.first_job_id
             Ctl_dict['fs_dampening_factor'] = self.__Config_ptr.fs_dampening_factor
@@ -693,8 +691,6 @@ cdef class config:
             Ctl_dict['over_time_limit'] = int16orNone(self.__Config_ptr.over_time_limit)
             Ctl_dict['plugindir'] = stringOrNone(self.__Config_ptr.plugindir, '')
             Ctl_dict['plugstack'] = stringOrNone(self.__Config_ptr.plugstack, '')
-            Ctl_dict['power_parameters'] = stringOrNone(self.__Config_ptr.power_parameters, '')
-            Ctl_dict['power_plugin'] = stringOrNone(self.__Config_ptr.power_plugin, '')
             Ctl_dict['prep_params'] = stringOrNone(self.__Config_ptr.prep_params, '')
             Ctl_dict['prep_plugins'] = stringOrNone(self.__Config_ptr.prep_plugins, '')
 
@@ -729,9 +725,9 @@ cdef class config:
             Ctl_dict['private_data'] = self.__Config_ptr.private_data
             Ctl_dict['private_data_list'] = get_private_data_list(self.__Config_ptr.private_data)
             Ctl_dict['priority_weight_tres'] = stringOrNone(self.__Config_ptr.priority_weight_tres, '')
-            Ctl_dict['prolog'] = stringOrNone(self.__Config_ptr.prolog, '')
+            # HvB Ctl_dict['prolog'] = stringOrNone(self.__Config_ptr.prolog, '')
             Ctl_dict['prolog_epilog_timeout'] = int16orNone(self.__Config_ptr.prolog_epilog_timeout)
-            Ctl_dict['prolog_slurmctld'] = stringOrNone(self.__Config_ptr.prolog_slurmctld, '')
+            # HvB Ctl_dict['prolog_slurmctld'] = stringOrNone(self.__Config_ptr.prolog_slurmctld, '')
             Ctl_dict['propagate_prio_process'] = self.__Config_ptr.propagate_prio_process
             Ctl_dict['prolog_flags'] = self.__Config_ptr.prolog_flags
             Ctl_dict['propagate_rlimits'] = stringOrNone(self.__Config_ptr.propagate_rlimits, '')
@@ -1859,9 +1855,6 @@ cdef class job:
         After calling this, the job pointer can be used in other methods
         to operate on the information of the job.
 
-        This method accepts both string and integer format of the jobid. It
-        calls slurm_xlate_job_id to convert the jobid appropriately.
-
         Raises an value error if the jobid does not correspond to a existing job.
 
         Args:
@@ -1876,11 +1869,8 @@ cdef class job:
             jobid = str(jobid).encode("UTF-8")
         else:
             jobid = jobid.encode("UTF-8")
-        # convert jobid appropriately for slurm
-        jobid_xlate = slurm.slurm_xlate_job_id(jobid)
-
         # load the job which sets the self._job_ptr pointer
-        rc = slurm.slurm_load_job(&self._job_ptr, jobid_xlate, self._ShowFlags)
+        rc = slurm.slurm_load_job(&self._job_ptr, jobid, self._ShowFlags)
 
         if rc != slurm.SLURM_SUCCESS:
             apiError = slurm.slurm_get_errno()
@@ -2160,7 +2150,6 @@ cdef class job:
             Job_dict['pn_min_memory'] = self._record.pn_min_memory
             Job_dict['pn_min_cpus'] = self._record.pn_min_cpus
             Job_dict['pn_min_tmp_disk'] = self._record.pn_min_tmp_disk
-            Job_dict['power_flags'] = self._record.power_flags
 
             if self._record.preemptable_time:
                 slurm.slurm_make_time_str(
@@ -2223,7 +2212,7 @@ cdef class job:
                 Job_dict['state_reason'] = self._record.state_desc.decode("UTF-8").replace(" ", "_")
             else:
                 Job_dict['state_reason'] = stringOrNone(
-                    slurm.slurm_job_reason_string(
+                    slurm.slurm_job_state_reason_string(
                         <slurm.job_state_reason>self._record.state_reason
                     ), ''
                 )
@@ -2418,9 +2407,7 @@ cdef class job:
         else:
             jobid = jobid.encode("UTF-8")
 
-        jobid_xlate = slurm.slurm_xlate_job_id(jobid)
-
-        return pyslurm.core.job.Job(jobid_xlate).get_batch_script()
+        return pyslurm.core.job.Job(jobid).get_batch_script()
 
     cdef int fill_job_desc_from_opts(self, dict job_opts, slurm.job_desc_msg_t *desc):
         """
@@ -2763,9 +2750,6 @@ cdef class job:
         if job_opts.get("wait4switch") and job_opts.get("wait4switch") >= 0:
             desc.wait4switch = job_opts.get("wait4switch")
 
-        if job_opts.get("power_flags"):
-            desc.power_flags = job_opts.get("power_flags")
-
         if job_opts.get("job_flags"):
             desc.bitflags = job_opts.get("job_flags")
 
@@ -2816,7 +2800,7 @@ cdef class job:
 
     cdef bool is_alps_cray_system(self):
         if slurm.working_cluster_rec:
-            return slurm.working_cluster_rec.flags & slurm.CLUSTER_FLAG_CRAY
+            return slurm.working_cluster_rec.flags
         if ALPS_CRAY_SYSTEM:
             return True
         return False
@@ -3413,10 +3397,7 @@ cdef class node:
 
             # Power Management
             Host_dict['power_mgmt'] = {}
-            if (not record.power or (record.power.cap_watts == slurm.NO_VAL)):
-                Host_dict['power_mgmt']["cap_watts"] = None
-            else:
-                Host_dict['power_mgmt']["cap_watts"] = record.power.cap_watts
+            Host_dict['power_mgmt']["cap_watts"] = None
 
             # Energy statistics
             Host_dict['energy'] = {}
@@ -5241,7 +5222,7 @@ cdef class qos:
     cdef __get(self):
         cdef:
             slurm.List qos_list = NULL
-            slurm.ListIterator iters = NULL
+            slurm.list_itr_t *iters = NULL
             int i = 0
             int listNum = 0
             dict Q_dict = {}
@@ -5360,7 +5341,7 @@ cdef class slurmdb_jobs:
             int apiError = 0
             dict J_dict = {}
             slurm.List JOBSList
-            slurm.ListIterator iters = NULL
+            slurm.list_itr_t *iters = NULL
 
 
         if clusters:
@@ -5614,7 +5595,7 @@ cdef class slurmdb_reservations:
         """
         cdef:
             slurm.List reservation_list
-            slurm.ListIterator iters = NULL
+            slurm.list_itr_t *iters = NULL
             slurm.slurmdb_reservation_rec_t *reservation
             int i = 0
             int j = 0
@@ -5723,7 +5704,7 @@ cdef class slurmdb_clusters:
         """
         cdef:
             slurm.List clusters_list
-            slurm.ListIterator iters = NULL
+            slurm.list_itr_t *iters = NULL
             slurm.slurmdb_cluster_rec_t *cluster = NULL
             int rc = slurm.SLURM_SUCCESS
             int i = 0
@@ -5749,7 +5730,6 @@ cdef class slurmdb_clusters:
                     Cluster_rec_dict['tres'] = stringOrNone(cluster.tres_str, '')
                     Cluster_rec_dict['control_port'] = cluster.control_port
                     Cluster_rec_dict['rpc_version'] = cluster.rpc_version
-                    Cluster_rec_dict['plugin_id_select'] = cluster.plugin_id_select
                     Cluster_rec_dict['flags'] = cluster.flags
                     Cluster_rec_dict['dimensions'] = cluster.dimensions
                     Cluster_rec_dict['classification'] = cluster.classification
@@ -5834,7 +5814,7 @@ cdef class slurmdb_events:
         """
         cdef:
             slurm.List event_list
-            slurm.ListIterator iters = NULL
+            slurm.list_itr_t *iters = NULL
             slurm.slurmdb_event_rec_t *event = NULL
             int i = 0
             int listNum = 0
@@ -5900,9 +5880,9 @@ cdef class slurmdb_reports:
         """
         cdef:
             slurm.List slurmdb_report_cluster_list = NULL
-            slurm.ListIterator itr = NULL
-            slurm.ListIterator cluster_itr = NULL
-            slurm.ListIterator tres_itr = NULL
+            slurm.list_itr_t *itr = NULL
+            slurm.list_itr_t *cluster_itr = NULL
+            slurm.list_itr_t *tres_itr = NULL
             slurm.slurmdb_cluster_cond_t cluster_cond
             slurm.slurmdb_report_assoc_rec_t *slurmdb_report_assoc = NULL
             slurm.slurmdb_report_cluster_rec_t *slurmdb_report_cluster = NULL
@@ -6263,9 +6243,6 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
     if (debug_flags & DEBUG_FLAG_ENERGY):
         debugFlags.append('Energy')
 
-    if (debug_flags & DEBUG_FLAG_EXT_SENSORS):
-        debugFlags.append('ExtSensors')
-
     if (debug_flags & DEBUG_FLAG_FEDR):
         debugFlags.append('Federation')
 
@@ -6325,9 +6302,6 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
 
     if (debug_flags & DEBUG_FLAG_SWITCH):
         debugFlags.append('Switch')
-
-    if (debug_flags & DEBUG_FLAG_TIME_CRAY):
-        debugFlags.append('TimeCray')
 
     if (debug_flags & DEBUG_FLAG_TRACE_JOBS):
         debugFlags.append('TraceJobs')
@@ -6584,7 +6558,7 @@ def get_job_state_reason(inx):
     Returns:
         (str): Reason string
     """
-    job_reason = stringOrNone(slurm.slurm_job_reason_string(inx), '')
+    job_reason = stringOrNone(slurm.slurm_job_state_reason_string(inx), '')
     return job_reason
 
 

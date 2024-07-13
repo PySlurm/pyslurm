@@ -214,7 +214,7 @@ cdef extern void slurm_free_job_info_members(job_info_t *job)
 cdef extern void slurm_free_job_step_info_response_msg(job_step_info_response_msg_t *msg)
 cdef extern void slurm_free_job_step_info_members(job_step_info_t *msg)
 cdef extern char *slurm_job_state_string(uint16_t inx)
-cdef extern char *slurm_job_reason_string(int inx)
+cdef extern char *slurm_job_state_reason_string(int inx)
 cdef extern char *slurm_job_share_string(uint16_t shared)
 cdef extern void slurm_free_update_step_msg(step_update_request_msg_t *msg)
 

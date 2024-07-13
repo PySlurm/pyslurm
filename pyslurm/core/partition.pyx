@@ -601,39 +601,39 @@ cdef class Partition:
 
     @property
     def is_default(self):
-        return u16_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_DEFAULT)
+        return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_DEFAULT)
 
     @is_default.setter
     def is_default(self, val):
-        u16_set_bool_flag(&self.ptr.flags, val,
+        u32_set_bool_flag(&self.ptr.flags, val,
                           slurm.PART_FLAG_DEFAULT, slurm.PART_FLAG_DEFAULT_CLR)
 
     @property
     def allow_root_jobs(self):
-        return u16_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_NO_ROOT)
+        return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_NO_ROOT)
 
     @allow_root_jobs.setter
     def allow_root_jobs(self, val):
-        u16_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_NO_ROOT,
+        u32_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_NO_ROOT,
                           slurm.PART_FLAG_NO_ROOT_CLR)
 
     @property
     def is_user_exclusive(self):
-        return u16_parse_bool_flag(self.ptr.flags,
+        return u32_parse_bool_flag(self.ptr.flags,
                                    slurm.PART_FLAG_EXCLUSIVE_USER)
 
     @is_user_exclusive.setter
     def is_user_exclusive(self, val):
-        u16_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_EXCLUSIVE_USER,
+        u32_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_EXCLUSIVE_USER,
                           slurm.PART_FLAG_EXC_USER_CLR)
 
     @property
     def is_hidden(self):
-        return u16_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_HIDDEN)
+        return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_HIDDEN)
 
     @is_hidden.setter
     def is_hidden(self, val):
-        u16_set_bool_flag(&self.ptr.flags, val,
+        u32_set_bool_flag(&self.ptr.flags, val,
                           slurm.PART_FLAG_HIDDEN, slurm.PART_FLAG_HIDDEN_CLR)
 
     @property
@@ -642,25 +642,25 @@ cdef class Partition:
 
     @least_loaded_nodes_scheduling.setter
     def least_loaded_nodes_scheduling(self, val):
-        u16_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_LLN,
+        u32_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_LLN,
                           slurm.PART_FLAG_LLN_CLR)
 
     @property
     def is_root_only(self):
-        return u16_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_ROOT_ONLY)
+        return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_ROOT_ONLY)
 
     @is_root_only.setter
     def is_root_only(self, val):
-        u16_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_ROOT_ONLY,
+        u32_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_ROOT_ONLY,
                           slurm.PART_FLAG_ROOT_ONLY_CLR)
 
     @property
     def requires_reservation(self):
-        return u16_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_REQ_RESV)
+        return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_REQ_RESV)
 
     @requires_reservation.setter
     def requires_reservation(self, val):
-        u16_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_REQ_RESV,
+        u32_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_REQ_RESV,
                           slurm.PART_FLAG_REQ_RESV_CLR)
 
     # TODO: tres_fmt_str

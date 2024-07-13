@@ -659,12 +659,6 @@ cdef class Node:
         self.info.cpu_bind=self.umsg.cpu_bind = cpubind_to_num(val)
 
     @property
-    def cap_watts(self):
-        if not self.info.power:
-            return 0
-        return u32_parse(self.info.power.cap_watts, on_noval=0)
-
-    @property
     def current_watts(self):
         if not self.info.energy:
             return 0
@@ -675,17 +669,6 @@ cdef class Node:
         if not self.info.energy:
             return 0
         return u32_parse(self.info.energy.ave_watts, on_noval=0)
-
-    @property
-    def external_sensors(self):
-        if not self.info.ext_sensors:
-            return {}
-
-        return {
-            "joules_total":  u64_parse(self.info.ext_sensors.consumed_energy),
-            "current_watts": u32_parse(self.info.ext_sensors.current_watts),
-            "temperature":   u32_parse(self.info.ext_sensors.temperature)
-        }
 
     @property
     def _node_state(self):
