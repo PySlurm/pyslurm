@@ -93,7 +93,8 @@ include "helpers.pxi"
 
 # Additional Features added to the Headers after initial release of the new
 # Major version
-cdef uint8_t ENFORCE_BINDING_GRES
-cdef uint8_t ONE_TASK_PER_SHARING_GRES
-cdef uint64_t GRES_ONE_TASK_PER_SHARING
-cdef uint64_t GRES_MULT_TASKS_PER_SHARING
+#  HvB
+#cdef uint8_t ENFORCE_BINDING_GRES
+#cdef uint8_t ONE_TASK_PER_SHARING_GRES
+#cdef uint64_t GRES_ONE_TASK_PER_SHARING
+#cdef uint64_t GRES_MULT_TASKS_PER_SHARING

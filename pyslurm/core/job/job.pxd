@@ -47,7 +47,7 @@ from pyslurm.slurm cimport (
     job_info_msg_t,
     slurm_job_info_t,
     slurm_job_state_string,
-    slurm_job_reason_string,
+    slurm_job_state_reason_string,
     slurm_job_share_string,
     slurm_job_batch_script,
     slurm_get_job_stdin,

@@ -650,7 +650,7 @@ cdef class Job:
         if self.ptr.state_desc:
             return cstr.to_unicode(self.ptr.state_desc)
 
-        return cstr.to_unicode(slurm_job_reason_string(self.ptr.state_reason))
+        return cstr.to_unicode(slurm_job_state_reason_string(self.ptr.state_reason))
 
     @property
     def is_requeueable(self):
@@ -1176,10 +1176,6 @@ cdef class Job:
     @property
     def spreads_over_nodes(self):
         return u64_parse_bool_flag(self.ptr.bitflags, slurm.SPREAD_JOB)
-
-    @property
-    def power_options(self):
-        return power_type_int_to_list(self.ptr.power_flags)
 
     @property
     def is_cronjob(self):

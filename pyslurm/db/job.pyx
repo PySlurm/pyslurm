@@ -799,7 +799,7 @@ cdef class Job:
 
     @property
     def state_reason(self):
-        return cstr.to_unicode(slurm_job_reason_string
+        return cstr.to_unicode(slurm_job_state_reason_string
                                (self.ptr.state_reason_prev))
 
     @property
