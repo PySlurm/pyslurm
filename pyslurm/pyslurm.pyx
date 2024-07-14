@@ -131,6 +131,15 @@ cdef inline listOrNone(char* value, sep_char):
 
     return value.decode("UTF_8", "replace").split(sep_char)
 
+cdef inline listOfStrings(char **value):
+    l = []
+    i = 0
+    if value != NULL:
+        while value[i] != NULL:
+            l.append(stringOrNone(value[i], ''))
+            i += 1
+
+    return(tuple(l))
 
 cdef inline stringOrNone(char* value, value2):
     if value is NULL:
@@ -635,9 +644,9 @@ cdef class config:
             Ctl_dict['dependency_params'] = stringOrNone(self.__Config_ptr.dependency_params, '')
             Ctl_dict['eio_timeout'] = self.__Config_ptr.eio_timeout
             Ctl_dict['enforce_part_limits'] = bool(self.__Config_ptr.enforce_part_limits)
-            # HvB Ctl_dict['epilog'] = stringOrNone(self.__Config_ptr.epilog, '')
+            Ctl_dict['epilog'] = listOfStrings(self.__Config_ptr.epilog)
             Ctl_dict['epilog_msg_time'] = self.__Config_ptr.epilog_msg_time
-            # HvB Ctl_dict['epilog_slurmctld'] = stringOrNone(self.__Config_ptr.epilog_slurmctld, '')
+            Ctl_dict['epilog_slurmctld'] = listOfStrings(self.__Config_ptr.epilog_slurmctld)
             Ctl_dict['federation_parameters'] = stringOrNone(self.__Config_ptr.fed_params, '')
             Ctl_dict['first_job_id'] = self.__Config_ptr.first_job_id
             Ctl_dict['fs_dampening_factor'] = self.__Config_ptr.fs_dampening_factor
@@ -725,9 +734,9 @@ cdef class config:
             Ctl_dict['private_data'] = self.__Config_ptr.private_data
             Ctl_dict['private_data_list'] = get_private_data_list(self.__Config_ptr.private_data)
             Ctl_dict['priority_weight_tres'] = stringOrNone(self.__Config_ptr.priority_weight_tres, '')
-            # HvB Ctl_dict['prolog'] = stringOrNone(self.__Config_ptr.prolog, '')
+            Ctl_dict['prolog'] = listOfStrings(self.__Config_ptr.prolog)
             Ctl_dict['prolog_epilog_timeout'] = int16orNone(self.__Config_ptr.prolog_epilog_timeout)
-            # HvB Ctl_dict['prolog_slurmctld'] = stringOrNone(self.__Config_ptr.prolog_slurmctld, '')
+            Ctl_dict['prolog_slurmctld'] = listOfStrings(self.__Config_ptr.prolog_slurmctld)
             Ctl_dict['propagate_prio_process'] = self.__Config_ptr.propagate_prio_process
             Ctl_dict['prolog_flags'] = self.__Config_ptr.prolog_flags
             Ctl_dict['propagate_rlimits'] = stringOrNone(self.__Config_ptr.propagate_rlimits, '')
