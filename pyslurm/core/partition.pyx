@@ -747,9 +747,6 @@ def _select_type_int_to_list(stype):
     if stype & slurm.CR_PACK_NODES:
         out.append("PACK_NODES")
 
-    if stype & slurm.CR_OTHER_CONS_TRES:
-        out.append("OTHER_CONS_TRES")
-
     if stype & slurm.CR_CORE_DEFAULT_DIST_BLOCK:
         out.append("CORE_DEFAULT_DIST_BLOCK")
 
