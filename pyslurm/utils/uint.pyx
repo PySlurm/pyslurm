@@ -189,7 +189,7 @@ cdef u16_parse_bool_flag(uint16_t flags, flag):
 
 
 cdef u32_parse_bool_flag(uint32_t flags, flag):
-    return uint_parse_bool_flag(flags, flag, slurm.NO_VAL16)
+    return uint_parse_bool_flag(flags, flag, slurm.NO_VAL)
 
 
 cdef u64_parse_bool_flag(uint64_t flags, flag):
