@@ -167,7 +167,7 @@ cdef class Partition:
 
             This can also return [UNLIMITED][pyslurm.constants.UNLIMITED]
         min_nodes (int):
-            Minimum number of Nodes that must be requested by Jobs 
+            Minimum number of Nodes that must be requested by Jobs
         max_time (int):
             Max Time-Limit in minutes that Jobs can request
 
@@ -211,6 +211,8 @@ cdef class Partition:
             Whether only root is able to use a Partition
         requires_reservation (bool):
             Whether a reservation is required to use a Partition
+        power_down_on_idle (bool):
+            Whether nodes power down on idle after running jobs
     """
     cdef:
         partition_info_t *ptr

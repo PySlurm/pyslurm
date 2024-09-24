@@ -663,6 +663,15 @@ cdef class Partition:
         u32_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_REQ_RESV,
                           slurm.PART_FLAG_REQ_RESV_CLR)
 
+    @property
+    def power_down_on_idle(self):
+        return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_PDOI)
+
+    @power_down_on_idle.setter
+    def power_down_on_idle(self, val):
+        u32_set_bool_flag(&self.ptr.flags, val, slurm.PART_FLAG_PDOI,
+                          slurm.PART_FLAG_PDOI_CLR)
+
     # TODO: tres_fmt_str
 
 
