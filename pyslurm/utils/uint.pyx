@@ -142,7 +142,7 @@ cdef uint_parse_bool_flag(flags, flag, no_val):
 
 cdef uint_parse_bool(val, no_val):
     if not val or val == no_val:
-        return False 
+        return False
 
     return True
 
@@ -175,8 +175,10 @@ cdef u16_parse_bool(uint16_t val):
 cdef u16_set_bool_flag(uint16_t *flags, boolean, true_flag, false_flag=0):
     flags[0] = uint_set_bool_flag(flags[0], boolean, true_flag, false_flag)
 
+
 cdef u32_set_bool_flag(uint32_t *flags, boolean, true_flag, false_flag=0):
     flags[0] = uint_set_bool_flag(flags[0], boolean, true_flag, false_flag)
+
 
 cdef u64_set_bool_flag(uint64_t *flags, boolean, true_flag, false_flag=0):
     flags[0] = uint_set_bool_flag(flags[0], boolean, true_flag, false_flag)
@@ -185,8 +187,10 @@ cdef u64_set_bool_flag(uint64_t *flags, boolean, true_flag, false_flag=0):
 cdef u16_parse_bool_flag(uint16_t flags, flag):
     return uint_parse_bool_flag(flags, flag, slurm.NO_VAL16)
 
+
 cdef u32_parse_bool_flag(uint32_t flags, flag):
     return uint_parse_bool_flag(flags, flag, slurm.NO_VAL16)
+
 
 cdef u64_parse_bool_flag(uint64_t flags, flag):
     return uint_parse_bool_flag(flags, flag, slurm.NO_VAL64)
