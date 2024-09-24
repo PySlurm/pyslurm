@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2024-07-12T16:21:52.276106
+# Generated on 2024-09-24T07:52:21.615726
 #
 # The Original Copyright notice from slurmdb.h has been included
 # below:
@@ -1143,6 +1143,8 @@ cdef extern from "slurm/slurmdb.h":
     void slurmdb_destroy_instance_cond(void* object)
 
     void slurmdb_destroy_job_cond(void* object)
+
+    void slurmdb_destroy_job_cond_members(slurmdb_job_cond_t* job_cond)
 
     void slurmdb_destroy_qos_cond(void* object)
 
