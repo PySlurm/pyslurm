@@ -358,8 +358,6 @@ cdef class Job:
             Whether the Job should be killed on an invalid dependency.
         spreads_over_nodes (bool):
             Whether the Job should be spread over as many nodes as possible.
-        power_options (list):
-            Options set for Power Management.
         is_cronjob (bool):
             Whether this Job is a cronjob.
         cronjob_time (str):

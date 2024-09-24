@@ -55,16 +55,11 @@ def test_parse_dependencies_to_dict():
 def test_mail_types_int_to_list():
     expected = []
     assert mail_type_int_to_list(0) == expected
-    
+
 
 def test_acctg_profile_int_to_list():
     expected = []
     assert acctg_profile_int_to_list(0) == expected
-
-
-def test_power_type_int_to_list():
-    expected = []
-    assert power_type_int_to_list(0) == expected
 
 
 def test_cpu_freq_int_to_str():

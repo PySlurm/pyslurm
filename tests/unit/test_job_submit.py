@@ -49,7 +49,6 @@ from pyslurm.core.job.util import (
     cpu_freq_str_to_int,
     cpu_gov_str_to_int,
     shared_type_str_to_int,
-    power_type_list_to_int,
 )
 
 
@@ -279,15 +278,6 @@ def test_acctg_profile_list_to_int():
     with pytest.raises(ValueError, match=r"Invalid *"):
         typ = "energy,invalid_type"
         acctg_profile_list_to_int(typ)
-
-
-def test_power_type_list_to_int():
-    typ = "level"
-    assert power_type_list_to_int(typ) > 0
-
-    with pytest.raises(ValueError, match=r"Invalid *"):
-        typ = "invalid_type"
-        power_type_list_to_int(typ)
 
 
 def test_cpu_gov_str_to_int():
