@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2023-12-11T22:40:42.798426
+# Generated on 2024-09-24T07:52:21.615726
 #
 # The Original Copyright notice from slurmdb.h has been included
 # below:
@@ -115,11 +115,8 @@ cdef extern from "slurm/slurmdb.h":
     uint8_t CLUSTER_FLAG_MULTSD
     uint16_t CLUSTER_FLAG_A9
     uint16_t CLUSTER_FLAG_FE
-    uint16_t CLUSTER_FLAG_CRAY
     uint16_t CLUSTER_FLAG_FED
     uint16_t CLUSTER_FLAG_EXT
-    uint8_t ASSOC_FLAG_DELETED
-    uint8_t ASSOC_FLAG_NO_UPDATE
     uint8_t SLURMDB_EVENT_COND_OPEN
     uint8_t DB_CONN_FLAG_CLUSTER_DEL
     uint8_t DB_CONN_FLAG_ROLLBACK
@@ -199,6 +196,16 @@ cdef extern from "slurm/slurmdb.h":
         CLUSTER_FED_STATE_ACTIVE
         CLUSTER_FED_STATE_INACTIVE
 
+    ctypedef enum slurmdb_assoc_flags_t:
+        ASSOC_FLAG_NONE
+        ASSOC_FLAG_DELETED
+        ASSOC_FLAG_NO_UPDATE
+        ASSOC_FLAG_EXACT
+        ASSOC_FLAG_USER_COORD_NO
+        ASSOC_FLAG_BASE
+        ASSOC_FLAG_USER_COORD
+        ASSOC_FLAG_INVALID
+
     ctypedef struct slurmdb_tres_rec_t:
         uint64_t alloc_secs
         uint32_t rec_count
@@ -277,23 +284,27 @@ cdef extern from "slurm/slurmdb.h":
         char* tres_usage_out_min_taskid
         char* tres_usage_out_tot
 
+    ctypedef enum slurmdb_acct_flags_t:
+        SLURMDB_ACCT_FLAG_NONE
+        SLURMDB_ACCT_FLAG_DELETED
+        SLURMDB_ACCT_FLAG_WASSOC
+        SLURMDB_ACCT_FLAG_WCOORD
+        SLURMDB_ACCT_FLAG_USER_COORD_NO
+        SLURMDB_ACCT_FLAG_BASE
+        SLURMDB_ACCT_FLAG_USER_COORD
+        SLURMDB_ACCT_FLAG_INVALID
+
     ctypedef struct slurmdb_account_cond_t:
         slurmdb_assoc_cond_t* assoc_cond
         List description_list
+        slurmdb_acct_flags_t flags
         List organization_list
-        uint16_t with_assocs
-        uint16_t with_coords
-        uint16_t with_deleted
-
-    cdef enum:
-        SLURMDB_ACCT_FLAG_NONE
-        SLURMDB_ACCT_FLAG_DELETED
 
     ctypedef struct slurmdb_account_rec_t:
         List assoc_list
         List coordinators
         char* description
-        uint32_t flags
+        slurmdb_acct_flags_t flags
         char* name
         char* organization
 
@@ -342,7 +353,7 @@ cdef extern from "slurm/slurmdb.h":
         char* cluster
         char* comment
         uint32_t def_qos_id
-        uint16_t flags
+        slurmdb_assoc_flags_t flags
         uint32_t grp_jobs
         uint32_t grp_jobs_accrue
         uint32_t grp_submit_jobs
@@ -458,7 +469,6 @@ cdef extern from "slurm/slurmdb.h":
         pthread_mutex_t lock
         char* name
         char* nodes
-        uint32_t plugin_id_select
         slurmdb_assoc_rec_t* root_assoc
         uint16_t rpc_version
         List send_rpc
@@ -587,6 +597,9 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t state
         uint32_t state_reason_prev
         List steps
+        char* std_err
+        char* std_in
+        char* std_out
         time_t submit
         char* submit_line
         uint32_t suspended
@@ -801,7 +814,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t jobs
         uint32_t submit_jobs
         uint64_t* tres
-        uint64_t* tres_run_mins
+        uint64_t* tres_run_secs
         bitstr_t* node_bitmap
         uint16_t* node_job_cnt
         uint32_t uid
@@ -1130,6 +1143,8 @@ cdef extern from "slurm/slurmdb.h":
     void slurmdb_destroy_instance_cond(void* object)
 
     void slurmdb_destroy_job_cond(void* object)
+
+    void slurmdb_destroy_job_cond_members(slurmdb_job_cond_t* job_cond)
 
     void slurmdb_destroy_qos_cond(void* object)
 

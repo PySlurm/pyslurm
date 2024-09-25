@@ -251,9 +251,6 @@ cdef class JobSubmitDescription:
         partitions (Union[list, str]):
             A list of partitions the Job may use.
             This is the same as -p/--partition from sbatch.
-        power_options (list):
-            A list of power management plugin options for the Job.
-            This is the same as --power from sbatch.
         accounting_gather_frequency (Union[dict, str]):
             Interval for accounting info to be gathered.
             This is the same as --acctg-freq from sbatch.
@@ -600,7 +597,6 @@ cdef class JobSubmitDescription:
         log_files_open_mode
         overcommit
         partitions
-        power_options
         profile_types
         accounting_gather_frequency
         qos

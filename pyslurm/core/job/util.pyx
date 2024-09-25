@@ -178,37 +178,6 @@ def acctg_profile_int_to_list(flags):
     return profiles
 
 
-def power_type_list_to_int(types):
-    """Convert a str or list of str with power types to uint8_t."""
-    cdef uint8_t flags = 0
-
-    if not types:
-        return slurm.NO_VAL8
-
-    if isinstance(types, str):
-        types = types.split(",")
-
-    for typ in types:
-        typ = typ.casefold()
-
-        if "level" == typ:
-            flags |= slurm.SLURM_POWER_FLAGS_LEVEL
-        else:
-            raise ValueError("Invalid power type: {typ}.")
-
-    return flags
-
-
-def power_type_int_to_list(flags):
-    """Convert uint8_t power type flags to a list of strings."""
-    types = []
-
-    if flags & slurm.SLURM_POWER_FLAGS_LEVEL:
-        types.append("LEVEL")
-
-    return types
-
-
 def shared_type_str_to_int(typ):
     """Convert a job-sharing type str to its numerical representation."""
     if not typ:
@@ -227,7 +196,7 @@ def shared_type_str_to_int(typ):
         raise ValueError(f"Invalid resource_sharing type: {typ}.")
 
 
-def cpu_gov_str_to_int(gov): 
+def cpu_gov_str_to_int(gov):
     """Convert a cpu governor str to is numerical representation."""
     if not gov:
         return u32(None)

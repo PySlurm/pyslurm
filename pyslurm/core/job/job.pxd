@@ -47,7 +47,7 @@ from pyslurm.slurm cimport (
     job_info_msg_t,
     slurm_job_info_t,
     slurm_job_state_string,
-    slurm_job_reason_string,
+    slurm_job_state_reason_string,
     slurm_job_share_string,
     slurm_job_batch_script,
     slurm_get_job_stdin,
@@ -358,8 +358,6 @@ cdef class Job:
             Whether the Job should be killed on an invalid dependency.
         spreads_over_nodes (bool):
             Whether the Job should be spread over as many nodes as possible.
-        power_options (list):
-            Options set for Power Management.
         is_cronjob (bool):
             Whether this Job is a cronjob.
         cronjob_time (str):

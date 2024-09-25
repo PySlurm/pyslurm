@@ -34,7 +34,7 @@ from pyslurm.slurm cimport (
     try_xmalloc,
     slurmdb_job_cond_def_start_end,
     slurm_job_state_string,
-    slurm_job_reason_string,
+    slurm_job_state_reason_string,
 )
 from pyslurm.db.util cimport SlurmList, SlurmListItem
 from pyslurm.db.connection cimport Connection

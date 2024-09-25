@@ -23,7 +23,7 @@
 from pyslurm cimport slurm
 from pyslurm.utils cimport cstr
 from pyslurm.slurm cimport (
-    ListIterator,
+    list_itr_t,
     List,
     slurm_list_iterator_create,
     slurm_list_iterator_destroy,
@@ -52,7 +52,7 @@ cdef class SlurmListItem:
 cdef class SlurmList:
     cdef:
         List info
-        ListIterator itr
+        list_itr_t *itr
 
     cdef readonly:
         owned

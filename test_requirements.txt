@@ -1,5 +1,5 @@
 pytest==7.1.2
 setuptools>=59.2.0
 wheel>=0.37.0
-Cython>=0.29.36
+Cython>=0.29.37
 packaging>=21.3

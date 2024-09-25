@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2023-12-11T22:40:42.328758
+# Generated on 2024-07-12T16:21:51.735507
 #
 # The Original Copyright notice from slurm_errno.h has been included
 # below:
@@ -77,6 +77,7 @@ cdef extern from "slurm/slurm_errno.h":
         SLURMCTLD_COMMUNICATIONS_RECEIVE_ERROR
         SLURMCTLD_COMMUNICATIONS_SHUTDOWN_ERROR
         SLURMCTLD_COMMUNICATIONS_BACKOFF
+        SLURMCTLD_COMMUNICATIONS_HARD_DROP
         SLURM_NO_CHANGE_IN_DATA
         ESLURM_INVALID_PARTITION_NAME
         ESLURM_DEFAULT_PARTITION_NOT_SET
@@ -248,6 +249,12 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_NODE_TABLE_FULL
         ESLURM_INVALID_RELATIVE_QOS
         ESLURM_INVALID_EXTRA
+        ESLURM_JOB_SIGNAL_FAILED
+        ESLURM_SIGNAL_JOBS_INVALID
+        ESLURM_RES_CORES_PER_GPU_UNIQUE
+        ESLURM_RES_CORES_PER_GPU_TOPO
+        ESLURM_RES_CORES_PER_GPU_NO
+        ESLURM_MAX_POWERED_NODES
         ESPANK_ERROR
         ESPANK_BAD_ARG
         ESPANK_NOT_TASK
@@ -282,6 +289,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURMD_CONTAINER_RUNTIME_INVALID
         ESLURMD_CPU_BIND_ERROR
         ESLURMD_CPU_LAYOUT_ERROR
+        ESLURMD_TOO_MANY_RPCS
         ESLURM_PROTOCOL_INCOMPLETE_PACKET
         SLURM_PROTOCOL_SOCKET_IMPL_TIMEOUT
         SLURM_PROTOCOL_SOCKET_ZERO_BYTES_SENT
@@ -302,6 +310,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_NO_REMOVE_DEFAULT_ACCOUNT
         ESLURM_BAD_SQL
         ESLURM_NO_REMOVE_DEFAULT_QOS
+        ESLURM_COORD_NO_INCREASE_JOB_LIMIT
         ESLURM_FED_CLUSTER_MAX_CNT
         ESLURM_FED_CLUSTER_MULTIPLE_ASSIGNMENT
         ESLURM_INVALID_CLUSTER_FEATURE
@@ -340,6 +349,8 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_DATA_AMBIGUOUS_QUERY
         ESLURM_DATA_PARSE_NOTHING
         ESLURM_DATA_INVALID_PARSER
+        ESLURM_DATA_PARSING_DEPTH
+        ESLURM_DATA_PARSER_INVALID_STATE
         ESLURM_CONTAINER_NOT_CONFIGURED
 
     ctypedef struct slurm_errtab_t:

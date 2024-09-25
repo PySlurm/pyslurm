@@ -266,7 +266,6 @@ cdef class JobSubmitDescription:
         ptr.requeue = u16_bool(self.is_requeueable)
         ptr.wait_all_nodes = u16_bool(self.wait_all_nodes)
         ptr.mail_type = mail_type_list_to_int(self.mail_types)
-        ptr.power_flags = power_type_list_to_int(self.power_options)
         ptr.profile = acctg_profile_list_to_int(self.profile_types)
         ptr.shared = shared_type_str_to_int(self.resource_sharing)
 
