@@ -5,7 +5,7 @@
 # For example: to communicate with the slurmctld directly in order
 # to retrieve the actual batch-script as a string.
 #
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_persist_conn.h#L54
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/persist_conn.h#L53
 ctypedef enum persist_conn_type_t:
     PERSIST_TYPE_NONE = 0
     PERSIST_TYPE_DBD
@@ -14,25 +14,24 @@ ctypedef enum persist_conn_type_t:
     PERSIST_TYPE_HA_DBD
     PERSIST_TYPE_ACCT_UPDATE
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_persist_conn.h#L63
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/persist_conn.h#L62
 ctypedef struct persist_msg_t:
     void *conn
     void *data
-    uint32_t data_size
     uint16_t msg_type
 
-ctypedef int (*_slurm_persist_conn_t_callback_proc) (void *arg, persist_msg_t *msg, buf_t **out_buffer)
+ctypedef int (*_persist_conn_t_callback_proc)(void *arg, persist_msg_t *msg, buf_t **out_buffer)
 
-ctypedef void (*_slurm_persist_conn_t_callback_fini)(void *arg)
+ctypedef void (*_persist_conn_t_callback_fini)(void *arg)
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_persist_conn.h#L70
-ctypedef struct slurm_persist_conn_t:
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/persist_conn.h#L68
+ctypedef struct persist_conn_t:
     void *auth_cred
     uid_t auth_uid
     gid_t auth_gid
     bool auth_ids_set
-    _slurm_persist_conn_t_callback_proc callback_proc
-    _slurm_persist_conn_t_callback_fini callback_fini
+    _persist_conn_t_callback_proc callback_proc
+    _persist_conn_t_callback_fini callback_fini
     char *cluster_name
     time_t comm_fail_time
     uint16_t my_port
@@ -46,10 +45,11 @@ ctypedef struct slurm_persist_conn_t:
     time_t *shutdown
     pthread_t thread_id
     int timeout
-    slurm_trigger_callbacks_t trigger_callbacks;
+    void *tls_conn
+    slurm_trigger_callbacks_t trigger_callbacks
     uint16_t version
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/pack.h#L68
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/pack.h#L68
 ctypedef struct buf_t:
     uint32_t magic
     char *head
@@ -58,16 +58,16 @@ ctypedef struct buf_t:
     bool mmaped
     bool shadow
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_protocol_defs.h#L998
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/slurm_protocol_defs.h#L731
 ctypedef struct return_code_msg_t:
     uint32_t return_code
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_protocol_defs.h#L687
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/slurm_protocol_defs.h#L405
 ctypedef struct job_id_msg_t:
     uint32_t job_id
     uint16_t show_flags
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_protocol_defs.h#L229
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/msg_type.h#L45
 # Only partially defined - not everything needed at the moment.
 ctypedef enum slurm_msg_type_t:
     REQUEST_SHARE_INFO    = 2022
@@ -75,7 +75,7 @@ ctypedef enum slurm_msg_type_t:
     RESPONSE_BATCH_SCRIPT = 2052
     RESPONSE_SLURM_RC     = 8001
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_protocol_defs.h#L504
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/slurm_protocol_defs.h#L231
 ctypedef struct forward_t:
     slurm_node_alias_addrs_t alias_addrs
     uint16_t cnt
@@ -84,7 +84,7 @@ ctypedef struct forward_t:
     uint32_t timeout
     uint16_t tree_width
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_protocol_defs.h#L527
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/slurm_protocol_defs.h#L254
 ctypedef struct forward_struct_t:
     slurm_node_alias_addrs_t *alias_addrs
     char *buf
@@ -95,7 +95,7 @@ ctypedef struct forward_struct_t:
     List ret_list
     uint32_t timeout
 
-# https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_protocol_defs.h#L544
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/slurm_protocol_defs.h#L271
 ctypedef struct slurm_msg_t:
     slurm_addr_t address
     void *auth_cred
@@ -107,10 +107,9 @@ ctypedef struct slurm_msg_t:
     bool restrict_uid_set
     uint32_t body_offset
     buf_t *buffer
-    slurm_persist_conn_t *conn
+    persist_conn_t *conn
     int conn_fd
     void *data
-    uint32_t data_size
     uint16_t flags
     uint8_t hash_index
     uint16_t msg_type
