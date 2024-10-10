@@ -24,6 +24,7 @@
 
 from typing import Union
 from pyslurm.utils import cstr, ctime
+from .stats import do_stat
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.settings import LOCAL_CLUSTER
@@ -253,6 +254,9 @@ cdef class JobStep:
         wrap._alloc_info()
         memcpy(wrap.ptr, in_ptr, sizeof(job_step_info_t))
         return wrap
+
+    def load_stats(self):
+        do_stat(self)
 
     def send_signal(self, signal):
         """Send a signal to a running Job step.

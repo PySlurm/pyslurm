@@ -170,6 +170,11 @@ cdef class Jobs(MultiClusterMap):
             if jid in steps:
                 job.steps = steps[jid]
 
+    def load_stats(self):
+        self.load_steps()
+        for job in self.values():
+            job.load_stats()
+
     @property
     def memory(self):
         return xcollections.sum_property(self, Job.memory)
@@ -199,6 +204,7 @@ cdef class Job:
         self.groups = {}
         cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
         self.steps = JobSteps()
+        self.stats = JobStatistics()
 
     def _alloc_impl(self):
         if not self.ptr:
@@ -276,6 +282,7 @@ cdef class Job:
         wrap.passwd = {}
         wrap.groups = {}
         wrap.steps = JobSteps.__new__(JobSteps)
+        wrap.stats = JobStatistics()
         memcpy(wrap.ptr, in_ptr, sizeof(slurm_job_info_t))
         return wrap
 
@@ -515,6 +522,15 @@ cdef class Job:
             >>> pyslurm.Job(9999).notify("Hello Friends!")
         """
         verify_rpc(slurm_notify_job(self.id, msg))
+
+    def load_stats(self):
+        for step in self.steps.values():
+            step.load_stats()
+            self.stats._add_base_stats(step.stats)
+
+        step_count = len(self.steps)
+        if step_count:
+            self.stats.avg_cpu_frequency /= step_count
 
     def get_batch_script(self):
         """Return the content of the script for a Batch-Job.

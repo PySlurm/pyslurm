@@ -25,6 +25,7 @@
 from pyslurm.utils cimport cstr, ctime
 from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
+from pyslurm.db.stats cimport JobStatistics
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 from libc.stdlib cimport free
@@ -372,7 +373,9 @@ cdef class Job:
         dict passwd
         dict groups
 
-    cdef public JobSteps steps
+    cdef public:
+        JobSteps steps
+        JobStatistics stats
 
     cdef _calc_run_time(self)
 

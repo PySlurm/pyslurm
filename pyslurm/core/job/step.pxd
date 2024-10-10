@@ -47,6 +47,7 @@ from pyslurm.utils cimport cstr, ctime
 from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.core.job.task_dist cimport TaskDistribution
+from pyslurm.db.stats cimport JobStatistics
 
 
 cdef class JobSteps(dict):
@@ -64,7 +65,7 @@ cdef class JobSteps(dict):
     @staticmethod
     cdef JobSteps _load_single(Job job)
     cdef dict _load_data(self, uint32_t job_id, int flags)
-        
+
 
 cdef class JobStep:
     """A Slurm Jobstep
@@ -135,6 +136,9 @@ cdef class JobStep:
     cdef:
         job_step_info_t *ptr
         step_update_request_msg_t *umsg
+
+    cdef public:
+        JobStatistics stats
 
     @staticmethod
     cdef JobStep from_ptr(job_step_info_t *in_ptr)
