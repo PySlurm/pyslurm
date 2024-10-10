@@ -26,6 +26,7 @@ from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     try_xmalloc,
     slurmdb_stats_t,
+    slurmdb_step_rec_t,
     slurmdb_job_rec_t,
 )
 from pyslurm.db.tres cimport TrackableResources
@@ -106,7 +107,7 @@ cdef class JobStatistics:
             Amount of Time spent in kernel space, in seconds
     """
     cdef slurmdb_job_rec_t *job
-    
+
     cdef public:
         consumed_energy
         elapsed_cpu_time
@@ -144,4 +145,7 @@ cdef class JobStatistics:
 
     @staticmethod
     cdef JobStatistics from_step(JobStep step)
+
+    @staticmethod
+    cdef JobStatistics from_ptr(slurmdb_step_rec_t *step, char *nodes_ptr, cpus=*, elapsed_time=*, is_live=*)
 

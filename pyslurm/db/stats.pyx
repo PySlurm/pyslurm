@@ -83,7 +83,9 @@ cdef class JobStatistics:
         for step in job.steps.values():
             job_stats._add_base_stats(step.stats)
 
-        job_stats._sum_cpu_time(job)
+        elapsed = job.elapsed_time if job.elapsed_time else 0
+        cpus = job.cpus if job.cpus else 0
+        job_stats.elapsed_cpu_time += elapsed * cpus
 
         step_count = len(job.steps)
         if step_count:
@@ -93,15 +95,25 @@ cdef class JobStatistics:
 
     @staticmethod
     cdef JobStatistics from_step(JobStep step):
+        return JobStatistics.from_ptr(
+            step.ptr,
+            step.ptr.nodes,
+            step.cpus if step.cpus else 0,
+            step.elapsed_time if step.elapsed_time else 0,
+            is_live=False,
+        )
+
+    @staticmethod
+    cdef JobStatistics from_ptr(slurmdb_step_rec_t *step, char *nodes_ptr, cpus=0, elapsed_time=0, is_live=False):
         cdef JobStatistics wrap = JobStatistics()
-        if not &step.ptr.stats:
+        if not step:
             return wrap
 
         cdef:
             list nodes = nodelist_from_range_str(
-                    cstr.to_unicode(step.ptr.nodes))
+                    cstr.to_unicode(nodes_ptr))
             cpu_time_adj = 1000
-            slurmdb_stats_t *ptr = &step.ptr.stats
+            slurmdb_stats_t *ptr = &step.stats
 
         if ptr.consumed_energy != slurm.NO_VAL64:
             wrap.consumed_energy = ptr.consumed_energy
@@ -109,9 +121,7 @@ cdef class JobStatistics:
         wrap.avg_cpu_time = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_ave, slurm.TRES_CPU) / cpu_time_adj
 
-        elapsed = step.elapsed_time if step.elapsed_time else 0
-        cpus = step.cpus if step.cpus else 0
-        wrap.elapsed_cpu_time = elapsed * cpus
+        wrap.elapsed_cpu_time = elapsed_time * cpus
 
         ave_freq = int(ptr.act_cpufreq)
         if ave_freq != slurm.NO_VAL:
@@ -127,7 +137,7 @@ cdef class JobStatistics:
                 ptr.tres_usage_in_ave, slurm.TRES_MEM)
         wrap.avg_virtual_memory = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_ave, slurm.TRES_VMEM)
-        
+
         wrap.max_disk_read = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max, slurm.TRES_FS_DISK)
         max_disk_read_nodeid = TrackableResources.find_count_in_str(
@@ -163,8 +173,20 @@ cdef class JobStatistics:
         wrap.min_cpu_time_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_min_taskid, slurm.TRES_CPU)
 
-        wrap.total_cpu_time = TrackableResources.find_count_in_str(
-                ptr.tres_usage_in_tot, slurm.TRES_CPU)
+        # The Total CPU-Time extracted here is only used for live-stats.
+        # sacct does not use it from the tres_usage_in_tot string, but instead
+        # the tot_cpu_sec value from the step pointer directly, so do that too.
+        if is_live:
+            wrap.total_cpu_time = TrackableResources.find_count_in_str(
+                    ptr.tres_usage_in_tot, slurm.TRES_CPU) / cpu_time_adj
+        elif step.tot_cpu_sec != slurm.NO_VAL64:
+            wrap.total_cpu_time += step.tot_cpu_sec
+
+        if step.user_cpu_sec != slurm.NO_VAL64:
+            wrap.user_cpu_time += step.user_cpu_sec
+
+        if step.sys_cpu_sec != slurm.NO_VAL64:
+            wrap.system_cpu_time += step.sys_cpu_sec
 
         if nodes:
             wrap.max_disk_write_node = nodes[max_disk_write_nodeid]
@@ -172,12 +194,6 @@ cdef class JobStatistics:
             wrap.max_resident_memory_node = nodes[max_resident_memory_nodeid]
             wrap.max_virtual_memory_node = nodes[max_virtual_memory_nodeid]
             wrap.min_cpu_time_node = nodes[min_cpu_time_nodeid]
-
-        if step.ptr.user_cpu_sec != slurm.NO_VAL64:
-            wrap.user_cpu_time = step.ptr.user_cpu_sec 
-
-        if step.ptr.sys_cpu_sec != slurm.NO_VAL64:
-            wrap.system_cpu_time = step.ptr.sys_cpu_sec
 
         return wrap
 
@@ -188,6 +204,9 @@ cdef class JobStatistics:
         self.avg_disk_read += src.avg_disk_read
         self.avg_disk_write += src.avg_disk_write
         self.avg_page_faults += src.avg_page_faults
+        self.total_cpu_time += src.total_cpu_time
+        self.user_cpu_time += src.user_cpu_time
+        self.system_cpu_time += src.system_cpu_time
 
         if src.max_disk_read >= self.max_disk_read:
             self.max_disk_read = src.max_disk_read
@@ -220,17 +239,3 @@ cdef class JobStatistics:
             self.min_cpu_time = src.min_cpu_time
             self.min_cpu_time_node = src.min_cpu_time_node
             self.min_cpu_time_task = src.min_cpu_time_task
-
-    def _sum_cpu_time(self, Job job):
-        if job.ptr.tot_cpu_sec != slurm.NO_VAL64:
-            self.total_cpu_time += job.ptr.tot_cpu_sec
-
-        if job.ptr.user_cpu_sec != slurm.NO_VAL64:
-            self.user_cpu_time += job.ptr.user_cpu_sec
-
-        if job.ptr.sys_cpu_sec != slurm.NO_VAL64:
-            self.system_cpu_time += job.ptr.sys_cpu_sec
-
-        elapsed = job.elapsed_time if job.elapsed_time else 0
-        cpus = job.cpus if job.cpus else 0
-        self.elapsed_cpu_time += elapsed * cpus
