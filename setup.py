@@ -15,7 +15,7 @@ except ImportError:
 
 
 CYTHON_VERSION_MIN = "0.29.37" # Keep in sync with pyproject.toml
-SLURM_LIB = "libslurm"
+SLURM_LIB = "libslurmfull"
 TOPDIR = Path(__file__).parent
 PYTHON_MIN_REQUIRED = (3, 6)
 
