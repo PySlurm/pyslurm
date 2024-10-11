@@ -45,8 +45,9 @@ from pyslurm.utils.ctime cimport time_t
 from pyslurm.db.util cimport SlurmList, SlurmListItem
 from pyslurm.db.stats cimport JobStatistics
 from posix.unistd cimport pid_t
-from .step cimport JobStep
+from pyslurm.core.job.step cimport JobStep
 
+cdef load_single(JobStep step)
 
 # The real definition for this is too long, including too many other types that
 # we don't have directly access to. Not sure if this is sane to do here.

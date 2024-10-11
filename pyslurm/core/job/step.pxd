@@ -48,6 +48,7 @@ from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.core.job.task_dist cimport TaskDistribution
 from pyslurm.db.stats cimport JobStatistics
+from pyslurm.core.job cimport stats
 
 
 cdef class JobSteps(dict):

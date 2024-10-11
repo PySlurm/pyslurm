@@ -25,9 +25,10 @@
 from typing import Union
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm.utils.helpers import nodelist_to_range_str
 
 
-def do_stat(JobStep step):
+cdef load_single(JobStep step):
     cdef:
         # jobacctinfo_t is the opaque data type provided in slurm.h
         # jobacctinfo is the actual (partial) re-definition of the jobacctinfo
@@ -48,14 +49,16 @@ def do_stat(JobStep step):
         char *usage_tmp = NULL
         int rc = slurm.SLURM_SUCCESS
         int ntasks = 0
+        list nodes = []
 
     rc = slurm_job_step_stat(&step.ptr.step_id, NULL,
                              step.ptr.start_protocol_ver, &stat_resp)
-    if (rc == slurm.ESLURM_INVALID_JOB_ID):
+    if rc != slurm.SLURM_SUCCESS:
         slurm_job_step_stat_response_msg_free(stat_resp)
-        return None
-    else:
-        verify_rpc(rc)
+        if rc == slurm.ESLURM_INVALID_JOB_ID:
+            return None
+        else:
+            verify_rpc(rc)
 
     memset(&db_step, 0, sizeof(slurmdb_step_rec_t))
     memset(&db_step.stats, 0, sizeof(slurmdb_stats_t))
@@ -77,6 +80,7 @@ def do_stat(JobStep step):
 
                 step.pids[node].append(step_stat.step_pids.pid[i])
 
+        nodes.append(node)
         ntasks += step_stat.num_tasks
         if step_stat.jobacct:
             if not assoc_mgr_tres_list and stat_jobacct.tres_list:
@@ -113,7 +117,7 @@ def do_stat(JobStep step):
 
     step.stats = JobStatistics.from_ptr(
             &db_step,
-            step.ptr.nodes,
+            nodes,
             step.alloc_cpus if step.alloc_cpus else 0,
             step.run_time if step.run_time else 0,
             is_live=True,

@@ -97,21 +97,19 @@ cdef class JobStatistics:
     cdef JobStatistics from_step(JobStep step):
         return JobStatistics.from_ptr(
             step.ptr,
-            step.ptr.nodes,
+            nodelist_from_range_str(cstr.to_unicode(step.ptr.nodes)),
             step.cpus if step.cpus else 0,
             step.elapsed_time if step.elapsed_time else 0,
             is_live=False,
         )
 
     @staticmethod
-    cdef JobStatistics from_ptr(slurmdb_step_rec_t *step, char *nodes_ptr, cpus=0, elapsed_time=0, is_live=False):
+    cdef JobStatistics from_ptr(slurmdb_step_rec_t *step, list nodes, cpus=0, elapsed_time=0, is_live=False):
         cdef JobStatistics wrap = JobStatistics()
         if not step:
             return wrap
 
         cdef:
-            list nodes = nodelist_from_range_str(
-                    cstr.to_unicode(nodes_ptr))
             cpu_time_adj = 1000
             slurmdb_stats_t *ptr = &step.stats
 

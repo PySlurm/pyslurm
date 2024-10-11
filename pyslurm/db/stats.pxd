@@ -147,5 +147,5 @@ cdef class JobStatistics:
     cdef JobStatistics from_step(JobStep step)
 
     @staticmethod
-    cdef JobStatistics from_ptr(slurmdb_step_rec_t *step, char *nodes_ptr, cpus=*, elapsed_time=*, is_live=*)
+    cdef JobStatistics from_ptr(slurmdb_step_rec_t *step, list nodes, cpus=*, elapsed_time=*, is_live=*)
 
