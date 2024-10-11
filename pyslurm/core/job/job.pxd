@@ -376,6 +376,7 @@ cdef class Job:
     cdef public:
         JobSteps steps
         JobStatistics stats
+        dict pids
 
     cdef _calc_run_time(self)
 

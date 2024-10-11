@@ -205,6 +205,7 @@ cdef class Job:
         cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
         self.steps = JobSteps()
         self.stats = JobStatistics()
+        self.pids = {}
 
     def _alloc_impl(self):
         if not self.ptr:
@@ -283,6 +284,7 @@ cdef class Job:
         wrap.groups = {}
         wrap.steps = JobSteps.__new__(JobSteps)
         wrap.stats = JobStatistics()
+        wrap.pids = {}
         memcpy(wrap.ptr, in_ptr, sizeof(slurm_job_info_t))
         return wrap
 
@@ -527,6 +529,12 @@ cdef class Job:
         for step in self.steps.values():
             step.load_stats()
             self.stats._add_base_stats(step.stats)
+
+            for node, pids in step.pids.items():
+                if node not in self.pids:
+                    self.pids[node] = []
+
+                self.pids[node].extend(pids)
 
         step_count = len(self.steps)
         if step_count:

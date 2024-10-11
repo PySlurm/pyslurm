@@ -63,12 +63,19 @@ def do_stat(JobStep step):
     stats_list = SlurmList.wrap(stat_resp.stats_list, owned=False)
     for stat_list_ptr in stats_list:
         step_stat = <job_step_stat_t*>stat_list_ptr.data
-
         # Casting jobacctinfo_t to jobacctinfo... hoping this is sane to do
         stat_jobacct = <jobacctinfo*>step_stat.jobacct
 
         if not step_stat.step_pids or not step_stat.step_pids.node_name:
             continue
+
+        node = cstr.to_unicode(step_stat.step_pids.node_name)
+        if step_stat.step_pids.pid_cnt > 0:
+            for i in range(step_stat.step_pids.pid_cnt):
+                if node not in step.pids:
+                    step.pids[node] = []
+
+                step.pids[node].append(step_stat.step_pids.pid[i])
 
         ntasks += step_stat.num_tasks
         if step_stat.jobacct:

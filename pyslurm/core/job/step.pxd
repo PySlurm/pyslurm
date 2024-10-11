@@ -139,6 +139,7 @@ cdef class JobStep:
 
     cdef public:
         JobStatistics stats
+        dict pids
 
     @staticmethod
     cdef JobStep from_ptr(job_step_info_t *in_ptr)
