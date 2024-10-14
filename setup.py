@@ -115,7 +115,7 @@ class SlurmConfig():
         if not lib.exists():
             raise RuntimeError(f"Cannot locate Slurm library in {lib_dir}")
 
-        print(f"Found {SLURM_LIB} library in {lib}")
+        print(f"Found slurm library: {lib}")
         return lib_dir
 
     @property
@@ -125,7 +125,8 @@ class SlurmConfig():
     @lib_dir.setter
     def lib_dir(self, path):
         lib_dir = Path(path)
-        if SLURM_LIB == "libslurmfull":
+        if SLURM_LIB == "libslurmfull" and lib_dir.name != "slurm":
+            # Only append this if the user hasn't already.
             lib_dir /= "slurm"
 
         self._lib_dir = self._find_lib(lib_dir)
