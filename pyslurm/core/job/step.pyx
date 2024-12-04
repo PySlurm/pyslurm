@@ -369,6 +369,8 @@ cdef class JobStep:
         if dist:
             out["distribution"] = dist.to_dict()
 
+        out["stats"] = self.stats.to_dict()
+        out["pids"] = self.pids
         return out
 
     @property
@@ -465,11 +467,11 @@ cdef class JobStep:
 
     @property
     def alloc_cpus(self):
-        return u32_parse(self.ptr.num_cpus)
+        return u32_parse(self.ptr.num_cpus, on_noval=1)
 
     @property
     def ntasks(self):
-        return u32_parse(self.ptr.num_tasks)
+        return u32_parse(self.ptr.num_tasks, on_noval=1)
 
     @property
     def distribution(self):

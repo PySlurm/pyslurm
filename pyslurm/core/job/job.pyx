@@ -335,6 +335,8 @@ cdef class Job:
         """
         cdef dict out = instance_to_dict(self)
         out["steps"] = self.steps.to_dict()
+        out["stats"] = self.stats.to_dict()
+        out["pids"] = self.pids
         return out
 
     def send_signal(self, signal, steps="children", hurry=False):
@@ -581,22 +583,22 @@ cdef class Job:
             job = Job.load(self.id)
             self.steps = job.steps
 
-        pids = {}
+        all_pids = {}
         for step in self.steps.values():
             step.load_stats()
             self.stats.add(step.stats)
 
             for node, pids in step.pids.items():
-                if node not in pids:
-                    pids[node] = []
+                if node not in all_pids:
+                    all_pids[node] = []
 
-                pids[node].extend(pids)
+                all_pids[node].extend(pids)
 
         step_count = len(self.steps)
         if step_count:
             self.stats.avg_cpu_frequency /= step_count
 
-        self.pids = pids
+        self.pids = all_pids
         return self.stats
 
     def get_batch_script(self):
