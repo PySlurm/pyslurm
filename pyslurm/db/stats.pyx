@@ -81,11 +81,11 @@ cdef class JobStatistics:
         cdef JobStatistics job_stats = JobStatistics()
 
         for step in job.steps.values():
-            job_stats._add_base_stats(step.stats)
+            job_stats.add(step.stats)
 
         elapsed = job.elapsed_time if job.elapsed_time else 0
         cpus = job.cpus if job.cpus else 0
-        job_stats.elapsed_cpu_time += elapsed * cpus
+        job_stats.elapsed_cpu_time = elapsed * cpus
 
         step_count = len(job.steps)
         if step_count:
@@ -195,8 +195,9 @@ cdef class JobStatistics:
 
         return wrap
 
-    def _add_base_stats(self, JobStatistics src):
+    def add(self, JobStatistics src, with_avg_mem=False):
         self.consumed_energy += src.consumed_energy
+        self.elapsed_cpu_time += src.elapsed_cpu_time
         self.avg_cpu_time += src.avg_cpu_time
         self.avg_cpu_frequency += src.avg_cpu_frequency
         self.avg_disk_read += src.avg_disk_read
@@ -205,6 +206,10 @@ cdef class JobStatistics:
         self.total_cpu_time += src.total_cpu_time
         self.user_cpu_time += src.user_cpu_time
         self.system_cpu_time += src.system_cpu_time
+
+        if with_avg_mem:
+            self.avg_resident_memory += src.avg_resident_memory
+            self.avg_virtual_memory += src.avg_virtual_memory
 
         if src.max_disk_read >= self.max_disk_read:
             self.max_disk_read = src.max_disk_read
@@ -225,13 +230,17 @@ cdef class JobStatistics:
             self.max_resident_memory = src.max_resident_memory
             self.max_resident_memory_node = src.max_resident_memory_node
             self.max_resident_memory_task = src.max_resident_memory_task
-            self.avg_resident_memory = self.max_resident_memory
+
+            if not with_avg_mem:
+                self.avg_resident_memory = self.max_resident_memory
 
         if src.max_virtual_memory >= self.max_virtual_memory:
             self.max_virtual_memory = src.max_virtual_memory
             self.max_virtual_memory_node = src.max_virtual_memory_node
             self.max_virtual_memory_task = src.max_virtual_memory_task
-            self.avg_virtual_memory = self.max_virtual_memory
+
+            if not with_avg_mem:
+                self.avg_virtual_memory = self.max_virtual_memory
 
         if src.min_cpu_time >= self.min_cpu_time:
             self.min_cpu_time = src.min_cpu_time
