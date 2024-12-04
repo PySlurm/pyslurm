@@ -3,6 +3,16 @@
 #########################################################################
 # Copyright (C) 2024 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
+#########################################################################
+# Note: Some struct definitions have been taken directly from various parts of
+# the Slurm source code, and just translated to Cython-Syntax. The structs are
+# appropriately annotated with the respective Copyright notices, and a link to
+# the source-code.
+
+# Slurm is licensed under the GNU General Public License. For the full text of
+# Slurm's License, please see here: pyslurm/slurm/SLURM_LICENSE
+
+#########################################################################
 # This file is part of PySlurm
 #
 # PySlurm is free software; you can redistribute it and/or modify
@@ -24,6 +34,7 @@
 
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.string cimport memcpy, memset
+from posix.unistd cimport pid_t
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     slurm_job_step_stat,
@@ -44,7 +55,6 @@ from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.db.util cimport SlurmList, SlurmListItem
 from pyslurm.db.stats cimport JobStatistics
-from posix.unistd cimport pid_t
 from pyslurm.core.job.step cimport JobStep
 
 cdef load_single(JobStep step)
@@ -55,6 +65,8 @@ ctypedef void* stepd_step_rec_t
 
 
 # https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/interfaces/jobacct_gather.h#L75
+# Copyright (C) 2003 The Regents of the University of California.
+# Copyright (C) 2005 Hewlett-Packard Development Company, L.P.
 ctypedef struct jobacct_id_t:
     uint32_t taskid
     uint32_t nodeid
@@ -62,6 +74,8 @@ ctypedef struct jobacct_id_t:
 
 
 # https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/interfaces/jobacct_gather.h#L81
+# Copyright (C) 2003 The Regents of the University of California.
+# Copyright (C) 2005 Hewlett-Packard Development Company, L.P.
 ctypedef struct jobacctinfo:
     pid_t pid
     uint64_t sys_cpu_sec
@@ -101,12 +115,17 @@ ctypedef struct jobacctinfo:
     time_t last_time
 
 
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/slurmctld/locks.h#L97
+# Copyright (C) 2002 The Regents of the University of California.
 ctypedef enum lock_level_t:
     NO_LOCK
     READ_LOCK
     WRITE_LOCK
 
 
+# https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/assoc_mgr.h#L71
+# Copyright (C) 2004-2007 The Regents of the University of California.
+# Copyright (C) 2008 Lawrence Livermore National Security.
 ctypedef struct assoc_mgr_lock_t:
     lock_level_t assoc
     lock_level_t file

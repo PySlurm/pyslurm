@@ -2,7 +2,19 @@
 # job/stats.pyx - interface to retrieve slurm job realtime stats
 #########################################################################
 # Copyright (C) 2024 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2008 Lawrence Livermore National Security.
 #
+#########################################################################
+# The main logic for this file's code was taken from:
+# https://github.com/SchedMD/slurm/blob/42a05b1bb4a7719944ee26adc6bc5d73e2d36823/src/sstat/sstat.c#L109
+#
+# The code has been modified a bit and translated to Cython syntax. Slurm's
+# sstat was originally written by Morris Jette <jette1@llnl.gov>
+#
+# Slurm is licensed under the GNU General Public License. For the full text of
+# Slurm's License, please see here: pyslurm/slurm/SLURM_LICENSE
+#
+#########################################################################
 # This file is part of PySlurm
 #
 # PySlurm is free software; you can redistribute it and/or modify
@@ -22,9 +34,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from typing import Union
-from pyslurm.core.error import RPCError, verify_rpc
-from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm.core.error import verify_rpc
 from pyslurm.utils.helpers import nodelist_to_range_str
 
 
