@@ -47,9 +47,6 @@ cdef inline IS_JOB_RESIZING(slurm_job_info_t *_X):
 cdef inline IS_JOB_REQUEUED(slurm_job_info_t *_X):
     return _X.job_state & JOB_REQUEUE
 
-cdef inline IS_JOB_UPDATE_DB(slurm_job_info_t *_X):
-    return _X.job_state & JOB_UPDATE_DB
-
 #
 # Node states
 #
