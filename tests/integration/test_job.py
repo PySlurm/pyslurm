@@ -32,6 +32,7 @@ from pyslurm import (
     JobSubmitDescription,
     RPCError,
 )
+from pyslurm.db import JobStatistics
 
 
 def test_parse_all(submit_job):
@@ -169,6 +170,26 @@ def test_load_steps(submit_job):
         assert job.steps
         assert isinstance(job.steps, pyslurm.JobSteps)
         assert job.steps.get("batch")
+
+
+def test_load_stats(submit_job):
+    job = submit_job()
+    util.wait(100)
+
+    job = Job.load(job.id)
+    job.load_stats()
+
+    assert job.state == "RUNNING"
+    assert job.stats
+    assert isinstance(job.stats, JobStatistics)
+    assert job.stats.elapsed_cpu_time > 0
+
+    for step in job.steps.values():
+        assert step.stats
+        assert step.state == "RUNNING"
+        assert isinstance(step.stats, JobStatistics)
+        assert step.stats.avg_virtual_memory > 0
+        assert step.stats.avg_resident_memory > 0
 
 
 def test_to_json(submit_job):
