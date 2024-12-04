@@ -259,7 +259,31 @@ cdef class JobStep:
         return wrap
 
     def load_stats(self):
+        """Load realtime stats for this Step.
+
+        Calling this function returns the live statistics of the step, and
+        additionally populates the `stats` and `pids` attribute of the
+        instance.
+
+        Returns:
+            (JobStatistics): The statistics of the Step.
+
+        Raises:
+            RPCError: When retrieving the stats for the Step failed.
+
+        Examples:
+            >>> import pyslurm
+            >>> step = pyslurm.JobStep.load(9999, 1)
+            >>> stats = step.load_stats()
+            >>>
+            >>> # Print the CPU Time Used
+            >>> print(stats.total_cpu_time)
+            >>>
+            >>> # Print the Process-IDs for the Step, organized by hostname
+            >>> print(step.pids)
+        """
         stats.load_single(self)
+        return self.stats
 
     def send_signal(self, signal):
         """Send a signal to a running Job step.

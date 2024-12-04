@@ -63,6 +63,7 @@ cdef class Jobs(MultiClusterMap):
 
     def __init__(self, jobs=None, frozen=False):
         self.frozen = frozen
+        self.stats = JobStatistics()
         super().__init__(data=jobs,
                          typ="Jobs",
                          val_type=Job,
@@ -161,8 +162,7 @@ cdef class Jobs(MultiClusterMap):
             Pending Jobs will be ignored, since they don't have any Steps yet.
 
         Raises:
-            RPCError: When retrieving the Job information for all the Steps
-                failed.
+            RPCError: When retrieving the information for all the Steps failed.
         """
         cdef dict steps = JobSteps.load_all()
         for job in self.values():
@@ -171,9 +171,38 @@ cdef class Jobs(MultiClusterMap):
                 job.steps = steps[jid]
 
     def load_stats(self):
+        """Load realtime stats for this collection of Jobs.
+
+        This function additionally fills in the `stats` attribute for all Jobs
+        in the collection, and also populates its own `stats` attribute.
+        Implicitly calls `load_steps()`.
+
+        !!! note
+
+            Pending Jobs will be ignored, since they don't have any Stats yet.
+
+        Returns:
+            (JobStatistics): The statistics of this job collection.
+
+        Raises:
+            RPCError: When retrieving the stats for all the Jobs failed.
+
+        Examples:
+            >>> import pyslurm
+            >>> jobs = pyslurm.Jobs.load()
+            >>> stats = jobs.load_stats()
+            >>>
+            >>> # Print the CPU Time Used
+            >>> print(stats.total_cpu_time)
+        """
         self.load_steps()
+        stats = JobStatistics()
         for job in self.values():
             job.load_stats()
+            stats.add(job.stats, with_avg_mem=True)
+
+        self.stats = stats
+        return self.stats
 
     @property
     def memory(self):
@@ -232,7 +261,7 @@ cdef class Job:
         !!! note
 
             If the Job is not pending, the related Job steps will also be
-            loaded.
+            loaded. Job statistics are however not loaded automatically.
 
         Args:
             job_id (int):
@@ -526,19 +555,49 @@ cdef class Job:
         verify_rpc(slurm_notify_job(self.id, msg))
 
     def load_stats(self):
+        """Load realtime statistics for a Job and its steps.
+
+        Calling this function returns the Job statistics, and additionally
+        populates the `stats` and `pids` attribute of the instance.
+
+        Returns:
+            (JobStatistics): The statistics of the job.
+
+        Raises:
+            RPCError: When receiving the Statistics was not successful.
+
+        Examples:
+            >>> import pyslurm
+            >>> job = pyslurm.Job.load(9999)
+            >>> stats = job.load_stats()
+            >>>
+            >>> # Print the CPU Time Used
+            >>> print(stats.total_cpu_time)
+            >>>
+            >>> # Print the Process-IDs for the whole Job, organized by hostname
+            >>> print(job.pids)
+        """
+        if not self.steps:
+            job = Job.load(self.id)
+            self.steps = job.steps
+
+        pids = {}
         for step in self.steps.values():
             step.load_stats()
-            self.stats._add_base_stats(step.stats)
+            self.stats.add(step.stats)
 
             for node, pids in step.pids.items():
-                if node not in self.pids:
-                    self.pids[node] = []
+                if node not in pids:
+                    pids[node] = []
 
-                self.pids[node].extend(pids)
+                pids[node].extend(pids)
 
         step_count = len(self.steps)
         if step_count:
             self.stats.avg_cpu_frequency /= step_count
+
+        self.pids = pids
+        return self.stats
 
     def get_batch_script(self):
         """Return the content of the script for a Batch-Job.

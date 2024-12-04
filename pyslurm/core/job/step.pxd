@@ -82,6 +82,14 @@ cdef class JobStep:
             Time limit in Minutes for this step.
 
     Attributes:
+        stats (JobStatistics):
+            Real-time statistics of a Step.
+            Before you can access the stats data for a Step, you have to call
+            the `load_stats` method of a Step instance or the Jobs collection.
+        pids (dict[str, list]):
+            Current Process-IDs of the Step, organized by node name. Before you
+            can access the pids data, you have to call the `load_stats` method
+            of a Srep instance or the Jobs collection.
         id (Union[str, int]):
             The id for this step.
         job_id (int):
