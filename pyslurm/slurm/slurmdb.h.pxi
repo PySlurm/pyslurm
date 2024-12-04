@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2024-09-24T07:52:21.615726
+# Generated on 2024-12-04T13:40:12.010546
 #
 # The Original Copyright notice from slurmdb.h has been included
 # below:
@@ -66,6 +66,7 @@ cdef extern from "slurm/slurmdb.h":
     uint16_t QOS_FLAG_RELATIVE
     uint16_t QOS_FLAG_RELATIVE_SET
     uint16_t QOS_FLAG_PART_QOS
+    uint8_t QOS_COND_FLAG_WITH_DELETED
     uint32_t SLURMDB_RES_FLAG_BASE
     uint32_t SLURMDB_RES_FLAG_NOTSET
     uint32_t SLURMDB_RES_FLAG_ADD
@@ -117,6 +118,14 @@ cdef extern from "slurm/slurmdb.h":
     uint16_t CLUSTER_FLAG_FE
     uint16_t CLUSTER_FLAG_FED
     uint16_t CLUSTER_FLAG_EXT
+    uint8_t ASSOC_COND_FLAG_WITH_DELETED
+    uint8_t ASSOC_COND_FLAG_WITH_USAGE
+    uint8_t ASSOC_COND_FLAG_ONLY_DEFS
+    uint8_t ASSOC_COND_FLAG_RAW_QOS
+    uint8_t ASSOC_COND_FLAG_SUB_ACCTS
+    uint8_t ASSOC_COND_FLAG_WOPI
+    uint8_t ASSOC_COND_FLAG_WOPL
+    uint8_t ASSOC_COND_FLAG_QOS_USAGE
     uint8_t SLURMDB_EVENT_COND_OPEN
     uint8_t DB_CONN_FLAG_CLUSTER_DEL
     uint8_t DB_CONN_FLAG_ROLLBACK
@@ -215,54 +224,48 @@ cdef extern from "slurm/slurmdb.h":
         char* type
 
     ctypedef struct slurmdb_assoc_cond_t:
-        List acct_list
-        List cluster_list
-        List def_qos_id_list
-        List format_list
-        List id_list
-        uint16_t only_defs
-        List parent_acct_list
-        List partition_list
-        List qos_list
+        list_t* acct_list
+        list_t* cluster_list
+        list_t* def_qos_id_list
+        uint32_t flags
+        list_t* format_list
+        list_t* id_list
+        list_t* parent_acct_list
+        list_t* partition_list
+        list_t* qos_list
         time_t usage_end
         time_t usage_start
-        List user_list
-        uint16_t with_usage
-        uint16_t with_deleted
-        uint16_t with_raw_qos
-        uint16_t with_sub_accts
-        uint16_t without_parent_info
-        uint16_t without_parent_limits
+        list_t* user_list
 
     ctypedef struct slurmdb_job_cond_t:
-        List acct_list
-        List associd_list
-        List cluster_list
-        List constraint_list
+        list_t* acct_list
+        list_t* associd_list
+        list_t* cluster_list
+        list_t* constraint_list
         uint32_t cpus_max
         uint32_t cpus_min
         uint32_t db_flags
         int32_t exitcode
         uint32_t flags
-        List format_list
-        List groupid_list
-        List jobname_list
+        list_t* format_list
+        list_t* groupid_list
+        list_t* jobname_list
         uint32_t nodes_max
         uint32_t nodes_min
-        List partition_list
-        List qos_list
-        List reason_list
-        List resv_list
-        List resvid_list
-        List state_list
-        List step_list
+        list_t* partition_list
+        list_t* qos_list
+        list_t* reason_list
+        list_t* resv_list
+        list_t* resvid_list
+        list_t* state_list
+        list_t* step_list
         uint32_t timelimit_max
         uint32_t timelimit_min
         time_t usage_end
         time_t usage_start
         char* used_nodes
-        List userid_list
-        List wckey_list
+        list_t* userid_list
+        list_t* wckey_list
 
     ctypedef struct slurmdb_stats_t:
         double act_cpufreq
@@ -296,13 +299,13 @@ cdef extern from "slurm/slurmdb.h":
 
     ctypedef struct slurmdb_account_cond_t:
         slurmdb_assoc_cond_t* assoc_cond
-        List description_list
+        list_t* description_list
         slurmdb_acct_flags_t flags
-        List organization_list
+        list_t* organization_list
 
     ctypedef struct slurmdb_account_rec_t:
-        List assoc_list
-        List coordinators
+        list_t* assoc_list
+        list_t* coordinators
         char* description
         slurmdb_acct_flags_t flags
         char* name
@@ -311,6 +314,7 @@ cdef extern from "slurm/slurmdb.h":
     ctypedef struct slurmdb_accounting_rec_t:
         uint64_t alloc_secs
         uint32_t id
+        uint32_t id_alt
         time_t period_start
         slurmdb_tres_rec_t tres_rec
 
@@ -332,10 +336,10 @@ cdef extern from "slurm/slurmdb.h":
 
     ctypedef struct slurmdb_tres_cond_t:
         uint64_t count
-        List format_list
-        List id_list
-        List name_list
-        List type_list
+        list_t* format_list
+        list_t* id_list
+        list_t* name_list
+        list_t* type_list
         uint16_t with_deleted
 
     ctypedef slurmdb_assoc_usage slurmdb_assoc_usage_t
@@ -345,7 +349,7 @@ cdef extern from "slurm/slurmdb.h":
     ctypedef slurmdb_user_rec slurmdb_user_rec_t
 
     cdef struct slurmdb_assoc_rec:
-        List accounting_list
+        list_t* accounting_list
         char* acct
         slurmdb_assoc_rec* assoc_next
         slurmdb_assoc_rec* assoc_next_id
@@ -386,7 +390,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t parent_id
         char* partition
         uint32_t priority
-        List qos_list
+        list_t* qos_list
         uint32_t rgt
         uint32_t shares_raw
         uint32_t uid
@@ -407,7 +411,7 @@ cdef extern from "slurm/slurmdb.h":
 
     cdef struct slurmdb_assoc_usage:
         uint32_t accrue_cnt
-        List children_list
+        list_t* children_list
         bitstr_t* grp_node_bitmap
         uint16_t* grp_node_job_cnt
         uint64_t* grp_used_tres
@@ -435,18 +439,18 @@ cdef extern from "slurm/slurmdb.h":
 
     ctypedef struct slurmdb_cluster_cond_t:
         uint16_t classification
-        List cluster_list
-        List federation_list
+        list_t* cluster_list
+        list_t* federation_list
         uint32_t flags
-        List format_list
-        List rpc_version_list
+        list_t* format_list
+        list_t* rpc_version_list
         time_t usage_end
         time_t usage_start
         uint16_t with_deleted
         uint16_t with_usage
 
     ctypedef struct slurmdb_cluster_fed_t:
-        List feature_list
+        list_t* feature_list
         uint32_t id
         char* name
         void* recv
@@ -456,7 +460,7 @@ cdef extern from "slurm/slurmdb.h":
         bool sync_sent
 
     cdef struct slurmdb_cluster_rec:
-        List accounting_list
+        list_t* accounting_list
         uint16_t classification
         time_t comm_fail_time
         slurm_addr_t control_addr
@@ -464,6 +468,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t control_port
         uint16_t dimensions
         int* dim_size
+        uint16_t id
         slurmdb_cluster_fed_t fed
         uint32_t flags
         pthread_mutex_t lock
@@ -471,7 +476,7 @@ cdef extern from "slurm/slurmdb.h":
         char* nodes
         slurmdb_assoc_rec_t* root_assoc
         uint16_t rpc_version
-        List send_rpc
+        list_t* send_rpc
         char* tres_str
 
     ctypedef struct slurmdb_cluster_accounting_rec_t:
@@ -493,18 +498,18 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t direct
 
     ctypedef struct slurmdb_event_cond_t:
-        List cluster_list
+        list_t* cluster_list
         uint32_t cond_flags
         uint32_t cpus_max
         uint32_t cpus_min
         uint16_t event_type
-        List format_list
+        list_t* format_list
         char* node_list
         time_t period_end
         time_t period_start
-        List reason_list
-        List reason_uid_list
-        List state_list
+        list_t* reason_list
+        list_t* reason_uid_list
+        list_t* state_list
 
     ctypedef struct slurmdb_event_rec_t:
         char* cluster
@@ -519,22 +524,22 @@ cdef extern from "slurm/slurmdb.h":
         char* tres_str
 
     ctypedef struct slurmdb_federation_cond_t:
-        List cluster_list
-        List federation_list
-        List format_list
+        list_t* cluster_list
+        list_t* federation_list
+        list_t* format_list
         uint16_t with_deleted
 
     ctypedef struct slurmdb_federation_rec_t:
         char* name
         uint32_t flags
-        List cluster_list
+        list_t* cluster_list
 
     ctypedef struct slurmdb_instance_cond_t:
-        List cluster_list
-        List extra_list
-        List format_list
-        List instance_id_list
-        List instance_type_list
+        list_t* cluster_list
+        list_t* extra_list
+        list_t* format_list
+        list_t* instance_id_list
+        list_t* instance_type_list
         char* node_list
         time_t time_end
         time_t time_start
@@ -586,9 +591,11 @@ cdef extern from "slurm/slurmdb.h":
         char* partition
         uint32_t priority
         uint32_t qosid
+        char* qos_req
         uint32_t req_cpus
         uint64_t req_mem
         uint32_t requid
+        uint16_t restart_cnt
         uint32_t resvid
         char* resv_name
         char* script
@@ -596,7 +603,7 @@ cdef extern from "slurm/slurmdb.h":
         time_t start
         uint32_t state
         uint32_t state_reason_prev
-        List steps
+        list_t* steps
         char* std_err
         char* std_in
         char* std_out
@@ -622,8 +629,8 @@ cdef extern from "slurm/slurmdb.h":
 
     ctypedef struct slurmdb_qos_usage_t:
         uint32_t accrue_cnt
-        List acct_limit_list
-        List job_list
+        list_t* acct_limit_list
+        list_t* job_list
         bitstr_t* grp_node_bitmap
         uint16_t* grp_node_job_cnt
         uint32_t grp_used_jobs
@@ -635,9 +642,10 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t tres_cnt
         long double usage_raw
         long double* usage_tres_raw
-        List user_limit_list
+        list_t* user_limit_list
 
     ctypedef struct slurmdb_qos_rec_t:
+        time_t blocked_until
         char* description
         uint32_t id
         uint32_t flags
@@ -679,7 +687,7 @@ cdef extern from "slurm/slurmdb.h":
         uint64_t* min_tres_pj_ctld
         char* name
         bitstr_t* preempt_bitstr
-        List preempt_list
+        list_t* preempt_list
         uint16_t preempt_mode
         uint32_t preempt_exempt_time
         uint32_t priority
@@ -687,22 +695,21 @@ cdef extern from "slurm/slurmdb.h":
         slurmdb_qos_usage_t* usage
         double usage_factor
         double usage_thres
-        time_t blocked_until
 
     ctypedef struct slurmdb_qos_cond_t:
-        List description_list
-        List id_list
-        List format_list
-        List name_list
+        list_t* description_list
+        uint16_t flags
+        list_t* id_list
+        list_t* format_list
+        list_t* name_list
         uint16_t preempt_mode
-        uint16_t with_deleted
 
     ctypedef struct slurmdb_reservation_cond_t:
-        List cluster_list
+        list_t* cluster_list
         uint64_t flags
-        List format_list
-        List id_list
-        List name_list
+        list_t* format_list
+        list_t* id_list
+        list_t* name_list
         char* nodes
         time_t time_end
         time_t time_start
@@ -722,7 +729,7 @@ cdef extern from "slurm/slurmdb.h":
         time_t time_start_prev
         char* tres_str
         double unused_wall
-        List tres_list
+        list_t* tres_list
 
     ctypedef struct slurmdb_step_rec_t:
         char* container
@@ -756,22 +763,22 @@ cdef extern from "slurm/slurmdb.h":
 
     ctypedef struct slurmdb_res_cond_t:
         list_t* allowed_list
-        List cluster_list
-        List description_list
+        list_t* cluster_list
+        list_t* description_list
         uint32_t flags
-        List format_list
-        List id_list
-        List manager_list
-        List name_list
-        List server_list
-        List type_list
+        list_t* format_list
+        list_t* id_list
+        list_t* manager_list
+        list_t* name_list
+        list_t* server_list
+        list_t* type_list
         uint16_t with_deleted
         uint16_t with_clusters
 
     ctypedef struct slurmdb_res_rec_t:
         uint32_t allocated
         uint32_t last_consumed
-        List clus_res_list
+        list_t* clus_res_list
         slurmdb_clus_res_rec_t* clus_res_rec
         uint32_t count
         char* description
@@ -784,17 +791,17 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t type
 
     ctypedef struct slurmdb_txn_cond_t:
-        List acct_list
-        List action_list
-        List actor_list
-        List cluster_list
-        List format_list
-        List id_list
-        List info_list
-        List name_list
+        list_t* acct_list
+        list_t* action_list
+        list_t* actor_list
+        list_t* cluster_list
+        list_t* format_list
+        list_t* id_list
+        list_t* info_list
+        list_t* name_list
         time_t time_end
         time_t time_start
-        List user_list
+        list_t* user_list
         uint16_t with_assoc_info
 
     ctypedef struct slurmdb_txn_rec_t:
@@ -822,8 +829,8 @@ cdef extern from "slurm/slurmdb.h":
     ctypedef struct slurmdb_user_cond_t:
         uint16_t admin_level
         slurmdb_assoc_cond_t* assoc_cond
-        List def_acct_list
-        List def_wckey_list
+        list_t* def_acct_list
+        list_t* def_wckey_list
         uint16_t with_assocs
         uint16_t with_coords
         uint16_t with_deleted
@@ -836,30 +843,30 @@ cdef extern from "slurm/slurmdb.h":
 
     cdef struct slurmdb_user_rec:
         uint16_t admin_level
-        List assoc_list
+        list_t* assoc_list
         slurmdb_bf_usage_t* bf_usage
-        List coord_accts
+        list_t* coord_accts
         char* default_acct
         char* default_wckey
         uint32_t flags
         char* name
         char* old_name
         uint32_t uid
-        List wckey_list
+        list_t* wckey_list
 
     ctypedef struct slurmdb_update_object_t:
-        List objects
+        list_t* objects
         uint16_t type
 
     ctypedef struct slurmdb_wckey_cond_t:
-        List cluster_list
-        List format_list
-        List id_list
-        List name_list
+        list_t* cluster_list
+        list_t* format_list
+        list_t* id_list
+        list_t* name_list
         uint16_t only_defs
         time_t usage_end
         time_t usage_start
-        List user_list
+        list_t* user_list
         uint16_t with_usage
         uint16_t with_deleted
 
@@ -868,7 +875,7 @@ cdef extern from "slurm/slurmdb.h":
         SLURMDB_WCKEY_FLAG_DELETED
 
     ctypedef struct slurmdb_wckey_rec_t:
-        List accounting_list
+        list_t* accounting_list
         char* cluster
         uint32_t flags
         uint32_t id
@@ -887,49 +894,51 @@ cdef extern from "slurm/slurmdb.h":
         slurmdb_assoc_rec_t* assoc
         char* key
         char* sort_name
-        List children
+        list_t* children
 
     ctypedef struct slurmdb_report_assoc_rec_t:
         char* acct
         char* cluster
+        uint32_t id
+        uint32_t id_alt
         char* parent_acct
-        List tres_list
+        list_t* tres_list
         char* user
 
     ctypedef struct slurmdb_report_user_rec_t:
         char* acct
-        List acct_list
-        List assoc_list
+        list_t* acct_list
+        list_t* assoc_list
         char* name
-        List tres_list
+        list_t* tres_list
         uid_t uid
 
     ctypedef struct slurmdb_report_cluster_rec_t:
-        List accounting_list
-        List assoc_list
+        list_t* accounting_list
+        list_t* assoc_list
         char* name
-        List tres_list
-        List user_list
+        list_t* tres_list
+        list_t* user_list
 
     ctypedef struct slurmdb_report_job_grouping_t:
         uint32_t count
-        List jobs
+        list_t* jobs
         uint32_t min_size
         uint32_t max_size
-        List tres_list
+        list_t* tres_list
 
     ctypedef struct slurmdb_report_acct_grouping_t:
         char* acct
         uint32_t count
-        List groups
+        list_t* groups
         char* lineage
-        List tres_list
+        list_t* tres_list
 
     ctypedef struct slurmdb_report_cluster_grouping_t:
-        List acct_list
+        list_t* acct_list
         char* cluster
         uint32_t count
-        List tres_list
+        list_t* tres_list
 
     cdef enum:
         DBD_ROLLUP_HOUR
@@ -953,58 +962,58 @@ cdef extern from "slurm/slurmdb.h":
 
     ctypedef struct slurmdb_stats_rec_t:
         slurmdb_rollup_stats_t* dbd_rollup_stats
-        List rollup_stats
-        List rpc_list
+        list_t* rollup_stats
+        list_t* rpc_list
         time_t time_start
-        List user_list
+        list_t* user_list
 
     slurmdb_cluster_rec_t* working_cluster_rec
 
-    int slurmdb_accounts_add(void* db_conn, List acct_list)
+    int slurmdb_accounts_add(void* db_conn, list_t* acct_list)
 
     char* slurmdb_accounts_add_cond(void* db_conn, slurmdb_add_assoc_cond_t* add_assoc, slurmdb_account_rec_t* acct)
 
-    List slurmdb_accounts_get(void* db_conn, slurmdb_account_cond_t* acct_cond)
+    list_t* slurmdb_accounts_get(void* db_conn, slurmdb_account_cond_t* acct_cond)
 
-    List slurmdb_accounts_modify(void* db_conn, slurmdb_account_cond_t* acct_cond, slurmdb_account_rec_t* acct)
+    list_t* slurmdb_accounts_modify(void* db_conn, slurmdb_account_cond_t* acct_cond, slurmdb_account_rec_t* acct)
 
-    List slurmdb_accounts_remove(void* db_conn, slurmdb_account_cond_t* acct_cond)
+    list_t* slurmdb_accounts_remove(void* db_conn, slurmdb_account_cond_t* acct_cond)
 
     int slurmdb_archive(void* db_conn, slurmdb_archive_cond_t* arch_cond)
 
     int slurmdb_archive_load(void* db_conn, slurmdb_archive_rec_t* arch_rec)
 
-    int slurmdb_associations_add(void* db_conn, List assoc_list)
+    int slurmdb_associations_add(void* db_conn, list_t* assoc_list)
 
-    List slurmdb_associations_get(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
+    list_t* slurmdb_associations_get(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
 
-    List slurmdb_associations_modify(void* db_conn, slurmdb_assoc_cond_t* assoc_cond, slurmdb_assoc_rec_t* assoc)
+    list_t* slurmdb_associations_modify(void* db_conn, slurmdb_assoc_cond_t* assoc_cond, slurmdb_assoc_rec_t* assoc)
 
-    List slurmdb_associations_remove(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
+    list_t* slurmdb_associations_remove(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
 
-    int slurmdb_clusters_add(void* db_conn, List cluster_list)
+    int slurmdb_clusters_add(void* db_conn, list_t* cluster_list)
 
-    List slurmdb_clusters_get(void* db_conn, slurmdb_cluster_cond_t* cluster_cond)
+    list_t* slurmdb_clusters_get(void* db_conn, slurmdb_cluster_cond_t* cluster_cond)
 
-    List slurmdb_clusters_modify(void* db_conn, slurmdb_cluster_cond_t* cluster_cond, slurmdb_cluster_rec_t* cluster)
+    list_t* slurmdb_clusters_modify(void* db_conn, slurmdb_cluster_cond_t* cluster_cond, slurmdb_cluster_rec_t* cluster)
 
-    List slurmdb_clusters_remove(void* db_conn, slurmdb_cluster_cond_t* cluster_cond)
+    list_t* slurmdb_clusters_remove(void* db_conn, slurmdb_cluster_cond_t* cluster_cond)
 
-    List slurmdb_report_cluster_account_by_user(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
+    list_t* slurmdb_report_cluster_account_by_user(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
 
-    List slurmdb_report_cluster_user_by_account(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
+    list_t* slurmdb_report_cluster_user_by_account(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
 
-    List slurmdb_report_cluster_wckey_by_user(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
+    list_t* slurmdb_report_cluster_wckey_by_user(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
 
-    List slurmdb_report_cluster_user_by_wckey(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
+    list_t* slurmdb_report_cluster_user_by_wckey(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
 
-    List slurmdb_report_job_sizes_grouped_by_account(void* db_conn, slurmdb_job_cond_t* job_cond, List grouping_list, bool flat_view, bool acct_as_parent)
+    list_t* slurmdb_report_job_sizes_grouped_by_account(void* db_conn, slurmdb_job_cond_t* job_cond, list_t* grouping_list, bool flat_view, bool acct_as_parent)
 
-    List slurmdb_report_job_sizes_grouped_by_wckey(void* db_conn, slurmdb_job_cond_t* job_cond, List grouping_list)
+    list_t* slurmdb_report_job_sizes_grouped_by_wckey(void* db_conn, slurmdb_job_cond_t* job_cond, list_t* grouping_list)
 
-    List slurmdb_report_job_sizes_grouped_by_account_then_wckey(void* db_conn, slurmdb_job_cond_t* job_cond, List grouping_list, bool flat_view, bool acct_as_parent)
+    list_t* slurmdb_report_job_sizes_grouped_by_account_then_wckey(void* db_conn, slurmdb_job_cond_t* job_cond, list_t* grouping_list, bool flat_view, bool acct_as_parent)
 
-    List slurmdb_report_user_top_usage(void* db_conn, slurmdb_user_cond_t* user_cond, bool group_accounts)
+    list_t* slurmdb_report_user_top_usage(void* db_conn, slurmdb_user_cond_t* user_cond, bool group_accounts)
 
     void* slurmdb_connection_get(uint16_t* persist_conn_flags)
 
@@ -1012,29 +1021,29 @@ cdef extern from "slurm/slurmdb.h":
 
     int slurmdb_connection_commit(void* db_conn, bool commit)
 
-    int slurmdb_coord_add(void* db_conn, List acct_list, slurmdb_user_cond_t* user_cond)
+    int slurmdb_coord_add(void* db_conn, list_t* acct_list, slurmdb_user_cond_t* user_cond)
 
-    List slurmdb_coord_remove(void* db_conn, List acct_list, slurmdb_user_cond_t* user_cond)
+    list_t* slurmdb_coord_remove(void* db_conn, list_t* acct_list, slurmdb_user_cond_t* user_cond)
 
-    int slurmdb_federations_add(void* db_conn, List federation_list)
+    int slurmdb_federations_add(void* db_conn, list_t* federation_list)
 
-    List slurmdb_federations_modify(void* db_conn, slurmdb_federation_cond_t* fed_cond, slurmdb_federation_rec_t* fed)
+    list_t* slurmdb_federations_modify(void* db_conn, slurmdb_federation_cond_t* fed_cond, slurmdb_federation_rec_t* fed)
 
-    List slurmdb_federations_remove(void* db_conn, slurmdb_federation_cond_t* fed_cond)
+    list_t* slurmdb_federations_remove(void* db_conn, slurmdb_federation_cond_t* fed_cond)
 
-    List slurmdb_federations_get(void* db_conn, slurmdb_federation_cond_t* fed_cond)
+    list_t* slurmdb_federations_get(void* db_conn, slurmdb_federation_cond_t* fed_cond)
 
-    List slurmdb_job_modify(void* db_conn, slurmdb_job_cond_t* job_cond, slurmdb_job_rec_t* job)
+    list_t* slurmdb_job_modify(void* db_conn, slurmdb_job_cond_t* job_cond, slurmdb_job_rec_t* job)
 
-    List slurmdb_jobs_get(void* db_conn, slurmdb_job_cond_t* job_cond)
+    list_t* slurmdb_jobs_get(void* db_conn, slurmdb_job_cond_t* job_cond)
 
-    int slurmdb_jobs_fix_runaway(void* db_conn, List jobs)
+    int slurmdb_jobs_fix_runaway(void* db_conn, list_t* jobs)
 
     int slurmdb_jobcomp_init()
 
     int slurmdb_jobcomp_fini()
 
-    List slurmdb_jobcomp_jobs_get(slurmdb_job_cond_t* job_cond)
+    list_t* slurmdb_jobcomp_jobs_get(slurmdb_job_cond_t* job_cond)
 
     int slurmdb_reconfig(void* db_conn)
 
@@ -1044,23 +1053,23 @@ cdef extern from "slurm/slurmdb.h":
 
     int slurmdb_get_stats(void* db_conn, slurmdb_stats_rec_t** stats_pptr)
 
-    List slurmdb_config_get(void* db_conn)
+    list_t* slurmdb_config_get(void* db_conn)
 
-    List slurmdb_events_get(void* db_conn, slurmdb_event_cond_t* event_cond)
+    list_t* slurmdb_events_get(void* db_conn, slurmdb_event_cond_t* event_cond)
 
-    List slurmdb_instances_get(void* db_conn, slurmdb_instance_cond_t* instance_cond)
+    list_t* slurmdb_instances_get(void* db_conn, slurmdb_instance_cond_t* instance_cond)
 
-    List slurmdb_problems_get(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
+    list_t* slurmdb_problems_get(void* db_conn, slurmdb_assoc_cond_t* assoc_cond)
 
-    List slurmdb_reservations_get(void* db_conn, slurmdb_reservation_cond_t* resv_cond)
+    list_t* slurmdb_reservations_get(void* db_conn, slurmdb_reservation_cond_t* resv_cond)
 
-    List slurmdb_txn_get(void* db_conn, slurmdb_txn_cond_t* txn_cond)
+    list_t* slurmdb_txn_get(void* db_conn, slurmdb_txn_cond_t* txn_cond)
 
-    List slurmdb_get_info_cluster(char* cluster_names)
+    list_t* slurmdb_get_info_cluster(char* cluster_names)
 
     int slurmdb_get_first_avail_cluster(job_desc_msg_t* req, char* cluster_names, slurmdb_cluster_rec_t** cluster_rec)
 
-    int slurmdb_get_first_het_job_cluster(List job_req_list, char* cluster_names, slurmdb_cluster_rec_t** cluster_rec)
+    int slurmdb_get_first_het_job_cluster(list_t* job_req_list, char* cluster_names, slurmdb_cluster_rec_t** cluster_rec)
 
     void slurmdb_destroy_assoc_usage(void* object)
 
@@ -1214,52 +1223,56 @@ cdef extern from "slurm/slurmdb.h":
 
     void slurmdb_init_res_cond(slurmdb_res_cond_t* cluster, bool free_it)
 
-    List slurmdb_get_hierarchical_sorted_assoc_list(List assoc_list)
+    int slurmdb_ping(char* rem_host)
 
-    List slurmdb_get_acct_hierarchical_rec_list(List assoc_list)
+    slurmdbd_ping_t* slurmdb_ping_all()
 
-    char* slurmdb_tree_name_get(char* name, char* parent, List tree_list)
+    list_t* slurmdb_get_hierarchical_sorted_assoc_list(list_t* assoc_list)
 
-    int slurmdb_res_add(void* db_conn, List res_list)
+    list_t* slurmdb_get_acct_hierarchical_rec_list(list_t* assoc_list)
 
-    List slurmdb_res_get(void* db_conn, slurmdb_res_cond_t* res_cond)
+    char* slurmdb_tree_name_get(char* name, char* parent, list_t* tree_list)
 
-    List slurmdb_res_modify(void* db_conn, slurmdb_res_cond_t* res_cond, slurmdb_res_rec_t* res)
+    int slurmdb_res_add(void* db_conn, list_t* res_list)
 
-    List slurmdb_res_remove(void* db_conn, slurmdb_res_cond_t* res_cond)
+    list_t* slurmdb_res_get(void* db_conn, slurmdb_res_cond_t* res_cond)
 
-    int slurmdb_qos_add(void* db_conn, List qos_list)
+    list_t* slurmdb_res_modify(void* db_conn, slurmdb_res_cond_t* res_cond, slurmdb_res_rec_t* res)
 
-    List slurmdb_qos_get(void* db_conn, slurmdb_qos_cond_t* qos_cond)
+    list_t* slurmdb_res_remove(void* db_conn, slurmdb_res_cond_t* res_cond)
 
-    List slurmdb_qos_modify(void* db_conn, slurmdb_qos_cond_t* qos_cond, slurmdb_qos_rec_t* qos)
+    int slurmdb_qos_add(void* db_conn, list_t* qos_list)
 
-    List slurmdb_qos_remove(void* db_conn, slurmdb_qos_cond_t* qos_cond)
+    list_t* slurmdb_qos_get(void* db_conn, slurmdb_qos_cond_t* qos_cond)
 
-    int slurmdb_tres_add(void* db_conn, List tres_list)
+    list_t* slurmdb_qos_modify(void* db_conn, slurmdb_qos_cond_t* qos_cond, slurmdb_qos_rec_t* qos)
 
-    List slurmdb_tres_get(void* db_conn, slurmdb_tres_cond_t* tres_cond)
+    list_t* slurmdb_qos_remove(void* db_conn, slurmdb_qos_cond_t* qos_cond)
+
+    int slurmdb_tres_add(void* db_conn, list_t* tres_list)
+
+    list_t* slurmdb_tres_get(void* db_conn, slurmdb_tres_cond_t* tres_cond)
 
     int slurmdb_usage_get(void* db_conn, void* in_, int type, time_t start, time_t end)
 
-    int slurmdb_usage_roll(void* db_conn, time_t sent_start, time_t sent_end, uint16_t archive_data, List* rollup_stats_list_in)
+    int slurmdb_usage_roll(void* db_conn, time_t sent_start, time_t sent_end, uint16_t archive_data, list_t** rollup_stats_list_in)
 
-    int slurmdb_users_add(void* db_conn, List user_list)
+    int slurmdb_users_add(void* db_conn, list_t* user_list)
 
     char* slurmdb_users_add_cond(void* db_conn, slurmdb_add_assoc_cond_t* add_assoc, slurmdb_user_rec_t* user)
 
-    List slurmdb_users_add_conn(void* db_conn, slurmdb_user_rec_t* user, slurmdb_assoc_cond_t* assoc_cond, slurmdb_assoc_rec_t* assoc)
+    list_t* slurmdb_users_add_conn(void* db_conn, slurmdb_user_rec_t* user, slurmdb_assoc_cond_t* assoc_cond, slurmdb_assoc_rec_t* assoc)
 
-    List slurmdb_users_get(void* db_conn, slurmdb_user_cond_t* user_cond)
+    list_t* slurmdb_users_get(void* db_conn, slurmdb_user_cond_t* user_cond)
 
-    List slurmdb_users_modify(void* db_conn, slurmdb_user_cond_t* user_cond, slurmdb_user_rec_t* user)
+    list_t* slurmdb_users_modify(void* db_conn, slurmdb_user_cond_t* user_cond, slurmdb_user_rec_t* user)
 
-    List slurmdb_users_remove(void* db_conn, slurmdb_user_cond_t* user_cond)
+    list_t* slurmdb_users_remove(void* db_conn, slurmdb_user_cond_t* user_cond)
 
-    int slurmdb_wckeys_add(void* db_conn, List wckey_list)
+    int slurmdb_wckeys_add(void* db_conn, list_t* wckey_list)
 
-    List slurmdb_wckeys_get(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
+    list_t* slurmdb_wckeys_get(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
 
-    List slurmdb_wckeys_modify(void* db_conn, slurmdb_wckey_cond_t* wckey_cond, slurmdb_wckey_rec_t* wckey)
+    list_t* slurmdb_wckeys_modify(void* db_conn, slurmdb_wckey_cond_t* wckey_cond, slurmdb_wckey_rec_t* wckey)
 
-    List slurmdb_wckeys_remove(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
+    list_t* slurmdb_wckeys_remove(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
