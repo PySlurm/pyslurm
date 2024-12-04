@@ -807,7 +807,7 @@ def _preempt_mode_int_to_str(mode, slurmctld.Config slurm_conf):
         return cstr.to_unicode(slurm_preempt_mode_string(mode))
 
 
-cdef _extract_job_default_item(typ, slurm.List job_defaults_list):
+cdef _extract_job_default_item(typ, list_t *job_defaults_list):
     cdef:
         job_defaults_t *default_item
         SlurmList job_def_list

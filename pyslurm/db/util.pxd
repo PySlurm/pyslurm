@@ -24,7 +24,7 @@ from pyslurm cimport slurm
 from pyslurm.utils cimport cstr
 from pyslurm.slurm cimport (
     list_itr_t,
-    List,
+    list_t,
     slurm_list_iterator_create,
     slurm_list_iterator_destroy,
     slurm_list_iterator_reset,
@@ -37,9 +37,9 @@ from pyslurm.slurm cimport (
     slurm_xfree_ptr,
 )
 
-cdef slurm_list_to_pylist(List in_list)
-cdef make_char_list(List *in_list, vals)
-cdef qos_list_to_pylist(List in_list, qos_data)
+cdef slurm_list_to_pylist(list_t *in_list)
+cdef make_char_list(list_t **in_list, vals)
+cdef qos_list_to_pylist(list_t *in_list, qos_data)
 
 
 cdef class SlurmListItem:
@@ -51,16 +51,16 @@ cdef class SlurmListItem:
 
 cdef class SlurmList:
     cdef:
-        List info
+        list_t *info
         list_itr_t *itr
 
     cdef readonly:
         owned
         int itr_cnt
         int cnt
-    
+
     @staticmethod
-    cdef SlurmList wrap(List, owned=*)
+    cdef SlurmList wrap(list_t *li, owned=*)
 
     @staticmethod
     cdef SlurmList create(slurm.ListDelF delf, owned=*)

@@ -30,7 +30,7 @@ from pyslurm.slurm cimport (
     slurmdb_destroy_qos_cond,
     slurmdb_qos_get,
     slurm_preempt_mode_num,
-    List,
+    list_t,
     try_xmalloc,
 )
 from pyslurm.db.util cimport (
@@ -40,8 +40,9 @@ from pyslurm.db.util cimport (
 )
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
+from pyslurm.utils.uint cimport u16_set_bool_flag
 
-cdef _set_qos_list(List *in_list, vals, QualitiesOfService data)
+cdef _set_qos_list(list_t **in_list, vals, QualitiesOfService data)
 
 
 cdef class QualitiesOfService(dict):

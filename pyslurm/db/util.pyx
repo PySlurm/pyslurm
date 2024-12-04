@@ -23,7 +23,7 @@
 # cython: language_level=3
 
 
-cdef make_char_list(List *in_list, vals):
+cdef make_char_list(list_t **in_list, vals):
     if not vals:
         return None
 
@@ -39,11 +39,11 @@ cdef make_char_list(List *in_list, vals):
     slist.owned = False
 
 
-cdef slurm_list_to_pylist(List in_list):
+cdef slurm_list_to_pylist(list_t *in_list):
     return SlurmList.wrap(in_list, owned=False).to_pylist()
 
 
-cdef qos_list_to_pylist(List in_list, qos_data):
+cdef qos_list_to_pylist(list_t *in_list, qos_data):
     if not in_list:
         return []
 
@@ -53,7 +53,7 @@ cdef qos_list_to_pylist(List in_list, qos_data):
 
 
 cdef class SlurmListItem:
-    
+
     def __cinit__(self):
         self.data = NULL
 
@@ -138,7 +138,7 @@ cdef class SlurmList:
         return wrapper
 
     @staticmethod
-    cdef SlurmList wrap(List li, owned=True):
+    cdef SlurmList wrap(list_t *li, owned=True):
         cdef SlurmList wrapper = SlurmList.__new__(SlurmList)
         if not li:
             return wrapper

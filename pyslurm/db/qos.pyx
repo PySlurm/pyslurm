@@ -223,6 +223,6 @@ def _validate_qos_single(qid, QualitiesOfService data):
     raise ValueError(f"Invalid QOS specified: {qid}")
 
 
-cdef _set_qos_list(List *in_list, vals, QualitiesOfService data):
+cdef _set_qos_list(list_t **in_list, vals, QualitiesOfService data):
     qos_ids = _qos_names_to_ids(vals, data)
     make_char_list(in_list, qos_ids)

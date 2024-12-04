@@ -92,7 +92,7 @@ ctypedef struct forward_struct_t:
     uint16_t fwd_cnt
     pthread_mutex_t forward_mutex
     pthread_cond_t notify
-    List ret_list
+    list_t *ret_list
     uint32_t timeout
 
 # https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/slurm_protocol_defs.h#L271
@@ -117,7 +117,7 @@ ctypedef struct slurm_msg_t:
     forward_t forward
     forward_struct_t *forward_struct
     slurm_addr_t orig_addr
-    List ret_list
+    list_t *ret_list
 
 # https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.c#L865
 cdef extern void slurm_free_return_code_msg(return_code_msg_t *msg)
@@ -244,8 +244,8 @@ cdef extern char *slurm_node_state_string (uint32_t inx)
 cdef extern char *slurm_step_layout_type_name (task_dist_states_t task_dist)
 cdef extern char *slurm_reservation_flags_string (reserve_info_t *resv_ptr)
 cdef extern void slurm_free_stats_response_msg (stats_info_response_msg_t *msg)
-cdef extern int slurm_addto_char_list_with_case(List char_list, char *names, bool lower_case_noralization)
-cdef extern int slurm_addto_step_list(List step_list, char *names)
+cdef extern int slurm_addto_char_list_with_case(list_t *char_list, char *names, bool lower_case_noralization)
+cdef extern int slurm_addto_step_list(list_t *step_list, char *names)
 cdef extern int slurmdb_report_set_start_end_time(time_t *start, time_t *end)
 cdef extern uint16_t slurm_get_track_wckey()
 cdef extern void slurm_sprint_cpu_bind_type(char *str, cpu_bind_type_t cpu_bind_type)
