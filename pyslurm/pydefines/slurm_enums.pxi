@@ -383,7 +383,6 @@ CPU_BIND_TO_CORES               = slurm.CPU_BIND_TO_CORES
 CPU_BIND_TO_SOCKETS             = slurm.CPU_BIND_TO_SOCKETS
 CPU_BIND_TO_LDOMS               = slurm.CPU_BIND_TO_LDOMS
 CPU_BIND_NONE                   = slurm.CPU_BIND_NONE
-CPU_BIND_RANK                   = slurm.CPU_BIND_RANK
 CPU_BIND_MAP                    = slurm.CPU_BIND_MAP
 CPU_BIND_MASK                   = slurm.CPU_BIND_MASK
 CPU_BIND_LDRANK                 = slurm.CPU_BIND_LDRANK
