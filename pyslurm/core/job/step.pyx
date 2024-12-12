@@ -157,7 +157,7 @@ cdef class JobStep:
         self._alloc_impl()
         self.job_id = job_id.id if isinstance(job_id, Job) else job_id
         self.id = step_id
-        self.stats = JobStatistics()
+        self.stats = JobStepStatistics()
         self.pids = {}
         cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
 
@@ -253,7 +253,7 @@ cdef class JobStep:
     cdef JobStep from_ptr(job_step_info_t *in_ptr):
         cdef JobStep wrap = JobStep.__new__(JobStep)
         wrap._alloc_info()
-        wrap.stats = JobStatistics()
+        wrap.stats = JobStepStatistics()
         wrap.pids = {}
         memcpy(wrap.ptr, in_ptr, sizeof(job_step_info_t))
         return wrap
@@ -266,7 +266,7 @@ cdef class JobStep:
         instance.
 
         Returns:
-            (JobStatistics): The statistics of the Step.
+            (JobStepStatistics): The statistics of the Step.
 
         Raises:
             RPCError: When retrieving the stats for the Step failed.

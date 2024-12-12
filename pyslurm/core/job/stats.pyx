@@ -125,7 +125,7 @@ cdef load_single(JobStep step):
         db_step.stats.tres_usage_out_ave = slurmdb_ave_tres_usage(usage_tmp, ntasks)
         xfree(usage_tmp)
 
-    step.stats = JobStatistics.from_ptr(
+    step.stats = JobStepStatistics.from_ptr(
             &db_step,
             nodes,
             step.alloc_cpus if step.alloc_cpus else 0,

@@ -199,7 +199,7 @@ cdef class Jobs(MultiClusterMap):
         stats = JobStatistics()
         for job in self.values():
             job.load_stats()
-            stats.add(job.stats, with_avg_mem=True)
+            stats.add(job.stats, is_collection=True)
 
         self.stats = stats
         return self.stats
@@ -593,10 +593,6 @@ cdef class Job:
                     all_pids[node] = []
 
                 all_pids[node].extend(pids)
-
-        step_count = len(self.steps)
-        if step_count:
-            self.stats.avg_cpu_frequency /= step_count
 
         self.pids = all_pids
         return self.stats

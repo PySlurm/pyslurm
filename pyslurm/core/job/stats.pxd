@@ -54,7 +54,7 @@ from pyslurm.utils cimport cstr, ctime
 from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.db.util cimport SlurmList, SlurmListItem
-from pyslurm.db.stats cimport JobStatistics
+from pyslurm.db.stats cimport JobStepStatistics
 from pyslurm.core.job.step cimport JobStep
 
 cdef load_single(JobStep step)

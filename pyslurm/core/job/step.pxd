@@ -47,7 +47,7 @@ from pyslurm.utils cimport cstr, ctime
 from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.core.job.task_dist cimport TaskDistribution
-from pyslurm.db.stats cimport JobStatistics
+from pyslurm.db.stats cimport JobStepStatistics
 from pyslurm.core.job cimport stats
 
 
@@ -82,7 +82,7 @@ cdef class JobStep:
             Time limit in Minutes for this step.
 
     Attributes:
-        stats (JobStatistics):
+        stats (JobStepStatistics):
             Real-time statistics of a Step.
             Before you can access the stats data for a Step, you have to call
             the `load_stats` method of a Step instance or the Jobs collection.
@@ -147,7 +147,7 @@ cdef class JobStep:
         step_update_request_msg_t *umsg
 
     cdef public:
-        JobStatistics stats
+        JobStepStatistics stats
         dict pids
 
     @staticmethod
