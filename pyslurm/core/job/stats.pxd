@@ -46,7 +46,6 @@ from pyslurm.slurm cimport (
     slurm_job_step_stat_response_msg_free,
     jobacctinfo_t,
     list_t,
-    List,
     xfree,
     try_xmalloc,
 )
@@ -60,8 +59,12 @@ from pyslurm.core.job.step cimport JobStep
 cdef load_single(JobStep step)
 
 # The real definition for this is too long, including too many other types that
-# we don't have directly access to. Not sure if this is sane to do here.
-ctypedef void* stepd_step_rec_t
+# we don't have directly access to.
+cdef extern from *:
+    """
+    typedef struct stepd_step_rec_s stepd_step_rec_t; \
+    """
+    ctypedef struct stepd_step_rec_t
 
 
 # https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/interfaces/jobacct_gather.h#L75
@@ -90,7 +93,7 @@ ctypedef struct jobacctinfo:
     uint32_t current_weighted_power
     uint32_t tres_count
     uint32_t *tres_ids
-    List tres_list
+    list_t *tres_list
     uint64_t *tres_usage_in_max
     uint64_t *tres_usage_in_max_nodeid
     uint64_t *tres_usage_in_max_taskid
@@ -144,6 +147,6 @@ cdef extern void jobacctinfo_2_stats(slurmdb_stats_t *stats, jobacctinfo_t *joba
 cdef extern list_t* assoc_mgr_tres_list
 cdef extern void assoc_mgr_lock(assoc_mgr_lock_t *locks)
 cdef extern void assoc_mgr_unlock(assoc_mgr_lock_t *locks)
-cdef extern int assoc_mgr_post_tres_list(List new_list)
+cdef extern int assoc_mgr_post_tres_list(list_t *new_list)
 
 cdef extern char *slurmdb_ave_tres_usage(char *tres_string, int tasks);
