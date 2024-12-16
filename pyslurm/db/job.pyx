@@ -761,7 +761,7 @@ cdef class Job:
         else:
             # Job is still pending, so we return the number of requested cpus
             # instead.
-            return u32_parse(self.ptr.req_cpus, on_noval=0, zero_is_noval=False)
+            return u32_parse(self.ptr.req_cpus, on_noval=1)
 
     @property
     def memory(self):
