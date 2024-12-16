@@ -199,7 +199,7 @@ cdef class Jobs(MultiClusterMap):
                          val_type=Job,
                          id_attr=Job.id,
                          key_type=int)
-        self.stats = JobStatistics()
+        self._reset_stats()
 
     @staticmethod
     def load(JobFilter db_filter=None, Connection db_connection=None):
@@ -279,14 +279,18 @@ cdef class Jobs(MultiClusterMap):
             job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
             job.qos_data = qos_data
             job._create_steps()
-            job.stats = JobStatistics.from_steps(job)
+            job.stats = JobStatistics.from_steps(job.steps)
+
+            elapsed = job.elapsed_time if job.elapsed_time else 0
+            cpus = job.cpus if job.cpus else 1
+            job.stats.elapsed_cpu_time = elapsed * cpus
 
             cluster = job.cluster
             if cluster not in out.data:
                 out.data[cluster] = {}
             out[cluster][job.id] = job
 
-            self._add_stats(job)
+            out._add_stats(job)
 
         return out
 
@@ -297,10 +301,11 @@ cdef class Jobs(MultiClusterMap):
         self.memory = 0
 
     def _add_stats(self, job):
-        self.stats.add(job.stats, is_collection=True)
+        self.stats.add(job.stats)
         self.cpus += job.cpus
         self.nodes += job.num_nodes
         self.memory += job.memory
+
 
     def calc_stats(self):
         """(Re)Calculate Statistics for the Job Collection."""

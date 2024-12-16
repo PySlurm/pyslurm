@@ -199,7 +199,7 @@ cdef class Jobs(MultiClusterMap):
         stats = JobStatistics()
         for job in self.values():
             job.load_stats()
-            stats.add(job.stats, is_collection=True)
+            stats.add(job.stats)
 
         self.stats = stats
         return self.stats
@@ -586,13 +586,15 @@ cdef class Job:
         all_pids = {}
         for step in self.steps.values():
             step.load_stats()
-            self.stats.add(step.stats)
+            self.stats._sum_steps(step.stats)
 
             for node, pids in step.pids.items():
                 if node not in all_pids:
                     all_pids[node] = []
 
                 all_pids[node].extend(pids)
+
+        self.stats.elapsed_cpu_time = self.run_time * self.cpus
 
         self.pids = all_pids
         return self.stats

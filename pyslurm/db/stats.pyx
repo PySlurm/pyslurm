@@ -38,29 +38,39 @@ cdef class JobStatistics:
         return instance_to_dict(self)
 
     @staticmethod
-    def from_steps(steps, is_collection=False):
+    def from_steps(steps):
         cdef JobStatistics total_stats = JobStatistics()
         for step in steps.values():
-            total_stats.add(step.stats, is_collection)
+            total_stats._sum_steps(step.stats)
 
         return total_stats
 
-    def add(self, src, is_collection=False):
+    def _sum_steps(self, src):
         self.consumed_energy += src.consumed_energy
         self.disk_read += src.avg_disk_read
         self.disk_write += src.avg_disk_write
         self.page_faults += src.avg_page_faults
-        self.elapsed_cpu_time += src.elapsed_cpu_time
         self.total_cpu_time += src.total_cpu_time
         self.user_cpu_time += src.user_cpu_time
         self.system_cpu_time += src.system_cpu_time
 
-        if is_collection:
-            self.resident_memory += src.avg_resident_memory
-            self.virtual_memory += src.avg_virtual_memory
-        else:
+        if src.max_resident_memory > self.resident_memory:
             self.resident_memory = src.max_resident_memory
+
+        if src.max_virtual_memory > self.resident_memory:
             self.virtual_memory = src.max_virtual_memory
+
+    def add(self, src):
+        self.consumed_energy += src.consumed_energy
+        self.disk_read += src.disk_read
+        self.disk_write += src.disk_write
+        self.page_faults += src.page_faults
+        self.total_cpu_time += src.total_cpu_time
+        self.user_cpu_time += src.user_cpu_time
+        self.system_cpu_time += src.system_cpu_time
+        self.resident_memory += src.resident_memory
+        self.virtual_memory += src.virtual_memory
+        self.elapsed_cpu_time += src.elapsed_cpu_time
 
 
 cdef class JobStepStatistics:
@@ -84,23 +94,6 @@ cdef class JobStepStatistics:
 
     def to_dict(self):
         return instance_to_dict(self)
-
-#   @staticmethod
-#   cdef JobStatistics from_job_steps(Job job):
-#       cdef JobStatistics job_stats = JobStatistics()
-
-#       for step in job.steps.values():
-#           job_stats.add(step.stats)
-
-#       elapsed = job.elapsed_time if job.elapsed_time else 0
-#       cpus = job.cpus if job.cpus else 0
-#       job_stats.elapsed_cpu_time = elapsed * cpus
-
-#       step_count = len(job.steps)
-#       if step_count:
-#           job_stats.avg_cpu_frequency /= step_count
-
-#       return job_stats
 
     @staticmethod
     cdef JobStepStatistics from_step(JobStep step):
