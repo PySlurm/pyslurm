@@ -118,8 +118,8 @@ cdef class JobStepStatistics:
         if ptr.consumed_energy != slurm.NO_VAL64:
             wrap.consumed_energy = ptr.consumed_energy
 
-        wrap.avg_cpu_time = TrackableResources.find_count_in_str(
-                ptr.tres_usage_in_ave, slurm.TRES_CPU) / cpu_time_adj
+        wrap.avg_cpu_time = int(TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_ave, slurm.TRES_CPU) / cpu_time_adj)
 
         wrap.elapsed_cpu_time = elapsed_time * cpus
 
@@ -166,8 +166,8 @@ cdef class JobStepStatistics:
         wrap.max_virtual_memory_task = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_max_taskid, slurm.TRES_VMEM)
 
-        wrap.min_cpu_time = TrackableResources.find_count_in_str(
-                ptr.tres_usage_in_min, slurm.TRES_CPU) / cpu_time_adj
+        wrap.min_cpu_time = int(TrackableResources.find_count_in_str(
+                ptr.tres_usage_in_min, slurm.TRES_CPU) / cpu_time_adj)
         min_cpu_time_nodeid = TrackableResources.find_count_in_str(
                 ptr.tres_usage_in_min_nodeid, slurm.TRES_CPU)
         wrap.min_cpu_time_task = TrackableResources.find_count_in_str(
@@ -177,8 +177,8 @@ cdef class JobStepStatistics:
         # sacct does not use it from the tres_usage_in_tot string, but instead
         # the tot_cpu_sec value from the step pointer directly, so do that too.
         if is_live:
-            wrap.total_cpu_time = TrackableResources.find_count_in_str(
-                    ptr.tres_usage_in_tot, slurm.TRES_CPU) / cpu_time_adj
+            wrap.total_cpu_time = int(TrackableResources.find_count_in_str(
+                    ptr.tres_usage_in_tot, slurm.TRES_CPU) / cpu_time_adj)
         elif step.tot_cpu_sec != slurm.NO_VAL64:
             wrap.total_cpu_time += step.tot_cpu_sec
 
