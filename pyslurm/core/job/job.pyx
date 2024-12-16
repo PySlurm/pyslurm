@@ -217,7 +217,7 @@ cdef class Jobs(MultiClusterMap):
         return xcollections.sum_property(self, Job.ntasks)
 
     @property
-    def cpu_time(self):
+    def elapsed_cpu_time(self):
         return xcollections.sum_property(self, Job.cpu_time)
 
 
@@ -1267,7 +1267,7 @@ cdef class Job:
         return cstr.to_unicode(self.ptr.cronspec)
 
     @property
-    def cpu_time(self):
+    def elapsed_cpu_time(self):
         return self.cpus * self.run_time
 
     @property
