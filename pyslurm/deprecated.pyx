@@ -3079,15 +3079,6 @@ def slurm_strerror(int Errno=0):
     return "%s" % errMsg
 
 
-def slurm_seterrno(int Errno=0):
-    """Set the slurm error number.
-
-    Args:
-        Errno (int): slurm error number
-    """
-    slurm.slurm_seterrno(Errno)
-
-
 def slurm_perror(char* Msg=''):
     """Print to standard error the supplied header.
 
