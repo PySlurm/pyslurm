@@ -157,6 +157,8 @@ cdef class JobStep:
         self._alloc_impl()
         self.job_id = job_id.id if isinstance(job_id, Job) else job_id
         self.id = step_id
+        self.stats = JobStepStatistics()
+        self.pids = {}
         cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
 
         # Initialize attributes, if any were provided
@@ -251,8 +253,37 @@ cdef class JobStep:
     cdef JobStep from_ptr(job_step_info_t *in_ptr):
         cdef JobStep wrap = JobStep.__new__(JobStep)
         wrap._alloc_info()
+        wrap.stats = JobStepStatistics()
+        wrap.pids = {}
         memcpy(wrap.ptr, in_ptr, sizeof(job_step_info_t))
         return wrap
+
+    def load_stats(self):
+        """Load realtime stats for this Step.
+
+        Calling this function returns the live statistics of the step, and
+        additionally populates the `stats` and `pids` attribute of the
+        instance.
+
+        Returns:
+            (JobStepStatistics): The statistics of the Step.
+
+        Raises:
+            RPCError: When retrieving the stats for the Step failed.
+
+        Examples:
+            >>> import pyslurm
+            >>> step = pyslurm.JobStep.load(9999, 1)
+            >>> stats = step.load_stats()
+            >>>
+            >>> # Print the CPU Time Used
+            >>> print(stats.total_cpu_time)
+            >>>
+            >>> # Print the Process-IDs for the Step, organized by hostname
+            >>> print(step.pids)
+        """
+        stats.load_single(self)
+        return self.stats
 
     def send_signal(self, signal):
         """Send a signal to a running Job step.
@@ -338,6 +369,8 @@ cdef class JobStep:
         if dist:
             out["distribution"] = dist.to_dict()
 
+        out["stats"] = self.stats.to_dict()
+        out["pids"] = self.pids
         return out
 
     @property
@@ -434,11 +467,11 @@ cdef class JobStep:
 
     @property
     def alloc_cpus(self):
-        return u32_parse(self.ptr.num_cpus)
+        return u32_parse(self.ptr.num_cpus, on_noval=1)
 
     @property
     def ntasks(self):
-        return u32_parse(self.ptr.num_tasks)
+        return u32_parse(self.ptr.num_tasks, on_noval=1)
 
     @property
     def distribution(self):

@@ -25,6 +25,7 @@
 from pyslurm.utils cimport cstr, ctime
 from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
+from pyslurm.db.stats cimport JobStatistics
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 from libc.stdlib cimport free
@@ -77,16 +78,16 @@ cdef class Jobs(MultiClusterMap):
 
     Attributes:
         memory (int):
-            Total amount of memory for all Jobs in this collection, in
-            Mebibytes
+            Total amount of memory requested for all Jobs in this collection,
+            in Mebibytes
         cpus (int):
-            Total amount of cpus for all Jobs in this collection.
+            Total amount of cpus requested for all Jobs in this collection.
         ntasks (int):
-            Total amount of tasks for all Jobs in this collection.
-        cpu_time (int):
+            Total amount of tasks requested for all Jobs in this collection.
+        elapsed_cpu_time (int):
             Total amount of CPU-Time used by all the Jobs in the collection.
             This is the result of multiplying the run_time with the amount of
-            cpus for each job.
+            cpus requested for each job.
         frozen (bool):
             If this is set to True and the `reload()` method is called, then
             *ONLY* Jobs that already exist in this collection will be
@@ -95,6 +96,10 @@ cdef class Jobs(MultiClusterMap):
             Slurm controllers memory will not be removed either.
             The default is False, so old jobs will be removed, and new Jobs
             will be added - basically the same behaviour as doing Jobs.load().
+        stats (JobStatistics):
+            Real-time statistics of all Jobs in this collection.
+            Before you can access the stats data for this, you have to call
+            the `load_stats` method on this collection.
     """
     cdef:
         job_info_msg_t *info
@@ -102,6 +107,7 @@ cdef class Jobs(MultiClusterMap):
 
     cdef public:
         frozen
+        JobStatistics stats
 
 
 cdef class Job:
@@ -119,6 +125,14 @@ cdef class Job:
             Before you can access the Steps data for a Job, you have to call
             the `reload()` method of a Job instance or the `load_steps()`
             method of a Jobs collection.
+        stats (JobStatistics):
+            Real-time statistics of a Job.
+            Before you can access the stats data for a Job, you have to call
+            the `load_stats` method of a Job instance or the Jobs collection.
+        pids (dict[str, list]):
+            Current Process-IDs of the Job, organized by node name.
+            Before you can access the pids data for a Job, you have to call
+            the `load_stats` method of a Job instance or the Jobs collection.
         name (str):
             Name of the Job
         id (int):
@@ -364,17 +378,20 @@ cdef class Job:
             Whether this Job is a cronjob.
         cronjob_time (str):
             The time specification for the Cronjob.
-        cpu_time (int):
+        elapsed_cpu_time (int):
             Amount of CPU-Time used by the Job so far.
             This is the result of multiplying the run_time with the amount of
-            cpus.
+            cpus requested.
     """
     cdef:
         slurm_job_info_t *ptr
         dict passwd
         dict groups
 
-    cdef public JobSteps steps
+    cdef public:
+        JobSteps steps
+        JobStatistics stats
+        dict pids
 
     cdef _calc_run_time(self)
 
