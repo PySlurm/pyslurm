@@ -47,6 +47,8 @@ from pyslurm.utils cimport cstr, ctime
 from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.core.job.task_dist cimport TaskDistribution
+from pyslurm.db.stats cimport JobStepStatistics
+from pyslurm.core.job cimport stats
 
 
 cdef class JobSteps(dict):
@@ -64,7 +66,7 @@ cdef class JobSteps(dict):
     @staticmethod
     cdef JobSteps _load_single(Job job)
     cdef dict _load_data(self, uint32_t job_id, int flags)
-        
+
 
 cdef class JobStep:
     """A Slurm Jobstep
@@ -80,6 +82,14 @@ cdef class JobStep:
             Time limit in Minutes for this step.
 
     Attributes:
+        stats (JobStepStatistics):
+            Real-time statistics of a Step.
+            Before you can access the stats data for a Step, you have to call
+            the `load_stats` method of a Step instance or the Jobs collection.
+        pids (dict[str, list]):
+            Current Process-IDs of the Step, organized by node name. Before you
+            can access the pids data, you have to call the `load_stats` method
+            of a Srep instance or the Jobs collection.
         id (Union[str, int]):
             The id for this step.
         job_id (int):
@@ -135,6 +145,10 @@ cdef class JobStep:
     cdef:
         job_step_info_t *ptr
         step_update_request_msg_t *umsg
+
+    cdef public:
+        JobStepStatistics stats
+        dict pids
 
     @staticmethod
     cdef JobStep from_ptr(job_step_info_t *in_ptr)

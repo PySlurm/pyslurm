@@ -166,46 +166,17 @@ cdef class Jobs(MultiClusterMap):
             Jobs to initialize this collection with.
 
     Attributes:
-        consumed_energy (int):
-            Total amount of energy consumed, in joules.
-        disk_read (int):
-             Total amount of bytes read.
-        disk_write (int):
-             Total amount of bytes written.
-        page_faults (int):
-            Total amount of page faults.
-        resident_memory (int):
-            Total Resident Set Size (RSS) used in bytes.
-        virtual_memory (int):
-            Total Virtual Memory Size (VSZ) used in bytes.
-        elapsed_cpu_time (int):
-            Total amount of time used (Elapsed time * cpu count) in seconds.
-            This is not the real CPU-Efficiency, but rather the total amount
-            of cpu-time the CPUs were occupied for.
-        total_cpu_time (int):
-            Sum of `user_cpu_time` and `system_cpu_time`, in seconds
-        user_cpu_time (int):
-            Total amount of Time spent in user space, in seconds
-        system_cpu_time (int):
-            Total amount of Time spent in kernel space, in seconds
+        stats (pyslurm.db.JobStatistics):
+            Utilization statistics of this Job Collection
         cpus (int):
-            Total amount of cpus.
+            Total amount of cpus requested.
         nodes (int):
-            Total amount of nodes.
+            Total amount of nodes requested.
         memory (int):
             Total amount of requested memory in Mebibytes.
     """
     cdef public:
-        consumed_energy
-        disk_read
-        disk_write
-        page_faults
-        resident_memory
-        virtual_memory
-        elapsed_cpu_time
-        total_cpu_time
-        user_cpu_time
-        system_cpu_time
+        stats
         cpus
         nodes
         memory
@@ -256,7 +227,7 @@ cdef class Job:
         association_id (int):
             ID of the Association this job runs in.
         block_id (str):
-            Name of the block used (for BlueGene Systems) 
+            Name of the block used (for BlueGene Systems)
         cluster (str):
             Cluster this Job belongs to
         constraints (str):

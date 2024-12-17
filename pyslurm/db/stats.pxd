@@ -26,6 +26,7 @@ from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     try_xmalloc,
     slurmdb_stats_t,
+    slurmdb_step_rec_t,
     slurmdb_job_rec_t,
 )
 from pyslurm.db.tres cimport TrackableResources
@@ -33,9 +34,48 @@ from pyslurm.db.step cimport JobStep, JobSteps
 from pyslurm.db.job cimport Job
 from pyslurm.utils cimport cstr
 
-
 cdef class JobStatistics:
-    """Statistics for a Slurm Job or Step.
+    """Statistics for a Slurm Job or Job Collection.
+
+    Attributes:
+        total_cpu_time (int):
+            Sum of user_cpu_time and system_cpu_time, in seconds
+        user_cpu_time (int):
+            Total amount of time spent in user space, in seconds
+        system_cpu_time (int):
+            Total amount of time spent in kernel space, in seconds
+        consumed_energy (int):
+            Total amount of energy consumed, in joules
+        elapsed_cpu_time (int):
+            Total amount of time used(Elapsed time * cpu count) in seconds.
+            This is not the real CPU-Efficiency, but rather the total amount
+            of cpu-time the CPUs were occupied for.
+        disk_read (int):
+            Total amount of bytes read.
+        disk_write (int):
+            Total amount of bytes written.
+        page_faults (int):
+            Total amount of page faults.
+        resident_memory (int):
+            Total Resident Set Size (RSS) used in bytes.
+        virtual_memory (int):
+            Total Virtual Memory Size (VSZ) used in bytes.
+    """
+    cdef public:
+        total_cpu_time
+        user_cpu_time
+        system_cpu_time
+        elapsed_cpu_time
+        consumed_energy
+        disk_read
+        disk_write
+        page_faults
+        resident_memory
+        virtual_memory
+
+
+cdef class JobStepStatistics:
+    """Statistics for a Slurm JobStep.
 
     !!! note
 
@@ -105,8 +145,6 @@ cdef class JobStatistics:
         system_cpu_time (int):
             Amount of Time spent in kernel space, in seconds
     """
-    cdef slurmdb_job_rec_t *job
-    
     cdef public:
         consumed_energy
         elapsed_cpu_time
@@ -140,8 +178,8 @@ cdef class JobStatistics:
         system_cpu_time
 
     @staticmethod
-    cdef JobStatistics from_job_steps(Job job)
+    cdef JobStepStatistics from_step(JobStep step)
 
     @staticmethod
-    cdef JobStatistics from_step(JobStep step)
+    cdef JobStepStatistics from_ptr(slurmdb_step_rec_t *step, list nodes, cpus=*, elapsed_time=*, is_live=*)
 

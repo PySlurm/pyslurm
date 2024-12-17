@@ -21,7 +21,7 @@
 #
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
-"""Custom Collection utilities""" 
+"""Custom Collection utilities"""
 
 from pyslurm.settings import LOCAL_CLUSTER
 import json
@@ -158,7 +158,7 @@ class ItemsView(BaseView):
         """
         return MCItemsView(self._mcm)
 
-    
+
 class MCItemsView(BaseView):
     """A Multi-Cluster Items View.
 
@@ -240,7 +240,7 @@ cdef class MultiClusterMap:
             cluster, key = item
         else:
             cluster, key = self._get_cluster(), item
-            
+
         return cluster, key
 
     def _check_val_type(self, item):
@@ -450,12 +450,18 @@ cdef class MultiClusterMap:
         if not self.data:
             return '{}'
 
+        return json.dumps(self.to_dict(multi_cluster=multi_cluster))
+
+    def to_dict(self, multi_cluster=False):
+        if not self.data:
+            return {}
+
         data = multi_dict_recursive(self)
         if multi_cluster:
-            return json.dumps(data)
+            return data
         else:
             cluster = self._get_cluster()
-            return json.dumps(data[cluster])
+            return data[cluster]
 
     def keys(self):
         """Return a View of all the Keys in this collection
@@ -476,7 +482,7 @@ cdef class MultiClusterMap:
             ...     print(cluster, key)
         """
         return KeysView(self)
-                
+
     def items(self):
         """Return a View of all the Values in this collection
 
@@ -556,12 +562,12 @@ cdef class MultiClusterMap:
         item = self.get(key, default=default)
         if item is default or item == default:
             return default
-    
+
         cluster = item.cluster
         del self.data[cluster][key]
         if not self.data[cluster]:
             del self.data[cluster]
-        
+
         return item
 
     def update(self, data={}, **kwargs):
@@ -591,7 +597,7 @@ def multi_reload(cur, frozen=True):
         for cluster, item in new.keys().with_cluster():
             if (cluster, item) not in cur.keys().with_cluster():
                 cur[cluster][item] = new[cluster][item]
-                
+
     return cur
 
 

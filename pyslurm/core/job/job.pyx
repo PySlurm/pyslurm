@@ -63,6 +63,7 @@ cdef class Jobs(MultiClusterMap):
 
     def __init__(self, jobs=None, frozen=False):
         self.frozen = frozen
+        self.stats = JobStatistics()
         super().__init__(data=jobs,
                          typ="Jobs",
                          val_type=Job,
@@ -161,14 +162,47 @@ cdef class Jobs(MultiClusterMap):
             Pending Jobs will be ignored, since they don't have any Steps yet.
 
         Raises:
-            RPCError: When retrieving the Job information for all the Steps
-                failed.
+            RPCError: When retrieving the information for all the Steps failed.
         """
         cdef dict steps = JobSteps.load_all()
         for job in self.values():
             jid = job.id
             if jid in steps:
                 job.steps = steps[jid]
+
+    def load_stats(self):
+        """Load realtime stats for this collection of Jobs.
+
+        This function additionally fills in the `stats` attribute for all Jobs
+        in the collection, and also populates its own `stats` attribute.
+        Implicitly calls `load_steps()`.
+
+        !!! note
+
+            Pending Jobs will be ignored, since they don't have any Stats yet.
+
+        Returns:
+            (JobStatistics): The statistics of this job collection.
+
+        Raises:
+            RPCError: When retrieving the stats for all the Jobs failed.
+
+        Examples:
+            >>> import pyslurm
+            >>> jobs = pyslurm.Jobs.load()
+            >>> stats = jobs.load_stats()
+            >>>
+            >>> # Print the CPU Time Used
+            >>> print(stats.total_cpu_time)
+        """
+        self.load_steps()
+        stats = JobStatistics()
+        for job in self.values():
+            job.load_stats()
+            stats.add(job.stats)
+
+        self.stats = stats
+        return self.stats
 
     @property
     def memory(self):
@@ -183,7 +217,7 @@ cdef class Jobs(MultiClusterMap):
         return xcollections.sum_property(self, Job.ntasks)
 
     @property
-    def cpu_time(self):
+    def elapsed_cpu_time(self):
         return xcollections.sum_property(self, Job.cpu_time)
 
 
@@ -199,6 +233,8 @@ cdef class Job:
         self.groups = {}
         cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
         self.steps = JobSteps()
+        self.stats = JobStatistics()
+        self.pids = {}
 
     def _alloc_impl(self):
         if not self.ptr:
@@ -225,7 +261,7 @@ cdef class Job:
         !!! note
 
             If the Job is not pending, the related Job steps will also be
-            loaded.
+            loaded. Job statistics are however not loaded automatically.
 
         Args:
             job_id (int):
@@ -276,6 +312,8 @@ cdef class Job:
         wrap.passwd = {}
         wrap.groups = {}
         wrap.steps = JobSteps.__new__(JobSteps)
+        wrap.stats = JobStatistics()
+        wrap.pids = {}
         memcpy(wrap.ptr, in_ptr, sizeof(slurm_job_info_t))
         return wrap
 
@@ -297,6 +335,8 @@ cdef class Job:
         """
         cdef dict out = instance_to_dict(self)
         out["steps"] = self.steps.to_dict()
+        out["stats"] = self.stats.to_dict()
+        out["pids"] = self.pids
         return out
 
     def send_signal(self, signal, steps="children", hurry=False):
@@ -515,6 +555,49 @@ cdef class Job:
             >>> pyslurm.Job(9999).notify("Hello Friends!")
         """
         verify_rpc(slurm_notify_job(self.id, msg))
+
+    def load_stats(self):
+        """Load realtime statistics for a Job and its steps.
+
+        Calling this function returns the Job statistics, and additionally
+        populates the `stats` and `pids` attribute of the instance.
+
+        Returns:
+            (JobStatistics): The statistics of the job.
+
+        Raises:
+            RPCError: When receiving the Statistics was not successful.
+
+        Examples:
+            >>> import pyslurm
+            >>> job = pyslurm.Job.load(9999)
+            >>> stats = job.load_stats()
+            >>>
+            >>> # Print the CPU Time Used
+            >>> print(stats.total_cpu_time)
+            >>>
+            >>> # Print the Process-IDs for the whole Job, organized by hostname
+            >>> print(job.pids)
+        """
+        if not self.steps:
+            job = Job.load(self.id)
+            self.steps = job.steps
+
+        all_pids = {}
+        for step in self.steps.values():
+            step.load_stats()
+            self.stats._sum_steps(step.stats)
+
+            for node, pids in step.pids.items():
+                if node not in all_pids:
+                    all_pids[node] = []
+
+                all_pids[node].extend(pids)
+
+        self.stats.elapsed_cpu_time = self.run_time * self.cpus
+
+        self.pids = all_pids
+        return self.stats
 
     def get_batch_script(self):
         """Return the content of the script for a Batch-Job.
@@ -1181,7 +1264,7 @@ cdef class Job:
         return cstr.to_unicode(self.ptr.cronspec)
 
     @property
-    def cpu_time(self):
+    def elapsed_cpu_time(self):
         return self.cpus * self.run_time
 
     @property
