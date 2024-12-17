@@ -15,7 +15,7 @@ except ImportError:
 
 
 CYTHON_VERSION_MIN = "0.29.37" # Keep in sync with pyproject.toml
-SLURM_LIB = "libslurm"
+SLURM_LIB = "libslurmfull"
 TOPDIR = Path(__file__).parent
 PYTHON_MIN_REQUIRED = (3, 6)
 
@@ -101,6 +101,8 @@ class SlurmConfig():
     def __init__(self):
         # Assume some defaults here
         self._lib_dir = Path("/usr/lib64")
+        self._lib = None
+        self._lib_dir_search_paths = []
         self.inc_dir = Path("/usr/include")
         self._version = None
 
@@ -110,13 +112,17 @@ class SlurmConfig():
             raise RuntimeError(f"Cannot locate {name} in {self.inc_full_dir}")
         return hdr
 
-    def _find_lib(self, lib_dir):
+    def _search_lib(self, lib_dir):
+        if self._lib:
+            return
+
         lib = lib_dir / f"{SLURM_LIB}.so"
         if not lib.exists():
-            raise RuntimeError(f"Cannot locate Slurm library in {lib_dir}")
-
-        print(f"Found {SLURM_LIB} library in {lib}")
-        return lib_dir
+            self._lib_dir_search_paths.append(str(lib_dir))
+        else:
+            print(f"Found slurm library: {lib}")
+            self._lib = lib
+            self._lib_dir = lib_dir
 
     @property
     def lib_dir(self):
@@ -124,11 +130,14 @@ class SlurmConfig():
 
     @lib_dir.setter
     def lib_dir(self, path):
-        lib_dir = Path(path)
-        if SLURM_LIB == "libslurmfull":
-            lib_dir /= "slurm"
+        self._search_lib(path)
+        self._search_lib(path / "slurm")
+        self._search_lib(path / "slurm-wlm")
 
-        self._lib_dir = self._find_lib(lib_dir)
+        if not self._lib:
+            searched = "\n- ".join(self._lib_dir_search_paths)
+            raise RuntimeError("Cannot locate Slurm library. Searched paths: "
+                               f"\n- {searched}")
 
     @property
     def inc_full_dir(self):
