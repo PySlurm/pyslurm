@@ -306,7 +306,6 @@ cdef class Jobs(MultiClusterMap):
         self.nodes += job.num_nodes
         self.memory += job.memory
 
-
     def calc_stats(self):
         """(Re)Calculate Statistics for the Job Collection."""
         self._reset_stats()
