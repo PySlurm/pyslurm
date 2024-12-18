@@ -218,7 +218,7 @@ cdef class Jobs(MultiClusterMap):
 
     @property
     def elapsed_cpu_time(self):
-        return xcollections.sum_property(self, Job.cpu_time)
+        return xcollections.sum_property(self, Job.elapsed_cpu_time)
 
 
 cdef class Job:
