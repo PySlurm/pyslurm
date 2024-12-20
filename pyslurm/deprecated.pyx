@@ -1874,7 +1874,7 @@ cdef class job:
             int rc
 
         # jobid can be given as int or string
-        if isinstance(jobid, int) or isinstance(jobid, long):
+        if isinstance(jobid, int):
             jobid = str(jobid).encode("UTF-8")
         else:
             jobid = jobid.encode("UTF-8")
@@ -2411,7 +2411,7 @@ cdef class job:
         Returns:
             (str): The content of the batch script.
         """
-        if isinstance(jobid, int) or isinstance(jobid, long):
+        if isinstance(jobid, int):
             jobid = str(jobid).encode("UTF-8")
         else:
             jobid = jobid.encode("UTF-8")
@@ -5372,7 +5372,7 @@ cdef class slurmdb_jobs:
         if jobids:
             self.job_cond.step_list = slurm.slurm_list_create(NULL)
             for _jobid in jobids:
-                if isinstance(_jobid, int) or isinstance(_jobid, long):
+                if isinstance(_jobid, int):
                     _jobid = str(_jobid).encode("UTF-8")
                 else:
                     _jobid = _jobid.encode("UTF-8")
@@ -5381,7 +5381,7 @@ cdef class slurmdb_jobs:
         if userids:
             self.job_cond.userid_list = slurm.slurm_list_create(NULL)
             for _userid in userids:
-                if isinstance(_userid, int) or isinstance(_userid, long):
+                if isinstance(_userid, int):
                     _userid = str(_userid).encode("UTF-8")
                 else:
                     _userid = _userid.encode("UTF-8")

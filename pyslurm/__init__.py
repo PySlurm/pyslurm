@@ -13,8 +13,7 @@ sys.setdlopenflags(sys.getdlopenflags() | os.RTLD_GLOBAL | os.RTLD_DEEPBIND )
 from pyslurm.api import slurm_init, slurm_fini
 slurm_init()
 
-from .pyslurm import *
-from .__version__ import __version__
+from .deprecated import *
 from .version import __version__
 
 from pyslurm import db
