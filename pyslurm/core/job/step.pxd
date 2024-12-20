@@ -126,11 +126,18 @@ cdef class JobStep:
             Time this step started, as unix timestamp.
         run_time (int):
             Seconds this step has been running for.
+        run_time_remaining (int):
+            The amount of seconds the step has still left until hitting the
+            `time_limit`.
+        elapsed_cpu_time (int):
+            Amount of CPU-Time used by the step so far.
+            This is the result of multiplying the `run_time` with the amount of
+            `cpus` allocated.
         partition (str):
             Name of the partition this step runs in.
         state (str):
             State the step is in.
-        allocated_cpus (int):
+        cpus (int):
             Number of CPUs this step uses in total.
         ntasks (int):
             Number of tasks this step uses.

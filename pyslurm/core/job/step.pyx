@@ -455,7 +455,19 @@ cdef class JobStep:
 
     @property
     def run_time(self):
-        return _raw_time(self.ptr.run_time)
+        return _raw_time(self.ptr.run_time, on_noval=0, on_inf=0)
+
+    @property
+    def run_time_remaining(self):
+        limit = self.time_limit
+        if limit is None:
+            return None
+
+        return limit - self.run_time
+
+    @property
+    def elapsed_cpu_time(self):
+        return self.run_time * self.cpus
 
     @property
     def partition(self):
@@ -466,7 +478,7 @@ cdef class JobStep:
         return cstr.to_unicode(slurm_job_state_string(self.ptr.state))
 
     @property
-    def alloc_cpus(self):
+    def cpus(self):
         return u32_parse(self.ptr.num_cpus, on_noval=1)
 
     @property
