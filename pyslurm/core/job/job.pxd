@@ -380,6 +380,9 @@ cdef class Job:
             Amount of CPU-Time used by the Job so far.
             This is the result of multiplying the run_time with the amount of
             cpus requested.
+        run_time_remaining (int):
+            The amount of seconds the job has still left until hitting the
+            `time_limit`.
     """
     cdef:
         slurm_job_info_t *ptr

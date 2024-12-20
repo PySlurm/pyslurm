@@ -144,7 +144,7 @@ cdef class Jobs(MultiClusterMap):
         """Reload the information for jobs in a collection.
 
         Returns:
-            (pyslurm.Partitions): Returns self
+            (pyslurm.Jobs): Returns self
 
         Raises:
             RPCError: When getting the Jobs from the slurmctld failed.
@@ -1273,14 +1273,12 @@ cdef class Job:
         return self.cpus * self.run_time
 
     @property
-    def pending_time(self):
-        # TODO
-        return None
+    def run_time_remaining(self):
+        limit = self.time_limit
+        if limit is None:
+            return None
 
-    @property
-    def run_time_left(self):
-        # TODO
-        return None
+        return (self.time_limit*60) - self.run_time
 
     def get_resource_layout_per_node(self):
         """Retrieve the resource layout of this Job on each node.
