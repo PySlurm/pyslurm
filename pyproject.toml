@@ -1,5 +1,5 @@
 [build-system]
-# Minimum requirements
+build_backend = "setuptools.build_meta"
 requires = [
     "setuptools>=59.2.0",
     "wheel>=0.37.0",
@@ -7,10 +7,16 @@ requires = [
     "packaging>=21.3"
 ]
 
+[tool.flake8]
+max-line-length = 80
+exclude = [
+    ".git",
+    "__pycache__"
+]
+extend-ignore = ["E203"]
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg,*.lock,*.css'
 check-hidden = true
-# ignore-regex = ''
 # ignore some variables etc
 ignore-words-list = 'mmaped,splitted'
