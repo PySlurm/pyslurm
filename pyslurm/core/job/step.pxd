@@ -82,7 +82,7 @@ cdef class JobStep:
             Time limit in Minutes for this step.
 
     Attributes:
-        stats (JobStepStatistics):
+        stats (pyslurm.db.JobStepStatistics):
             Real-time statistics of a Step.
             Before you can access the stats data for a Step, you have to call
             the `load_stats` method of a Step instance or the Jobs collection.

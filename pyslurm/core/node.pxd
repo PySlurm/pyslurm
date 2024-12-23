@@ -62,7 +62,7 @@ cdef class Nodes(MultiClusterMap):
     """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Node][] objects.
 
     Args:
-        nodes (Union[list[str], dict[str, Node], str], optional=None):
+        nodes (Union[list[str], dict[str, pyslurm.Node], str], optional=None):
             Nodes to initialize this collection with.
 
     Attributes:
@@ -210,19 +210,10 @@ cdef class Node:
             Number of idle CPUs.
         cpu_binding (str):
             Default CPU-Binding on the node.
-        cap_watts (int):
-            Node cap watts.
         current_watts (int):
             Current amount of watts consumed on the node.
         avg_watts (int):
             Average amount of watts consumed on the node.
-        external_sensors (dict):
-            External Sensor info for the Node.
-            The dict returned contains the following information:
-
-            * `joules_total` (int)
-            * `current_watts` (int)
-            * `temperature` (int)
         state (str):
             State the node is currently in.
         next_state (str):
