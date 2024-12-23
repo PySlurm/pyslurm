@@ -2,8 +2,6 @@
 
 pyslurm is a wrapper around the Slurm C-API.
 """
-from __future__ import absolute_import
-
 import os
 import sys
 
@@ -13,7 +11,6 @@ sys.setdlopenflags(sys.getdlopenflags() | os.RTLD_GLOBAL | os.RTLD_DEEPBIND )
 from pyslurm.api import slurm_init, slurm_fini
 slurm_init()
 
-from .deprecated import *
 from .version import __version__
 
 from pyslurm import db
@@ -35,3 +32,4 @@ from pyslurm.core.error import (
     RPCError,
 )
 from pyslurm.core import slurmctld
+from pyslurm import deprecated

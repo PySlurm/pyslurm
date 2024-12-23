@@ -2,5 +2,5 @@
 
 python setup.py clean
 pip install -r doc_requirements.txt
-pip install --no-build-isolation -e .
+scripts/build.sh -j4 -d
 mkdocs build

@@ -217,7 +217,7 @@ def get_extensions():
 
 def parse_slurm_args():
     slurm.lib_dir = Path(os.getenv("SLURM_LIB_DIR", slurm.lib_dir))
-    slurm.lib_dir = Path(os.getenv("SLURM_INCLUDE_DIR", slurm.inc_dir))
+    slurm.inc_dir = Path(os.getenv("SLURM_INCLUDE_DIR", slurm.inc_dir))
 
 
 def cythongen():
