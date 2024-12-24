@@ -1,19 +1,22 @@
-Name:           python-pyslurm
-Version:        24.5.0
-Release:        1%{?dist}
-Summary:        Python interface to Slurm
+%define python3_pkgversion 3.11
 
-License:        GPLv2+
-URL:            https://github.com/PySlurm/pyslurm
+Name:            python-pyslurm
+Version:         24.5.0
+%define rel      1
+Release:         %{rel}%{?dist}
+Summary:         Python interface to Slurm
+License:         GPLv2+
+URL:             https://github.com/PySlurm/pyslurm
+Source:          pyslurm-%{version}.tar.gz
 
-# https://docs.fedoraproject.org/en-US/packaging-guidelines/SourceURL/#_troublesome_urls
-Source:         %{url}/archive/refs/tags/v%{version}.tar.gz
-
-BuildArch:       noarch
 BuildRequires:   python%{python3_pkgversion}-devel
+BuildRequires:   python%{python3_pkgversion}-setuptools
+BuildRequires:   python%{python3_pkgversion}-wheel
+BuildRequires:   python%{python3_pkgversion}-Cython
+BuildRequires:   python%{python3_pkgversion}-packaging
+BuildRequires:   python-rpm-macros
 BuildRequires:   slurm-devel >= 24.05.0
 BuildRequires:   slurm >= 24.05.0
-# BuildRequires:   python%{python3_pkgversion}-setuptools
 Requires:        python%{python3_pkgversion}
 
 %description
@@ -41,6 +44,3 @@ pyslurm is a Python interface to Slurm
 %files -f %{pyproject_files}
 %license COPYING.txt
 %doc README.md
-
-%changelog
-%autochangelog
