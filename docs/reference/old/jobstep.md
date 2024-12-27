@@ -6,5 +6,5 @@ title: JobStep
     This class is superseded by [pyslurm.JobStep](../jobstep.md) and will be
     removed in a future release.
 
-::: pyslurm.jobstep
+::: pyslurm.deprecated.jobstep
     handler: python

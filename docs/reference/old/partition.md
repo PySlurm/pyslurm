@@ -6,5 +6,5 @@ title: Partition
     This class is superseded by [pyslurm.Partition](../partition.md) and will
     be removed in a future release.
 
-::: pyslurm.partition
+::: pyslurm.deprecated.partition
     handler: python

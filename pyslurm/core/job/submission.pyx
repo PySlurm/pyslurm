@@ -83,7 +83,7 @@ cdef class JobSubmitDescription:
             (int): The ID of the submitted Job.
 
         Raises:
-            RPCError: When the job submission was not successful.
+            (pyslurm.RPCError): When the job submission was not successful.
 
         Examples:
             >>> import pyslurm

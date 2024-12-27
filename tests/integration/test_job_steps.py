@@ -72,7 +72,7 @@ def test_load(submit_job):
     # Now try to load the first and second Step started by srun
     step_zero = JobStep.load(job, 0)
     step_one = JobStep.load(job, 1)
-  
+
     # It is possible that the srun executed as the second command will
     # become the Step with ID '0' - so we just swap it.
     if step_zero.name == "step_one":
@@ -87,14 +87,14 @@ def test_load(submit_job):
     assert step.job_id == job.id
     assert step.name == "step_zero"
     assert step.ntasks == 1
-    assert step.alloc_cpus == 2
+    assert step.cpus == 2
     assert step.time_limit is None
 
     step = step_one
     assert step.job_id == job.id
     assert step.name == "step_one"
     assert step.ntasks == 1
-    assert step.alloc_cpus == 3
+    assert step.cpus == 3
     assert step.time_limit == 10
 
 
@@ -123,7 +123,7 @@ def test_cancel(submit_job):
             1 in steps)
 
     steps[0].cancel()
-    
+
     util.wait()
     steps = JobSteps.load(job)
     assert len(steps) == 2

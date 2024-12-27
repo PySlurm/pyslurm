@@ -219,7 +219,7 @@ cdef class Jobs(MultiClusterMap):
             (pyslurm.db.Jobs): A Collection of database Jobs.
 
         Raises:
-            RPCError: When getting the Jobs from the Database was not
+            (pyslurm.RPCError): When getting the Jobs from the Database was not
                 successful
 
         Examples:
@@ -347,7 +347,7 @@ cdef class Jobs(MultiClusterMap):
             (list[int]): A list of Jobs that were modified
 
         Raises:
-            RPCError: When a failure modifying the Jobs occurred.
+            (pyslurm.RPCError): When a failure modifying the Jobs occurred.
 
         Examples:
             In its simplest form, you can do something like this:
@@ -496,8 +496,8 @@ cdef class Job:
             (pyslurm.db.Job): Returns a new Database Job instance
 
         Raises:
-            RPCError: If requesting the information for the database Job was
-                not successful.
+            (pyslurm.RPCError): If requesting the information for the database
+                Job was not successful.
 
         Examples:
             >>> import pyslurm
@@ -574,7 +574,7 @@ cdef class Job:
                 info on this parameter.
 
         Raises:
-            RPCError: When modifying the Job failed.
+            (pyslurm.RPCError): When modifying the Job failed.
         """
         cdef JobFilter jfilter = JobFilter(ids=[self.id])
         Jobs.modify(jfilter, changes, db_connection)
