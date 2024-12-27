@@ -3,43 +3,45 @@
 
 import os
 import sys
-import textwrap
-import shutil
 from pathlib import Path
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 
 try:
     from packaging.version import Version
 except ImportError:
     from setuptools._vendor.packaging.version import Version
 
-
-CYTHON_VERSION_MIN = "0.29.37" # Keep in sync with pyproject.toml
-SLURM_LIB = "libslurmfull"
 TOPDIR = Path(__file__).parent
-PYTHON_MIN_REQUIRED = (3, 6)
 
 
 def get_version():
-    with (TOPDIR / "pyslurm/__version__.py").open() as f:
+    with (TOPDIR / "pyslurm/version.py").open() as f:
         for line in f.read().splitlines():
-            if line.startswith("__version__"):
-               return Version(line.split('"')[1])
+            if not line.startswith("__version__"):
+                continue
+
+            V = Version(line.split('"')[1])
+            if not hasattr(V, "major") or not hasattr(V, "minor"):
+                (V.major, V.minor) = V._version.release[0:2]
+
+            return V
     raise RuntimeError("Cannot get version string.")
 
 
+CYTHON_VERSION_MIN = "0.29.37" # Keep in sync with pyproject.toml
+SLURM_LIB = "libslurmfull"
 VERSION = get_version()
 SLURM_VERSION = f"{VERSION.major}.{VERSION.minor}"
+DOCUMENTATION_URL = f"https://pyslurm.github.io/{SLURM_VERSION}"
+GITHUB_URL = "https://github.com/PySlurm/pyslurm"
 
 
 def homepage(*args):
-    url = f"https://pyslurm.github.io/{SLURM_VERSION}"
-    return "/".join([url] + list(args))
+    return "/".join([DOCUMENTATION_URL] + list(args))
 
 
 def github(*args):
-    url = "https://github.com/PySlurm/pyslurm"
-    return "/".join([url] + list(args))
+    return "/".join([GITHUB_URL] + list(args))
 
 
 metadata = dict(
@@ -49,16 +51,17 @@ metadata = dict(
     description="Python Interface for Slurm",
     long_description=(TOPDIR / "README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
-    author="Mark Roberts, Giovanni Torres, et al.",
-    author_email="pyslurm@googlegroups.com",
-    url=homepage(),
+    author="Mark Roberts, Giovanni Torres, Toni Harzendorf, et al.",
+    maintainer="Toni Harzendorf",
+    maintainer_email="toni.harzendorf@gmail.com",
     platforms=["Linux"],
+    url=homepage(),
     keywords=[
-        "HPC"
-        "Batch Scheduler"
-        "Resource Manager"
-        "Slurm"
-        "Cython"
+        "HPC",
+        "Batch Scheduler",
+        "Resource Manager",
+        "Slurm",
+        "Cython",
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -83,18 +86,19 @@ metadata = dict(
         "Topic :: System :: Distributed Computing",
     ],
     project_urls={
-        "Source Code"   : github(),
-        "Bug Tracker"   : github("issues"),
+        "Homepage"      : github(),
+        "Repository"    : github(),
+        "Issues"        : github("issues"),
         "Discussions"   : github("discussions"),
         "Documentation" : homepage("reference"),
         "Changelog"     : homepage("changelog")
     },
-    python_requires=f">={'.'.join(str(i) for i in PYTHON_MIN_REQUIRED)}",
+    python_requires=">=3.6",
+    packages=find_packages(
+        include=['pyslurm*'],
+    ),
+    include_package_data=True,
 )
-
-if sys.version_info[:2] < PYTHON_MIN_REQUIRED:
-    raise RuntimeError(f"Python {PYTHON_MIN_REQUIRED} or higher is required.")
-
 
 class SlurmConfig():
 
@@ -178,27 +182,6 @@ class SlurmConfig():
 slurm = SlurmConfig()
 
 
-def usage():
-    print(
-        textwrap.dedent(
-        f"""
-        PySlurm Help
-        ------------
-            --slurm-lib=PATH    Where to look for the Slurm library (default=/usr/lib64)
-                                You can also instead use the environment
-                                variable SLURM_LIB_DIR.
-
-            --slurm-inc=PATH    Where to look for slurm.h, slurm_errno.h
-                                and slurmdb.h (default=/usr/include)
-                                You can also instead use the environment
-                                variable SLURM_INCLUDE_DIR.
-
-        Homepage: {homepage()}
-        """
-        )
-    )
-
-
 def find_files_with_extension(path, extensions):
     files = [p
              for p in Path(path).glob("**/*")
@@ -233,23 +216,8 @@ def get_extensions():
 
 
 def parse_slurm_args():
-    # Check first if necessary paths to Slurm header and lib were provided via
-    # env var
-    lib_dir = os.getenv("SLURM_LIB_DIR", slurm.lib_dir)
-    inc_dir = os.getenv("SLURM_INCLUDE_DIR", slurm.inc_dir)
-
-    # If these are provided, they take precedence over the env vars
-    args = sys.argv[1:]
-    for arg in args:
-        if arg.find("--slurm-lib=") == 0:
-            lib_dir = arg.split("=")[1]
-            sys.argv.remove(arg)
-        if arg.find("--slurm-inc=") == 0:
-            inc_dir = arg.split("=")[1]
-            sys.argv.remove(arg)
-
-    slurm.inc_dir = Path(inc_dir)
-    slurm.lib_dir = Path(lib_dir)
+    slurm.lib_dir = Path(os.getenv("SLURM_LIB_DIR", slurm.lib_dir))
+    slurm.inc_dir = Path(os.getenv("SLURM_INCLUDE_DIR", slurm.inc_dir))
 
 
 def cythongen():
@@ -267,7 +235,8 @@ def cythongen():
             raise RuntimeError(msg)
 
     cleanup_build()
-    metadata["ext_modules"] = cythonize(get_extensions())
+    nthreads = os.getenv("PYSLURM_BUILD_JOBS", 1)
+    metadata["ext_modules"] = cythonize(get_extensions(), nthreads=int(nthreads))
 
 
 def parse_setuppy_commands():
@@ -275,29 +244,16 @@ def parse_setuppy_commands():
     if not args:
         return False
 
-    # Prepend PySlurm help text when passing --help | -h
-    if "--help" in args or "-h" in args:
-        usage()
-        print(
-            textwrap.dedent(
-            """
-            Setuptools Help
-            --------------
-            """
-            )
-        )
-        return False
-
-    # Clean up all build objects
     if "clean" in args:
         cleanup_build()
         return False
 
     build_cmd = ('build', 'build_ext', 'build_py', 'build_clib',
-        'build_scripts', 'bdist_wheel', 'build_src', 'bdist_egg', 'develop')
+                 'build_scripts', 'bdist_wheel', 'build_src', 'bdist_egg',
+                 'develop', 'editable_wheel')
 
     for cmd in build_cmd:
-        if cmd in args:
+        if cmd == args[0]:
             return True
 
     return False

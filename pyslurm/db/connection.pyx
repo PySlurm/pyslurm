@@ -57,7 +57,7 @@ cdef class Connection:
         """Open a new connection to the slurmdbd
 
         Raises:
-            RPCError: When opening the connection fails
+            (pyslurm.RPCError): When opening the connection fails
 
         Returns:
             (pyslurm.db.Connection): Connection to slurmdbd

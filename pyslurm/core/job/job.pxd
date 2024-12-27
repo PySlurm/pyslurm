@@ -96,7 +96,7 @@ cdef class Jobs(MultiClusterMap):
             Slurm controllers memory will not be removed either.
             The default is False, so old jobs will be removed, and new Jobs
             will be added - basically the same behaviour as doing Jobs.load().
-        stats (JobStatistics):
+        stats (pyslurm.db.JobStatistics):
             Real-time statistics of all Jobs in this collection.
             Before you can access the stats data for this, you have to call
             the `load_stats` method on this collection.
@@ -120,12 +120,12 @@ cdef class Job:
             An Integer representing a Job-ID.
 
     Attributes:
-        steps (JobSteps):
+        steps (pyslurm.JobSteps):
             Steps this Job has.
             Before you can access the Steps data for a Job, you have to call
             the `reload()` method of a Job instance or the `load_steps()`
             method of a Jobs collection.
-        stats (JobStatistics):
+        stats (pyslurm.db.JobStatistics):
             Real-time statistics of a Job.
             Before you can access the stats data for a Job, you have to call
             the `load_stats` method of a Job instance or the Jobs collection.
@@ -380,6 +380,9 @@ cdef class Job:
             Amount of CPU-Time used by the Job so far.
             This is the result of multiplying the run_time with the amount of
             cpus requested.
+        run_time_remaining (int):
+            The amount of seconds the job has still left until hitting the
+            `time_limit`.
     """
     cdef:
         slurm_job_info_t *ptr

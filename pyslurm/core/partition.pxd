@@ -63,7 +63,7 @@ cdef class Partitions(MultiClusterMap):
     """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Partition][] objects.
 
     Args:
-        partitions (Union[list[str], dict[str, Partition], str], optional=None):
+        partitions (Union[list[str], dict[str, pyslurm.Partition], str], optional=None):
             Partitions to initialize this collection with.
 
     Attributes:

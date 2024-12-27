@@ -1,5 +1,5 @@
 [build-system]
-# Minimum requirements
+build-backend = "setuptools.build_meta"
 requires = [
     "setuptools>=59.2.0",
     "wheel>=0.37.0",
@@ -7,10 +7,27 @@ requires = [
     "packaging>=21.3"
 ]
 
+[tool.flake8]
+filename = ["*.py", "*.pyx", "*.pxd"]
+max-line-length = 80
+exclude = [
+    ".git",
+    "__pycache__",
+    ".eggs",
+    "*.egg",
+    "build",
+    "tests",
+    "examples",
+    "scripts",
+]
+extend-ignore = ["E203", "E901", "E225", "E226", "E227", "E999"]
+
+[tool.cython-lint]
+max-line-length = 80
+ignore = ['E503', 'E504']
+exclude = 'deprecated.pyx'
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg,*.lock,*.css'
 check-hidden = true
-# ignore-regex = ''
-# ignore some variables etc
 ignore-words-list = 'mmaped,splitted'
