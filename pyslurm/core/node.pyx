@@ -78,7 +78,8 @@ cdef class Nodes(MultiClusterMap):
             (pyslurm.Nodes): Collection of node objects.
 
         Raises:
-            RPCError: When getting all the Nodes from the slurmctld failed.
+            (pyslurm.RPCError): When getting all the Nodes from the slurmctld
+                failed.
         """
         cdef:
             dict passwd = {}
@@ -139,7 +140,8 @@ cdef class Nodes(MultiClusterMap):
             (pyslurm.Nodes): Returns self
 
         Raises:
-            RPCError: When getting the Nodes from the slurmctld failed.
+            (pyslurm.RPCError): When getting the Nodes from the slurmctld
+                failed.
         """
         return xcollections.multi_reload(self)
 
@@ -153,7 +155,7 @@ cdef class Nodes(MultiClusterMap):
                 properties can be modified.
 
         Raises:
-            RPCError: When updating the Node was not successful.
+            (pyslurm.RPCError): When updating the Node was not successful.
 
         Examples:
             >>> import pyslurm
@@ -293,8 +295,8 @@ cdef class Node:
             (pyslurm.Node): Returns a new Node instance.
 
         Raises:
-            RPCError: If requesting the Node information from the slurmctld
-                was not successful.
+            (pyslurm.RPCError): If requesting the Node information from the
+                slurmctld was not successful.
 
         Examples:
             >>> import pyslurm
@@ -339,7 +341,7 @@ cdef class Node:
                 object itself.
 
         Raises:
-            RPCError: If creating the Node was not successful.
+            (pyslurm.RPCError): If creating the Node was not successful.
 
         Examples:
             >>> import pyslurm
@@ -367,7 +369,7 @@ cdef class Node:
                 properties can be modified.
 
         Raises:
-            RPCError: When updating the Node was not successful.
+            (pyslurm.RPCError): When updating the Node was not successful.
 
         Examples:
             >>> import pyslurm
@@ -389,7 +391,7 @@ cdef class Node:
         Implements the slurm_delete_node RPC.
 
         Raises:
-            RPCError: If deleting the Node was not successful.
+            (pyslurm.RPCError): If deleting the Node was not successful.
 
         Examples:
             >>> import pyslurm

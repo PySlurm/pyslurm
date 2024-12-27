@@ -55,7 +55,8 @@ cdef class JobSteps(dict):
     """A [dict][] of [pyslurm.JobStep][] objects for a given Job.
 
     Raises:
-        RPCError: When getting the Job steps from the slurmctld failed.
+        (pyslurm.RPCError): When getting the Job steps from the slurmctld
+            failed.
     """
 
     cdef:
