@@ -8,15 +8,26 @@ requires = [
 ]
 
 [tool.flake8]
+filename = ["*.py", "*.pyx", "*.pxd"]
 max-line-length = 80
 exclude = [
     ".git",
-    "__pycache__"
+    "__pycache__",
+    ".eggs",
+    "*.egg",
+    "build",
+    "tests",
+    "examples",
+    "scripts",
 ]
-extend-ignore = ["E203"]
+extend-ignore = ["E203", "E901", "E225", "E226", "E227", "E999"]
+
+[tool.cython-lint]
+max-line-length = 80
+ignore = ['E503', 'E504']
+exclude = 'deprecated.pyx'
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg,*.lock,*.css'
 check-hidden = true
-# ignore some variables etc
 ignore-words-list = 'mmaped,splitted'
