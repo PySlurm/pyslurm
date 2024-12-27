@@ -5,7 +5,7 @@ pyslurm is a wrapper around the Slurm C-API.
 import os
 import sys
 
-sys.setdlopenflags(sys.getdlopenflags() | os.RTLD_GLOBAL | os.RTLD_DEEPBIND )
+sys.setdlopenflags(sys.getdlopenflags() | os.RTLD_GLOBAL | os.RTLD_DEEPBIND)
 
 # Initialize slurm api
 from pyslurm.api import slurm_init, slurm_fini
