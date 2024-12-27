@@ -34,4 +34,4 @@ from pyslurm.core.error import (
 from pyslurm.core import slurmctld
 
 # The old API in deprecated.pyx
-from pyslurm import deprecated
+from pyslurm.deprecated import *
