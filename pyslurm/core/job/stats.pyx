@@ -128,7 +128,7 @@ cdef load_single(JobStep step):
     step.stats = JobStepStatistics.from_ptr(
             &db_step,
             nodes,
-            step.alloc_cpus if step.alloc_cpus else 0,
+            step.cpus,
             step.run_time if step.run_time else 0,
             is_live=True,
     )
