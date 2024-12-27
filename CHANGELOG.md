@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New Classes to interact with Database QoS (WIP)
     - `pyslurm.db.QualityOfService`
     - `pyslurm.db.QualitiesOfService`
+
+## [24.5.1](https://github.com/PySlurm/pyslurm/releases/tag/v24.5.1) - 2024-12-27
+
+### Added
+
 - Added `stats` attribute to both `pyslurm.Job`, `pyslurm.Jobs` and
   `pyslurm.db.Jobs`
 - Added `pids` attribute to `pyslurm.Job` which contains Process-IDs of the Job
@@ -35,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   You can keep providing the directory where `libslurm.so` resided as
   `$SLURM_LIB_DIR` to pyslurm, and it will automatically find `libslurmfull.so`
   from there.
+- Added `run_time_remaining` and `elapsed_cpu_time` attributes to `pyslurm.JobStep`
+- Added `run_time_remaining` attribute to `pyslurm.Job`
 
 ### Fixed
 
@@ -47,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Breaking: rename `cpu_time` to `elapsed_cpu_time` in `pyslurm.Job` and
   `pyslurm.Jobs` classes
+- Breaking: rename attribute `alloc_cpus` to just `cpus` in `pyslurm.JobStep`
 - Breaking: removed the following attributes from `pyslurm.db.Jobs`:<br>
     * `consumed_energy`
     * `disk_read`
@@ -68,6 +76,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   statistics that make sense at the Job-level.
 - return `1` as a value for the `cpus` attribute in `pyslurm.db.Job` when there
   is no value set from Slurm's side.
+
+### Removed
+
+- Removed `pyslurm.version()` function. Should use `__version__` attribute directly.
+- Removed `--slurm-lib` and `--slurm-inc` parameters to `setup.py`.<br>
+  `SLURM_LIB_DIR` and `SLURM_INCLUDE_DIR` environment variables should be used instead.
 
 ## [24.5.0](https://github.com/PySlurm/pyslurm/releases/tag/v24.5.0) - 2024-11-16
 
