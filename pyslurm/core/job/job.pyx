@@ -185,7 +185,7 @@ cdef class Jobs(MultiClusterMap):
             Pending Jobs will be ignored, since they don't have any Stats yet.
 
         Returns:
-            (pyslurm.JobStatistics): The statistics of this job collection.
+            (pyslurm.db.JobStatistics): The statistics of this job collection.
 
         Raises:
             (pyslurm.RPCError): When retrieving the stats for all the Jobs
@@ -568,7 +568,7 @@ cdef class Job:
         populates the `stats` and `pids` attribute of the instance.
 
         Returns:
-            (pyslurm.JobStatistics): The statistics of the job.
+            (pyslurm.db.JobStatistics): The statistics of the job.
 
         Raises:
             (pyslurm.RPCError): When receiving the Statistics was not

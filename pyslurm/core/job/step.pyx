@@ -266,7 +266,7 @@ cdef class JobStep:
         instance.
 
         Returns:
-            (pyslurm.JobStepStatistics): The statistics of the Step.
+            (pyslurm.db.JobStepStatistics): The statistics of the Step.
 
         Raises:
             (pyslurm.RPCError): When retrieving the stats for the Step failed.
