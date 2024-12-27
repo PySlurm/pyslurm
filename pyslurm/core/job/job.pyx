@@ -75,7 +75,7 @@ cdef class Jobs(MultiClusterMap):
         """Retrieve all Jobs from the Slurm controller
 
         Args:
-            preload_passwd_info (bool, optional): 
+            preload_passwd_info (bool, optional):
                 Decides whether to query passwd and groups information from
                 the system.
                 Could potentially speed up access to attributes of the Job
@@ -89,7 +89,8 @@ cdef class Jobs(MultiClusterMap):
             (pyslurm.Jobs): A collection of Job objects.
 
         Raises:
-            RPCError: When getting all the Jobs from the slurmctld failed.
+            (pyslurm.RPCError): When getting all the Jobs from the slurmctld
+                failed.
 
         Examples:
             >>> import pyslurm
@@ -144,10 +145,11 @@ cdef class Jobs(MultiClusterMap):
         """Reload the information for jobs in a collection.
 
         Returns:
-            (pyslurm.Partitions): Returns self
+            (pyslurm.Jobs): Returns self
 
         Raises:
-            RPCError: When getting the Jobs from the slurmctld failed.
+            (pyslurm.RPCError): When getting the Jobs from the slurmctld
+                failed.
         """
         return xcollections.multi_reload(self, frozen=self.frozen)
 
@@ -162,7 +164,8 @@ cdef class Jobs(MultiClusterMap):
             Pending Jobs will be ignored, since they don't have any Steps yet.
 
         Raises:
-            RPCError: When retrieving the information for all the Steps failed.
+            (pyslurm.RPCError): When retrieving the information for all the
+                Steps failed.
         """
         cdef dict steps = JobSteps.load_all()
         for job in self.values():
@@ -182,10 +185,11 @@ cdef class Jobs(MultiClusterMap):
             Pending Jobs will be ignored, since they don't have any Stats yet.
 
         Returns:
-            (JobStatistics): The statistics of this job collection.
+            (pyslurm.db.JobStatistics): The statistics of this job collection.
 
         Raises:
-            RPCError: When retrieving the stats for all the Jobs failed.
+            (pyslurm.RPCError): When retrieving the stats for all the Jobs
+                failed.
 
         Examples:
             >>> import pyslurm
@@ -271,8 +275,8 @@ cdef class Job:
             (pyslurm.Job): Returns a new Job instance
 
         Raises:
-            RPCError: If requesting the Job information from the slurmctld was
-                not successful.
+            (pyslurm.RPCError): If requesting the Job information from the
+                slurmctld was not successful.
 
         Examples:
             >>> import pyslurm
@@ -282,7 +286,7 @@ cdef class Job:
             job_info_msg_t *info = NULL
             Job wrap = None
 
-        try: 
+        try:
             verify_rpc(slurm_load_job(&info, job_id, slurm.SHOW_DETAIL))
 
             if info and info.record_count:
@@ -320,7 +324,7 @@ cdef class Job:
     cdef _swap_data(Job dst, Job src):
         cdef slurm_job_info_t *tmp = NULL
         if dst.ptr and src.ptr:
-            tmp = dst.ptr 
+            tmp = dst.ptr
             dst.ptr = src.ptr
             src.ptr = tmp
 
@@ -345,7 +349,7 @@ cdef class Job:
         Implements the slurm_signal_job RPC.
 
         Args:
-            signal (Union[str, int]): 
+            signal (Union[str, int]):
                 Any valid signal which will be sent to the Job. Can be either
                 a str like `SIGUSR1`, or simply an [int][].
             steps (str):
@@ -355,12 +359,12 @@ cdef class Job:
                 signaled.
                 The value `batch` in contrast means, that only the batch-step
                 will be signaled. With `all` every step is signaled.
-            hurry (bool): 
+            hurry (bool):
                 If True, no burst buffer data will be staged out. The default
                 value is False.
 
         Raises:
-            RPCError: When sending the signal was not successful.
+            (pyslurm.RPCError): When sending the signal was not successful.
 
         Examples:
             Specifying the signal as a string:
@@ -378,7 +382,7 @@ cdef class Job:
             flags |= slurm.KILL_FULL_JOB
         elif steps.casefold() == "batch":
             flags |= slurm.KILL_JOB_BATCH
-        
+
         if hurry:
             flags |= slurm.KILL_HURRY
 
@@ -400,7 +404,7 @@ cdef class Job:
         Implements the slurm_kill_job RPC.
 
         Raises:
-            RPCError: When cancelling the Job was not successful.
+            (pyslurm.RPCError): When cancelling the Job was not successful.
 
         Examples:
             >>> import pyslurm
@@ -414,7 +418,7 @@ cdef class Job:
         Implements the slurm_suspend RPC.
 
         Raises:
-            RPCError: When suspending the Job was not successful.
+            (pyslurm.RPCError): When suspending the Job was not successful.
 
         Examples:
             >>> import pyslurm
@@ -433,7 +437,7 @@ cdef class Job:
         Implements the slurm_resume RPC.
 
         Raises:
-            RPCError: When unsuspending the Job was not successful.
+            (pyslurm.RPCError): When unsuspending the Job was not successful.
 
         Examples:
             >>> import pyslurm
@@ -453,11 +457,11 @@ cdef class Job:
                 modifications that should be done on the Job.
 
         Raises:
-            RPCError: When updating the Job was not successful.
+            (pyslurm.RPCError): When updating the Job was not successful.
 
         Examples:
             >>> import pyslurm
-            >>> 
+            >>>
             >>> # Setting the new time-limit to 20 days
             >>> changes = pyslurm.JobSubmitDescription(time_limit="20-00:00:00")
             >>> pyslurm.Job(9999).modify(changes)
@@ -478,14 +482,14 @@ cdef class Job:
                 User will also be able to release the job.
 
         Raises:
-            RPCError: When holding the Job was not successful.
+            (pyslurm.RPCError): When holding the Job was not successful.
 
         Examples:
             >>> import pyslurm
-            >>> 
+            >>>
             >>> # Holding a Job (in "admin" mode by default)
             >>> pyslurm.Job(9999).hold()
-            >>> 
+            >>>
             >>> # Holding a Job in "user" mode
             >>> pyslurm.Job(9999).hold(mode="user")
         """
@@ -500,7 +504,7 @@ cdef class Job:
         """Release a currently held Job, allowing it to be scheduled again.
 
         Raises:
-            RPCError: When releasing a held Job was not successful.
+            (pyslurm.RPCError): When releasing a held Job was not successful.
 
         Examples:
             >>> import pyslurm
@@ -519,15 +523,15 @@ cdef class Job:
                 Default for this is `False`, so it will not be held.
 
         Raises:
-            RPCError: When requeing the Job was not successful.
+            (pyslurm.RPCError): When requeing the Job was not successful.
 
         Examples:
             >>> import pyslurm
-            >>> 
+            >>>
             >>> # Requeing a Job while allowing it to be
             >>> # scheduled again immediately
             >>> pyslurm.Job(9999).requeue()
-            >>> 
+            >>>
             >>> # Requeing a Job while putting it in a held state
             >>> pyslurm.Job(9999).requeue(hold=True)
         """
@@ -548,8 +552,9 @@ cdef class Job:
                 The message that should be sent.
 
         Raises:
-            RPCError: When sending the message to the Job was not successful.
-                
+            (pyslurm.RPCError): When sending the message to the Job was not
+                successful.
+
         Examples:
             >>> import pyslurm
             >>> pyslurm.Job(9999).notify("Hello Friends!")
@@ -563,10 +568,11 @@ cdef class Job:
         populates the `stats` and `pids` attribute of the instance.
 
         Returns:
-            (JobStatistics): The statistics of the job.
+            (pyslurm.db.JobStatistics): The statistics of the job.
 
         Raises:
-            RPCError: When receiving the Statistics was not successful.
+            (pyslurm.RPCError): When receiving the Statistics was not
+            successful.
 
         Examples:
             >>> import pyslurm
@@ -606,8 +612,8 @@ cdef class Job:
             (str): The content of the batch script.
 
         Raises:
-            RPCError: When retrieving the Batch-Script for the Job was not
-                successful.
+            (pyslurm.RPCError): When retrieving the Batch-Script for the Job
+                was not successful.
 
         Examples:
             >>> import pyslurm
@@ -622,7 +628,7 @@ cdef class Job:
         #
         # The copyright notices for the file this function was taken from is
         # included below:
-        # 
+        #
         # Portions Copyright (C) 2010-2017 SchedMD LLC <https://www.schedmd.com>.
         # Copyright (C) 2002-2007 The Regents of the University of California.
         # Copyright (C) 2008-2010 Lawrence Livermore National Security.
@@ -704,7 +710,7 @@ cdef class Job:
 
     @property
     def nice(self):
-        if self.ptr.nice == slurm.NO_VAL: 
+        if self.ptr.nice == slurm.NO_VAL:
             return None
 
         return self.ptr.nice - slurm.NICE_OFFSET
@@ -730,7 +736,7 @@ cdef class Job:
 
     @property
     def state_reason(self):
-        if self.ptr.state_desc: 
+        if self.ptr.state_desc:
             return cstr.to_unicode(self.ptr.state_desc)
 
         return cstr.to_unicode(slurm_job_reason_string(self.ptr.state_reason))
@@ -891,7 +897,7 @@ cdef class Job:
     def cpus_per_task(self):
         if self.ptr.cpus_per_tres:
             return None
-        
+
         return u16_parse(self.ptr.cpus_per_task, on_noval=1)
 
     @property
@@ -1121,7 +1127,7 @@ cdef class Job:
         task_str = cstr.to_unicode(self.ptr.array_task_str)
         if not task_str:
             return None
-        
+
         if "%" in task_str:
             # We don't want this % character and everything after it
             # in here, so remove it.
@@ -1132,7 +1138,7 @@ cdef class Job:
     @property
     def end_time(self):
         return _raw_time(self.ptr.end_time)
-    
+
     # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L480
     cdef _calc_run_time(self):
         cdef time_t rtime
@@ -1268,20 +1274,18 @@ cdef class Job:
         return self.cpus * self.run_time
 
     @property
-    def pending_time(self):
-        # TODO
-        return None
+    def run_time_remaining(self):
+        limit = self.time_limit
+        if limit is None:
+            return None
 
-    @property
-    def run_time_left(self):
-        # TODO
-        return None
+        return (self.time_limit*60) - self.run_time
 
     def get_resource_layout_per_node(self):
         """Retrieve the resource layout of this Job on each node.
 
         !!! warning
-        
+
             Return type may still be subject to change in the future
 
         Returns:
@@ -1294,13 +1298,13 @@ cdef class Job:
         #
         # The copyright notices for the file that contains the original code
         # is below:
-        # 
+        #
         # Portions Copyright (C) 2010-2017 SchedMD LLC <https://www.schedmd.com>.
         # Copyright (C) 2002-2007 The Regents of the University of California.
         # Copyright (C) 2008-2010 Lawrence Livermore National Security.
         # Produced at Lawrence Livermore National Laboratory (cf, DISCLAIMER).
         # Written by Morris Jette <jette1@llnl.gov> et. al.
-        # CODE-OCEC-09-009. All rights reserved. 
+        # CODE-OCEC-09-009. All rights reserved.
         #
         # Slurm is licensed under the GNU General Public License. For the full
         # text of Slurm's License, please see here:
@@ -1308,7 +1312,7 @@ cdef class Job:
         #
         # Please, as mentioned above, also have a look at Slurm's DISCLAIMER
         # under pyslurm/slurm/SLURM_DISCLAIMER
-        # 
+        #
         # TODO: Explain the structure of the return value a bit more.
         cdef:
             slurm.job_resources *resources = <slurm.job_resources*>self.ptr.job_resrcs
@@ -1389,9 +1393,9 @@ cdef class Job:
             free(host)
 
         slurm.slurm_hostlist_destroy(hl)
-        return output    
+        return output
 
-            
+
 # https://github.com/SchedMD/slurm/blob/d525b6872a106d32916b33a8738f12510ec7cf04/src/api/job_info.c#L99
 cdef _threads_per_core(char *host):
     # TODO

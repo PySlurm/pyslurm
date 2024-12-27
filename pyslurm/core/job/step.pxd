@@ -55,7 +55,8 @@ cdef class JobSteps(dict):
     """A [dict][] of [pyslurm.JobStep][] objects for a given Job.
 
     Raises:
-        RPCError: When getting the Job steps from the slurmctld failed.
+        (pyslurm.RPCError): When getting the Job steps from the slurmctld
+            failed.
     """
 
     cdef:
@@ -82,7 +83,7 @@ cdef class JobStep:
             Time limit in Minutes for this step.
 
     Attributes:
-        stats (JobStepStatistics):
+        stats (pyslurm.db.JobStepStatistics):
             Real-time statistics of a Step.
             Before you can access the stats data for a Step, you have to call
             the `load_stats` method of a Step instance or the Jobs collection.
@@ -126,11 +127,18 @@ cdef class JobStep:
             Time this step started, as unix timestamp.
         run_time (int):
             Seconds this step has been running for.
+        run_time_remaining (int):
+            The amount of seconds the step has still left until hitting the
+            `time_limit`.
+        elapsed_cpu_time (int):
+            Amount of CPU-Time used by the step so far.
+            This is the result of multiplying the `run_time` with the amount of
+            `cpus` allocated.
         partition (str):
             Name of the partition this step runs in.
         state (str):
             State the step is in.
-        allocated_cpus (int):
+        cpus (int):
             Number of CPUs this step uses in total.
         ntasks (int):
             Number of tasks this step uses.

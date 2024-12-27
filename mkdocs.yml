@@ -3,7 +3,7 @@ site_name: "pyslurm"
 site_url: "https://pyslurm.github.io"
 repo_url: "https://github.com/PySlurm/pyslurm"
 repo_name: "PySlurm/pyslurm"
-copyright: Copyright &copy; 2023 PySlurm Developers
+copyright: Copyright &copy; 2024 PySlurm Developers
 
 nav:
   - Home:
@@ -22,13 +22,13 @@ theme:
     - navigation.top
     - content.code.copy
     - toc.follow
-  palette: 
+  palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       accent: purple
       primary: indigo
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
@@ -54,6 +54,8 @@ plugins:
           options:
             filters: ["!^_"]
             docstring_style: google
+            allow_inspection: true
+            inherited_members: false
             show_signature: true
             show_root_heading: true
             show_symbol_type_toc: true

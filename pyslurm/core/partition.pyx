@@ -70,8 +70,8 @@ cdef class Partitions(MultiClusterMap):
             (pyslurm.Partitions): Collection of Partition objects.
 
         Raises:
-            RPCError: When getting all the Partitions from the slurmctld
-                failed.
+            (pyslurm.RPCError): When getting all the Partitions from the
+                slurmctld failed.
         """
         cdef:
             Partitions partitions = Partitions()
@@ -121,7 +121,8 @@ cdef class Partitions(MultiClusterMap):
             (pyslurm.Partitions): Returns self
 
         Raises:
-            RPCError: When getting the Partitions from the slurmctld failed.
+            (pyslurm.RPCError): When getting the Partitions from the slurmctld
+                failed.
         """
         return xcollections.multi_reload(self)
 
@@ -135,7 +136,7 @@ cdef class Partitions(MultiClusterMap):
                 see which properties can be modified.
 
         Raises:
-            RPCError: When updating at least one Partition failed.
+            (pyslurm.RPCError): When updating at least one Partition failed.
 
         Examples:
             >>> import pyslurm
@@ -230,8 +231,8 @@ cdef class Partition:
             (pyslurm.Partition): Returns a new Partition instance.
 
         Raises:
-            RPCError: If requesting the Partition information from the
-                slurmctld was not successful.
+            (pyslurm.RPCError): If requesting the Partition information from
+                the slurmctld was not successful.
 
         Examples:
             >>> import pyslurm
@@ -253,7 +254,7 @@ cdef class Partition:
                 instance object itself.
 
         Raises:
-            RPCError: If creating the Partition was not successful.
+            (pyslurm.RPCError): If creating the Partition was not successful.
 
         Examples:
             >>> import pyslurm
@@ -275,7 +276,7 @@ cdef class Partition:
                 see which properties can be modified.
 
         Raises:
-            RPCError: When updating the Partition was not successful.
+            (pyslurm.RPCError): When updating the Partition was not successful.
 
         Examples:
             >>> import pyslurm
@@ -296,7 +297,7 @@ cdef class Partition:
         Implements the slurm_delete_partition RPC.
 
         Raises:
-            RPCError: When deleting the Partition was not successful.
+            (pyslurm.RPCError): When deleting the Partition was not successful.
 
         Examples:
             >>> import pyslurm

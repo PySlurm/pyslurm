@@ -102,7 +102,7 @@ cdef class QualityOfServiceFilter:
 
         if isinstance(self.preempt_modes, int):
             return self.preempt_modes
-        
+
         out = 0
         for mode in self.preempt_modes:
             _mode = slurm_preempt_mode_num(mode)
@@ -125,7 +125,7 @@ cdef class QualityOfServiceFilter:
         make_char_list(&ptr.description_list, self.descriptions)
         ptr.preempt_mode = self._parse_preempt_modes()
         ptr.with_deleted = 1 if bool(self.with_deleted) else 0
-        
+
 
 cdef class QualityOfService:
 
@@ -180,8 +180,8 @@ cdef class QualityOfService:
                 instance.
 
         Raises:
-            RPCError: If requesting the information from the database was not
-                successful.
+            (pyslurm.RPCError): If requesting the information from the database
+                was not successful.
         """
         qfilter = QualityOfServiceFilter(names=[name])
         qos = QualitiesOfService.load(qfilter).get(name)

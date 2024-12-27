@@ -222,8 +222,8 @@ cdef class JobStep:
             (pyslurm.JobStep): Returns a new JobStep instance
 
         Raises:
-            RPCError: When retrieving Step information from the slurmctld was
-                not successful.
+            (pyslurm.RPCError): When retrieving Step information from the
+                slurmctld was not successful.
 
         Examples:
             >>> import pyslurm
@@ -266,10 +266,10 @@ cdef class JobStep:
         instance.
 
         Returns:
-            (JobStepStatistics): The statistics of the Step.
+            (pyslurm.db.JobStepStatistics): The statistics of the Step.
 
         Raises:
-            RPCError: When retrieving the stats for the Step failed.
+            (pyslurm.RPCError): When retrieving the stats for the Step failed.
 
         Examples:
             >>> import pyslurm
@@ -296,7 +296,7 @@ cdef class JobStep:
                 a str like `SIGUSR1`, or simply an [int][].
 
         Raises:
-            RPCError: When sending the signal was not successful.
+            (pyslurm.RPCError): When sending the signal was not successful.
 
         Examples:
             Specifying the signal as a string:
@@ -318,7 +318,7 @@ cdef class JobStep:
         Implements the slurm_kill_job_step RPC.
 
         Raises:
-            RPCError: When cancelling the Job was not successful.
+            (pyslurm.RPCError): When cancelling the Job was not successful.
 
         Examples:
             >>> import pyslurm
@@ -339,7 +339,7 @@ cdef class JobStep:
                 properties can be modified.
 
         Raises:
-            RPCError: When updating the JobStep was not successful.
+            (pyslurm.RPCError): When updating the JobStep was not successful.
 
         Examples:
             >>> import pyslurm
@@ -455,7 +455,19 @@ cdef class JobStep:
 
     @property
     def run_time(self):
-        return _raw_time(self.ptr.run_time)
+        return _raw_time(self.ptr.run_time, on_noval=0, on_inf=0)
+
+    @property
+    def run_time_remaining(self):
+        limit = self.time_limit
+        if limit is None:
+            return None
+
+        return limit - self.run_time
+
+    @property
+    def elapsed_cpu_time(self):
+        return self.run_time * self.cpus
 
     @property
     def partition(self):
@@ -466,7 +478,7 @@ cdef class JobStep:
         return cstr.to_unicode(slurm_job_state_string(self.ptr.state))
 
     @property
-    def alloc_cpus(self):
+    def cpus(self):
         return u32_parse(self.ptr.num_cpus, on_noval=1)
 
     @property
