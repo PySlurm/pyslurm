@@ -463,7 +463,7 @@ cdef class JobStep:
         if limit is None:
             return None
 
-        return limit - self.run_time
+        return (limit*60) - self.run_time
 
     @property
     def elapsed_cpu_time(self):
