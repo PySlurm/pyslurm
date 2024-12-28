@@ -1,7 +1,7 @@
 %define python3_pkgversion 3.11
 
 Name:            python-pyslurm
-Version:         23.11.0
+Version:         23.11.1
 %define rel      1
 Release:         %{rel}%{?dist}
 Summary:         Python interface to Slurm
