@@ -124,7 +124,8 @@ cdef class QualityOfServiceFilter:
         make_char_list(&ptr.id_list, self.ids)
         make_char_list(&ptr.description_list, self.descriptions)
         ptr.preempt_mode = self._parse_preempt_modes()
-        ptr.with_deleted = 1 if bool(self.with_deleted) else 0
+        u16_set_bool_flag(&ptr.flags, self.with_deleted,
+                          slurm.QOS_COND_FLAG_WITH_DELETED)
 
 
 cdef class QualityOfService:
