@@ -43,8 +43,6 @@ scripts/build.sh
 pip install .
 ```
 
-Also see `python setup.py --help`
-
 ## Contributors
 
 pyslurm is made by [contributors like
