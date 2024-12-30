@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2024-07-12T16:21:51.735507
+# Generated on 2024-12-04T13:40:11.641040
 #
 # The Original Copyright notice from slurm_errno.h has been included
 # below:
@@ -72,6 +72,9 @@ cdef extern from "slurm/slurm_errno.h":
         SLURM_PLUGIN_NAME_INVALID
         SLURM_UNKNOWN_FORWARD_ADDR
         SLURM_COMMUNICATIONS_MISSING_SOCKET_ERROR
+        SLURM_COMMUNICATIONS_INVALID_INCOMING_FD
+        SLURM_COMMUNICATIONS_INVALID_OUTGOING_FD
+        SLURM_COMMUNICATIONS_INVALID_FD
         SLURMCTLD_COMMUNICATIONS_CONNECTION_ERROR
         SLURMCTLD_COMMUNICATIONS_SEND_ERROR
         SLURMCTLD_COMMUNICATIONS_RECEIVE_ERROR
@@ -180,7 +183,6 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_BURST_BUFFER_WAIT
         ESLURM_PARTITION_DOWN
         ESLURM_DUPLICATE_GRES
-        ESLURM_JOB_SETTING_DB_INX
         ESLURM_RSV_ALREADY_STARTED
         ESLURM_SUBMISSIONS_DISABLED
         ESLURM_NOT_HET_JOB
@@ -255,6 +257,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_RES_CORES_PER_GPU_TOPO
         ESLURM_RES_CORES_PER_GPU_NO
         ESLURM_MAX_POWERED_NODES
+        ESLURM_REQUESTED_TOPO_CONFIG_UNAVAILABLE
         ESPANK_ERROR
         ESPANK_BAD_ARG
         ESPANK_NOT_TASK
@@ -294,6 +297,7 @@ cdef extern from "slurm/slurm_errno.h":
         SLURM_PROTOCOL_SOCKET_IMPL_TIMEOUT
         SLURM_PROTOCOL_SOCKET_ZERO_BYTES_SENT
         ESLURM_AUTH_CRED_INVALID
+        ESLURM_AUTH_EXPIRED
         ESLURM_AUTH_BADARG
         ESLURM_AUTH_UNPACK
         ESLURM_AUTH_SKIP
@@ -365,7 +369,5 @@ cdef extern from "slurm/slurm_errno.h":
     char* slurm_strerror(int errnum)
 
     void slurm_seterrno(int errnum)
-
-    int slurm_get_errno()
 
     void slurm_perror(const char* msg)

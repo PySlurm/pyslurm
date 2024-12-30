@@ -248,9 +248,6 @@ cdef inline IS_JOB_REQUEUED(slurm.slurm_job_info_t _X):
 cdef inline IS_JOB_FED_REQUEUED(slurm.slurm_job_info_t _X):
     return (_X.job_state & JOB_REQUEUE_FED)
 
-cdef inline IS_JOB_UPDATE_DB(slurm.slurm_job_info_t _X):
-    return (_X.job_state & JOB_UPDATE_DB)
-
 cdef inline IS_JOB_REVOKED(slurm.slurm_job_info_t _X):
     return (_X.job_state & JOB_REVOKED)
 
@@ -353,7 +350,7 @@ def get_controllers():
         uint32_t length = 0
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     control_machs = []
@@ -535,7 +532,7 @@ cdef class config:
             int errCode = slurm.slurm_load_ctl_conf(Time, &slurm_ctl_conf_ptr)
 
         if errCode != 0:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
         self.__Config_ptr = slurm_ctl_conf_ptr
@@ -549,7 +546,7 @@ cdef class config:
         """
         cdef:
             void *ret_list = NULL
-            slurm.List config_list = NULL
+            slurm.list_t *config_list = NULL
             slurm.list_itr_t *iters = NULL
 
             config_key_pair_t *keyPairs
@@ -559,7 +556,7 @@ cdef class config:
 
         if self.__Config_ptr is not NULL:
 
-            config_list = <slurm.List>slurm.slurm_ctl_conf_2_key_pairs(self.__Config_ptr)
+            config_list = <slurm.list_t*>slurm.slurm_ctl_conf_2_key_pairs(self.__Config_ptr)
 
             listNum = slurm.slurm_list_count(config_list)
             iters = slurm.slurm_list_iterator_create(config_list)
@@ -595,7 +592,7 @@ cdef class config:
         """Get the slurm control configuration information."""
         cdef:
             void *ret_list = NULL
-            slurm.List config_list = NULL
+            slurm.list_t *config_list = NULL
             slurm.list_itr_t *iters = NULL
             char tmp_str[128]
 
@@ -824,7 +821,7 @@ cdef class config:
             # Get key_pairs from Opaque data structure
             #
 
-#            config_list = <slurm.List>self.__Config_ptr.select_conf_key_pairs
+#            config_list = <slurm.list_t*>self.__Config_ptr.select_conf_key_pairs
 #            if config_list is not NULL:
 #                listNum = slurm.slurm_list_count(config_list)
 #                iters = slurm.slurm_list_iterator_create(config_list)
@@ -897,7 +894,7 @@ cdef class partition:
             self._Partition_ptr = NULL
             return all_partitions
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def find_id(self, partID):
@@ -954,7 +951,7 @@ cdef class partition:
             slurm.slurm_free_partition_info_msg(self._Partition_ptr)
             self._Partition_ptr = NULL
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def delete(self, PartID):
@@ -978,7 +975,7 @@ cdef class partition:
         errCode = slurm.slurm_delete_partition(&part_msg)
 
         if errCode != slurm.SLURM_SUCCESS:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
         return errCode
@@ -1157,7 +1154,7 @@ cdef class partition:
             self._Partition_ptr = NULL
             return self._PartDict
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
 
@@ -1335,7 +1332,7 @@ def slurm_delete_partition(PartID):
     errCode = slurm.slurm_delete_partition(&part_msg)
 
     if errCode != slurm.SLURM_SUCCESS:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1360,7 +1357,7 @@ cpdef int slurm_ping(int Controller=0) except? -1:
     cdef int errCode = slurm.slurm_ping(Controller)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1376,7 +1373,7 @@ cpdef int slurm_reconfigure() except? -1:
     cdef int errCode = slurm.slurm_reconfigure()
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1400,7 +1397,7 @@ cpdef int slurm_shutdown(uint16_t Options=0) except? -1:
     cdef int errCode = slurm.slurm_shutdown(Options)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1434,7 +1431,7 @@ cpdef int slurm_set_debug_level(uint32_t DebugLevel=0) except? -1:
     cdef int errCode = slurm.slurm_set_debug_level(DebugLevel)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1456,7 +1453,7 @@ cpdef int slurm_set_debugflags(uint32_t debug_flags_plus=0,
                                                   debug_flags_minus)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1475,7 +1472,7 @@ cpdef int slurm_set_schedlog_level(uint32_t Enable=0) except? -1:
     cdef int errCode = slurm.slurm_set_schedlog_level(Enable)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1499,7 +1496,7 @@ cpdef int slurm_suspend(uint32_t JobID=0) except? -1:
     cdef int errCode = slurm.slurm_suspend(JobID)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1518,7 +1515,7 @@ cpdef int slurm_resume(uint32_t JobID=0) except? -1:
     cdef int errCode = slurm.slurm_resume(JobID)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1537,7 +1534,7 @@ cpdef int slurm_requeue(uint32_t JobID=0, uint32_t State=0) except? -1:
     cdef int errCode = slurm.slurm_requeue(JobID, State)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1556,7 +1553,7 @@ cpdef long slurm_get_rem_time(uint32_t JobID=0) except? -1:
     cdef long errCode = slurm.slurm_get_rem_time(JobID)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1576,7 +1573,7 @@ cpdef time_t slurm_get_end_time(uint32_t JobID=0) except? -1:
     cdef int errCode = slurm.slurm_get_end_time(JobID, &EndTime)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return EndTime
@@ -1611,7 +1608,7 @@ cpdef int slurm_signal_job(uint32_t JobID=0, uint16_t Signal=0) except? -1:
     cdef int errCode = slurm.slurm_signal_job(JobID, Signal)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1638,7 +1635,7 @@ cpdef int slurm_signal_job_step(uint32_t JobID=0, uint32_t JobStep=0,
     cdef int errCode = slurm.slurm_signal_job_step(JobID, JobStep, Signal)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1660,7 +1657,7 @@ cpdef int slurm_kill_job(uint32_t JobID=0, uint16_t Signal=0,
     cdef int errCode = slurm.slurm_kill_job(JobID, Signal, BatchFlag)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1682,7 +1679,7 @@ cpdef int slurm_kill_job_step(uint32_t JobID=0, uint32_t JobStep=0,
     cdef int errCode = slurm.slurm_kill_job_step(JobID, JobStep, Signal, 0)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1705,7 +1702,7 @@ cpdef int slurm_kill_job2(const char *JobID='', uint16_t Signal=0,
     cdef int errCode = slurm.slurm_kill_job2(JobID, Signal, BatchFlag, sibling)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1725,7 +1722,7 @@ cpdef int slurm_complete_job(uint32_t JobID=0, uint32_t JobCode=0) except? -1:
     cdef int errCode = slurm.slurm_complete_job(JobID, JobCode)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1745,7 +1742,7 @@ cpdef int slurm_notify_job(uint32_t JobID=0, char* Msg='') except? -1:
     cdef int errCode = slurm.slurm_notify_job(JobID, Msg)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1765,7 +1762,7 @@ cpdef int slurm_terminate_job_step(uint32_t JobID=0, uint32_t JobStep=0) except?
     cdef int errCode = slurm.slurm_terminate_job_step(JobID, JobStep)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -1833,7 +1830,7 @@ cdef class job:
             self._job_ptr = NULL
             return all_jobs
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def find(self, name='', val=''):
@@ -1882,7 +1879,7 @@ cdef class job:
         rc = slurm.slurm_load_job(&self._job_ptr, jobid, self._ShowFlags)
 
         if rc != slurm.SLURM_SUCCESS:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def find_id(self, jobid):
@@ -1932,7 +1929,7 @@ cdef class job:
         if rc == slurm.SLURM_SUCCESS:
             return self.get_job_ptr()
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def get(self):
@@ -1954,7 +1951,7 @@ cdef class job:
         if rc == slurm.SLURM_SUCCESS:
             return self.get_job_ptr()
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     cdef dict get_job_ptr(self):
@@ -2212,7 +2209,6 @@ cdef class job:
             else:
                 Job_dict['shared'] = "OK"
 
-            Job_dict['show_flags'] = self._record.show_flags
             Job_dict['sockets_per_board'] = self._record.sockets_per_board
             Job_dict['sockets_per_node'] = int16orNone(self._record.sockets_per_node)
             Job_dict['start_time'] = self._record.start_time
@@ -2281,8 +2277,8 @@ cdef class job:
                 if host_list:
                     for node_name in host_list:
                         b_node_name = node_name.decode("UTF-8")
-                        Job_dict['cpus_allocated'][b_node_name] = self.__cpus_allocated_on_node(node_name)
-                        Job_dict['cpus_alloc_layout'][b_node_name] = self.__cpus_allocated_list_on_node(node_name)
+                        Job_dict['cpus_allocated'][b_node_name] = 0
+                        Job_dict['cpus_alloc_layout'][b_node_name] = []
                 hl.destroy()
 
             self._JobDict[self._record.job_id] = Job_dict
@@ -2290,63 +2286,6 @@ cdef class job:
         slurm.slurm_free_job_info_msg(self._job_ptr)
         self._job_ptr = NULL
         return self._JobDict
-
-    cpdef int __cpus_allocated_on_node_id(self, int nodeID=0):
-        """Get the number of cpus allocated to a job on a node by node name.
-
-        Args:
-            nodeID (int): Numerical node ID
-
-        Returns:
-            int: Num of CPUs allocated to job on this node or -1 on error
-        """
-        cdef:
-            slurm.job_resources_t *job_resrcs_ptr = <slurm.job_resources_t *>self._record.job_resrcs
-            int retval = slurm.slurm_job_cpus_allocated_on_node_id(job_resrcs_ptr, nodeID)
-
-        return retval
-
-    cdef int __cpus_allocated_on_node(self, char* nodeName=''):
-        """Get the number of cpus allocated to a slurm job on a node by node name.
-
-        Args:
-            nodeName (str): Name of the node
-
-        Returns:
-            Num of CPUs allocated to job on this node or -1 on error
-        """
-        cdef:
-            slurm.job_resources_t *job_resrcs_ptr = <slurm.job_resources_t *>self._record.job_resrcs
-            int retval = slurm.slurm_job_cpus_allocated_on_node(job_resrcs_ptr, nodeName)
-
-        return retval
-
-    cdef list __cpus_allocated_list_on_node(self, char* nodeName=''):
-        """Get a list of cpu ids allocated to current slurm job on a node by node name.
-
-        Args:
-            nodeName (str): Name of the node
-
-        Returns:
-            list of allocated cpus (empty, if nothing found or error)
-        """
-        cdef:
-            int error = 0
-            int cpus_len = 1024
-            char *cpus
-            list cpus_list = []
-            slurm.job_resources_t *job_resrcs_ptr = <slurm.job_resources_t *>self._record.job_resrcs
-
-        cpus = <char *>malloc(cpus_len * sizeof(char))
-        if cpus is not NULL:
-            try:
-                error = slurm.slurm_job_cpus_allocated_str_on_node(cpus, cpus_len, job_resrcs_ptr, nodeName)
-                if error == 0:
-                    cpus_list = self.__unrange(stringOrNone(cpus, ''))
-            finally:
-                free(cpus)
-
-        return cpus_list
 
     def __unrange(self, bit_str):
         """converts a string describing a bitmap (from slurm_job_cpus_allocated_str_on_node()) to a list.
@@ -2376,28 +2315,6 @@ cdef class job:
         """Release storage generated by the slurm_get_job_steps function."""
         if self._job_ptr is not NULL:
             slurm.slurm_free_job_info_msg(self._job_ptr)
-
-    def print_job_info_msg(self, int oneLiner=0):
-        """Print the data structure describing all job step records.
-
-        Args:
-            oneLiner (int, optional): Whether to print the data in one line or
-                not
-        """
-        cdef:
-            int rc
-            int apiError
-
-        rc = slurm.slurm_load_jobs(<time_t> NULL, &self._job_ptr, self._ShowFlags)
-
-        if rc == slurm.SLURM_SUCCESS:
-            slurm.slurm_print_job_info_msg(slurm.stdout, self._job_ptr,
-                                           oneLiner)
-            slurm.slurm_free_job_info_msg(self._job_ptr)
-            self._job_ptr = NULL
-        else:
-            apiError = slurm.slurm_get_errno()
-            raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def slurm_job_batch_script(self, jobid):
         """Return the contents of the batch-script for a Job.
@@ -3049,7 +2966,7 @@ def slurm_pid2jobid(uint32_t JobPID=0):
         int errCode = slurm.slurm_pid2jobid(JobPID, &JobID)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode, JobID
@@ -3145,9 +3062,7 @@ def slurm_get_errno():
     Returns:
         (int): Current slurm error number
     """
-    cdef int errNum = slurm.slurm_get_errno()
-
-    return errNum
+    return errno
 
 
 def slurm_strerror(int Errno=0):
@@ -3162,15 +3077,6 @@ def slurm_strerror(int Errno=0):
     cdef char* errMsg = slurm.slurm_strerror(Errno)
 
     return "%s" % errMsg
-
-
-def slurm_seterrno(int Errno=0):
-    """Set the slurm error number.
-
-    Args:
-        Errno (int): slurm error number
-    """
-    slurm.slurm_seterrno(Errno)
 
 
 def slurm_perror(char* Msg=''):
@@ -3240,7 +3146,7 @@ cdef class node:
             self._Node_ptr = NULL
             return all_nodes
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def find_id(self, nodeID):
@@ -3300,7 +3206,7 @@ cdef class node:
         rc = slurm.slurm_load_node(<time_t>NULL, &self._Node_ptr, self._ShowFlags)
 
         if rc != slurm.SLURM_SUCCESS:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
         if slurm.slurm_load_ctl_conf(<time_t>NULL, &slurm_ctl_conf_ptr) != slurm.SLURM_SUCCESS:
@@ -3524,7 +3430,7 @@ cdef class node:
             slurm.slurm_free_node_info_msg(self._Node_ptr)
             self._Node_ptr = NULL
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
 
@@ -3576,7 +3482,7 @@ def slurm_update_node(dict node_dict):
     errCode = slurm.slurm_update_node(&node_msg)
 
     if errCode != slurm.SLURM_SUCCESS:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -4049,8 +3955,8 @@ cdef class trigger:
         while slurm.slurm_set_trigger(&trigger_set):
             slurm.slurm_perror('slurm_set_trigger')
             # EAGAIN
-            if slurm.slurm_get_errno() != 11:
-                errCode = slurm.slurm_get_errno()
+            if slurm_get_errno() != 11:
+                errCode = slurm_get_errno()
                 return errCode
 
             p_time.sleep(5)
@@ -4208,7 +4114,7 @@ cdef class reservation:
                                                     &new_reserve_info_ptr)
             if errCode == slurm.SLURM_SUCCESS:
                 slurm.slurm_free_reservation_info_msg(self._Res_ptr)
-            elif slurm.slurm_get_errno() == 1900:   # SLURM_NO_CHANGE_IN_DATA
+            elif slurm_get_errno() == 1900:   # SLURM_NO_CHANGE_IN_DATA
                 errCode = 0
                 new_reserve_info_ptr = self._Res_ptr
         else:
@@ -4219,7 +4125,7 @@ cdef class reservation:
             self._Res_ptr = new_reserve_info_ptr
             self._lastUpdate = self._Res_ptr.last_update
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
         return errCode
@@ -4408,7 +4314,7 @@ def slurm_create_reservation(dict reservation_dict={}):
         resID = stringOrNone(resid, '')
         free(resid)
     else:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return resID
@@ -4493,7 +4399,7 @@ def slurm_update_reservation(dict reservation_dict={}):
 
     errCode = slurm.slurm_update_reservation(&resv_msg)
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -4521,7 +4427,7 @@ def slurm_delete_reservation(ResID):
     cdef int errCode = slurm.slurm_delete_reservation(&resv_msg)
 
     if errCode != 0:
-        apiError = slurm.slurm_get_errno()
+        apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode
@@ -4598,7 +4504,7 @@ cdef class topology:
 
         errCode = slurm.slurm_load_topo(&self._topo_info_ptr)
         if errCode != 0:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
         return errCode
@@ -4769,7 +4675,7 @@ cdef class statistics:
             self._buf = NULL
             return self._StatsDict
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def reset(self):
@@ -4787,7 +4693,7 @@ cdef class statistics:
         if errCode == slurm.SLURM_SUCCESS:
             return errCode
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     cpdef __rpc_num2string(self, uint16_t opcode):
@@ -5094,7 +5000,7 @@ cdef class front_end:
             errCode = slurm.slurm_load_front_end(last_time, &self._FrontEndNode_ptr)
 
         if errCode != 0:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
         return errCode
@@ -5167,7 +5073,7 @@ cdef class qos:
     cdef:
         void *dbconn
         dict _QOSDict
-        slurm.List _QOSList
+        slurm.list_t *_QOSList
 
     def __cinit__(self):
         self.dbconn = <void *>NULL
@@ -5190,10 +5096,10 @@ cdef class qos:
             slurm.slurmdb_qos_cond_t *new_qos_cond = NULL
             int apiError = 0
             void* dbconn = slurm.slurmdb_connection_get(NULL)
-            slurm.List QOSList = slurm.slurmdb_qos_get(dbconn, new_qos_cond)
+            slurm.list_t *QOSList = slurm.slurmdb_qos_get(dbconn, new_qos_cond)
 
         if QOSList is NULL:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
         else:
             self._QOSList = QOSList
@@ -5230,7 +5136,7 @@ cdef class qos:
 
     cdef __get(self):
         cdef:
-            slurm.List qos_list = NULL
+            slurm.list_t *qos_list = NULL
             slurm.list_itr_t *iters = NULL
             int i = 0
             int listNum = 0
@@ -5349,7 +5255,7 @@ cdef class slurmdb_jobs:
             int listNum = 0
             int apiError = 0
             dict J_dict = {}
-            slurm.List JOBSList
+            slurm.list_t *JOBSList
             slurm.list_itr_t *iters = NULL
 
 
@@ -5389,20 +5295,20 @@ cdef class slurmdb_jobs:
 
         if starttime:
             self.job_cond.usage_start = slurm.slurm_parse_time(starttime, 1)
-            errno = slurm.slurm_get_errno()
+            errno = slurm_get_errno()
             if errno == slurm.ESLURM_INVALID_TIME_VALUE:
                 raise ValueError(slurm.slurm_strerror(errno), errno)
 
         if endtime:
             self.job_cond.usage_end = slurm.slurm_parse_time(endtime, 1)
-            errno = slurm.slurm_get_errno()
+            errno = slurm_get_errno()
             if errno == slurm.ESLURM_INVALID_TIME_VALUE:
                 raise ValueError(slurm.slurm_strerror(errno), errno)
 
         JOBSList = slurm.slurmdb_jobs_get(self.db_conn, self.job_cond)
 
         if JOBSList is NULL:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(slurm.slurm_strerror(apiError), apiError)
 
         listNum = slurm.slurm_list_count(JOBSList)
@@ -5603,13 +5509,13 @@ cdef class slurmdb_reservations:
             (dict): Dictionary whose keys are the reservations ids
         """
         cdef:
-            slurm.List reservation_list
+            slurm.list_t *reservation_list
             slurm.list_itr_t *iters = NULL
             slurm.slurmdb_reservation_rec_t *reservation
             int i = 0
             int j = 0
             int listNum
-            slurm.List _resvList
+            slurm.list_t *_resvList
 
         Reservation_dict = {}
         reservation_list = slurm.slurmdb_reservations_get(self.dbconn, self.reservation_cond)
@@ -5712,7 +5618,7 @@ cdef class slurmdb_clusters:
             (dict): Dictionary whose keys are the clusters ids
         """
         cdef:
-            slurm.List clusters_list
+            slurm.list_t *clusters_list
             slurm.list_itr_t *iters = NULL
             slurm.slurmdb_cluster_rec_t *cluster = NULL
             int rc = slurm.SLURM_SUCCESS
@@ -5822,7 +5728,7 @@ cdef class slurmdb_events:
             (dict): Dictionary whose keys are the events ids
         """
         cdef:
-            slurm.List event_list
+            slurm.list_t *event_list
             slurm.list_itr_t *iters = NULL
             slurm.slurmdb_event_rec_t *event = NULL
             int i = 0
@@ -5888,7 +5794,7 @@ cdef class slurmdb_reports:
             (dict): sreport information.
         """
         cdef:
-            slurm.List slurmdb_report_cluster_list = NULL
+            slurm.list_t *slurmdb_report_cluster_list = NULL
             slurm.list_itr_t *itr = NULL
             slurm.list_itr_t *cluster_itr = NULL
             slurm.list_itr_t *tres_itr = NULL
@@ -5902,7 +5808,7 @@ cdef class slurmdb_reports:
             int j
 
         slurm.slurmdb_init_cluster_cond(&cluster_cond, 0)
-        self.assoc_cond.with_sub_accts = 1
+        self.assoc_cond.flags = slurm.ASSOC_COND_FLAG_SUB_ACCTS
 
         if starttime:
             self.assoc_cond.usage_start = slurm.slurm_parse_time(starttime, 1)
@@ -5916,8 +5822,8 @@ cdef class slurmdb_reports:
         self.assoc_cond.usage_start = start_time
         self.assoc_cond.usage_end = end_time
 
-        self.assoc_cond.with_usage = 1
-        self.assoc_cond.with_deleted = 1
+        self.assoc_cond.flags |= slurm.ASSOC_COND_FLAG_WITH_USAGE
+        self.assoc_cond.flags |= slurm.ASSOC_COND_FLAG_WITH_DELETED
 
         slurmdb_report_cluster_list = slurm.slurmdb_report_cluster_account_by_user(
             self.db_conn, self.assoc_cond
@@ -5981,7 +5887,7 @@ def get_last_slurm_error():
     Returns:
         (int): Slurm error number and the associated error string
     """
-    rc = slurm.slurm_get_errno()
+    rc = slurm_get_errno()
 
     if rc == 0:
         return (rc, 'Success')
@@ -6668,7 +6574,7 @@ cdef class licenses:
             self._msg = NULL
             return all_licenses
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     def get(self):
@@ -6705,5 +6611,5 @@ cdef class licenses:
             self._msg = NULL
             return self._licDict
         else:
-            apiError = slurm.slurm_get_errno()
+            apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)

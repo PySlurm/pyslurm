@@ -27,6 +27,7 @@ from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from pyslurm.slurm cimport (
+    list_t,
     partition_info_msg_t,
     job_defaults_t,
     delete_part_msg_t,

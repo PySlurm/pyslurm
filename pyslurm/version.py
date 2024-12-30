@@ -5,4 +5,4 @@
 # The last Number "Z" is the current Pyslurm patch version, which should be
 # incremented each time a new release is made (except when migrating to a new
 # Slurm Major release, then set it back to 0)
-__version__ = "24.5.1"
+__version__ = "24.11.0"

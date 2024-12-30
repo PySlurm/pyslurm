@@ -24,7 +24,7 @@
 
 from pyslurm.utils cimport cstr
 from pyslurm cimport slurm
-from pyslurm.slurm cimport slurm_get_errno
+cimport libc.errno
 
 
 def slurm_strerror(errno):
@@ -36,7 +36,7 @@ def slurm_strerror(errno):
             returned.
 
     Returns:
-        (str): String representation of errno.  
+        (str): String representation of errno.
     """
     return cstr.to_unicode(slurm.slurm_strerror(errno))
 
@@ -47,7 +47,7 @@ def slurm_errno():
     Returns:
         (int): Current slurm errno
     """
-    return slurm_get_errno()
+    return libc.errno.errno
 
 
 def get_last_slurm_error():
@@ -75,7 +75,7 @@ class RPCError(PyslurmError):
     Args:
         errno (int):
             A slurm error number returned by RPC functions. Default is None,
-            which will get the last slurm error automatically. 
+            which will get the last slurm error automatically.
         msg (str):
             An optional, custom error description. If this is set, the errno
             will not be translated to its string representation.
@@ -89,7 +89,7 @@ class RPCError(PyslurmError):
     """
     def __init__(self, errno=slurm.SLURM_ERROR, msg=None):
         self.msg = msg
-        self.errno = errno 
+        self.errno = errno
 
         if not msg:
             if errno == slurm.SLURM_ERROR:

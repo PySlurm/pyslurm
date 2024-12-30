@@ -124,7 +124,8 @@ cdef class QualityOfServiceFilter:
         make_char_list(&ptr.id_list, self.ids)
         make_char_list(&ptr.description_list, self.descriptions)
         ptr.preempt_mode = self._parse_preempt_modes()
-        ptr.with_deleted = 1 if bool(self.with_deleted) else 0
+        u16_set_bool_flag(&ptr.flags, self.with_deleted,
+                          slurm.QOS_COND_FLAG_WITH_DELETED)
 
 
 cdef class QualityOfService:
@@ -223,6 +224,6 @@ def _validate_qos_single(qid, QualitiesOfService data):
     raise ValueError(f"Invalid QOS specified: {qid}")
 
 
-cdef _set_qos_list(List *in_list, vals, QualitiesOfService data):
+cdef _set_qos_list(list_t **in_list, vals, QualitiesOfService data):
     qos_ids = _qos_names_to_ids(vals, data)
     make_char_list(in_list, qos_ids)

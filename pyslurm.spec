@@ -1,7 +1,7 @@
 %define python3_pkgversion 3.11
 
 Name:            python-pyslurm
-Version:         24.5.1
+Version:         24.11.0
 %define rel      1
 Release:         %{rel}%{?dist}
 Summary:         Python interface to Slurm
@@ -15,8 +15,8 @@ BuildRequires:   python%{python3_pkgversion}-wheel
 BuildRequires:   python%{python3_pkgversion}-Cython
 BuildRequires:   python%{python3_pkgversion}-packaging
 BuildRequires:   python-rpm-macros
-BuildRequires:   slurm-devel >= 24.05.0
-BuildRequires:   slurm >= 24.05.0
+BuildRequires:   slurm-devel >= 24.11.0
+BuildRequires:   slurm >= 24.11.0
 Requires:        python%{python3_pkgversion}
 
 %description
