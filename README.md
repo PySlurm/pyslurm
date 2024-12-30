@@ -38,8 +38,18 @@ Then you can proceed to install pyslurm, for example by cloning the Repository:
 ```shell
 git clone https://github.com/PySlurm/pyslurm.git && cd pyslurm
 scripts/build.sh
+```
 
-# Or simply with pip
+Also see `scripts/build.sh -h`. You can specify multiple cores for building
+with the `-j` option (also possible to set via environment variable `PYSLURM_BUILD_JOBS`):
+
+```shell
+scripts/build.sh -j4
+```
+
+Or simply with `pip` directly:
+
+```shell
 pip install .
 ```
 
