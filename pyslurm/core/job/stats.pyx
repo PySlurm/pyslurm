@@ -70,6 +70,7 @@ cdef load_single(JobStep step):
         else:
             verify_rpc(rc)
 
+    memset(&locks, 0, sizeof(assoc_mgr_lock_t))
     memset(&db_step, 0, sizeof(slurmdb_step_rec_t))
     memset(&db_step.stats, 0, sizeof(slurmdb_stats_t))
 
