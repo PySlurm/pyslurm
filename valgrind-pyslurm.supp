@@ -34,6 +34,15 @@
 }
 
 {
+   Slurm topology_g_init
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:topology_g_init
+   ...
+}
+
+{
    Slurm slurm_auth_init
    Memcheck:Leak
    match-leak-kinds: possible
@@ -43,11 +52,19 @@
 }
 
 {
-   Slurm slurm_conf_init/slurm_init
+   Slurm slurm_conf_init
    Memcheck:Leak
    match-leak-kinds: possible
    ...
    fun:slurm_conf_init
+   ...
+}
+
+{
+   Slurm slurm_init
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
    fun:slurm_init
    ...
 }
