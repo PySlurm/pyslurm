@@ -190,6 +190,9 @@ cdef class JobStep:
 
     def _dealloc_impl(self):
         slurm_free_job_step_info_members(self.ptr)
+        # Bug in slurm_free_job_step_info_members - submit_line is not freed
+        # there.
+        xfree(self.ptr.submit_line)
         xfree(self.ptr)
         slurm_free_update_step_msg(self.umsg)
         self.umsg = NULL
