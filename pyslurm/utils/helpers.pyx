@@ -182,10 +182,10 @@ def nodelist_from_range_str(nodelist):
     if not hl:
         return []
 
-    hl_unranged = slurm.slurm_hostlist_deranged_string_malloc(hl)
+    hl_unranged = slurm.slurm_hostlist_deranged_string_xmalloc(hl)
     out = cstr.to_list(hl_unranged)
 
-    free(hl_unranged)
+    xfree(hl_unranged)
     slurm.slurm_hostlist_destroy(hl)
 
     return out
@@ -213,10 +213,10 @@ def nodelist_to_range_str(nodelist):
     if not hl:
         return None
 
-    hl_ranged = slurm.slurm_hostlist_ranged_string_malloc(hl)
+    hl_ranged = slurm.slurm_hostlist_ranged_string_xmalloc(hl)
     out = cstr.to_unicode(hl_ranged)
 
-    free(hl_ranged)
+    xfree(hl_ranged)
     slurm.slurm_hostlist_destroy(hl)
 
     return out

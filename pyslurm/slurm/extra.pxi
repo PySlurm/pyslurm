@@ -266,7 +266,7 @@ cdef extern from *:
     void bit_free(bitstr_t *_X)
     void FREE_NULL_BITMAP(bitstr_t *_X)
 
-cdef extern char *slurm_hostlist_deranged_string_malloc(hostlist_t hl)
+cdef extern char *slurm_hostlist_deranged_string_xmalloc(hostlist_t hl)
 
 #
 # slurmdb functions
