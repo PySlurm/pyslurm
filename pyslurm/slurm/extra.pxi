@@ -176,7 +176,7 @@ cdef extern slurm_conf_t slurm_conf
 cdef extern from "pyslurm/slurm/xmalloc.h" nogil:
     void xfree(void *__p)
     void *xmalloc(size_t __sz)
-    void *try_xmalloc(size_t __sz) 
+    void *try_xmalloc(size_t __sz)
 
 cdef extern void slurm_xfree_ptr(void *)
 

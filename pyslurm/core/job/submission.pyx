@@ -43,7 +43,7 @@ from pyslurm.utils.ctime import (
 )
 from pyslurm.utils.helpers import (
     humanize,
-    dehumanize, 
+    dehumanize,
     signal_to_num,
     user_to_uid,
     group_to_gid,
@@ -92,7 +92,7 @@ cdef class JobSubmitDescription:
             ...     cpus_per_task=1,
             ...     time_limit="10-00:00:00",
             ...     script="/path/to/your/submit_script.sh")
-            >>> 
+            >>>
             >>> job_id = desc.submit()
             >>> print(job_id)
             99
@@ -117,7 +117,7 @@ cdef class JobSubmitDescription:
             attributes.
 
         Args:
-            overwrite (bool): 
+            overwrite (bool):
                 If set to `True`, the value from an option found in the
                 environment will override the current value of the attribute
                 in this instance. Default is `False`
@@ -166,9 +166,9 @@ cdef class JobSubmitDescription:
                 # Arguments directly specified upon object creation will
                 # always have precedence.
                 continue
-           
-            spec = attr.upper() 
-            val = pyenviron.get(f"PYSLURM_JOBDESC_{spec)}") 
+
+            spec = attr.upper()
+            val = pyenviron.get(f"PYSLURM_JOBDESC_{spec)}")
             if (val is not None
                     and (getattr(self, attr) is None or overwrite)):
 
@@ -225,7 +225,7 @@ cdef class JobSubmitDescription:
                      cstr.from_gres_dict(self.gpus_per_task, "gpu"))
         cstr.fmalloc(&ptr.tres_per_node,
                      cstr.from_gres_dict(self.gres_per_node))
-        cstr.fmalloc(&ptr.cpus_per_tres, 
+        cstr.fmalloc(&ptr.cpus_per_tres,
                      cstr.from_gres_dict(self.cpus_per_gpu, "gpu"))
         cstr.fmalloc(&ptr.admin_comment, self.admin_comment)
         cstr.fmalloc(&self.ptr.dependency,
@@ -256,7 +256,7 @@ cdef class JobSubmitDescription:
         u64_set_bool_flag(&ptr.bitflags, self.spreads_over_nodes,
                           slurm.SPREAD_JOB)
         u64_set_bool_flag(&ptr.bitflags, self.kill_on_invalid_dependency,
-                          slurm.KILL_INV_DEP) 
+                          slurm.KILL_INV_DEP)
         u64_set_bool_flag(&ptr.bitflags, self.use_min_nodes,
                           slurm.USE_MIN_NODES)
         ptr.contiguous = u16_bool(self.requires_contiguous_nodes)
@@ -333,7 +333,7 @@ cdef class JobSubmitDescription:
                 and self.threads_reserved_for_system):
             raise ValueError("cores_reserved_for_system is mutually "
                     " exclusive with threads_reserved_for_system.")
-                    
+
     def _set_core_spec(self):
         if self.cores_reserved_for_system:
             self.ptr.core_spec = u16(self.cores_reserved_for_system)
@@ -354,13 +354,13 @@ cdef class JobSubmitDescription:
         self.ptr.cpu_freq_min = freq_min
         self.ptr.cpu_freq_max = freq_max
         self.ptr.cpu_freq_gov = freq_gov
-    
+
     def _set_memory(self):
         if self.memory_per_cpu:
-            self.ptr.pn_min_memory = u64(dehumanize(self.memory_per_cpu)) 
+            self.ptr.pn_min_memory = u64(dehumanize(self.memory_per_cpu))
             self.ptr.pn_min_memory |= slurm.MEM_PER_CPU
         elif self.memory_per_node:
-            self.ptr.pn_min_memory = u64(dehumanize(self.memory_per_node)) 
+            self.ptr.pn_min_memory = u64(dehumanize(self.memory_per_node))
         elif self.memory_per_gpu:
             mem_gpu = u64(dehumanize(val))
             cstr.fmalloc(&self.ptr.mem_per_tres, f"gres:gpu:{mem_gpu}")
@@ -436,7 +436,7 @@ cdef class JobSubmitDescription:
                     if not "=" in item:
                         continue
 
-                    var, val = item.split("=", 1)    
+                    var, val = item.split("=", 1)
                     slurm_env_array_overwrite(&self.ptr.environment,
                                               var, str(val))
                 get_user_env = True
@@ -449,7 +449,7 @@ cdef class JobSubmitDescription:
                                               var, str(val))
 
             # Setup all User selected env vars.
-            for var, val in vals.items(): 
+            for var, val in vals.items():
                 slurm_env_array_overwrite(&self.ptr.environment,
                                           var, str(val))
 
@@ -470,7 +470,7 @@ cdef class JobSubmitDescription:
 
         if isinstance(self.distribution, int):
             # Assume the user meant to specify the plane size only.
-            plane = u16(self.distribution) 
+            plane = u16(self.distribution)
         elif isinstance(self.distribution, str):
             # Support sbatch style string input
             dist = TaskDistribution.from_str(self.distribution)
@@ -495,7 +495,7 @@ cdef class JobSubmitDescription:
             if "verbose" in self.gpu_binding:
                 binding = f"verbose,gpu:{binding}"
 
-        cstr.fmalloc(&self.ptr.tres_bind, binding) 
+        cstr.fmalloc(&self.ptr.tres_bind, binding)
 
     def _set_min_cpus(self):
         if self.min_cpus_per_node:
@@ -568,7 +568,7 @@ def _parse_dependencies(val):
             if not isinstance(vals, list):
                 vals = str(vals).split(",")
 
-            vals = [str(s) for s in vals] 
+            vals = [str(s) for s in vals]
             final.append(f"{condition}:{':'.join(vals)}")
 
         final = delim.join(final)
@@ -630,7 +630,7 @@ def _parse_switches_str_to_dict(switches_str):
     vals = str(switches_str.split("@"))
     if len(vals) > 1:
         out["max_wait_time"] = timestr_to_secs(vals[1])
-        
+
     out["count"] = u32(vals[0])
 
     return out
@@ -694,7 +694,7 @@ def _validate_cpu_freq(freq):
 def _validate_batch_script(script, args=None):
     if Path(script).is_file():
         # First assume the caller is passing a path to a script and we try
-        # to load it. 
+        # to load it.
         script = Path(script).read_text()
     else:
         if args:
