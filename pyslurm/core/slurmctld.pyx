@@ -25,8 +25,10 @@
 from pyslurm.core.error import verify_rpc, RPCError
 from pyslurm.utils.uint import *
 from pyslurm.utils.ctime import _raw_time
-from pyslurm.utils.helpers import cpu_freq_int_to_str
-from pyslurm.utils.helpers import instance_to_dict
+from pyslurm.utils.helpers import (
+    cpu_freq_int_to_str,
+    instance_to_dict,
+)
 from pyslurm.utils import cstr
 
 
