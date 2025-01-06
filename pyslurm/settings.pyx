@@ -30,4 +30,4 @@ from pyslurm.utils cimport cstr
 LOCAL_CLUSTER = cstr.to_unicode(slurm.slurm_conf.cluster_name)
 if not LOCAL_CLUSTER:
     slurm_conf = slurmctld.Config.load()
-    LOCAL_CLUSTER = slurm_conf.cluster
+    LOCAL_CLUSTER = slurm_conf.cluster_name
