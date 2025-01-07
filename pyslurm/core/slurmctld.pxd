@@ -31,6 +31,12 @@ from pyslurm.slurm cimport (
     slurm_accounting_enforce_string,
     slurm_sprint_cpu_bind_type,
     slurm_ctl_conf_2_key_pairs,
+    slurm_reconfigure,
+    slurm_shutdown,
+    slurm_ping,
+    slurm_takeover,
+    ping_all_controllers,
+    controller_ping_t,
     cpu_bind_type_t,
     try_xmalloc,
     list_t,
@@ -38,7 +44,12 @@ from pyslurm.slurm cimport (
 )
 from pyslurm.utils cimport cstr
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
-from pyslurm.utils.uint cimport *
+from pyslurm.utils.uint cimport (
+    u16_parse,
+    u32_parse,
+    u64_parse,
+    u16_parse_bool,
+)
 
 from pyslurm.db.util cimport (
     SlurmList,
@@ -54,6 +65,17 @@ ctypedef struct config_key_pair_t:
     char *value
 
 
+cdef class PingResponse:
+    """Slurm Controller Ping response information"""
+
+    cdef public:
+        is_primary
+        is_responding
+        index
+        hostname
+        latency
+
+
 cdef class Config:
     cdef slurm_conf_t *ptr
 
@@ -64,6 +86,7 @@ cdef class Config:
 
 
 cdef class MPIConfig:
+    """Slurm MPI Config (mpi.conf)"""
 
     cdef public:
         pmix_cli_tmp_dir_base
@@ -83,6 +106,7 @@ cdef class MPIConfig:
     cdef MPIConfig from_ptr(void *ptr)
 
 cdef class CgroupConfig:
+    """Slurm Cgroup Config (cgroup.conf)"""
 
     cdef public:
         mountpoint
@@ -110,6 +134,7 @@ cdef class CgroupConfig:
 
 
 cdef class AccountingGatherConfig:
+    """Slurm Accounting Gather Config (acct_gather.conf)"""
 
     cdef public:
         energy_ipmi_frequency

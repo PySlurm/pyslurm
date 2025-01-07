@@ -23,13 +23,167 @@
 # cython: language_level=3
 
 from pyslurm.core.error import verify_rpc, RPCError
-from pyslurm.utils.uint import *
+from pyslurm.utils.uint import (
+    u16_parse,
+    u32_parse,
+    u64_parse,
+)
+from pyslurm.constants import UNLIMITED
 from pyslurm.utils.ctime import _raw_time
 from pyslurm.utils.helpers import (
     cpu_freq_int_to_str,
     instance_to_dict,
 )
 from pyslurm.utils import cstr
+from typing import Union
+import time
+from enum import IntEnum
+
+
+class ShutdownMode(IntEnum):
+    """Mode of operation for shutdown action"""
+    ALL = 0
+    CORE_FILE = 1
+    CONTROLLER_ONLY = 2
+
+
+cdef class PingResponse:
+
+    def to_dict(self):
+        """Slurmctld ping response formatted as dictionary.
+
+        Returns:
+            (dict): Ping response as a dict
+
+        Examples:
+            >>> from pyslurm import slurmctld
+            >>> ctld_primary = slurmctld.Config.ping(0)
+            >>> primary_dict = ctld_primary.to_dict()
+        """
+        return instance_to_dict(self)
+
+
+def ping(index):
+    """Ping a Slurm controller
+
+    Returns:
+        (pyslurm.slurmctld.PingResponse): a ping response
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> resp = slurmctld.ping(0)
+        >>> print(resp.hostname, resp.latency)
+        slurmctl 1.246
+    """
+    t0 = time.perf_counter()
+    rc = slurm_ping(index)
+    t1 = time.perf_counter()
+
+    verify_rpc(rc)
+    ctl_cnt = slurm.slurm_conf.control_cnt
+
+    if index >= ctl_cnt:
+        raise RPCError(msg="Invalid Index specified.")
+
+    info = PingResponse()
+    info.is_primary = index == 0
+    info.is_responding = not rc
+    info.index = index
+    info.hostname = cstr.to_unicode(slurm.slurm_conf.control_machine[index])
+    info.latency = round((t1 - t0) * 1000, 3)
+
+    return info
+
+
+def ping_primary():
+    """Ping the primary Slurm Controller.
+
+    See `ping()` for more information and examples.
+
+    Returns:
+        (pyslurm.slurmctld.PingResponse): a ping response
+    """
+    return ping(0)
+
+
+def ping_backup():
+    """Ping the first backup Slurm Controller.
+
+    See `ping()` for more information and examples.
+
+    Returns:
+        (pyslurm.slurmctld.PingResponse): a ping response
+    """
+    return ping(1)
+
+
+def ping_all():
+    """Ping all Slurm Controllers.
+
+    Returns:
+        (list[pyslurm.slurmctld.PingResponse]): a list of ping responses
+
+    Raises:
+        (pyslurm.RPCError): When the ping was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> resps = slurmctld.ping_all()
+        >>> for resp in resps:
+        ...     print(resp.hostname, resp.latency)
+        ...
+        slurmctl 1.246
+        slurmctlbackup 1.373
+    """
+    cdef list out = []
+
+    ctl_cnt = slurm.slurm_conf.control_cnt
+    for i in range(ctl_cnt):
+        out.append(ping(i))
+
+    return out
+
+
+def shutdown(mode: Union[ShutdownMode, int]):
+    """Shutdown Slurm Controller or all Daemons
+
+    Args:
+        mode:
+            Whether only the Slurm controller shut be downed, or also all other
+            slurmd daemons.
+
+    Raises:
+        (pyslurm.RPCError): When shutdowning the daemons was not successful.
+    """
+    verify_rpc(slurm_shutdown(int(mode)))
+
+
+def reconfigure():
+    """Trigger Slurm Controller to reload the Config
+
+    Raises:
+        (pyslurm.RPCError): When reconfiguring was not successful.
+    """
+    verify_rpc(slurm_reconfigure())
+
+
+def takeover(index = 1):
+    """Let a Backup Slurm Controller take over as the Primary.
+
+    Args:
+        index (int, optional = 1):
+            Index of the Backup Controller that should take over. By default,
+            the `index` is `1`, meaning the next Controller configured after
+            the Primary in slurm.conf (second `SlurmctlHost` entry) will be
+            asked to take over operation.
+
+            If you have more than one backup controller configured, you can for
+            example also pass `2` as the index.
+
+    Raises:
+        (pyslurm.RPCError): When reconfiguring was not successful.
+    """
+    verify_rpc(slurm_takeover(index))
 
 
 cdef class MPIConfig:
@@ -75,7 +229,7 @@ cdef class MPIConfig:
 
 cdef class CgroupConfig:
 
-    def __init__(self, job_id):
+    def __init__(self):
         raise RuntimeError("Cannot instantiate class directly")
 
     def to_dict(self):
@@ -121,7 +275,7 @@ cdef class CgroupConfig:
 
 cdef class AccountingGatherConfig:
 
-    def __init__(self, job_id):
+    def __init__(self):
         raise RuntimeError("Cannot instantiate class directly")
 
     def to_dict(self):
@@ -147,7 +301,7 @@ cdef class AccountingGatherConfig:
         out.energy_ipmi_calc_adjustment = _yesno_to_bool(
                 conf.get("EnergyIPMICalcAdjustment"))
 
-        # TODO: dict
+        # TODO: maybe dict?
         out.energy_ipmi_power_sensors = conf.get("EnergyIPMIPowerSensors")
 
         out.energy_ipmi_user_name = conf.get("EnergyIPMIUsername")
@@ -176,8 +330,9 @@ cdef class Config:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, job_id):
-        raise RuntimeError("Cannot instantiate class directly")
+    def __init__(self):
+        raise RuntimeError("Cannot instantiate class directly. "
+                           "Use slurmctld.Config.load() to get an instance.")
 
     def __dealloc__(self):
         slurm_free_ctl_conf(self.ptr)
@@ -201,6 +356,13 @@ cdef class Config:
 
     @staticmethod
     def load():
+        """Load the current Slurm configuration (slurm.conf)
+
+        This also loads the following other configurations:
+            * `cgroup.conf` (`cgroup_config`)
+            * `acct_gather.conf` (`accounting_gather_config`)
+            * `mpi.conf` (`mpi_config`)
+        """
         cdef Config conf = Config.__new__(Config)
         verify_rpc(slurm_load_ctl_conf(0, &conf.ptr))
 
@@ -208,6 +370,7 @@ cdef class Config:
         conf.accounting_gather_config = AccountingGatherConfig.from_ptr(
                 conf.ptr.acct_gather_conf)
         conf.mpi_config = MPIConfig.from_ptr(conf.ptr.mpi_conf)
+        # TODO: node_features_conf
 
         return conf
 
@@ -431,16 +594,6 @@ cdef class Config:
         return cstr.to_list_with_count(self.ptr.epilog_slurmctld,
                                        self.ptr.epilog_slurmctld_cnt)
 
-#   @property
-#   def external_sensors_type(self):
-#       return cstr.to_unicode(self.ptr.ext_sensors_type)
-
-#   @property
-#   def external_sensors_frequency(self):
-#       return u16_parse(self.ptr.ext_sensors_freq)
-
-    # TODO: void *ext_sensors_conf put into own class?
-
     @property
     def federation_parameters(self):
         return cstr.to_list(self.ptr.fed_params)
@@ -469,7 +622,6 @@ cdef class Config:
 
     @property
     def group_update_force(self):
-        # TODO: maybe bool?
         return u16_parse_bool(self.ptr.group_force)
 
     @property
@@ -485,7 +637,6 @@ cdef class Config:
         val = u32_parse(self.ptr.hash_val)
         if not val:
             return None
-
         return hex(val)
 
     @property
@@ -533,10 +684,6 @@ cdef class Config:
     @property
     def job_completion_parameters(self):
         return cstr.to_list(self.ptr.job_comp_params)
-
-#    @property
-#    def job_completion_password(self):
-#        return cstr.to_unicode(self.ptr.job_comp_pass)
 
     @property
     def job_completion_port(self):
@@ -675,8 +822,6 @@ cdef class Config:
     def next_job_id(self):
         return u32_parse(self.ptr.next_job_id)
 
-    # TODO: void *node_features_conf put into own class?
-
     @property
     def node_features_plugins(self):
         return cstr.to_list(self.ptr.node_features_plugins)
@@ -686,21 +831,12 @@ cdef class Config:
         return u16_parse(self.ptr.over_time_limit)
 
     @property
-    def plugin_path(self):
-        # TODO: maybe list
-        return cstr.to_unicode(self.ptr.plugindir)
+    def plugin_dirs(self):
+        return cstr.to_list(self.ptr.plugindir, None, ":")
 
     @property
     def plugin_stack_config(self):
         return cstr.to_unicode(self.ptr.plugstack)
-
-#   @property
-#   def power_parameters(self):
-#       return cstr.to_list(self.ptr.power_parameters)
-
-#   @property
-#   def power_plugin(self):
-#       return cstr.to_unicode(self.ptr.power_plugin)
 
     @property
     def preempt_exempt_time(self):
@@ -1295,6 +1431,7 @@ def _log_level_int_to_str(flags):
     else:
         return data
 
+
 def _acct_store_flags_int_to_str(flags):
     cdef list out = []
 
@@ -1310,6 +1447,7 @@ def _acct_store_flags_int_to_str(flags):
         out.append("NO_STDIO")
 
     return out
+
 
 def _get_memory(value, per_cpu):
     if value != slurm.NO_VAL64:
