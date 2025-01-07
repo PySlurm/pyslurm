@@ -96,14 +96,14 @@ cdef fmalloc(char **old, val):
         old[0] = NULL
 
 
-cpdef list to_list(char *str_list, default=[]):
+cpdef list to_list(char *str_list, default=None, delim=","):
     """Convert C-String to a list."""
     cdef str ret = to_unicode(str_list)
 
     if not ret:
-        return default
+        return [] if default is None else default
 
-    return ret.split(",")
+    return ret.split(delim)
 
 
 cdef list to_list_free(char **str_list):
