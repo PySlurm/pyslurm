@@ -2,7 +2,7 @@
 # partition.pyx - interface to work with partitions in slurm
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
-# Copyright (C) 2023 PySlurm Developers
+# Copyright (C) 2025 PySlurm Developers
 #
 # This file is part of PySlurm
 #
