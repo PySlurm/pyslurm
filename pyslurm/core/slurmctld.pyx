@@ -186,6 +186,192 @@ def takeover(index = 1):
     verify_rpc(slurm_takeover(index))
 
 
+def add_debug_flags(flags):
+    """Add DebugFlags to slurmctld
+
+    Args:
+        flags (list):
+            For an available list of possible values, please check the
+            `slurm.conf` documentation under `DebugFlags`.
+
+    Raises:
+        (pyslurm.RPCError): When setting the debug flags was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.add_debug_flags(["CpuFrequency"])
+    """
+    if not flags:
+        return
+
+    data = _debug_flags_str_to_int(flags)
+    if not data:
+        raise RPCError(msg="Invalid Debug Flags specified.")
+
+    verify_rpc(slurm_set_debugflags(data, 0))
+
+
+def remove_debug_flags(flags):
+    """Remove DebugFlags from slurmctld.
+
+    Args:
+        flags (list):
+            For an available list of possible values, please check the
+            `slurm.conf` documentation under `DebugFlags`.
+
+    Raises:
+        (pyslurm.RPCError): When removing the debug flags was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.remove_debug_flags(["CpuFrequency"])
+    """
+    if not flags:
+        return
+
+    data = _debug_flags_str_to_int(flags)
+    if not data:
+        raise RPCError(msg="Invalid Debug Flags specified.")
+
+    verify_rpc(slurm_set_debugflags(0, data))
+
+
+def clear_debug_flags():
+    """Remove all currently set debug flags from slurmctld.
+
+    Raises:
+        (pyslurm.RPCError): When removing the debug flags was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.clear_debug_flags()
+    """
+    current_flags = get_debug_flags()
+    if not current_flags:
+        return
+
+    data = _debug_flags_str_to_int(current_flags)
+    verify_rpc(slurm_set_debugflags(0, data))
+
+
+def get_debug_flags():
+    """Get the current list of debug flags for the slurmctld.
+
+    Raises:
+        (pyslurm.RPCError): When getting the debug flags was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> flags = slurmctld.get_debug_flags()
+        >>> print(flags)
+        ['CpuFrequency', 'Backfill']
+    """
+    return Config.load().debug_flags
+
+
+def set_log_level(level):
+    """Set the logging level for slurmctld.
+
+    Args:
+        level (str):
+            For an available list of possible values, please check the
+            `slurm.conf` documentation under `SlurmctldDebug`.
+
+    Raises:
+        (pyslurm.RPCError): When setting the log level was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.set_log_level("quiet")
+    """
+    data = _log_level_str_to_int(level)
+    verify_rpc(slurm_set_debug_level(data))
+
+
+def get_log_level():
+    """Get the current log level for the slurmctld.
+
+    Raises:
+        (pyslurm.RPCError): When getting the log level was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> level = slurmctld.get_log_level()
+        >>> print(level)
+        quiet
+    """
+    return Config.load().slurmctld_log_level
+
+
+def enable_scheduler_logging():
+    """Enable scheduler logging for slurmctld.
+
+    Raises:
+        (pyslurm.RPCError): When enabling scheduler logging was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.enable_scheduler_logging()
+    """
+    verify_rpc(slurm_set_schedlog_level(1))
+
+
+def is_scheduler_logging_enabled():
+    """Check whether scheduler logging is enabled for slurmctld.
+
+    Returns:
+       (bool): Whether scheduler logging is enabled or not.
+
+    Raises:
+        (pyslurm.RPCError): When getting the scheduler logging was not
+            successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> print(slurmctld.is_scheduler_logging_enabled())
+        False
+    """
+    return Config.load().scheduler_logging
+
+
+def set_fair_share_dampening_factor(factor):
+    """Set the FairShare Dampening factor.
+
+    Args:
+        factor (int):
+            The factor to set. A minimum value of `1`, and a maximum value of
+            `65535` are allowed.
+
+    Raises:
+        (pyslurm.RPCError): When setting the factor was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.set_fair_share_dampening_factor(100)
+    """
+    max_value = (2 ** 16) - 1
+    if not factor or factor >= max_value:
+        raise RPCError(msg=f"Invalid Dampening factor: {factor}. "
+                           f"Factor must be between 0 and {max_value}.")
+
+    verify_rpc(slurm_set_fs_dampeningfactor(factor))
+
+
+def get_fair_share_dampening_factor():
+    """Get the currently set FairShare Dampening factor.
+
+    Raises:
+        (pyslurm.RPCError): When getting the factor was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> factor = slurmctld.get_fair_share_dampening_factor()
+        >>> print(factor)
+        100
+    """
+    return Config.load().fair_share_dampening_factor
+
+
 cdef class MPIConfig:
 
     def __init__(self):
@@ -1022,8 +1208,8 @@ cdef class Config:
         return cstr.to_unicode(self.ptr.sched_logfile)
 
     @property
-    def scheduler_log_level(self):
-        return u16_parse(self.ptr.sched_log_level, zero_is_noval=False)
+    def scheduler_logging(self):
+        return u16_parse_bool(self.ptr.sched_log_level)
 
     @property
     def scheduler_parameters(self):
@@ -1344,7 +1530,13 @@ def _debug_flags_int_to_list(flags):
 
 
 def _debug_flags_str_to_int(flags):
-    pass
+    cdef:
+        uint64_t flags_num = 0
+        char *flags_str = NULL
+
+    flags_str = cstr.from_unicode(cstr.list_to_str(flags))
+    slurm.debug_str2flags(flags_str, &flags_num)
+    return flags_num
 
 
 # https://github.com/SchedMD/slurm/blob/01a3aac7c59c9b32a9dd4e395aa5a97a8aea4f08/slurm/slurm.h#L621
@@ -1430,6 +1622,14 @@ def _log_level_int_to_str(flags):
         return None
     else:
         return data
+
+
+def _log_level_str_to_int(level):
+    cdef uint16_t data = slurm.log_string2num(str(level))
+    if u16_parse(data, zero_is_noval=False) is None:
+        raise RPCError(msg=f"Invalid Log level: {level}.")
+
+    return data
 
 
 def _acct_store_flags_int_to_str(flags):
