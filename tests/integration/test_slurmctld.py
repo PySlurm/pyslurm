@@ -56,3 +56,54 @@ def test_load_config():
     assert conf.cgroup_config
     assert conf.accounting_gather_config
     assert conf.mpi_config
+
+
+def test_debug_flags():
+    slurmctld.clear_debug_flags()
+
+    slurmctld.add_debug_flags([])
+    assert slurmctld.get_debug_flags() == []
+
+    slurmctld.add_debug_flags(["CpuFrequency", "Backfill"])
+    assert slurmctld.get_debug_flags() == ["Backfill", "CpuFrequency"]
+
+    slurmctld.add_debug_flags(["Agent"])
+    assert slurmctld.get_debug_flags() == ["Agent", "Backfill", "CpuFrequency"]
+
+    slurmctld.remove_debug_flags(["CpuFrequency"])
+    assert slurmctld.get_debug_flags() == ["Agent", "Backfill"]
+
+    slurmctld.clear_debug_flags()
+    assert slurmctld.get_debug_flags() == []
+
+
+def test_log_level():
+    slurmctld.set_log_level("debug5")
+    assert slurmctld.get_log_level() == "debug5"
+
+    slurmctld.set_log_level("debug2")
+    assert slurmctld.get_log_level() == "debug2"
+
+    with pytest.raises(pyslurm.RPCError,
+           match=r"Invalid Log*"):
+        slurmctld.set_log_level("invalid")
+
+
+def test_scheduler_log_level():
+    assert not slurmctld.is_scheduler_logging_enabled()
+
+
+def test_fair_share_dampening_factor():
+    slurmctld.set_fair_share_dampening_factor(100)
+    assert slurmctld.get_fair_share_dampening_factor() == 100
+
+    slurmctld.set_fair_share_dampening_factor(1)
+    assert slurmctld.get_fair_share_dampening_factor() == 1
+
+    with pytest.raises(pyslurm.RPCError,
+           match=r"Invalid Dampening*"):
+        slurmctld.set_fair_share_dampening_factor(0)
+
+    with pytest.raises(pyslurm.RPCError,
+           match=r"Invalid Dampening*"):
+        slurmctld.set_fair_share_dampening_factor(99999999)
