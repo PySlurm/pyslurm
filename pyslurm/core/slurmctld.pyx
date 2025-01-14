@@ -331,7 +331,7 @@ def is_scheduler_logging_enabled():
         >>> print(slurmctld.is_scheduler_logging_enabled())
         False
     """
-    return Config.load().scheduler_logging
+    return Config.load().scheduler_logging_enabled
 
 
 def set_fair_share_dampening_factor(factor):
@@ -578,10 +578,6 @@ cdef class Config:
         return out
 
     @property
-    def accounting_storage_tres(self):
-        return cstr.to_list(self.ptr.accounting_storage_tres)
-
-    @property
     def accounting_storage_enforce(self):
         cdef char tmp[128]
         slurm_accounting_enforce_string(self.ptr.accounting_storage_enforce,
@@ -609,12 +605,12 @@ cdef class Config:
         return cstr.to_dict(self.ptr.accounting_storage_params)
 
     @property
-    def accounting_storage_password(self):
-        return cstr.to_unicode(self.ptr.accounting_storage_pass)
-
-    @property
     def accounting_storage_port(self):
         return u16_parse(self.ptr.accounting_storage_port)
+
+    @property
+    def accounting_storage_tres(self):
+        return cstr.to_list(self.ptr.accounting_storage_tres)
 
     @property
     def accounting_storage_type(self):
@@ -664,9 +660,9 @@ cdef class Config:
         return cstr.to_list(self.ptr.authinfo)
 
     @property
-    def auth_alt_params(self):
-        # TODO: maybe dict?
-        return cstr.to_list(self.ptr.authalt_params)
+    def auth_alt_parameters(self):
+        return cstr.to_dict(self.ptr.authalt_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def auth_type(self):
@@ -683,14 +679,15 @@ cdef class Config:
 
     @property
     def bcast_parameters(self):
-        return cstr.to_list(self.ptr.bcast_parameters)
+        return cstr.to_dict(self.ptr.authalt_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def burst_buffer_type(self):
         return cstr.to_unicode(self.ptr.bb_type)
 
     @property
-    def boot_time(self):
+    def slurmctld_boot_time(self):
         return _raw_time(self.ptr.boot_time)
 
     @property
@@ -711,7 +708,9 @@ cdef class Config:
 
     @property
     def communication_parameters(self):
-        return cstr.to_list(self.ptr.comm_params)
+        # TODO: check again
+        return cstr.to_dict(self.ptr.comm_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def complete_wait_time(self):
@@ -719,13 +718,7 @@ cdef class Config:
         return u16_parse(self.ptr.complete_wait)
 
     @property
-    def disable_root_jobs(self):
-        if self.ptr.conf_flags & slurm.CONF_FLAG_DRJ:
-            return True
-        return False
-
-    @property
-    def default_cpu_frequency(self):
+    def default_cpu_frequency_governor(self):
         return cpu_freq_int_to_str(self.ptr.cpu_freq_def)
 
     @property
@@ -752,9 +745,19 @@ cdef class Config:
     def default_memory_per_node(self):
         return _get_memory(self.ptr.def_mem_per_cpu, per_cpu=False)
 
+    # TODO: DefCpuPerGPU
+    # TODO: DefMemPerGPU
+
     @property
     def dependency_parameters(self):
+        # TODO: check format again
         return cstr.to_list(self.ptr.dependency_params)
+
+    @property
+    def disable_root_jobs(self):
+        if self.ptr.conf_flags & slurm.CONF_FLAG_DRJ:
+            return True
+        return False
 
     @property
     def eio_timeout(self):
@@ -781,18 +784,16 @@ cdef class Config:
                                        self.ptr.epilog_slurmctld_cnt)
 
     @property
+    def fair_share_dampening_factor(self):
+        return u16_parse(self.ptr.fs_dampening_factor)
+
+    @property
     def federation_parameters(self):
         return cstr.to_list(self.ptr.fed_params)
 
     @property
     def first_job_id(self):
         return u32_parse(self.ptr.first_job_id)
-
-    @property
-    def fair_share_dampening_factor(self):
-        return u16_parse(self.ptr.fs_dampening_factor)
-
-    # getnameinfo_cache_timeout
 
     @property
     def get_environment_timeout(self):
@@ -803,12 +804,12 @@ cdef class Config:
         return cstr.to_list(self.ptr.gres_plugins)
 
     @property
-    def group_update_time(self):
-        return u16_parse(self.ptr.group_time)
-
-    @property
     def group_update_force(self):
         return u16_parse_bool(self.ptr.group_force)
+
+    @property
+    def group_update_time(self):
+        return u16_parse(self.ptr.group_time)
 
     @property
     def default_gpu_frequency(self):
@@ -848,12 +849,12 @@ cdef class Config:
         return cstr.to_unicode(self.ptr.interactive_step_opts)
 
     @property
-    def job_accounting_gather_frequency(self):
-        return cstr.to_dict(self.ptr.job_acct_gather_freq)
-
-    @property
     def job_accounting_gather_type(self):
         return cstr.to_unicode(self.ptr.job_acct_gather_type)
+
+    @property
+    def job_accounting_gather_frequency(self):
+        return cstr.to_dict(self.ptr.job_acct_gather_freq)
 
     @property
     def job_accounting_gather_parameters(self):
@@ -869,6 +870,7 @@ cdef class Config:
 
     @property
     def job_completion_parameters(self):
+        # TODO: maybe dict?
         return cstr.to_list(self.ptr.job_comp_params)
 
     @property
@@ -907,15 +909,11 @@ cdef class Config:
         return cstr.to_list(self.ptr.job_submit_plugins)
 
     @property
-    def keepalive_interval(self):
-        return u32_parse(self.ptr.keepalive_interval)
-
-    @property
     def kill_on_bad_exit(self):
         return u16_parse_bool(self.ptr.kill_on_bad_exit)
 
     @property
-    def kill_wait(self):
+    def kill_wait_time(self):
         # seconds
         return u16_parse(self.ptr.kill_wait)
 
@@ -998,6 +996,7 @@ cdef class Config:
 
     @property
     def mpi_parameters(self):
+        # TODO: check format again
         return cstr.to_list(self.ptr.mpi_params)
 
     @property
@@ -1036,6 +1035,7 @@ cdef class Config:
 
     @property
     def preempt_parameters(self):
+        # TODO: check format again
         return cstr.to_list(self.ptr.preempt_params)
 
     @property
@@ -1057,7 +1057,7 @@ cdef class Config:
 
     @property
     def priority_calc_period(self):
-        # seconds
+        # TODO: seconds or minutes?
         return u32_parse(self.ptr.priority_calc_period)
 
     @property
@@ -1070,7 +1070,7 @@ cdef class Config:
 
     @property
     def priortiy_max_age(self):
-        # seconds?
+        # TODO: seconds or minutes?
         return u32_parse(self.ptr.priority_max_age)
 
     @property
@@ -1087,27 +1087,27 @@ cdef class Config:
 
     @property
     def priority_weight_age(self):
-        return u32_parse(self.ptr.priority_weight_age)
+        return u32_parse(self.ptr.priority_weight_age, zero_is_noval=False)
 
     @property
     def priority_weight_assoc(self):
-        return u32_parse(self.ptr.priority_weight_assoc)
+        return u32_parse(self.ptr.priority_weight_assoc, zero_is_noval=False)
 
     @property
     def priority_weight_fair_share(self):
-        return u32_parse(self.ptr.priority_weight_fs)
+        return u32_parse(self.ptr.priority_weight_fs, zero_is_noval=False)
 
     @property
     def priority_weight_job_size(self):
-        return u32_parse(self.ptr.priority_weight_js)
+        return u32_parse(self.ptr.priority_weight_js, zero_is_noval=False)
 
     @property
     def priority_weight_partition(self):
-        return u32_parse(self.ptr.priority_weight_part)
+        return u32_parse(self.ptr.priority_weight_part, zero_is_noval=False)
 
     @property
     def priority_weight_qos(self):
-        return u32_parse(self.ptr.priority_weight_qos)
+        return u32_parse(self.ptr.priority_weight_qos, zero_is_noval=False)
 
     @property
     def priority_weight_tres(self):
@@ -1178,12 +1178,10 @@ cdef class Config:
 
     @property
     def resume_rate(self):
-        # minutes?
         return u16_parse(self.ptr.resume_rate)
 
     @property
     def resume_timeout(self):
-        # seconds
         return u16_parse(self.ptr.resume_timeout)
 
     @property
@@ -1192,8 +1190,7 @@ cdef class Config:
 
     @property
     def reservation_over_run(self):
-        # minutes
-        return u16_parse(self.ptr.resv_over_run)
+        return u16_parse(self.ptr.resv_over_run, zero_is_noval=False)
 
     @property
     def reservation_prolog(self):
@@ -1208,11 +1205,13 @@ cdef class Config:
         return cstr.to_unicode(self.ptr.sched_logfile)
 
     @property
-    def scheduler_logging(self):
+    def scheduler_logging_enabled(self):
+        # TODO: check again
         return u16_parse_bool(self.ptr.sched_log_level)
 
     @property
     def scheduler_parameters(self):
+        # TODO: check format again
         return cstr.to_list(self.ptr.sched_params)
 
     @property
@@ -1265,8 +1264,6 @@ cdef class Config:
     def slurmd_user_name(self):
         return cstr.to_unicode(self.ptr.slurmd_user_name)
 
-    # TODO: char *slurmctld_addr
-
     @property
     def slurmctld_log_level(self):
         return _log_level_int_to_str(self.ptr.slurmctld_debug)
@@ -1309,6 +1306,7 @@ cdef class Config:
 
     @property
     def slurmctld_parameters(self):
+        # TODO: check format again
         return cstr.to_list(self.ptr.slurmctld_params)
 
     @property
@@ -1321,6 +1319,7 @@ cdef class Config:
 
     @property
     def slurmd_parameters(self):
+        # TODO: Check again
         return cstr.to_list(self.ptr.slurmd_params)
 
     @property
@@ -1336,7 +1335,7 @@ cdef class Config:
         return cstr.to_unicode(self.ptr.slurmd_spooldir)
 
     @property
-    def slurmd_syslog_debug_level(self):
+    def slurmd_syslog_level(self):
         return _log_level_int_to_str(self.ptr.slurmd_syslog_debug)
 
     @property
@@ -1398,6 +1397,7 @@ cdef class Config:
 
     @property
     def switch_parameters(self):
+        # TODO: Check format again
         return cstr.to_list(self.ptr.switch_param)
 
     @property
@@ -1440,6 +1440,7 @@ cdef class Config:
 
     @property
     def topology_parameters(self):
+        # TODO: check format again
         return cstr.to_list(self.ptr.topology_param)
 
     @property
@@ -1480,11 +1481,12 @@ cdef class Config:
 
     @property
     def default_job_wait_time(self):
+        # TODO: reconsider name
         return u16_parse(self.ptr.wait_time)
 
     @property
     def x11_parameters(self):
-        return cstr.to_unicode(self.ptr.x11_params)
+        return cstr.to_list(self.ptr.x11_params)
 
 
 def _str_to_bool(val, true_str, false_str):
