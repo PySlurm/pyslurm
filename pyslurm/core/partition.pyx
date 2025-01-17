@@ -31,7 +31,7 @@ from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
 from pyslurm.settings import LOCAL_CLUSTER
-from pyslurm.core.slurmctld import _get_memory
+from pyslurm.core.slurmctld.config import _get_memory
 from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     uid_to_name,
