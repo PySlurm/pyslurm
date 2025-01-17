@@ -268,7 +268,8 @@ cdef class Config:
 
     @property
     def accounting_storage_parameters(self):
-        return cstr.to_dict(self.ptr.accounting_storage_params)
+        return cstr.to_dict(self.ptr.accounting_storage_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def accounting_storage_port(self):
@@ -388,7 +389,6 @@ cdef class Config:
 
     @property
     def communication_parameters(self):
-        # TODO: check again
         return cstr.to_dict(self.ptr.comm_params, delim1=",",
                             delim2="=", def_value=True)
 
@@ -431,8 +431,8 @@ cdef class Config:
 
     @property
     def dependency_parameters(self):
-        # TODO: check format again
-        return cstr.to_list(self.ptr.dependency_params)
+        return cstr.to_dict(self.ptr.dependency_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def disable_root_jobs(self):
@@ -554,8 +554,8 @@ cdef class Config:
 
     @property
     def job_completion_parameters(self):
-        # TODO: maybe dict?
-        return cstr.to_list(self.ptr.job_comp_params)
+        return cstr.to_dict(self.ptr.job_comp_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def job_completion_port(self):
@@ -698,8 +698,8 @@ cdef class Config:
 
     @property
     def mpi_parameters(self):
-        # TODO: check format again
-        return cstr.to_list(self.ptr.mpi_params)
+        return cstr.to_dict(self.ptr.mpi_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def message_timeout(self):
@@ -737,8 +737,8 @@ cdef class Config:
 
     @property
     def preempt_parameters(self):
-        # TODO: check format again
-        return cstr.to_list(self.ptr.preempt_params)
+        return cstr.to_dict(self.ptr.preempt_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def preempt_type(self):
@@ -759,7 +759,6 @@ cdef class Config:
 
     @property
     def priority_calc_period(self):
-        # TODO: seconds or minutes?
         return u32_parse(self.ptr.priority_calc_period)
 
     @property
@@ -938,8 +937,8 @@ cdef class Config:
 
     @property
     def scheduler_parameters(self):
-        # TODO: check format again
-        return cstr.to_list(self.ptr.sched_params)
+        return cstr.to_dict(self.ptr.sched_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def scheduler_time_slice(self):
@@ -1046,8 +1045,8 @@ cdef class Config:
 
     @property
     def slurmd_parameters(self):
-        # TODO: Check again
-        return cstr.to_list(self.ptr.slurmd_params)
+        return cstr.to_dict(self.ptr.slurmd_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def slurmd_pid_file(self):
@@ -1124,8 +1123,8 @@ cdef class Config:
 
     @property
     def switch_parameters(self):
-        # TODO: Check format again
-        return cstr.to_list(self.ptr.switch_param)
+        return cstr.to_dict(self.ptr.switch_param, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def task_epilog(self):
@@ -1167,8 +1166,8 @@ cdef class Config:
 
     @property
     def topology_parameters(self):
-        # TODO: check format again
-        return cstr.to_list(self.ptr.topology_param)
+        return cstr.to_dict(self.ptr.topology_param, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def topology_plugin(self):

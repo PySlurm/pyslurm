@@ -95,8 +95,12 @@ cdef class Config:
             Name of the machine hosting the slurm database.
             {slurm.conf#OPT_AccountingStorageHost}
 
-        accounting_storage_parameters (dict[str, str]):
+        accounting_storage_parameters (dict[str, Union[str, int, bool]]):
             Options for the accounting storage Plugin
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_AccountingStorageParameters}
         accounting_storage_port (int):
@@ -149,8 +153,12 @@ cdef class Config:
             List of alternative authentication plugins the slurmctld permits.
 
             {slurm.conf#OPT_AuthAltTypes}
-        auth_alt_parameters (dict[str, str]:
+        auth_alt_parameters (dict[str, Union[str, int, bool]]):
             Options for the alternative authentication plugins.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_AuthAltParameters}
         auth_info (list[str]):
@@ -175,8 +183,12 @@ cdef class Config:
             through `sbcast` or `srun --bcast`.
 
             {slurm.conf#OPT_BcastExclude}
-        bcast_parameters (dict[str, str]:
+        bcast_parameters (dict[str, Union[int, str, bool]]:
             Options for `sbcast` and `srun --bcast` behaviour.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_BcastParameters}
         burst_buffer_type (str):
@@ -199,6 +211,10 @@ cdef class Config:
             {slurm.conf#OPT_ClusterName}
         communication_parameters (dict[str, Union[str, int]]):
             Communication options for Cluster daemons.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_CommunicationParameters}
         complete_wait_time (int):
@@ -236,8 +252,12 @@ cdef class Config:
             Default real memory size available per allocated Node in Mebibytes.
 
             {slurm.conf#OPT_DefMemPerNode}
-        dependency_parameters (list[str]):
+        dependency_parameters (dict[str, Union[str, int, bool]]):
             List of parameters for dependencies.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_DependencyParameters}
         disable_root_jobs (bool):
@@ -274,8 +294,12 @@ cdef class Config:
             allocated resources.
 
             {slurm.conf#OPT_FairShareDampeningFactor}
-        federation_parameters (list[str]):
+        federation_parameters (dict[str, Union[str, int, bool]]):
             Options for Federations
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_FederationParameters}
         first_job_id (int):
@@ -361,8 +385,12 @@ cdef class Config:
             `job_completion_type`
 
             {slurm.conf#OPT_JobCompLoc}
-        job_completion_parameters (list[str]):
+        job_completion_parameters (dict[str, Union[str, int, bool]]):
             Arbitrary text passed to the Job completion plugin.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_JobCompParams}
         job_completion_port (int):
@@ -490,8 +518,12 @@ cdef class Config:
             Default type of MPI that will be used.
 
             {slurm.conf#OPT_MpiDefault}
-        mpi_parameters (list[str]):
+        mpi_parameters (dict[str, Union[str, int, bool]]):
             Parameters for MPI.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_MpiParams}
         message_timeout (int):
@@ -528,8 +560,12 @@ cdef class Config:
             Mechanism used to preempt jobs or enable gang scheduling.
 
             {slurm.conf#OPT_PreemptMode}
-        preempt_parameters (list[str]):
+        preempt_parameters (dict[str, Union[str, int, bool]]):
             Options for the Preempt Plugin.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_PreemptParameters}
         preempt_type (str):
@@ -728,8 +764,12 @@ cdef class Config:
             The initial level of scheduling event logging.
 
             {slurm.conf#OPT_SlurmSchedLogLevel}
-        scheduler_parameters (list[str]):
+        scheduler_parameters (dict[str, Union[str, int, bool]]):
             List of options for the `scheduler_type` plugin.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_SchedulerParameters}
         scheduler_time_slice (int):
@@ -827,8 +867,12 @@ cdef class Config:
             Pathname of the file where `slurmd` writes logs to.
 
             {slurm.conf#OPT_SlurmdLogFile}
-        slurmd_parameters (list[str]):
+        slurmd_parameters (dict[str, Union[str, int, bool]]):
             Parameters for the `slurmd`.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_SlurmdParameters}
         slurmd_pid_file (str):
@@ -913,8 +957,12 @@ cdef class Config:
             communications.
 
             {slurm.conf#OPT_SwitchType}
-        switch_parameters (list[str]):
+        switch_parameters (dict[str, Union[str, int, bool]]):
             Optional parameters for the switch plugin.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_SwitchParameters}
         task_epilog (str):
@@ -949,8 +997,12 @@ cdef class Config:
             storage.
 
             {slurm.conf#OPT_TmpFS}
-        topology_parameters (list[str]):
+        topology_parameters (dict[str, Union[str, int, bool]]):
             List of network topology options
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
 
             {slurm.conf#OPT_TopologyParam}
         topology_plugin (str):
