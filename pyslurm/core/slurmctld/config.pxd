@@ -1,5 +1,5 @@
 #########################################################################
-# slurmctld.pxd - pyslurm slurmctld api
+# slurmctld/config.pxd - pyslurm slurmctld config api
 #########################################################################
 # Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -34,18 +34,7 @@ from pyslurm.slurm cimport (
     slurm_accounting_enforce_string,
     slurm_sprint_cpu_bind_type,
     slurm_ctl_conf_2_key_pairs,
-    slurm_reconfigure,
-    slurm_shutdown,
-    slurm_ping,
-    slurm_takeover,
-    slurm_set_debugflags,
-    slurm_set_debug_level,
-    slurm_set_schedlog_level,
-    slurm_set_fs_dampeningfactor,
-    ping_all_controllers,
-    controller_ping_t,
     cpu_bind_type_t,
-    try_xmalloc,
     list_t,
     xfree,
 )
@@ -72,17 +61,6 @@ ctypedef struct config_key_pair_t:
     char *value
 
 
-cdef class PingResponse:
-    """Slurm Controller Ping response information"""
-
-    cdef public:
-        is_primary
-        is_responding
-        index
-        hostname
-        latency
-
-
 # Documentation for the attributes in the Config class have been largely taken
 # from the official slurm.conf overview at:
 # https://slurm.schedmd.com/slurm.conf.html
@@ -93,8 +71,8 @@ cdef class PingResponse:
 #
 # Copyright (C) 2002-2007 The Regents of the University of California. Produced
 # at Lawrence Livermore National Laboratory (cf, pyslurm/slurm/SLURM_DISCLAIMER).
-# Copyright (C) 2008-2010 Lawrence Livermore
-# National Security. Copyright (C) 2010-2022 SchedMD LLC.
+# Copyright (C) 2008-2010 Lawrence Livermore National Security.
+# Copyright (C) 2010-2022 SchedMD LLC.
 cdef class Config:
     """The Slurm Configuration.
 
@@ -676,8 +654,12 @@ cdef class Config:
             The interval, in seconds, that the backup controller waits for the
             primary controller to respond before assuming control.
             {slurm.conf::OPT_SlurmctldTimeout}
-        slurmctld_parameters (list[str]):
+        slurmctld_parameters (dict[str, Union[str, int, bool]]):
             Options set for the `slurmctld`.
+
+            If a value in this dict is `True`, it means this parameter does not
+            have any additional options specified, and is just an "enabled"
+            option.
             {slurm.conf::OPT_SlurmctldParameters}
         slurmd_log_level (str):
             Level of detail `slurmd` is logging.
@@ -832,9 +814,61 @@ cdef class Config:
         MPIConfig mpi_config
 
 
+# Documentation for the attributes in the MPIConfig class have
+# been largely taken from the official mpi.conf overview at:
+# https://slurm.schedmd.com/mpi.conf.html
+#
+# Therefore, the following Copyright notices that mpi.conf has (see
+# https://slurm.schedmd.com/mpi.conf.html#SECTION_COPYING), are also
+# listed here:
+#
+# Copyright (C) 2022 SchedMD LLC.
 cdef class MPIConfig:
-    """Slurm MPI Config (mpi.conf)"""
+    """Slurm MPI Config (mpi.conf)
 
+    Attributes:
+        pmix_cli_tmp_dir_base (str):
+            Directory to have PMIx use for temporary files.
+            {mpi.conf::OPT_PMIxCliTmpDirBase}
+        pmix_coll_fence (str):
+            Defines the type of fence to use for collecting inter-node data.
+            {mpi.conf::OPT_PMIxCollFence}
+        pmix_debug (bool):
+            Whether debug logging for the PMIx Plugin is enabled or not.
+            {mpi.conf::OPT_PMIxDebug}
+        pmix_direct_conn (bool):
+            Whether direct launching of tasks is enabled or not.
+            {mpi.conf::OPT_PMIxDirectConn}
+        pmix_direct_conn_early (bool):
+            Whether early connection to a parent node are allowed or not.
+            {mpi.conf::OPT_PMIxDirectConnEarly}
+        pmix_direct_conn_ucx (bool):
+            Whether PMIx is allowed to use UCX for communication.
+            {mpi.conf::OPT_PMIxDirectConnUCX}
+        pmix_direct_same_arch (bool):
+            Whether additional communication optimizations are enabled when
+            `pmix_direct_conn` is also set to `True`, also assuming all nodes
+            of the job have the same architecture.
+            {mpi.conf::OPT_PMIxDirectSameArch}
+        pmix_environment (dict[str, Union[str, int]):
+            Environment variables to bet set in the Job environment, used by
+            PMIx.
+            {mpi.conf::OPT_PMIxEnv}
+        pmix_fence_barrier (bool):
+            Whether to fence inter-node communication for data collection.
+            {mpi.conf::OPT_PMIxFenceBarrier}
+        pmix_net_devices_ucx (str):
+            Type of network device to use for communication.
+            {mpi.conf::OPT_PMIxNetDevicesUCX}
+        pmix_timeout (int):
+            The maximum time (in seconds) allowed for communication between
+            hosts to take place.
+            {mpi.conf::OPT_PMIxTimeout}
+        pmix_tls_ucx (list[str]):
+            List of values for the UCX_TLS variable which restrict the
+            transports to use.
+            {mpi.conf::OPT_PMIxTlsUCX}
+    """
     cdef public:
         pmix_cli_tmp_dir_base
         pmix_coll_fence
@@ -853,9 +887,93 @@ cdef class MPIConfig:
     cdef MPIConfig from_ptr(void *ptr)
 
 
+# Documentation for the attributes in the CgroupConfig class have
+# been largely taken from the official cgroup.conf overview at:
+# https://slurm.schedmd.com/cgroup.conf.html
+#
+# Therefore, the following Copyright notices that cgroup.conf has (see
+# https://slurm.schedmd.com/cgroup.conf.html#SECTION_COPYING), are also
+# listed here:
+#
+# Copyright (C) 2010-2012 Lawrence Livermore National Security. (cf,
+# pyslurm/slurm/SLURM_DISCLAIMER).
+# Copyright (C) 2010-2022 SchedMD LLC.
 cdef class CgroupConfig:
-    """Slurm Cgroup Config (cgroup.conf)"""
+    """Slurm Cgroup Config (cgroup.conf)
 
+    Attributes:
+        mountpoint (str):
+            Specifies the PATH under which cgroup controllers should be
+            mounted.
+            {cgroup.conf::OPT_CgroupMountpoint)
+        plugin (str):
+            Specifies the plugin to be used when interacting with the cgroup
+            subsystem.
+            {cgroup.conf::OPT_CgroupPlugin)
+        systemd_timeout (int):
+            Maximum time (in milliseconds) that Slurm will wait for the slurmd
+            scope to be ready before failing.
+            {cgroup.conf::OPT_SystemdTimeout)
+        ignore_systemd (bool):
+            If `True`, it will avoid any call to dbus and contact with systemd,
+            and cgroup hierarchy preparation is done manually. Only for
+            `cgroup/v2`
+            {cgroup.conf::OPT_IgnoreSystemd)
+        ignore_systemd_on_failure (bool):
+            Similar to `ignore_systemd`, but only in the case that a dbus call
+            does not succeed. Only for `cgroup/v2`.
+            {cgroup.conf::OPT_IgnoreSystemdOnFailure)
+        enable_controllers (bool):
+            When enabled, `slurmd` gets the available controllers from root`s
+            cgroup.controllers file located in `mountpoint`.
+            {cgroup.conf::OPT_EnableControllers)
+        allowed_ram_space (int):
+            Constrains the job/step cgroup RAM to this percentage of the
+            allocated memory.
+            {cgroup.conf::OPT_AllowedRAMSpace)
+        allowed_swap_space (float):
+            Constrain the job cgroup swap space to this percentage of the
+            allocated memory.
+            {cgroup.conf::OPT_AllowedSwapSpace)
+        constrain_cores (bool):
+            When `True`, then constrain allowed cores to the subset of
+            allocated resources.
+            {cgroup.conf::OPT_ConstrainCores)
+        constrain_devices (bool):
+            When `True`, then constrain the job's allowed devices based on GRES
+            allocated resources.
+            {cgroup.conf::OPT_ConstrainDevices)
+        constrain_ram_space (bool):
+            When `True`, then constrain the job's RAM usage by setting the
+            memory soft limit to the allocated memory and the hard limit to the
+            allocated memory * `allowed_ram_space`.
+            {cgroup.conf::OPT_ConstrainRAMSpace)
+        constrain_swap_space (bool):
+            When `True`, then constrain the job's swap space usage.
+            {cgroup.conf::OPT_ConstrainSwapSpace)
+        max_ram_percent (float):
+            Upper bound in percent of total RAM (configured RealMemory of the
+            node) on the RAM constraint for a job.
+            {cgroup.conf::OPT_MaxRAMPercent)
+        max_swap_percent (float):
+            Upper bound (in percent of total RAM, configured RealMemory of the
+            node) on the amount of RAM+Swap that may be used for a job.
+            {cgroup.conf::OPT_MaxSwapPercent)
+        memory_swappiness (float):
+            Configures the kernel's priority for swapping out anonymous pages
+            verses file cache pages for the job cgroup. Only for `cgroup/v1`.
+            A value of `-1.0` means that the kernel's default swappiness value
+            will be used.
+            {cgroup.conf::OPT_MemorySwappiness)
+        min_ram_space (int):
+            Lower bound (in Mebibytes) on the memory limits defined by
+            `allowed_ram_space` and `allowed_swap_space`.
+            {cgroup.conf::OPT_MinRAMSpace)
+        signal_children_processes (bool):
+            When `True`, then send signals (for cancelling, suspending,
+            resuming, etc.) to all children processes in a job/step.
+            {cgroup.conf::OPT_SignalChildrenProcesses)
+    """
     cdef public:
         mountpoint
         plugin

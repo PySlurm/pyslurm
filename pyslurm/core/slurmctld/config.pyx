@@ -1,5 +1,5 @@
 #########################################################################
-# slurmctld.pyx - pyslurm slurmctld api
+# slurmctld/config.pyx - pyslurm slurmctld config api
 #########################################################################
 # Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
@@ -36,340 +36,6 @@ from pyslurm.utils.helpers import (
 )
 from pyslurm.utils import cstr
 from typing import Union
-import time
-from enum import IntEnum
-
-
-class ShutdownMode(IntEnum):
-    """Mode of operation for shutdown action"""
-    ALL = 0
-    CORE_FILE = 1
-    CONTROLLER_ONLY = 2
-
-
-cdef class PingResponse:
-
-    def to_dict(self):
-        """Slurmctld ping response formatted as dictionary.
-
-        Returns:
-            (dict): Ping response as a dict
-
-        Examples:
-            >>> from pyslurm import slurmctld
-            >>> ctld_primary = slurmctld.Config.ping(0)
-            >>> primary_dict = ctld_primary.to_dict()
-        """
-        return instance_to_dict(self)
-
-
-def ping(index):
-    """Ping a Slurm controller
-
-    Returns:
-        (pyslurm.slurmctld.PingResponse): a ping response
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> resp = slurmctld.ping(0)
-        >>> print(resp.hostname, resp.latency)
-        slurmctl 1.246
-    """
-    t0 = time.perf_counter()
-    rc = slurm_ping(index)
-    t1 = time.perf_counter()
-
-    verify_rpc(rc)
-    ctl_cnt = slurm.slurm_conf.control_cnt
-
-    if index >= ctl_cnt:
-        raise RPCError(msg="Invalid Index specified.")
-
-    info = PingResponse()
-    info.is_primary = index == 0
-    info.is_responding = not rc
-    info.index = index
-    info.hostname = cstr.to_unicode(slurm.slurm_conf.control_machine[index])
-    info.latency = round((t1 - t0) * 1000, 3)
-
-    return info
-
-
-def ping_primary():
-    """Ping the primary Slurm Controller.
-
-    See `ping()` for more information and examples.
-
-    Returns:
-        (pyslurm.slurmctld.PingResponse): a ping response
-    """
-    return ping(0)
-
-
-def ping_backup():
-    """Ping the first backup Slurm Controller.
-
-    See `ping()` for more information and examples.
-
-    Returns:
-        (pyslurm.slurmctld.PingResponse): a ping response
-    """
-    return ping(1)
-
-
-def ping_all():
-    """Ping all Slurm Controllers.
-
-    Returns:
-        (list[pyslurm.slurmctld.PingResponse]): a list of ping responses
-
-    Raises:
-        (pyslurm.RPCError): When the ping was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> resps = slurmctld.ping_all()
-        >>> for resp in resps:
-        ...     print(resp.hostname, resp.latency)
-        ...
-        slurmctl 1.246
-        slurmctlbackup 1.373
-    """
-    cdef list out = []
-
-    ctl_cnt = slurm.slurm_conf.control_cnt
-    for i in range(ctl_cnt):
-        out.append(ping(i))
-
-    return out
-
-
-def shutdown(mode: Union[ShutdownMode, int]):
-    """Shutdown Slurm Controller or all Daemons
-
-    Args:
-        mode:
-            Whether only the Slurm controller shut be downed, or also all other
-            slurmd daemons.
-
-    Raises:
-        (pyslurm.RPCError): When shutdowning the daemons was not successful.
-    """
-    verify_rpc(slurm_shutdown(int(mode)))
-
-
-def reconfigure():
-    """Trigger Slurm Controller to reload the Config
-
-    Raises:
-        (pyslurm.RPCError): When reconfiguring was not successful.
-    """
-    verify_rpc(slurm_reconfigure())
-
-
-def takeover(index = 1):
-    """Let a Backup Slurm Controller take over as the Primary.
-
-    Args:
-        index (int, optional = 1):
-            Index of the Backup Controller that should take over. By default,
-            the `index` is `1`, meaning the next Controller configured after
-            the Primary in slurm.conf (second `SlurmctlHost` entry) will be
-            asked to take over operation.
-
-            If you have more than one backup controller configured, you can for
-            example also pass `2` as the index.
-
-    Raises:
-        (pyslurm.RPCError): When reconfiguring was not successful.
-    """
-    verify_rpc(slurm_takeover(index))
-
-
-def add_debug_flags(flags):
-    """Add DebugFlags to slurmctld
-
-    Args:
-        flags (list):
-            For an available list of possible values, please check the
-            `slurm.conf` documentation under `DebugFlags`.
-
-    Raises:
-        (pyslurm.RPCError): When setting the debug flags was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> slurmctld.add_debug_flags(["CpuFrequency"])
-    """
-    if not flags:
-        return
-
-    data = _debug_flags_str_to_int(flags)
-    if not data:
-        raise RPCError(msg="Invalid Debug Flags specified.")
-
-    verify_rpc(slurm_set_debugflags(data, 0))
-
-
-def remove_debug_flags(flags):
-    """Remove DebugFlags from slurmctld.
-
-    Args:
-        flags (list):
-            For an available list of possible values, please check the
-            `slurm.conf` documentation under `DebugFlags`.
-
-    Raises:
-        (pyslurm.RPCError): When removing the debug flags was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> slurmctld.remove_debug_flags(["CpuFrequency"])
-    """
-    if not flags:
-        return
-
-    data = _debug_flags_str_to_int(flags)
-    if not data:
-        raise RPCError(msg="Invalid Debug Flags specified.")
-
-    verify_rpc(slurm_set_debugflags(0, data))
-
-
-def clear_debug_flags():
-    """Remove all currently set debug flags from slurmctld.
-
-    Raises:
-        (pyslurm.RPCError): When removing the debug flags was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> slurmctld.clear_debug_flags()
-    """
-    current_flags = get_debug_flags()
-    if not current_flags:
-        return
-
-    data = _debug_flags_str_to_int(current_flags)
-    verify_rpc(slurm_set_debugflags(0, data))
-
-
-def get_debug_flags():
-    """Get the current list of debug flags for the slurmctld.
-
-    Raises:
-        (pyslurm.RPCError): When getting the debug flags was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> flags = slurmctld.get_debug_flags()
-        >>> print(flags)
-        ['CpuFrequency', 'Backfill']
-    """
-    return Config.load().debug_flags
-
-
-def set_log_level(level):
-    """Set the logging level for slurmctld.
-
-    Args:
-        level (str):
-            For an available list of possible values, please check the
-            `slurm.conf` documentation under `SlurmctldDebug`.
-
-    Raises:
-        (pyslurm.RPCError): When setting the log level was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> slurmctld.set_log_level("quiet")
-    """
-    data = _log_level_str_to_int(level)
-    verify_rpc(slurm_set_debug_level(data))
-
-
-def get_log_level():
-    """Get the current log level for the slurmctld.
-
-    Raises:
-        (pyslurm.RPCError): When getting the log level was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> level = slurmctld.get_log_level()
-        >>> print(level)
-        quiet
-    """
-    return Config.load().slurmctld_log_level
-
-
-def enable_scheduler_logging():
-    """Enable scheduler logging for slurmctld.
-
-    Raises:
-        (pyslurm.RPCError): When enabling scheduler logging was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> slurmctld.enable_scheduler_logging()
-    """
-    verify_rpc(slurm_set_schedlog_level(1))
-
-
-def is_scheduler_logging_enabled():
-    """Check whether scheduler logging is enabled for slurmctld.
-
-    Returns:
-       (bool): Whether scheduler logging is enabled or not.
-
-    Raises:
-        (pyslurm.RPCError): When getting the scheduler logging was not
-            successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> print(slurmctld.is_scheduler_logging_enabled())
-        False
-    """
-    return Config.load().scheduler_logging_enabled
-
-
-def set_fair_share_dampening_factor(factor):
-    """Set the FairShare Dampening factor.
-
-    Args:
-        factor (int):
-            The factor to set. A minimum value of `1`, and a maximum value of
-            `65535` are allowed.
-
-    Raises:
-        (pyslurm.RPCError): When setting the factor was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> slurmctld.set_fair_share_dampening_factor(100)
-    """
-    max_value = (2 ** 16) - 1
-    if not factor or factor >= max_value:
-        raise RPCError(msg=f"Invalid Dampening factor: {factor}. "
-                           f"Factor must be between 0 and {max_value}.")
-
-    verify_rpc(slurm_set_fs_dampeningfactor(factor))
-
-
-def get_fair_share_dampening_factor():
-    """Get the currently set FairShare Dampening factor.
-
-    Raises:
-        (pyslurm.RPCError): When getting the factor was not successful.
-
-    Examples:
-        >>> from pyslurm import slurmctld
-        >>> factor = slurmctld.get_fair_share_dampening_factor()
-        >>> print(factor)
-        100
-    """
-    return Config.load().fair_share_dampening_factor
 
 
 cdef class MPIConfig:
@@ -444,15 +110,15 @@ cdef class CgroupConfig:
         out.ignore_systemd_on_failure = _yesno_to_bool(conf.get("IgnoreSystemdOnFailure"))
         out.enable_controllers = _yesno_to_bool(conf.get("EnableControllers"))
 
-        out.allowed_ram_space = int(conf.get("AllowedRAMSpace", 100))
-        out.allowed_swap_space = int(conf.get("AllowedSwapSpace", 0))
+        out.allowed_ram_space = float(conf.get("AllowedRAMSpace", 100.0))
+        out.allowed_swap_space = float(conf.get("AllowedSwapSpace", 0.0))
         out.constrain_cores = _yesno_to_bool(conf.get("ConstrainCores", "no"))
         out.constrain_devices = _yesno_to_bool(conf.get("ConstrainDevices", "no"))
         out.constrain_ram_space = _yesno_to_bool(conf.get("ConstrainRAMSpace", "no"))
         out.constrain_swap_space = _yesno_to_bool(conf.get("ConstrainSwapSpace", "no"))
-        out.max_ram_percent = int(conf.get("MaxRAMPercent", 100))
-        out.max_swap_percent = int(conf.get("MaxSwapPercent", 100))
-        out.memory_swappiness = int(conf.get("MemorySwappiness", -1))
+        out.max_ram_percent = float(conf.get("MaxRAMPercent", 100.0))
+        out.max_swap_percent = float(conf.get("MaxSwapPercent", 100.0))
+        out.memory_swappiness = float(conf.get("MemorySwappiness", -1.0))
         out.min_ram_space = int(conf.get("MinRAMSpace", 30*1024))
 
         out.signal_children_processes = _yesno_to_bool(conf.get("SignalChildrenProcesses", "no"))
@@ -622,7 +288,21 @@ cdef class Config:
 
     @property
     def accounting_store_flags(self):
-        return _acct_store_flags_int_to_str(self.ptr.conf_flags)
+        out = []
+        flags = self.ptr.conf_flags
+
+        if flags & slurm.CONF_FLAG_SJC:
+            out.append("JOB_COMMENT")
+        if flags & slurm.CONF_FLAG_SJE:
+            out.append("JOB_ENV")
+        if flags & slurm.CONF_FLAG_SJX:
+            out.append("JOB_EXTRA")
+        if flags & slurm.CONF_FLAG_SJS:
+            out.append("JOB_SCRIPT")
+        if flags & slurm.CONF_FLAG_NO_STDIO:
+            out.append("NO_STDIO")
+
+        return out
 
     @property
     def accounting_gather_node_frequency(self):
@@ -735,7 +415,8 @@ cdef class Config:
 
     @property
     def debug_flags(self):
-        return _debug_flags_int_to_list(self.ptr.debug_flags)
+        cdef char *data = slurm.debug_flags2str(self.ptr.debug_flags)
+        return cstr.to_list_free(&data)
 
     @property
     def default_memory_per_cpu(self):
@@ -766,7 +447,9 @@ cdef class Config:
 
     @property
     def enforce_partition_limits(self):
-        return _enforce_part_limits_int_to_str(self.ptr.enforce_part_limits)
+        cdef char* data = slurm.parse_part_enforce_type_2str(
+                self.ptr.enforce_part_limits)
+        return cstr.to_unicode(data)
 
     @property
     def epilog(self):
@@ -832,8 +515,9 @@ cdef class Config:
 
     @property
     def health_check_node_state(self):
-        return _health_check_node_state_int_to_list(
+        cdef char *data = slurm.health_check_node_state_str(
                 self.ptr.health_check_node_state)
+        return cstr.to_list_free(&data)
 
     @property
     def health_check_program(self):
@@ -928,7 +612,25 @@ cdef class Config:
 
     @property
     def log_time_format(self):
-        return _log_fmt_int_to_str(self.ptr.log_fmt)
+        flag = self.ptr.log_fmt
+        if flag == slurm.LOG_FMT_ISO8601_MS:
+            return "iso8601_ms"
+        elif flag == slurm.LOG_FMT_ISO8601:
+            return "iso8601"
+        elif flag == slurm.LOG_FMT_RFC5424_MS:
+            return "rfc5424_ms"
+        elif flag == slurm.LOG_FMT_RFC5424:
+            return "rfc5424"
+        elif flag == slurm.LOG_FMT_CLOCK:
+            return "clock"
+        elif flag == slurm.LOG_FMT_SHORT:
+            return "short"
+        elif flag == slurm.LOG_FMT_THREAD_ID:
+            return "thread_id"
+        elif flag == slurm.LOG_FMT_RFC3339:
+            return "rfc3339"
+        else:
+            return None
 
     @property
     def mail_domain(self):
@@ -1066,7 +768,8 @@ cdef class Config:
 
     @property
     def priority_flags(self):
-        return _priority_flags_int_to_list(self.ptr.priority_flags)
+        cdef char *data = slurm.priority_flags_string(self.ptr.priority_flags)
+        return cstr.to_list_free(&data)
 
     @property
     def priortiy_max_age(self):
@@ -1079,7 +782,23 @@ cdef class Config:
 
     @property
     def priority_usage_reset_period(self):
-        return _priority_reset_int_to_str(self.ptr.priority_reset_period)
+        flag = self.ptr.priority_reset_period
+        if flag == slurm.PRIORITY_RESET_NONE:
+            return None
+        elif flag == slurm.PRIORITY_RESET_NOW:
+            return "NOW"
+        elif flag == slurm.PRIORITY_RESET_DAILY:
+            return "DAILY"
+        elif flag == slurm.PRIORITY_RESET_WEEKLY:
+            return "WEEKLY"
+        elif flag == slurm.PRIORITY_RESET_MONTHLY:
+            return "MONTHLY"
+        elif flag == slurm.PRIORITY_RESET_QUARTERLY:
+            return "QUARTERLY"
+        elif flag == slurm.PRIORITY_RESET_YEARLY:
+            return "YEARLY"
+        else:
+            return None
 
     @property
     def priority_type(self):
@@ -1115,7 +834,13 @@ cdef class Config:
 
     @property
     def private_data(self):
-        return _private_data_int_to_list(self.ptr.private_data)
+        cdef char tmp[128]
+        slurm.private_data_string(self.ptr.private_data, tmp, sizeof(tmp))
+        out = cstr.to_unicode(tmp)
+        if not out or out == "none":
+            return []
+
+        return out.split(",")
 
     @property
     def proctrack_type(self):
@@ -1142,7 +867,8 @@ cdef class Config:
 
     @property
     def prolog_flags(self):
-        return _prolog_flags_int_to_list(self.ptr.prolog_flags)
+        cdef char *data = slurm.prolog_flags2str(self.ptr.prolog_flags)
+        return cstr.to_list_free(&data)
 
     @property
     def propagate_resource_limits(self):
@@ -1158,7 +884,8 @@ cdef class Config:
 
     @property
     def reconfig_flags(self):
-        return _reconfig_flags_int_to_list(self.ptr.reconfig_flags)
+        cdef char *tmp = slurm.reconfig_flags2str(self.ptr.reconfig_flags)
+        return cstr.to_list_free(&tmp)
 
     @property
     def requeue_exit(self):
@@ -1306,8 +1033,8 @@ cdef class Config:
 
     @property
     def slurmctld_parameters(self):
-        # TODO: check format again
-        return cstr.to_list(self.ptr.slurmctld_params)
+        return cstr.to_dict(self.ptr.slurmctld_params, delim1=",",
+                            delim2="=", def_value=True)
 
     @property
     def slurmd_log_level(self):
@@ -1489,6 +1216,22 @@ cdef class Config:
         return cstr.to_list(self.ptr.x11_params)
 
 
+cdef dict _parse_config_key_pairs(void *ptr, owned=False):
+    cdef:
+        SlurmList conf = SlurmList.wrap(<list_t*>ptr, owned=owned)
+        SlurmListItem item
+        config_key_pair_t *key_pair
+        dict out = {}
+
+    for item in conf:
+        key_pair = <config_key_pair_t*>item.data
+        name = cstr.to_unicode(key_pair.name)
+        val = cstr.to_unicode(key_pair.value)
+        out[name] = val
+
+    return out
+
+
 def _str_to_bool(val, true_str, false_str):
     if not val:
         return False
@@ -1510,145 +1253,12 @@ def _true_false_to_bool(val):
     return _str_to_bool(val, "true", "false")
 
 
-cdef dict _parse_config_key_pairs(void *ptr, owned=False):
-    cdef:
-        SlurmList conf = SlurmList.wrap(<list_t*>ptr, owned=owned)
-        SlurmListItem item
-        config_key_pair_t *key_pair
-        dict out = {}
-
-    for item in conf:
-        key_pair = <config_key_pair_t*>item.data
-        name = cstr.to_unicode(key_pair.name)
-        val = cstr.to_unicode(key_pair.value)
-        out[name] = val
-
-    return out
-
-
-def _debug_flags_int_to_list(flags):
-    cdef char *data = slurm.debug_flags2str(flags)
-    return cstr.to_list_free(&data)
-
-
-def _debug_flags_str_to_int(flags):
-    cdef:
-        uint64_t flags_num = 0
-        char *flags_str = NULL
-
-    flags_str = cstr.from_unicode(cstr.list_to_str(flags))
-    slurm.debug_str2flags(flags_str, &flags_num)
-    return flags_num
-
-
-# https://github.com/SchedMD/slurm/blob/01a3aac7c59c9b32a9dd4e395aa5a97a8aea4f08/slurm/slurm.h#L621
-def _enforce_part_limits_int_to_str(limits):
-    cdef char* data = slurm.parse_part_enforce_type_2str(limits)
-    return cstr.to_unicode(data)
-
-
-# https://github.com/SchedMD/slurm/blob/01a3aac7c59c9b32a9dd4e395aa5a97a8aea4f08/slurm/slurm.h#L2741
-def _health_check_node_state_int_to_list(state):
-    cdef char *data = slurm.health_check_node_state_str(state)
-    return cstr.to_list_free(&data)
-
-
-def _log_fmt_int_to_str(flag):
-    if flag == slurm.LOG_FMT_ISO8601_MS:
-        return "iso8601_ms"
-    elif flag == slurm.LOG_FMT_ISO8601:
-        return "iso8601"
-    elif flag == slurm.LOG_FMT_RFC5424_MS:
-        return "rfc5424_ms"
-    elif flag == slurm.LOG_FMT_RFC5424:
-        return "rfc5424"
-    elif flag == slurm.LOG_FMT_CLOCK:
-        return "clock"
-    elif flag == slurm.LOG_FMT_SHORT:
-        return "short"
-    elif flag == slurm.LOG_FMT_THREAD_ID:
-        return "thread_id"
-    elif flag == slurm.LOG_FMT_RFC3339:
-        return "rfc3339"
-    else:
-        return None
-
-
-def _priority_flags_int_to_list(flags):
-    cdef char *data = slurm.priority_flags_string(flags)
-    return cstr.to_list_free(&data)
-
-
-def _priority_reset_int_to_str(flag):
-    if flag == slurm.PRIORITY_RESET_NONE:
-        return None
-    elif flag == slurm.PRIORITY_RESET_NOW:
-        return "NOW"
-    elif flag == slurm.PRIORITY_RESET_DAILY:
-        return "DAILY"
-    elif flag == slurm.PRIORITY_RESET_WEEKLY:
-        return "WEEKLY"
-    elif flag == slurm.PRIORITY_RESET_MONTHLY:
-        return "MONTHLY"
-    elif flag == slurm.PRIORITY_RESET_QUARTERLY:
-        return "QUARTERLY"
-    elif flag == slurm.PRIORITY_RESET_YEARLY:
-        return "YEARLY"
-    else:
-        return None
-
-
-def _private_data_int_to_list(flags):
-    cdef char tmp[128]
-    slurm.private_data_string(flags, tmp, sizeof(tmp))
-    out = cstr.to_unicode(tmp)
-    if not out or out == "none":
-        return []
-
-    return out.split(",")
-
-
-def _prolog_flags_int_to_list(flags):
-    cdef char *data = slurm.prolog_flags2str(flags)
-    return cstr.to_list_free(&data)
-
-
-def _reconfig_flags_int_to_list(flags):
-    cdef char *tmp = slurm.reconfig_flags2str(flags)
-    return cstr.to_list_free(&tmp)
-
-
 def _log_level_int_to_str(flags):
     data = cstr.to_unicode(slurm.log_num2string(flags))
     if data == "(null)":
         return None
     else:
         return data
-
-
-def _log_level_str_to_int(level):
-    cdef uint16_t data = slurm.log_string2num(str(level))
-    if u16_parse(data, zero_is_noval=False) is None:
-        raise RPCError(msg=f"Invalid Log level: {level}.")
-
-    return data
-
-
-def _acct_store_flags_int_to_str(flags):
-    cdef list out = []
-
-    if flags & slurm.CONF_FLAG_SJC:
-        out.append("JOB_COMMENT")
-    if flags & slurm.CONF_FLAG_SJE:
-        out.append("JOB_ENV")
-    if flags & slurm.CONF_FLAG_SJX:
-        out.append("JOB_EXTRA")
-    if flags & slurm.CONF_FLAG_SJS:
-        out.append("JOB_SCRIPT")
-    if flags & slurm.CONF_FLAG_NO_STDIO:
-        out.append("NO_STDIO")
-
-    return out
 
 
 def _get_memory(value, per_cpu):
