@@ -701,7 +701,7 @@ cdef class Config:
 
     @property
     def plugin_dirs(self):
-        return cstr.to_list(self.ptr.plugindir, None, ":")
+        return cstr.to_list(self.ptr.plugindir, default=None, delim=":")
 
     @property
     def plugin_stack_config(self):
