@@ -66,8 +66,11 @@ pattern = re.compile(
 #   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 #   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 class DynamicDocstrings(griffe.Extension):
-    def __init__(self, object_paths: list[str] | None = None) -> None:
-        self.object_paths = object_paths
+    def __init__(self, include_paths: list[str] | None = None,
+                 ignore_paths: list[str] | None = None) -> None:
+
+        self.include_paths = include_paths
+        self.ignore_paths = ignore_paths
 
     def on_instance(
         self,
@@ -76,7 +79,9 @@ class DynamicDocstrings(griffe.Extension):
         agent: griffe.Visitor | griffe.Inspector,
         **kwargs,
     ) -> None:
-        if self.object_paths and obj.path not in self.object_paths:
+
+        if ((self.include_paths and obj.path not in self.include_paths)
+                or (self.ignore_paths and obj.path in self.ignore_paths)):
             return
 
         try:

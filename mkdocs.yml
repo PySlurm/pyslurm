@@ -61,7 +61,9 @@ plugins:
             show_symbol_type_toc: true
             show_symbol_type_heading: true
             extensions:
-              - scripts/griffe_exts.py:DynamicDocstrings
+              - scripts/griffe_exts.py:DynamicDocstrings:
+                  ignore_paths:
+                    - pyslurm.constants.UNLIMITED
 
 markdown_extensions:
   - admonition
