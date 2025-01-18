@@ -25,11 +25,11 @@
 from pyslurm.core.error import verify_rpc, RPCError
 from pyslurm.utils.helpers import instance_to_dict
 from pyslurm.utils import cstr
+from pyslurm.utils.uint import u16_parse
 from typing import Union
 import time
 from enum import IntEnum
 from .config import Config
-from pyslurm.utils.uint import u16_parse
 from .enums import ShutdownMode
 
 
@@ -88,6 +88,12 @@ def ping_primary():
 
     Returns:
         (pyslurm.slurmctld.PingResponse): a ping response
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> resp = slurmctld.ping_primary()
+        >>> print(resp.hostname, resp.latency, resp.is_primary)
+        slurmctl 1.222 True
     """
     return ping(0)
 
@@ -99,6 +105,12 @@ def ping_backup():
 
     Returns:
         (pyslurm.slurmctld.PingResponse): a ping response
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> resp = slurmctld.ping_backup()
+        >>> print(resp.hostname, resp.latency, resp.is_primary)
+        slurmctlbackup 1.373 False
     """
     return ping(1)
 
@@ -140,6 +152,10 @@ def shutdown(mode: Union[ShutdownMode, int]):
 
     Raises:
         (pyslurm.RPCError): When shutdowning the daemons was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.shutdown(slurmctld.ShutdownMode.ALL)
     """
     verify_rpc(slurm_shutdown(int(mode)))
 
@@ -149,6 +165,10 @@ def reconfigure():
 
     Raises:
         (pyslurm.RPCError): When reconfiguring was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.reconfigure()
     """
     verify_rpc(slurm_reconfigure())
 
@@ -168,6 +188,10 @@ def takeover(index = 1):
 
     Raises:
         (pyslurm.RPCError): When reconfiguring was not successful.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> slurmctld.takeover(1)
     """
     verify_rpc(slurm_takeover(index))
 
@@ -176,7 +200,7 @@ def add_debug_flags(flags):
     """Add DebugFlags to slurmctld
 
     Args:
-        flags (list):
+        flags (list[str]):
             For an available list of possible values, please check the
             `slurm.conf` documentation under `DebugFlags`.
 
@@ -185,7 +209,7 @@ def add_debug_flags(flags):
 
     Examples:
         >>> from pyslurm import slurmctld
-        >>> slurmctld.add_debug_flags(["CpuFrequency"])
+        >>> slurmctld.add_debug_flags(["CpuFrequency", "Backfill"])
     """
     if not flags:
         return
@@ -201,7 +225,7 @@ def remove_debug_flags(flags):
     """Remove DebugFlags from slurmctld.
 
     Args:
-        flags (list):
+        flags (list[str]):
             For an available list of possible values, please check the
             `slurm.conf` documentation under `DebugFlags`.
 
@@ -231,6 +255,8 @@ def clear_debug_flags():
     Examples:
         >>> from pyslurm import slurmctld
         >>> slurmctld.clear_debug_flags()
+        >>> print(slurmctld.get_debug_flags())
+        []
     """
     current_flags = get_debug_flags()
     if not current_flags:
@@ -269,6 +295,9 @@ def set_log_level(level):
     Examples:
         >>> from pyslurm import slurmctld
         >>> slurmctld.set_log_level("quiet")
+        >>> log_level = slurmctld.get_log_level()
+        >>> print(log_level)
+        quiet
     """
     data = _log_level_str_to_int(level)
     verify_rpc(slurm_set_debug_level(data))
@@ -282,8 +311,8 @@ def get_log_level():
 
     Examples:
         >>> from pyslurm import slurmctld
-        >>> level = slurmctld.get_log_level()
-        >>> print(level)
+        >>> log_level = slurmctld.get_log_level()
+        >>> print(log_level)
         quiet
     """
     return Config.load().slurmctld_log_level
@@ -298,6 +327,8 @@ def enable_scheduler_logging():
     Examples:
         >>> from pyslurm import slurmctld
         >>> slurmctld.enable_scheduler_logging()
+        >>> print(slurmctld.is_scheduler_logging_enabled())
+        True
     """
     verify_rpc(slurm_set_schedlog_level(1))
 
@@ -334,6 +365,8 @@ def set_fair_share_dampening_factor(factor):
     Examples:
         >>> from pyslurm import slurmctld
         >>> slurmctld.set_fair_share_dampening_factor(100)
+        >>> print(slurmctld.get_fair_share_dampening_factor)
+        100
     """
     max_value = (2 ** 16) - 1
     if not factor or factor >= max_value:

@@ -40,8 +40,21 @@ from pyslurm.utils cimport cstr
 
 
 cdef class PingResponse:
-    """Slurm Controller Ping response information"""
+    """Slurm Controller Ping response information
 
+    Attributes:
+        is_primary (bool):
+            Whether this Slurm Controller is the primary Server.
+        is_responding (bool):
+            Whether this Slurm Controller actually responds to the ping.
+        index (int):
+            The index in the slurm.conf. For example, 0 means primary.
+        hostname (str):
+            Hostname of the Controller
+        latency (float):
+            The latency which the Controller responds with. This is in
+            milliseconds.
+    """
     cdef public:
         is_primary
         is_responding

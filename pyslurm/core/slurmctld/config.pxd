@@ -79,6 +79,12 @@ cdef class Config:
     All attributes in this class are read-only.
 
     Attributes:
+        cgroup_config (pyslurm.slurmctld.CgroupConfig):
+            The CGroup Configuration data
+        accounting_gather_config (pyslurm.slurmctld.AccountingGatherConfig):.
+            The Accounting Gather Configuration data.
+        mpi_config (pyslurm.slurmctld.MPIConfig):
+            The MPI Configuration data.
         accounting_storage_enforce (list[str]):
             List of enforcements on Job submissions.
 
@@ -1104,7 +1110,7 @@ cdef class MPIConfig:
             of the job have the same architecture.
 
             {mpi.conf#OPT_PMIxDirectSameArch}
-        pmix_environment (dict[str, Union[str, int]):
+        pmix_environment (dict[str, Union[str, int]]):
             Environment variables to bet set in the Job environment, used by
             PMIx.
 

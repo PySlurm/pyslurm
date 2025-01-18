@@ -41,7 +41,9 @@ from typing import Union
 cdef class MPIConfig:
 
     def __init__(self):
-        raise RuntimeError("Cannot instantiate class directly")
+        raise RuntimeError("Cannot instantiate class directly. "
+                           "Use slurmctld.Config.load() and access the "
+                           "mpi_config attribute there")
 
     def to_dict(self):
         """MPI config formatted as a dictionary.
@@ -82,7 +84,9 @@ cdef class MPIConfig:
 cdef class CgroupConfig:
 
     def __init__(self):
-        raise RuntimeError("Cannot instantiate class directly")
+        raise RuntimeError("Cannot instantiate class directly. "
+                           "Use slurmctld.Config.load() and access the "
+                           "cgroup_config attribute there")
 
     def to_dict(self):
         """Cgroup config formatted as a dictionary.
@@ -128,7 +132,9 @@ cdef class CgroupConfig:
 cdef class AccountingGatherConfig:
 
     def __init__(self):
-        raise RuntimeError("Cannot instantiate class directly")
+        raise RuntimeError("Cannot instantiate class directly. "
+                           "Use slurmctld.Config.load() and access the "
+                           "accounting_gather_config attribute there")
 
     def to_dict(self):
         """AccountingGather config formatted as a dictionary.
@@ -152,10 +158,8 @@ cdef class AccountingGatherConfig:
         out.energy_ipmi_frequency = int(conf.get("EnergyIPMIFrequency", 30))
         out.energy_ipmi_calc_adjustment = _yesno_to_bool(
                 conf.get("EnergyIPMICalcAdjustment"))
-
-        # TODO: maybe dict?
-        out.energy_ipmi_power_sensors = conf.get("EnergyIPMIPowerSensors")
-
+        out.energy_ipmi_power_sensors = cstr.to_dict(
+                conf.get("EnergyIPMIPowerSensors", ""), delim1=";", delim2="=")
         out.energy_ipmi_user_name = conf.get("EnergyIPMIUsername")
         out.energy_ipmi_password = conf.get("EnergyIPMIPassword")
         out.energy_ipmi_timeout = int(conf.get("EnergyIPMITimeout", 10))
@@ -189,22 +193,6 @@ cdef class Config:
     def __dealloc__(self):
         slurm_free_ctl_conf(self.ptr)
         self.ptr = NULL
-
-    @staticmethod
-    def load_scontrol():
-        cdef Config conf = Config.__new__(Config)
-        verify_rpc(slurm_load_ctl_conf(0, &conf.ptr))
-
-        out = _parse_config_key_pairs(slurm_ctl_conf_2_key_pairs(conf.ptr),
-                                      owned=True)
-        out["CgroupSupportConfiguration"] = _parse_config_key_pairs(
-                conf.ptr.cgroup_conf)
-        out["AccountingGatherConfiguration"] = _parse_config_key_pairs(
-                conf.ptr.acct_gather_conf)
-        out["MPIPluginsConfiguration"] = _parse_config_key_pairs(
-                conf.ptr.mpi_conf)
-
-        return out
 
     @staticmethod
     def load():
@@ -351,7 +339,6 @@ cdef class Config:
 
     @property
     def batch_start_timeout(self):
-        # seconds
         return u16_parse(self.ptr.batch_start_timeout)
 
     @property
@@ -394,7 +381,6 @@ cdef class Config:
 
     @property
     def complete_wait_time(self):
-        # seconds
         return u16_parse(self.ptr.complete_wait)
 
     @property
@@ -442,7 +428,6 @@ cdef class Config:
 
     @property
     def eio_timeout(self):
-        # seconds
         return u16_parse(self.ptr.eio_timeout)
 
     @property
@@ -458,7 +443,6 @@ cdef class Config:
 
     @property
     def epilog_msg_time(self):
-        # ms
         return u32_parse(self.ptr.epilog_msg_time)
 
     @property
@@ -525,7 +509,6 @@ cdef class Config:
 
     @property
     def inactive_limit(self):
-        # seconds
         return u16_parse(self.ptr.inactive_limit)
 
     @property
@@ -598,7 +581,6 @@ cdef class Config:
 
     @property
     def kill_wait_time(self):
-        # seconds
         return u16_parse(self.ptr.kill_wait)
 
     @property
@@ -754,7 +736,6 @@ cdef class Config:
 
     @property
     def priority_decay_half_life(self):
-        # seconds
         return u32_parse(self.ptr.priority_decay_hl)
 
     @property
@@ -852,7 +833,6 @@ cdef class Config:
 
     @property
     def prolog_epilog_timeout(self):
-        # seconds
         return u16_parse(self.ptr.prolog_epilog_timeout)
 
     @property
@@ -942,7 +922,6 @@ cdef class Config:
 
     @property
     def scheduler_time_slice(self):
-        # seconds
         return u16_parse(self.ptr.sched_time_slice)
 
     @property
@@ -1027,7 +1006,6 @@ cdef class Config:
 
     @property
     def slurmctld_timeout(self):
-        # seconds
         return u16_parse(self.ptr.slurmctld_timeout)
 
     @property
