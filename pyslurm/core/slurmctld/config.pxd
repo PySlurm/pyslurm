@@ -408,7 +408,7 @@ cdef class Config:
 
             {slurm.conf#OPT_JobCompType}
         job_completion_user (str):
-            User account user fo accessing the job completion database.
+            User account user for accessing the job completion database.
 
             {slurm.conf#OPT_JobCompUser}
         job_container_type (str):
@@ -454,7 +454,7 @@ cdef class Config:
 
             {slurm.conf#OPT_LogTimeFormat}
         mail_domain (str):
-            Domain name to qualify usernames if email address is not explicity
+            Domain name to qualify usernames if email address is not explicitly
             given with the `--mail-user` option.
 
             {slurm.conf#OPT_MailDomain}
@@ -486,11 +486,11 @@ cdef class Config:
 
             {slurm.conf#OPT_MaxJobId}
         max_memory_per_cpu (int):
-            Maximum real memory size avialable per allocated CPU in Mebibytes.
+            Maximum real memory size available per allocated CPU in Mebibytes.
 
             {slurm.conf#OPT_MaxMemPerCPU}
         max_memory_per_node (int):
-            Maximum real memory size avialable per allocated Node in Mebibytes.
+            Maximum real memory size available per allocated Node in Mebibytes.
 
             {slurm.conf#OPT_MaxMemPerNode}
         max_node_count (int):
