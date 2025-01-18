@@ -30,13 +30,7 @@ import time
 from enum import IntEnum
 from .config import Config
 from pyslurm.utils.uint import u16_parse
-
-
-class ShutdownMode(IntEnum):
-    """Mode of operation for shutdown action"""
-    ALL = 0
-    CORE_FILE = 1
-    CONTROLLER_ONLY = 2
+from .enums import ShutdownMode
 
 
 cdef class PingResponse:

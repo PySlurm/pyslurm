@@ -4,9 +4,9 @@ from .config import (
    AccountingGatherConfig,
    CgroupConfig,
 )
+from .enums import ShutdownMode
 from .base import (
     PingResponse,
-    ShutdownMode,
     ping,
     ping_primary,
     ping_backup,
