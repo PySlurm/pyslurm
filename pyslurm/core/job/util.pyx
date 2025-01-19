@@ -246,37 +246,6 @@ def cpu_freq_str_to_int(freq):
     raise ValueError(f"Invalid cpu freq value: {freq}.")
 
 
-def cpu_freq_int_to_str(freq):
-    """Convert a numerical cpufreq value to its string representation."""
-    if freq == slurm.CPU_FREQ_LOW:
-        return "LOW"
-    elif freq == slurm.CPU_FREQ_MEDIUM:
-        return "MEDIUM"
-    elif freq == slurm.CPU_FREQ_HIGHM1:
-        return "HIGHM1"
-    elif freq == slurm.CPU_FREQ_HIGH:
-        return "HIGH"
-    elif freq == slurm.CPU_FREQ_CONSERVATIVE:
-        return "CONSERVATIVE"
-    elif freq == slurm.CPU_FREQ_PERFORMANCE:
-        return "PERFORMANCE"
-    elif freq == slurm.CPU_FREQ_POWERSAVE:
-        return "POWERSAVE"
-    elif freq == slurm.CPU_FREQ_USERSPACE:
-        return "USERSPACE"
-    elif freq == slurm.CPU_FREQ_ONDEMAND:
-        return "ONDEMAND"
-    elif freq == slurm.CPU_FREQ_SCHEDUTIL:
-        return "SCHEDUTIL"
-    elif freq & slurm.CPU_FREQ_RANGE_FLAG:
-        return None
-    elif freq == slurm.NO_VAL or freq == 0:
-        return None
-    else:
-        # This is in kHz
-        return freq
-
-
 def dependency_str_to_dict(dep):
     if not dep:
         return None

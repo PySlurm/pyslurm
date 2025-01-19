@@ -32,7 +32,10 @@ def test_create_instance():
 
 
 def test_parse_all():
-    assert Partition("normal").to_dict()
+    part = Partition("normal")
+    assert part.to_dict()
+    assert part.allowed_submit_nodes == ["ALL"]
+    assert part.allowed_accounts == ["ALL"]
 
 
 def test_parse_memory():

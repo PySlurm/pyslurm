@@ -249,6 +249,7 @@ cdef extern int slurm_addto_step_list(List step_list, char *names)
 cdef extern int slurmdb_report_set_start_end_time(time_t *start, time_t *end)
 cdef extern uint16_t slurm_get_track_wckey()
 cdef extern void slurm_sprint_cpu_bind_type(char *str, cpu_bind_type_t cpu_bind_type)
+cdef extern void slurm_accounting_enforce_string(uint16_t enforce, char *str, int str_len)
 
 # Slurm bit functions
 
@@ -290,3 +291,22 @@ cdef extern void slurmdb_init_tres_cond(slurmdb_tres_cond_t *tres, bool free_it)
 
 cdef extern void slurm_free_update_part_msg(update_part_msg_t *msg)
 cdef extern void slurm_free_partition_info_members(partition_info_t *node)
+
+#
+# Slurmctld stuff
+#
+
+cdef extern char *debug_flags2str(uint64_t debug_flags)
+cdef extern int debug_str2flags(const char* debug_flags, uint64_t *flags_out)
+cdef extern char *parse_part_enforce_type_2str(uint16_t type)
+cdef extern char *health_check_node_state_str(uint32_t node_state)
+cdef extern char *priority_flags_string(uint16_t priority_flags)
+cdef extern char* prolog_flags2str(uint16_t prolog_flags)
+cdef extern uint16_t prolog_str2flags(char *prolog_flags)
+cdef extern char *log_num2string(uint16_t inx)
+cdef extern uint16_t log_string2num(const char *name)
+cdef extern char *private_data_string(uint16_t private_data, char *str, int str_len)
+cdef extern char *reconfig_flags2str(uint16_t reconfig_flags)
+cdef extern uint16_t reconfig_str2flags(char *reconfig_flags)
+cdef extern char *select_type_param_string(uint16_t select_type_param)
+cdef extern char *job_defaults_str(list_t *in_list)

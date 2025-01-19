@@ -2,7 +2,7 @@
 # partition.pyx - interface to work with partitions in slurm
 #########################################################################
 # Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
-# Copyright (C) 2023 PySlurm Developers
+# Copyright (C) 2025 PySlurm Developers
 #
 # This file is part of PySlurm
 #
@@ -31,6 +31,7 @@ from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
 from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm.core.slurmctld.config import _get_memory
 from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     uid_to_name,
@@ -832,21 +833,3 @@ cdef _concat_job_default_str(typ, val, char **job_defaults_str):
         current.update({typ : _val})
 
     cstr.from_dict(job_defaults_str, current)
-
-
-def _get_memory(value, per_cpu):
-    if value != slurm.NO_VAL64:
-        if value & slurm.MEM_PER_CPU and per_cpu:
-            if value == slurm.MEM_PER_CPU:
-                return UNLIMITED
-            return u64_parse(value & (~slurm.MEM_PER_CPU))
-
-        # For these values, Slurm interprets 0 as being equal to
-        # INFINITE/UNLIMITED
-        elif value == 0 and not per_cpu:
-            return UNLIMITED
-
-        elif not value & slurm.MEM_PER_CPU and not per_cpu:
-            return u64_parse(value)
-
-    return None

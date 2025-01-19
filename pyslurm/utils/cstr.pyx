@@ -96,14 +96,30 @@ cdef fmalloc(char **old, val):
         old[0] = NULL
 
 
-cpdef list to_list(char *str_list, default=[]):
+cpdef list to_list(char *str_list, default=None, delim=","):
     """Convert C-String to a list."""
     cdef str ret = to_unicode(str_list)
 
     if not ret:
-        return default
+        return [] if default is None else default
 
-    return ret.split(",")
+    return ret.split(delim)
+
+
+cdef list to_list_free(char **str_list):
+    out = to_list(str_list[0])
+    xfree(str_list[0])
+    return out
+
+
+cdef list to_list_with_count(char **str_list, cnt):
+    cdef list out = []
+
+    if cnt and cnt != slurm.NO_VAL:
+        for i in range(cnt):
+            out.append(to_unicode(str_list[i]))
+
+    return out
 
 
 def list_to_str(vals, delim=","):
@@ -125,7 +141,8 @@ cdef from_list2(char **p1, char **p2, vals, delim=","):
     from_list(p2, vals, delim)
 
 
-cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
+cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="=",
+                   def_value=None):
     """Convert a char* key=value pair to dict.
 
     With a char* Slurm represents key-values pairs usually in the form of:
@@ -144,6 +161,8 @@ cpdef dict to_dict(char *str_dict, str delim1=",", str delim2="="):
         if delim2 in kv:
             key, val = kv.split(delim2, 1)
             out[key] = int(val) if val.isdigit() else val
+        elif def_value is not None:
+            out[kv] = def_value
 
     return out
 
