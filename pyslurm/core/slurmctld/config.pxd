@@ -705,7 +705,7 @@ cdef class Config:
             Program to be executed on each compute node to reboot it.
 
             {slurm.conf#OPT_RebootProgram}
-        reconfig_flags (lisr[str]):
+        reconfig_flags (list[str]):
             List of flags to control various actions that may be taken when a
             reconfigure command is issued (for example with `scontrol
             reconfig`).

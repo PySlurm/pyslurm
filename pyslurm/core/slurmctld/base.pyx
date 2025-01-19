@@ -177,10 +177,10 @@ def takeover(index = 1):
     """Let a Backup Slurm Controller take over as the Primary.
 
     Args:
-        index (int, optional = 1):
+        index (int, optional=1):
             Index of the Backup Controller that should take over. By default,
             the `index` is `1`, meaning the next Controller configured after
-            the Primary in slurm.conf (second `SlurmctlHost` entry) will be
+            the Primary in `slurm.conf` (second `SlurmctldHost` entry) will be
             asked to take over operation.
 
             If you have more than one backup controller configured, you can for
