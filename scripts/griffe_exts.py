@@ -97,7 +97,10 @@ class DynamicDocstrings(griffe.Extension):
         if not docstring or not obj.docstring:
             return
 
-        # Update the object instance with the evaluated docstring.
         fmt_docstring = pattern.sub(replace_with_slurm_docs_url, docstring)
+        if fmt_docstring == docstring:
+            # No need to update the docstring if nothing has changed
+            return
+
         docstring = inspect.cleandoc(fmt_docstring)
         obj.docstring.value = docstring
