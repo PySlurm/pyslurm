@@ -1,7 +1,7 @@
 #########################################################################
-# slurmctld.pxd - pyslurm slurmctld api
+# slurmctld/enums.pyx - pyslurm slurmctld enums
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -22,18 +22,17 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm cimport slurm
-from pyslurm.slurm cimport (
-    slurm_conf_t,
-    slurm_load_ctl_conf,
-    slurm_free_ctl_conf,
-    slurm_preempt_mode_string,
-    try_xmalloc,
-)
-from pyslurm.utils cimport cstr
-from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
-from pyslurm.utils.uint cimport *
+from enum import IntEnum
+
+class ShutdownMode(IntEnum):
+    """Mode of operation for shutdown action."""
+    ALL = 0
+    CORE_FILE = 1
+    CONTROLLER_ONLY = 2
 
 
-cdef class Config:
-    cdef slurm_conf_t *ptr
+# A bit hacky, but it works for now. Putting the docstring under the enum value
+# does not work unfortunately.
+ShutdownMode.ALL.__doc__ = "Shutdown all daemons (`slurmctld` and `slurmd`)"
+ShutdownMode.CORE_FILE.__doc__ = "Shutdown only `slurmctld`, and create a coredump"
+ShutdownMode.CONTROLLER_ONLY.__doc__ = "Shutdown only `slurmctld`, without a coredump"

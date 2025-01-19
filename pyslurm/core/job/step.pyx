@@ -34,8 +34,8 @@ from pyslurm.utils.helpers import (
     uid_to_name,
     humanize_step_id,
     dehumanize_step_id,
+    cpu_freq_int_to_str,
 )
-from pyslurm.core.job.util import cpu_freq_int_to_str
 from pyslurm.utils.ctime import (
     secs_to_timestr,
     mins_to_timestr,

@@ -24,6 +24,7 @@ import pytest
 import pyslurm
 from pyslurm import Job
 from pyslurm.core.job.util import *
+from pyslurm.utils.helpers import cpu_freq_int_to_str
 
 def test_create_instance():
     job = Job(9999)

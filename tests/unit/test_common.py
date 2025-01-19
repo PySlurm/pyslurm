@@ -1,7 +1,7 @@
 #########################################################################
 # test_common.py - common utility tests
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -107,6 +107,25 @@ class TestStrings:
         input_str = "cpu=2,mem=11G,gres/gpu=1,gres/gpu:nvidia-a100=1"
         assert cstr.to_dict(input_str) == expected_dict
         assert cstr.to_dict("") == {}
+
+        expected_dict = {"param1": True, "param2": "opt1", "param3": True}
+        input_str = "param1,param2=opt1,param3"
+        assert cstr.to_dict(input_str, delim1=",", delim2="=", def_value=True)
+
+        expected_dict = {"license1": 1, "license2": 5, "license3": 20}
+        input_str = "license1,license2:5,license3:20"
+        assert cstr.to_dict(input_str, delim1=",", delim2=":", def_value=1)
+
+    def test_str_to_list(self):
+        expected_list = ["val1", "val2", "val3"]
+        input_str = "val1,val2,val3"
+        assert cstr.to_list(input_str) == expected_list
+
+        expected_list = ["/path/to/dir1", "/path/to/dir2"]
+        input_str = "/path/to/dir1:/path/to/dir2"
+        assert cstr.to_list(input_str, default=None, delim=":") == expected_list
+
+        assert cstr.to_list("") == []
 
     def test_dict_to_str(self):
         input_dict = {"key1": "value1", "key2": "value2"}
@@ -253,32 +272,6 @@ class TestUint:
         assert part.is_root_only
         assert not part.is_default
         assert not part.allow_root_jobs
-
-
-#   def _uint_bool_impl(self, arg):
-#       js = JobSubmitDescription()
-
-#       setattr(js, arg, True)
-#       assert getattr(js, arg) == True
-
-#       setattr(js, arg, False)
-#       assert getattr(js, arg) == False
-
-#       # Set to true again to make sure toggling actually works.
-#       setattr(js, arg, True)
-#       assert getattr(js, arg) == True
-
-#       setattr(js, arg, None)
-#       assert getattr(js, arg) == False
-
-#   def test_u8_bool(self):
-#       self._uint_bool_impl("overcommit")
-
-#   def test_u16_bool(self):
-#       self._uint_bool_impl("requires_contiguous_nodes")
-
-#   def test_u64_bool_flag(self):
-#       self._uint_bool_impl("kill_on_invalid_dependency")
 
 
 class TestTime:
