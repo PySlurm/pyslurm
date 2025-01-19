@@ -50,6 +50,7 @@ from pyslurm.utils.helpers import (
     _getpwall_to_dict,
     instance_to_dict,
     _get_exit_code,
+    cpu_freq_int_to_str,
 )
 
 
