@@ -752,8 +752,7 @@ cdef class Config:
         return cstr.to_list_free(&data)
 
     @property
-    def priortiy_max_age(self):
-        # TODO: seconds or minutes?
+    def priority_max_age(self):
         return u32_parse(self.ptr.priority_max_age)
 
     @property
@@ -912,7 +911,6 @@ cdef class Config:
 
     @property
     def scheduler_logging_enabled(self):
-        # TODO: check again
         return u16_parse_bool(self.ptr.sched_log_level)
 
     @property
@@ -1184,8 +1182,7 @@ cdef class Config:
         return u16_parse(self.ptr.vsize_factor)
 
     @property
-    def default_job_wait_time(self):
-        # TODO: reconsider name
+    def wait_time(self):
         return u16_parse(self.ptr.wait_time)
 
     @property

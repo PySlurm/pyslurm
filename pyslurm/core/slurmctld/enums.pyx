@@ -33,6 +33,6 @@ class ShutdownMode(IntEnum):
 
 # A bit hacky, but it works for now. Putting the docstring under the enum value
 # does not work unfortunately.
-ShutdownMode.ALL.__doc__ = "Shutdown all daemons (slurmctld and slurmd)"
-ShutdownMode.CORE_FILE.__doc__ = "Shutdown only slurmctld, and create a coredump"
-ShutdownMode.CONTROLLER_ONLY.__doc__ = "Shutdown only slurmctld, without a coredump"
+ShutdownMode.ALL.__doc__ = "Shutdown all daemons (`slurmctld` and `slurmd`)"
+ShutdownMode.CORE_FILE.__doc__ = "Shutdown only `slurmctld`, and create a coredump"
+ShutdownMode.CONTROLLER_ONLY.__doc__ = "Shutdown only `slurmctld`, without a coredump"

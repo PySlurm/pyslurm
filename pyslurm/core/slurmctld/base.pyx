@@ -197,7 +197,7 @@ def takeover(index = 1):
 
 
 def add_debug_flags(flags):
-    """Add DebugFlags to slurmctld
+    """Add DebugFlags to `slurmctld`
 
     Args:
         flags (list[str]):
@@ -222,7 +222,7 @@ def add_debug_flags(flags):
 
 
 def remove_debug_flags(flags):
-    """Remove DebugFlags from slurmctld.
+    """Remove DebugFlags from `slurmctld`.
 
     Args:
         flags (list[str]):
@@ -247,7 +247,7 @@ def remove_debug_flags(flags):
 
 
 def clear_debug_flags():
-    """Remove all currently set debug flags from slurmctld.
+    """Remove all currently set debug flags from `slurmctld`.
 
     Raises:
         (pyslurm.RPCError): When removing the debug flags was not successful.
@@ -267,7 +267,7 @@ def clear_debug_flags():
 
 
 def get_debug_flags():
-    """Get the current list of debug flags for the slurmctld.
+    """Get the current list of debug flags for the `slurmctld`.
 
     Raises:
         (pyslurm.RPCError): When getting the debug flags was not successful.
@@ -282,7 +282,7 @@ def get_debug_flags():
 
 
 def set_log_level(level):
-    """Set the logging level for slurmctld.
+    """Set the logging level for `slurmctld`.
 
     Args:
         level (str):
@@ -304,7 +304,7 @@ def set_log_level(level):
 
 
 def get_log_level():
-    """Get the current log level for the slurmctld.
+    """Get the current log level for the `slurmctld`.
 
     Raises:
         (pyslurm.RPCError): When getting the log level was not successful.
@@ -319,7 +319,7 @@ def get_log_level():
 
 
 def enable_scheduler_logging():
-    """Enable scheduler logging for slurmctld.
+    """Enable scheduler logging for `slurmctld`.
 
     Raises:
         (pyslurm.RPCError): When enabling scheduler logging was not successful.
@@ -334,7 +334,7 @@ def enable_scheduler_logging():
 
 
 def is_scheduler_logging_enabled():
-    """Check whether scheduler logging is enabled for slurmctld.
+    """Check whether scheduler logging is enabled for `slurmctld`.
 
     Returns:
        (bool): Whether scheduler logging is enabled or not.

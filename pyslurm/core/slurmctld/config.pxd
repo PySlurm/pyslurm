@@ -441,7 +441,7 @@ cdef class Config:
             `SIGTERM` and `SIGKILL` signals upon reaching its time limit.
 
             {slurm.conf#OPT_KillWait}
-        launch_parameters (list[str])
+        launch_parameters (list[str]):
             Options for the job launch plugin.
 
             {slurm.conf#OPT_LaunchParameters}
@@ -606,8 +606,8 @@ cdef class Config:
 
             {slurm.conf#OPT_PriorityFlags}
         priority_max_age (int):
-            Job age that is needed before receiving the maximum age factor in
-            computing priority.
+            Job age (in seconds) that is needed before receiving the maximum
+            age factor in computing priority.
 
             {slurm.conf#OPT_PriorityMaxAge}
         priority_parameters (str):
@@ -1048,7 +1048,7 @@ cdef class Config:
             percentage of its real memory limit.
 
             {slurm.conf#OPT_VSizeFactor}
-        default_job_wait_time (int):
+        wait_time (int):
             Specifies how many seconds the srun command should by default wait
             after the first task terminates before terminating all remaining
             tasks.
@@ -1077,7 +1077,7 @@ cdef class Config:
 #
 # Copyright (C) 2022 SchedMD LLC.
 cdef class MPIConfig:
-    """Slurm MPI Config (mpi.conf)
+    """Slurm MPI Config (`mpi.conf`)
 
     Attributes:
         pmix_cli_tmp_dir_base (str):
@@ -1164,7 +1164,7 @@ cdef class MPIConfig:
 # pyslurm/slurm/SLURM_DISCLAIMER).
 # Copyright (C) 2010-2022 SchedMD LLC.
 cdef class CgroupConfig:
-    """Slurm Cgroup Config (cgroup.conf)
+    """Slurm Cgroup Config (`cgroup.conf`)
 
     Attributes:
         mountpoint (str):
@@ -1292,7 +1292,7 @@ cdef class CgroupConfig:
 # Copyright (C) 2012-2013 Bull.
 # Copyright (C) 2012-2022 SchedMD LLC.
 cdef class AccountingGatherConfig:
-    """Slurm Accounting Gather Config (acct_gather.conf)
+    """Slurm Accounting Gather Config (`acct_gather.conf`)
 
     Attributes:
         energy_ipmi_frequency (int):
