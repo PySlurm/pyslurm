@@ -45,8 +45,49 @@ cdef extern const char *rpc_num2string(uint16_t msg_type)
 cdef parse_response(stats_info_response_msg_t *ptr)
 
 
-cdef class RPCTypeStatistic:
+cdef class PendingRPC:
+    """A RPC in pending State
 
+    Attributes:
+        id (int):
+            The numeric ID of the RPC type.
+        name (str):
+            The string representation of the RPC.
+        count (int):
+            How many RPCs are pending of this type.
+    """
+    cdef public:
+        id
+        name
+        count
+
+
+cdef class RPCTypeStatistic:
+    """Statistics for a specific RPC Type
+
+    Attributes:
+        id (int):
+            The numeric ID of the RPC Type
+        name (str):
+            The string representation of the RPC
+        count (int):
+            How many times this RPC was issued since the last time the
+            statistics were cleared.
+        time (int):
+            How much total time it has taken to process this RPC. The unit is
+            microseconds
+        average_time (int):
+            How much time on average it has taken to process this RPC. The unit
+            is microseconds.
+        queued (int):
+            How many of these RPCs are still queued.
+        dropped (int):
+            How many of these RPCs have been dropped.
+        cycle_last (int):
+            Number of RPCs processed within the last RPC queue cycle
+        cycle_max (int):
+            Maximum number of RPCs processed within a RPC queue cycle
+    """
     cdef public:
         id
         name
@@ -70,28 +111,195 @@ cdef class RPCUserStatistic:
 
 
 cdef class RPCTypeStatistics(dict):
+    """Collection of [](pyslurm.slurmctld.RPCTypeStatistic)'s
 
+    Attributes:
+        count (int):
+            Total amount of RPCs made to the `slurmctld` since last reset.
+        time (int):
+            Total amount of time it has taken to process all RPCs made yet.
+        queued (int):
+            Total amount of RPCs queued.
+        queued (int):
+            Total amount of RPCs dropped.
+    """
     @staticmethod
     cdef RPCTypeStatistics from_ptr(stats_info_response_msg_t *ptr, rpc_queue_enabled)
 
 
 cdef class RPCUserStatistics(dict):
+    """Collection of [](pyslurm.slurmctld.RPCUserStatistic)'s
 
+    Attributes:
+        count (int):
+            Total amount of RPCs made to the `slurmctld` since last reset.
+        time (int):
+            Total amount of time it has taken to process all RPCs made yet.
+    """
     @staticmethod
     cdef RPCUserStatistics from_ptr(stats_info_response_msg_t *ptr)
 
 
-cdef class Statistics:
+cdef class PendingRPCStatistics(dict):
+    """Collection of [](pyslurm.slurmctld.PendingRPCStatistics)
 
+    Attributes:
+        count (int):
+            Total amount of RPCs made to the `slurmctld` since last reset.
+    """
+    @staticmethod
+    cdef PendingRPCStatistics from_ptr(stats_info_response_msg_t *ptr)
+
+
+cdef class Statistics:
+    """Statistics for the `slurmctld`.
+
+    Attributes:
+        request_time (int):
+            Time when the data was requested. This is a unix timestamp.
+        data_since (int):
+            The date when `slurmctld` started gathering statistics. This is a
+            unix timestamp.
+        server_thread_count (int):
+            The number of current active slurmctld threads.
+        rpc_queue_enabled (bool):
+            Whether RPC queuing is enabled.
+        agent_queue_size (int):
+            Count of enqueued outgoing RPC requests in an internal retry list.
+        agent_count (int):
+            Number of agent threads.
+        agent_thread_count (int):
+            Total count of active threads created by all the agent threads.
+        dbd_agent_queue_size (int):
+            Number of messages intended for the `slurmdbd`. If the `slurmdbd`
+            goes down, then this number starts going up.
+        jobs_submitted (int):
+            Number of jobs submitted since last reset
+        jobs_started (int):
+            Number of jobs started since last reset. This includes backfilled
+            jobs.
+        jobs_completed (int):
+            Number of jobs completed since last reset.
+        jobs_canceled (int):
+            Number of jobs canceled since last reset.
+        jobs_failed (int):
+            Number of jobs failed due to slurmd or other internal issues since
+            last reset.
+        jobs_pending (int):
+            Number of jobs pending.
+        jobs_running (int):
+            Number of jobs running.
+        schedule_cycle_last (int):
+            Time in microseconds for last scheduling cycle.
+        schedule_cycle_max (int):
+            Maximum time in microseconds for any scheduling cycle since last
+            reset.
+        schedule_cycle_counter (int):
+            Total run time in microseconds for all scheduling cycles since last
+            reset.
+        schedule_cycle_mean (int):
+            Mean time in microseconds for all scheduling cycles since last
+            reset.
+        schedule_cycle_mean_depth (int):
+            Mean of cycle depth. Depth means number of jobs processed in a
+            scheduling cycle.
+        schedule_cycles_per_minute (int):
+            Counter of scheduling executions per minute.
+        schedule_queue_length (int):
+            Length of jobs pending queue.
+        backfill_active (bool):
+            Whether these statistics have been gathered during backfilling
+            operation.
+        backfilled_jobs (int):
+            Number of jobs started thanks to backfilling since last slurm
+            start.
+        last_backfilled_jobs (int):
+            Number of jobs started thanks to backfilling since last time stats
+            where reset. By default these values are reset at midnight UTC
+            time.
+        backfilled_het_jobs (int):
+            Number of heterogeneous job components started thanks to
+            backfilling since last Slurm start.
+        backfill_cycle_counter (int):
+            Number of backfill scheduling cycles since last reset.
+        backfill_last_cycle_when (int):
+            Time when last backfill scheduling cycle happened. This is a unix
+            timestamp.
+        backfill_last_cycle (int):
+            Time in microseconds of last backfill scheduling cycle. It counts
+            only execution time, removing sleep time inside a scheduling cycle
+            when it executes for an extended period time. Note that locks are
+            released during the sleep time so that other work can proceed.
+        backfill_cycle_max (int):
+            Time in microseconds of maximum backfill scheduling cycle execution
+            since last reset. It counts only execution time, removing sleep
+            time inside a scheduling cycle when it executes for an extended
+            period time. Note that locks are released during the sleep time so
+            that other work can proceed.
+        backfill_cycle_mean (int):
+            Mean time in microseconds of backfilling scheduling cycles since
+            last reset.
+        backfill_last_depth (int):
+            Number of processed jobs during last backfilling scheduling cycle.
+            It counts every job even if that job can not be started due to
+            dependencies or limits.
+        backfill_last_depth_try (int):
+            Number of processed jobs during last backfilling scheduling cycle.
+            It counts only jobs with a chance to start using available
+            resources. These jobs consume more scheduling time than jobs which
+            are found can not be started due to dependencies or limits.
+        backfill_mean_depth (int):
+            Mean count of jobs processed during all backfilling scheduling
+            cycles since last reset. Jobs which are found to be ineligible to
+            run when examined by the backfill scheduler are not counted (e.g.
+            jobs submitted to multiple partitions and already started, jobs
+            which have reached a QOS or account limit such as maximum running
+            jobs for an account, etc).
+        backfill_mean_depth_try (int):
+            The subset of `backfill_mean_depth` that the backfill
+            scheduler attempted to schedule.
+        backfill_queue_len (int):
+            Number of jobs pending to be processed by backfilling algorithm. A
+            job is counted once for each partition it is queued to use. A
+            pending job array will normally be counted as one job (tasks of a
+            job array which have already been started/requeued or individually
+            modified will already have individual job records and are each
+            counted as a separate job).
+        backfill_queue_len_mean (int):
+            Mean count of jobs pending to be processed by backfilling
+            algorithm. A job is counted once for each partition it requested. A
+            pending job array will normally be counted as one job (tasks of a
+            job array which have already been started/requeued or individually
+            modified will already have individual job records and are each
+            counted as a separate job).
+        backfill_table_size (int):
+            Count of different time slots tested by the backfill scheduler in
+            its last iteration.
+        backfill_table_size_mean (int):
+            Mean count of different time slots tested by the backfill
+            scheduler. Larger counts increase the time required for the
+            backfill operation. The table size is influenced by many scheduling
+            parameters, including: bf_min_age_reserve, bf_min_prio_reserve,
+            bf_resolution, and bf_window.
+        gettimeofday_latency (int):
+            Latency of 1000 calls to the gettimeofday() syscall in
+            microseconds, as measured at controller startup.
+        rpcs_by_type (pyslurm.slurmctld.RPCTypeStatistics):
+            RPC Statistics organized by Type.
+        rpcs_by_user (pyslurm.slurmctld.RPCUserStatistics):
+            RPC Statistics organized by User.
+        pending_rpcs (pyslurm.slurmctld.PendingRPCStatistics):
+            Statistics for pending RPCs.
+    """
     cdef public:
         request_time
         data_since
         server_thread_count
+        rpc_queue_enabled
         agent_queue_size
         agent_count
         agent_thread_count
         dbd_agent_queue_size
-        rpc_queue_enabled
 
         jobs_submitted
         jobs_started
@@ -100,31 +308,31 @@ cdef class Statistics:
         jobs_failed
         jobs_pending
         jobs_running
-        job_states_ts
+        # job_states_time
 
-        schedule_cycle_max
         schedule_cycle_last
+        schedule_cycle_max
         schedule_cycle_counter
         schedule_cycle_mean
         schedule_cycle_mean_depth
-        schedule_queue_len
-        cycles_per_minute
+        schedule_cycles_per_minute
+        schedule_queue_length
         schedule_exit
 
         backfill_active
         backfilled_jobs
         last_backfilled_jobs
         backfilled_het_jobs
+        backfill_cycle_counter
         backfill_last_cycle_when
         backfill_last_cycle
         backfill_cycle_last
         backfill_cycle_max
-        backfill_total_cycles
         backfill_cycle_mean
-        backfill_last_depth_cycle
-        backfill_last_depth_cycle_try_sched
-        backfill_mean_depth_cycle
-        backfill_mean_depth_cycle_try_sched
+        backfill_last_depth
+        backfill_last_depth_try
+        backfill_mean_depth
+        backfill_mean_depth_try
         backfill_queue_len
         backfill_queue_len_mean
         backfill_table_size
@@ -132,5 +340,6 @@ cdef class Statistics:
 
         gettimeofday_latency
 
-        rpc_type_stats
-        rpc_user_stats
+        rpcs_by_type
+        rpcs_by_user
+        pending_rpcs

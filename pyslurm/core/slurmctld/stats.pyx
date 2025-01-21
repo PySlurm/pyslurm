@@ -23,12 +23,6 @@
 # cython: language_level=3
 
 from pyslurm.core.error import verify_rpc, RPCError
-from pyslurm.utils.uint import (
-    u16_parse,
-    u32_parse,
-    u64_parse,
-)
-from pyslurm.constants import UNLIMITED
 from pyslurm.utils.ctime import _raw_time
 from pyslurm.utils.helpers import (
     instance_to_dict,
@@ -36,6 +30,14 @@ from pyslurm.utils.helpers import (
 )
 from pyslurm.utils import cstr
 from pyslurm import xcollections
+
+
+cdef class PendingRPC:
+
+    def __init__(self):
+        self.id = 0
+        self.name = None
+        self.count = 0
 
 
 cdef class RPCTypeStatistic:
@@ -86,7 +88,7 @@ cdef class RPCTypeStatistics(dict):
             stats.time = ptr.rpc_type_time[i]
 
             if ptr.rpc_type_cnt[i]:
-                stats.average_time = ptr.rpc_type_time[i] / ptr.rpc_type_cnt[i]
+                stats.average_time = int(ptr.rpc_type_time[i] / ptr.rpc_type_cnt[i])
 
             if rpc_queue_enabled:
                 stats.queued = ptr.rpc_type_queued[i]
@@ -94,25 +96,24 @@ cdef class RPCTypeStatistics(dict):
                 stats.cycle_last = ptr.rpc_type_cycle_last[i]
                 stats.cycle_max = ptr.rpc_type_cycle_max[i]
 
-            if stats.name:
-                out[stats.name] = stats
+            out[stats.name] = stats
 
         return out
 
     @property
-    def total_queued(self):
-        return xcollections.sum_property(self, RPCTypeStatistic.queued)
-
-    @property
-    def total_count(self):
+    def count(self):
         return xcollections.sum_property(self, RPCTypeStatistic.count)
 
     @property
-    def total_time(self):
+    def time(self):
         return xcollections.sum_property(self, RPCTypeStatistic.time)
 
     @property
-    def total_dropped(self):
+    def queued(self):
+        return xcollections.sum_property(self, RPCTypeStatistic.queued)
+
+    @property
+    def dropped(self):
         return xcollections.sum_property(self, RPCTypeStatistic.dropped)
 
 
@@ -127,10 +128,7 @@ cdef class RPCUserStatistics(dict):
 
         for i in range(ptr.rpc_user_size):
             user_id = ptr.rpc_user_id[i]
-            user = uid_to_name(user_id)
-            if not user:
-                continue
-
+            user = uid_to_name(user_id, err_on_invalid=False)
             stats = RPCUserStatistic()
             stats.user_id = ptr.rpc_user_id[i]
             stats.user_name = user
@@ -138,15 +136,43 @@ cdef class RPCUserStatistics(dict):
             stats.time = ptr.rpc_user_time[i]
 
             if ptr.rpc_user_cnt[i]:
-                stats.average_time = ptr.rpc_user_time[i] / ptr.rpc_user_cnt[i]
+                stats.average_time = int(ptr.rpc_user_time[i] / ptr.rpc_user_cnt[i])
 
-            out[user] = stats
+            key = user if user is not None else str(user_id)
+            out[key] = stats
 
         return out
 
     @property
-    def total_queued(self):
-        return xcollections.sum_attr(self, "queued")
+    def count(self):
+        return xcollections.sum_property(self, RPCUserStatistic.count)
+
+    @property
+    def time(self):
+        return xcollections.sum_property(self, RPCUserStatistic.time)
+
+
+cdef class PendingRPCStatistics(dict):
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    cdef PendingRPCStatistics from_ptr(stats_info_response_msg_t *ptr):
+        out = PendingRPCStatistics()
+
+        for i in range(ptr.rpc_queue_type_count):
+            stats = PendingRPC()
+            stats.id = ptr.rpc_queue_type_id[i]
+            stats.name = rpc_num2string(ptr.rpc_queue_type_id[i])
+            stats.count = ptr.rpc_queue_count[i]
+            out[stats.name] = stats
+
+        return out
+
+    @property
+    def count(self):
+        return xcollections.sum_property(self, PendingRPCStatistics.count)
 
 
 cdef parse_response(stats_info_response_msg_t *ptr):
@@ -155,6 +181,8 @@ cdef parse_response(stats_info_response_msg_t *ptr):
     cycle_count = ptr.schedule_cycle_counter
     bf_cycle_count = ptr.bf_cycle_counter
 
+    out.request_time = ptr.req_time
+    out.data_since = ptr.req_time_start
     out.server_thread_count = ptr.server_thread_count
     out.rpc_queue_enabled = True if ptr.rpc_queue_enabled else False
     out.agent_queue_size = ptr.agent_queue_size
@@ -168,21 +196,21 @@ cdef parse_response(stats_info_response_msg_t *ptr):
     out.jobs_failed = ptr.jobs_failed
     out.jobs_pending = ptr.jobs_pending
     out.jobs_running = ptr.jobs_running
-    out.schedule_cycle_max = ptr.schedule_cycle_max
-    out.schedule_cycle_last = ptr.schedule_cycle_last
-    out.schedule_cycle_counter = cycle_count
-    out.schedule_queue_len = ptr.schedule_queue_len
+    out.schedule_cycle_last = int(ptr.schedule_cycle_last)
+    out.schedule_cycle_max = int(ptr.schedule_cycle_max)
+    out.schedule_cycle_counter = int(cycle_count)
+    out.schedule_queue_length = int(ptr.schedule_queue_len)
 
-    # TODO: job_states_ts ?
+    # TODO: job_states_time ?
     # TODO: scheduler exits
 
     if cycle_count > 0:
-        out.schedule_cycle_mean = ptr.schedule_cycle_sum / cycle_count
-        out.schedule_cycle_mean_depth = ptr.schedule_cycle_depth / cycle_count
+        out.schedule_cycle_mean = int(ptr.schedule_cycle_sum / cycle_count)
+        out.schedule_cycle_mean_depth = int(ptr.schedule_cycle_depth / cycle_count)
 
     ts = ptr.req_time - ptr.req_time_start
     if ts > 60:
-        out.cycles_per_minute = cycle_count / (ts / 60)
+        out.schedule_cycles_per_minute = int(cycle_count / (ts / 60))
 
 
     out.backfill_active = bool(ptr.bf_active)
@@ -192,23 +220,24 @@ cdef parse_response(stats_info_response_msg_t *ptr):
     out.backfill_last_cycle_when = ptr.bf_when_last_cycle
     out.backfill_last_cycle = ptr.bf_cycle_last
     out.backfill_cycle_max = ptr.bf_cycle_max
-    out.backfill_total_cycles = bf_cycle_count
-    out.backfill_last_depth_cycle = ptr.bf_last_depth
-    out.backfill_last_depth_cycle_try_sched = ptr.bf_last_depth_try
+    out.backfill_cycle_counter = bf_cycle_count
+    out.backfill_last_depth = ptr.bf_last_depth
+    out.backfill_last_depth_try = ptr.bf_last_depth_try
     out.backfill_queue_len = ptr.bf_queue_len
     out.backfill_table_size = ptr.bf_table_size
 
     if bf_cycle_count > 0:
-        out.backfill_cycle_mean = ptr.bf_cycle_sum / bf_cycle_count
-        out.backfill_mean_depth_cycle = ptr.bf_depth_sum / bf_cycle_count
-        out.backfill_mean_depth_cycle_try_sched = ptr.bf_depth_try_sum / bf_cycle_count
-        out.backfill_queue_len_mean = ptr.bf_queue_len_sum / bf_cycle_count
-        out.backfill_table_size_mean = ptr.bf_table_size_sum / bf_cycle_count
+        out.backfill_cycle_mean = int(ptr.bf_cycle_sum / bf_cycle_count)
+        out.backfill_mean_depth = int(ptr.bf_depth_sum / bf_cycle_count)
+        out.backfill_mean_depth_try = int(ptr.bf_depth_try_sum / bf_cycle_count)
+        out.backfill_queue_len_mean = int(ptr.bf_queue_len_sum / bf_cycle_count)
+        out.backfill_table_size_mean = int(ptr.bf_table_size_sum / bf_cycle_count)
 
     out.gettimeofday_latency = ptr.gettimeofday_latency
 
-    out.rpc_type_stats = RPCTypeStatistics.from_ptr(ptr, out.rpc_queue_enabled)
-    out.rpc_user_stats = RPCUserStatistics.from_ptr(ptr)
+    out.rpcs_by_type = RPCTypeStatistics.from_ptr(ptr, out.rpc_queue_enabled)
+    out.rpcs_by_user = RPCUserStatistics.from_ptr(ptr)
+    out.pending_rpcs = PendingRPCStatistics.from_ptr(ptr)
 
     return out
 
@@ -218,10 +247,10 @@ cdef class Statistics:
     def __init__(self):
         self.schedule_cycle_mean = 0
         self.schedule_cycle_mean_depth = 0
-        self.cycles_per_minute = 0
+        self.schedule_cycles_per_minute = 0
         self.backfill_cycle_mean = 0
-        self.backfill_mean_depth_cycle = 0
-        self.backfill_mean_depth_cycle_try_sched = 0
+        self.backfill_mean_depth = 0
+        self.backfill_mean_depth_try = 0
         self.backfill_queue_len_mean = 0
         self.backfill_table_size_mean = 0
 
@@ -247,12 +276,12 @@ cdef class Statistics:
     @staticmethod
     def reset():
         cdef stats_info_request_msg_t req
+        req.command_id = slurm.STAT_COMMAND_RESET
         verify_rpc(slurm_reset_statistics(&req))
 
     def to_dict(self):
         out = instance_to_dict(self)
-        out["rpc_type_stats"] = xcollections.dict_recursive(self.rpc_type_stats)
-        out["rpc_user_stats"] = xcollections.dict_recursive(self.rpc_user_stats)
+        out["rpcs_by_type"] = xcollections.dict_recursive(self.rpcs_by_type)
+        out["rpcs_by_user"] = xcollections.dict_recursive(self.rpcs_by_user)
+        out["pending_rpcs"] = xcollections.dict_recursive(self.pending_rpcs)
         return out
-
-
