@@ -46,16 +46,58 @@ cdef parse_response(stats_info_response_msg_t *ptr)
 
 
 cdef class SchedulerExitStatistics:
+    """Conditions reached at the end of a scheduling run
 
+    Each attribute is simply a counter that describes how many times a specific
+    condition was met during the main scheduling run.
+
+    Attributes:
+        end_of_job_queue (int):
+            Times the end of the job queue was reached.
+        default_queue_depth (int):
+            Reached the number of jobs allowed to be tested limit
+        max_job_start (int):
+            Reached the number of jobs allowed to start limit
+        blocked_on_licenses (int):
+            Times the scheduler blocked on licenses.
+        max_rpc_count (int):
+            Reached RPC Limit.
+        max_time (int):
+            Reached maximum allowed scheduler time for a cycle.
+    """
     cdef public:
         end_of_job_queue
         default_queue_depth
         max_job_start
-        max_sched_time
-        blocked_on_licences
+        blocked_on_licenses
+        max_rpc_count
+        max_time
+
+    @staticmethod
+    cdef SchedulerExitStatistics from_ptr(stats_info_response_msg_t *ptr)
 
 
 cdef class BackfillExitStatistics:
+    """Conditions reached at the end of a Backfill scheduling run.
+
+    Each attribute is simply a counter that describes how many times a specific
+    condition was met during the Backfill scheduling run.
+
+    Attributes:
+        end_of_job_queue (int):
+            Times the end of the job queue was reached.
+        max_job_start (int):
+            Reached the number of jobs allowed to start limit
+        max_job_test (int):
+            Reached the number of jobs allowed to attempt backfill scheduling
+            for.
+        max_time (int):
+            Reached maximum allowed scheduler time for a cycle.
+        node_space_size (int):
+            Reached the node_space table size limit.
+        state_changed (int):
+            System state changes.
+    """
 
     cdef public:
         end_of_job_queue
@@ -64,6 +106,9 @@ cdef class BackfillExitStatistics:
         max_time
         node_space_size
         state_changed
+
+    @staticmethod
+    cdef BackfillExitStatistics from_ptr(stats_info_response_msg_t *ptr)
 
 
 cdef class PendingRPC:
@@ -338,7 +383,7 @@ cdef class Statistics:
         schedule_cycle_mean_depth
         schedule_cycles_per_minute
         schedule_queue_length
-        schedule_exit
+        schedule_exit_stats
 
         backfill_active
         backfilled_jobs
@@ -358,6 +403,7 @@ cdef class Statistics:
         backfill_queue_len_mean
         backfill_table_size
         backfill_table_size_mean
+        backfill_exit_stats
 
         gettimeofday_latency
 

@@ -32,14 +32,39 @@ from pyslurm.utils import cstr
 from pyslurm import xcollections
 
 
+# Make sure this is in sync with the current Slurm release we are targeting.
+# Check in Slurm source at src/slurmctld/slurmctld.h
+BF_EXIT_COUNT = 6
+SCHED_EXIT_COUNT = 6
+
+
 cdef class SchedulerExitStatistics:
 
     def __init__(self):
         self.end_of_job_queue = 0
         self.default_queue_depth = 0
         self.max_job_start = 0
-        self.max_sched_time = 0
         self.blocked_on_licenses = 0
+        self.max_rpc_count = 0
+        self.max_time = 0
+
+    @staticmethod
+    cdef SchedulerExitStatistics from_ptr(stats_info_response_msg_t *ptr):
+        if ptr.schedule_exit_cnt != SCHED_EXIT_COUNT:
+            raise RPCError(msg="schedule_exit_cnt has an unexpected size. "
+                           f"Got {ptr.schedule_exit_cnt}, expected {SCHED_EXIT_COUNT}.")
+
+        out = SchedulerExitStatistics()
+        out.end_of_job_queue = ptr.schedule_exit[0]
+        out.default_queue_depth = ptr.schedule_exit[1]
+        out.max_job_start = ptr.schedule_exit[2]
+        out.blocked_on_licenses = ptr.schedule_exit[3]
+        out.max_rpc_count = ptr.schedule_exit[4]
+        out.max_time = ptr.schedule_exit[5]
+        return out
+
+    def to_dict(self):
+        return instance_to_dict(self)
 
 
 cdef class BackfillExitStatistics:
@@ -52,6 +77,24 @@ cdef class BackfillExitStatistics:
         self.node_space_size = 0
         self.state_changed = 0
 
+    @staticmethod
+    cdef BackfillExitStatistics from_ptr(stats_info_response_msg_t *ptr):
+        if ptr.bf_exit_cnt != BF_EXIT_COUNT:
+            raise RPCError(msg="bf_exit_cnt has an unexpected size. "
+                           f"Got {ptr.bf_exit_cnt}, expected {BF_EXIT_COUNT}.")
+
+        out = BackfillExitStatistics()
+        out.end_of_job_queue = ptr.bf_exit[0]
+        out.max_job_start = ptr.bf_exit[1]
+        out.max_job_test = ptr.bf_exit[2]
+        out.max_time = ptr.bf_exit[3]
+        out.node_space_size = ptr.bf_exit[4]
+        out.state_changed = ptr.bf_exit[5]
+        return out
+
+    def to_dict(self):
+        return instance_to_dict(self)
+
 
 cdef class PendingRPC:
 
@@ -59,6 +102,9 @@ cdef class PendingRPC:
         self.id = 0
         self.name = None
         self.count = 0
+
+    def to_dict(self):
+        return instance_to_dict(self)
 
 
 cdef class RPCTypeStatistic:
@@ -196,73 +242,6 @@ cdef class PendingRPCStatistics(dict):
         return xcollections.sum_property(self, PendingRPCStatistics.count)
 
 
-cdef parse_response(stats_info_response_msg_t *ptr):
-    cdef Statistics out = Statistics()
-
-    cycle_count = ptr.schedule_cycle_counter
-    bf_cycle_count = ptr.bf_cycle_counter
-
-    out.request_time = ptr.req_time
-    out.data_since = ptr.req_time_start
-    out.server_thread_count = ptr.server_thread_count
-    out.rpc_queue_enabled = True if ptr.rpc_queue_enabled else False
-    out.agent_queue_size = ptr.agent_queue_size
-    out.agent_count = ptr.agent_count
-    out.agent_thread_count = ptr.agent_thread_count
-    out.dbd_agent_queue_size = ptr.dbd_agent_queue_size
-    out.jobs_submitted = ptr.jobs_submitted
-    out.jobs_started = ptr.jobs_started
-    out.jobs_completed = ptr.jobs_completed
-    out.jobs_canceled = ptr.jobs_canceled
-    out.jobs_failed = ptr.jobs_failed
-    out.jobs_pending = ptr.jobs_pending
-    out.jobs_running = ptr.jobs_running
-    out.schedule_cycle_last = int(ptr.schedule_cycle_last)
-    out.schedule_cycle_max = int(ptr.schedule_cycle_max)
-    out.schedule_cycle_counter = int(cycle_count)
-    out.schedule_queue_length = int(ptr.schedule_queue_len)
-
-    # TODO: job_states_time ?
-    # TODO: scheduler exits
-
-    if cycle_count > 0:
-        out.schedule_cycle_mean = int(ptr.schedule_cycle_sum / cycle_count)
-        out.schedule_cycle_mean_depth = int(ptr.schedule_cycle_depth / cycle_count)
-
-    ts = ptr.req_time - ptr.req_time_start
-    if ts > 60:
-        out.schedule_cycles_per_minute = int(cycle_count / (ts / 60))
-
-
-    out.backfill_active = bool(ptr.bf_active)
-    out.backfilled_jobs = ptr.bf_backfilled_jobs
-    out.last_backfilled_jobs = ptr.bf_last_backfilled_jobs
-    out.backfilled_het_jobs = ptr.bf_backfilled_het_jobs
-    out.backfill_last_cycle_when = ptr.bf_when_last_cycle
-    out.backfill_last_cycle = ptr.bf_cycle_last
-    out.backfill_cycle_max = ptr.bf_cycle_max
-    out.backfill_cycle_counter = bf_cycle_count
-    out.backfill_last_depth = ptr.bf_last_depth
-    out.backfill_last_depth_try = ptr.bf_last_depth_try
-    out.backfill_queue_len = ptr.bf_queue_len
-    out.backfill_table_size = ptr.bf_table_size
-
-    if bf_cycle_count > 0:
-        out.backfill_cycle_mean = int(ptr.bf_cycle_sum / bf_cycle_count)
-        out.backfill_mean_depth = int(ptr.bf_depth_sum / bf_cycle_count)
-        out.backfill_mean_depth_try = int(ptr.bf_depth_try_sum / bf_cycle_count)
-        out.backfill_queue_len_mean = int(ptr.bf_queue_len_sum / bf_cycle_count)
-        out.backfill_table_size_mean = int(ptr.bf_table_size_sum / bf_cycle_count)
-
-    out.gettimeofday_latency = ptr.gettimeofday_latency
-
-    out.rpcs_by_type = RPCTypeStatistics.from_ptr(ptr, out.rpc_queue_enabled)
-    out.rpcs_by_user = RPCUserStatistics.from_ptr(ptr)
-    out.pending_rpcs = PendingRPCStatistics.from_ptr(ptr)
-
-    return out
-
-
 cdef class Statistics:
 
     def __init__(self):
@@ -305,4 +284,74 @@ cdef class Statistics:
         out["rpcs_by_type"] = xcollections.dict_recursive(self.rpcs_by_type)
         out["rpcs_by_user"] = xcollections.dict_recursive(self.rpcs_by_user)
         out["pending_rpcs"] = xcollections.dict_recursive(self.pending_rpcs)
+        out["schedule_exit_stats"] = self.schedule_exit_stats.to_dict()
+        out["backfill_exit_stats"] = self.backfill_exit_stats.to_dict()
         return out
+
+
+cdef parse_response(stats_info_response_msg_t *ptr):
+    cdef Statistics out = Statistics()
+
+    cycle_count = ptr.schedule_cycle_counter
+    bf_cycle_count = ptr.bf_cycle_counter
+
+    out.request_time = ptr.req_time
+    out.data_since = ptr.req_time_start
+    out.server_thread_count = ptr.server_thread_count
+    out.rpc_queue_enabled = True if ptr.rpc_queue_enabled else False
+    out.agent_queue_size = ptr.agent_queue_size
+    out.agent_count = ptr.agent_count
+    out.agent_thread_count = ptr.agent_thread_count
+    out.dbd_agent_queue_size = ptr.dbd_agent_queue_size
+    out.jobs_submitted = ptr.jobs_submitted
+    out.jobs_started = ptr.jobs_started
+    out.jobs_completed = ptr.jobs_completed
+    out.jobs_canceled = ptr.jobs_canceled
+    out.jobs_failed = ptr.jobs_failed
+    out.jobs_pending = ptr.jobs_pending
+    out.jobs_running = ptr.jobs_running
+    out.schedule_cycle_last = int(ptr.schedule_cycle_last)
+    out.schedule_cycle_max = int(ptr.schedule_cycle_max)
+    out.schedule_cycle_counter = int(cycle_count)
+    out.schedule_queue_length = int(ptr.schedule_queue_len)
+
+    # TODO: job_states_time ?
+
+    if cycle_count > 0:
+        out.schedule_cycle_mean = int(ptr.schedule_cycle_sum / cycle_count)
+        out.schedule_cycle_mean_depth = int(ptr.schedule_cycle_depth / cycle_count)
+
+    ts = ptr.req_time - ptr.req_time_start
+    if ts > 60:
+        out.schedule_cycles_per_minute = int(cycle_count / (ts / 60))
+
+
+    out.backfill_active = bool(ptr.bf_active)
+    out.backfilled_jobs = ptr.bf_backfilled_jobs
+    out.last_backfilled_jobs = ptr.bf_last_backfilled_jobs
+    out.backfilled_het_jobs = ptr.bf_backfilled_het_jobs
+    out.backfill_last_cycle_when = ptr.bf_when_last_cycle
+    out.backfill_last_cycle = ptr.bf_cycle_last
+    out.backfill_cycle_max = ptr.bf_cycle_max
+    out.backfill_cycle_counter = bf_cycle_count
+    out.backfill_last_depth = ptr.bf_last_depth
+    out.backfill_last_depth_try = ptr.bf_last_depth_try
+    out.backfill_queue_len = ptr.bf_queue_len
+    out.backfill_table_size = ptr.bf_table_size
+
+    if bf_cycle_count > 0:
+        out.backfill_cycle_mean = int(ptr.bf_cycle_sum / bf_cycle_count)
+        out.backfill_mean_depth = int(ptr.bf_depth_sum / bf_cycle_count)
+        out.backfill_mean_depth_try = int(ptr.bf_depth_try_sum / bf_cycle_count)
+        out.backfill_queue_len_mean = int(ptr.bf_queue_len_sum / bf_cycle_count)
+        out.backfill_table_size_mean = int(ptr.bf_table_size_sum / bf_cycle_count)
+
+    out.gettimeofday_latency = ptr.gettimeofday_latency
+
+    out.rpcs_by_type = RPCTypeStatistics.from_ptr(ptr, out.rpc_queue_enabled)
+    out.rpcs_by_user = RPCUserStatistics.from_ptr(ptr)
+    out.pending_rpcs = PendingRPCStatistics.from_ptr(ptr)
+    out.schedule_exit_stats = SchedulerExitStatistics.from_ptr(ptr)
+    out.backfill_exit_stats = BackfillExitStatistics.from_ptr(ptr)
+
+    return out
