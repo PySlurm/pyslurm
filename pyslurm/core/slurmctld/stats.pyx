@@ -32,6 +32,27 @@ from pyslurm.utils import cstr
 from pyslurm import xcollections
 
 
+cdef class SchedulerExitStatistics:
+
+    def __init__(self):
+        self.end_of_job_queue = 0
+        self.default_queue_depth = 0
+        self.max_job_start = 0
+        self.max_sched_time = 0
+        self.blocked_on_licenses = 0
+
+
+cdef class BackfillExitStatistics:
+
+    def __init__(self):
+        self.end_of_job_queue = 0
+        self.max_job_start = 0
+        self.max_job_test = 0
+        self.max_time = 0
+        self.node_space_size = 0
+        self.state_changed = 0
+
+
 cdef class PendingRPC:
 
     def __init__(self):

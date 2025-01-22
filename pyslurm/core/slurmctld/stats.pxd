@@ -45,8 +45,29 @@ cdef extern const char *rpc_num2string(uint16_t msg_type)
 cdef parse_response(stats_info_response_msg_t *ptr)
 
 
+cdef class SchedulerExitStatistics:
+
+    cdef public:
+        end_of_job_queue
+        default_queue_depth
+        max_job_start
+        max_sched_time
+        blocked_on_licences
+
+
+cdef class BackfillExitStatistics:
+
+    cdef public:
+        end_of_job_queue
+        max_job_start
+        max_job_test
+        max_time
+        node_space_size
+        state_changed
+
+
 cdef class PendingRPC:
-    """A RPC in pending State
+    """A RPC in pending State.
 
     Attributes:
         id (int):
