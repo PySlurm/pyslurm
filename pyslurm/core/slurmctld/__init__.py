@@ -7,6 +7,10 @@ from .config import (
 from .enums import ShutdownMode
 from .stats import (
     Statistics,
+    SchedulerExitStatistics,
+    BackfillExitStatistics,
+    PendingRPC,
+    PendingRPCStatistics,
     RPCUserStatistic,
     RPCUserStatistics,
     RPCTypeStatistic,
