@@ -22,6 +22,7 @@ from pyslurm.core.job import (
 )
 from pyslurm.core.node import Node, Nodes
 from pyslurm.core.partition import Partition, Partitions
+from pyslurm.core.reservation import Reservation, Reservations
 from pyslurm.core import error
 from pyslurm.core.error import (
     PyslurmError,
