@@ -38,7 +38,7 @@ BF_EXIT_COUNT = 6
 SCHED_EXIT_COUNT = 6
 
 
-cdef class SchedulerExitStatistics:
+cdef class ScheduleExitStatistics:
 
     def __init__(self):
         self.end_of_job_queue = 0
@@ -49,12 +49,12 @@ cdef class SchedulerExitStatistics:
         self.max_time = 0
 
     @staticmethod
-    cdef SchedulerExitStatistics from_ptr(stats_info_response_msg_t *ptr):
+    cdef ScheduleExitStatistics from_ptr(stats_info_response_msg_t *ptr):
         if ptr.schedule_exit_cnt != SCHED_EXIT_COUNT:
             raise RPCError(msg="schedule_exit_cnt has an unexpected size. "
                            f"Got {ptr.schedule_exit_cnt}, expected {SCHED_EXIT_COUNT}.")
 
-        out = SchedulerExitStatistics()
+        out = ScheduleExitStatistics()
         out.end_of_job_queue = ptr.schedule_exit[0]
         out.default_queue_depth = ptr.schedule_exit[1]
         out.max_job_start = ptr.schedule_exit[2]
@@ -96,7 +96,7 @@ cdef class BackfillExitStatistics:
         return instance_to_dict(self)
 
 
-cdef class PendingRPC:
+cdef class RPCPending:
 
     def __init__(self):
         self.id = 0
@@ -107,7 +107,7 @@ cdef class PendingRPC:
         return instance_to_dict(self)
 
 
-cdef class RPCTypeStatistic:
+cdef class RPCType:
 
     def __init__(self):
         self.id = 0
@@ -124,7 +124,7 @@ cdef class RPCTypeStatistic:
         return instance_to_dict(self)
 
 
-cdef class RPCUserStatistic:
+cdef class RPCUser:
 
     def __init__(self):
         self.user_id = 0
@@ -148,7 +148,7 @@ cdef class RPCTypeStatistics(dict):
         out = RPCTypeStatistics()
 
         for i in range(ptr.rpc_type_size):
-            stats = RPCTypeStatistic()
+            stats = RPCType()
             stats.id = ptr.rpc_type_id[i]
             stats.name = rpc_num2string(ptr.rpc_type_id[i])
             stats.count = ptr.rpc_type_cnt[i]
@@ -169,19 +169,19 @@ cdef class RPCTypeStatistics(dict):
 
     @property
     def count(self):
-        return xcollections.sum_property(self, RPCTypeStatistic.count)
+        return xcollections.sum_property(self, RPCType.count)
 
     @property
     def time(self):
-        return xcollections.sum_property(self, RPCTypeStatistic.time)
+        return xcollections.sum_property(self, RPCType.time)
 
     @property
     def queued(self):
-        return xcollections.sum_property(self, RPCTypeStatistic.queued)
+        return xcollections.sum_property(self, RPCType.queued)
 
     @property
     def dropped(self):
-        return xcollections.sum_property(self, RPCTypeStatistic.dropped)
+        return xcollections.sum_property(self, RPCType.dropped)
 
 
 cdef class RPCUserStatistics(dict):
@@ -196,7 +196,7 @@ cdef class RPCUserStatistics(dict):
         for i in range(ptr.rpc_user_size):
             user_id = ptr.rpc_user_id[i]
             user = uid_to_name(user_id, err_on_invalid=False)
-            stats = RPCUserStatistic()
+            stats = RPCUser()
             stats.user_id = ptr.rpc_user_id[i]
             stats.user_name = user
             stats.count = ptr.rpc_user_cnt[i]
@@ -212,24 +212,24 @@ cdef class RPCUserStatistics(dict):
 
     @property
     def count(self):
-        return xcollections.sum_property(self, RPCUserStatistic.count)
+        return xcollections.sum_property(self, RPCUser.count)
 
     @property
     def time(self):
-        return xcollections.sum_property(self, RPCUserStatistic.time)
+        return xcollections.sum_property(self, RPCUser.time)
 
 
-cdef class PendingRPCStatistics(dict):
+cdef class RPCPendingStatistics(dict):
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
-    cdef PendingRPCStatistics from_ptr(stats_info_response_msg_t *ptr):
-        out = PendingRPCStatistics()
+    cdef RPCPendingStatistics from_ptr(stats_info_response_msg_t *ptr):
+        out = RPCPendingStatistics()
 
         for i in range(ptr.rpc_queue_type_count):
-            stats = PendingRPC()
+            stats = RPCPending()
             stats.id = ptr.rpc_queue_type_id[i]
             stats.name = rpc_num2string(ptr.rpc_queue_type_id[i])
             stats.count = ptr.rpc_queue_count[i]
@@ -239,7 +239,7 @@ cdef class PendingRPCStatistics(dict):
 
     @property
     def count(self):
-        return xcollections.sum_property(self, PendingRPCStatistics.count)
+        return xcollections.sum_property(self, RPCPendingStatistics.count)
 
 
 cdef class Statistics:
@@ -249,10 +249,13 @@ cdef class Statistics:
         self.schedule_cycle_mean_depth = 0
         self.schedule_cycles_per_minute = 0
         self.backfill_cycle_mean = 0
+        self.backfill_cycle_sum = 0
         self.backfill_mean_depth = 0
         self.backfill_mean_depth_try = 0
-        self.backfill_queue_len_mean = 0
+        self.backfill_queue_length_mean = 0
         self.backfill_table_size_mean = 0
+        self.backfill_queue_length_sum = 0
+        self.backfill_table_size_sum = 0
 
     @staticmethod
     def load():
@@ -283,9 +286,9 @@ cdef class Statistics:
         out = instance_to_dict(self)
         out["rpcs_by_type"] = xcollections.dict_recursive(self.rpcs_by_type)
         out["rpcs_by_user"] = xcollections.dict_recursive(self.rpcs_by_user)
-        out["pending_rpcs"] = xcollections.dict_recursive(self.pending_rpcs)
-        out["schedule_exit_stats"] = self.schedule_exit_stats.to_dict()
-        out["backfill_exit_stats"] = self.backfill_exit_stats.to_dict()
+        out["rpcs_pending"] = xcollections.dict_recursive(self.rpcs_pending)
+        out["schedule_exit"] = self.schedule_exit.to_dict()
+        out["backfill_exit"] = self.backfill_exit.to_dict()
         return out
 
 
@@ -314,6 +317,7 @@ cdef parse_response(stats_info_response_msg_t *ptr):
     out.schedule_cycle_max = int(ptr.schedule_cycle_max)
     out.schedule_cycle_counter = int(cycle_count)
     out.schedule_queue_length = int(ptr.schedule_queue_len)
+    out.schedule_cycle_sum = int(ptr.schedule_cycle_sum)
 
     # TODO: job_states_time ?
 
@@ -330,28 +334,33 @@ cdef parse_response(stats_info_response_msg_t *ptr):
     out.backfilled_jobs = ptr.bf_backfilled_jobs
     out.last_backfilled_jobs = ptr.bf_last_backfilled_jobs
     out.backfilled_het_jobs = ptr.bf_backfilled_het_jobs
-    out.backfill_last_cycle_when = ptr.bf_when_last_cycle
-    out.backfill_last_cycle = ptr.bf_cycle_last
+    out.backfill_cycle_last_when = ptr.bf_when_last_cycle
+    out.backfill_cycle_last = ptr.bf_cycle_last
     out.backfill_cycle_max = ptr.bf_cycle_max
     out.backfill_cycle_counter = bf_cycle_count
+    out.backfill_cycle_sum = ptr.bf_cycle_sum
     out.backfill_last_depth = ptr.bf_last_depth
     out.backfill_last_depth_try = ptr.bf_last_depth_try
-    out.backfill_queue_len = ptr.bf_queue_len
+    out.backfill_queue_length = ptr.bf_queue_len
+    out.backfill_queue_length_sum = ptr.bf_queue_len_sum
     out.backfill_table_size = ptr.bf_table_size
+    out.backfill_table_size_sum = ptr.bf_table_size_sum
+    out.backfill_depth_sum = ptr.bf_depth_sum
+    out.backfill_depth_try_sum = ptr.bf_depth_try_sum
 
     if bf_cycle_count > 0:
         out.backfill_cycle_mean = int(ptr.bf_cycle_sum / bf_cycle_count)
         out.backfill_mean_depth = int(ptr.bf_depth_sum / bf_cycle_count)
         out.backfill_mean_depth_try = int(ptr.bf_depth_try_sum / bf_cycle_count)
-        out.backfill_queue_len_mean = int(ptr.bf_queue_len_sum / bf_cycle_count)
+        out.backfill_queue_length_mean = int(ptr.bf_queue_len_sum / bf_cycle_count)
         out.backfill_table_size_mean = int(ptr.bf_table_size_sum / bf_cycle_count)
 
     out.gettimeofday_latency = ptr.gettimeofday_latency
 
     out.rpcs_by_type = RPCTypeStatistics.from_ptr(ptr, out.rpc_queue_enabled)
     out.rpcs_by_user = RPCUserStatistics.from_ptr(ptr)
-    out.pending_rpcs = PendingRPCStatistics.from_ptr(ptr)
-    out.schedule_exit_stats = SchedulerExitStatistics.from_ptr(ptr)
-    out.backfill_exit_stats = BackfillExitStatistics.from_ptr(ptr)
+    out.rpcs_pending = RPCPendingStatistics.from_ptr(ptr)
+    out.schedule_exit = ScheduleExitStatistics.from_ptr(ptr)
+    out.backfill_exit = BackfillExitStatistics.from_ptr(ptr)
 
     return out

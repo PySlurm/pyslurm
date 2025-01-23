@@ -45,7 +45,7 @@ cdef extern const char *rpc_num2string(uint16_t msg_type)
 cdef parse_response(stats_info_response_msg_t *ptr)
 
 
-cdef class SchedulerExitStatistics:
+cdef class ScheduleExitStatistics:
     """Conditions reached at the end of a scheduling run
 
     Each attribute is simply a counter that describes how many times a specific
@@ -74,7 +74,7 @@ cdef class SchedulerExitStatistics:
         max_time
 
     @staticmethod
-    cdef SchedulerExitStatistics from_ptr(stats_info_response_msg_t *ptr)
+    cdef ScheduleExitStatistics from_ptr(stats_info_response_msg_t *ptr)
 
 
 cdef class BackfillExitStatistics:
@@ -98,7 +98,6 @@ cdef class BackfillExitStatistics:
         state_changed (int):
             System state changes.
     """
-
     cdef public:
         end_of_job_queue
         max_job_start
@@ -111,8 +110,8 @@ cdef class BackfillExitStatistics:
     cdef BackfillExitStatistics from_ptr(stats_info_response_msg_t *ptr)
 
 
-cdef class PendingRPC:
-    """A RPC in pending State.
+cdef class RPCPending:
+    """Statistics for a pending RPC.
 
     Attributes:
         id (int):
@@ -128,8 +127,8 @@ cdef class PendingRPC:
         count
 
 
-cdef class RPCTypeStatistic:
-    """Statistics for a specific RPC Type
+cdef class RPCType:
+    """Statistics for a specific RPC Type.
 
     Attributes:
         id (int):
@@ -150,9 +149,9 @@ cdef class RPCTypeStatistic:
         dropped (int):
             How many of these RPCs have been dropped.
         cycle_last (int):
-            Number of RPCs processed within the last RPC queue cycle
+            Number of RPCs processed within the last RPC queue cycle.
         cycle_max (int):
-            Maximum number of RPCs processed within a RPC queue cycle
+            Maximum number of RPCs processed within a RPC queue cycle.
     """
     cdef public:
         id
@@ -166,8 +165,24 @@ cdef class RPCTypeStatistic:
         cycle_max
 
 
-cdef class RPCUserStatistic:
+cdef class RPCUser:
+    """RPC Statistics for a specific User.
 
+    Attributes:
+        user_id (int):
+            The numeric ID of the User.
+        user_name (str):
+            The name of the User.
+        count (int):
+            How many times the User issued RPCs since the last time the
+            statistics were cleared.
+        time (int):
+            How much total time it has taken to process RPCs by this User. The
+            unit is microseconds
+        average_time (int):
+            How much time on average it has taken to process RPCs by this User.
+            The unit is microseconds.
+    """
     cdef public:
         user_id
         user_name
@@ -194,7 +209,7 @@ cdef class RPCTypeStatistics(dict):
 
 
 cdef class RPCUserStatistics(dict):
-    """Collection of [](pyslurm.slurmctld.RPCUserStatistic)'s
+    """Collection of [](pyslurm.slurmctld.RPCUser)'s
 
     Attributes:
         count (int):
@@ -206,15 +221,15 @@ cdef class RPCUserStatistics(dict):
     cdef RPCUserStatistics from_ptr(stats_info_response_msg_t *ptr)
 
 
-cdef class PendingRPCStatistics(dict):
-    """Collection of [](pyslurm.slurmctld.PendingRPCStatistics)
+cdef class RPCPendingStatistics(dict):
+    """Collection of [](pyslurm.slurmctld.RPCPendingStatistics)
 
     Attributes:
         count (int):
             Total amount of RPCs made to the `slurmctld` since last reset.
     """
     @staticmethod
-    cdef PendingRPCStatistics from_ptr(stats_info_response_msg_t *ptr)
+    cdef RPCPendingStatistics from_ptr(stats_info_response_msg_t *ptr)
 
 
 cdef class Statistics:
@@ -269,6 +284,9 @@ cdef class Statistics:
         schedule_cycle_mean_depth (int):
             Mean of cycle depth. Depth means number of jobs processed in a
             scheduling cycle.
+        schedule_cycle_sum (int):
+            Total run time in microseconds for all scheduling cycles since last
+            reset format.
         schedule_cycles_per_minute (int):
             Counter of scheduling executions per minute.
         schedule_queue_length (int):
@@ -288,10 +306,10 @@ cdef class Statistics:
             backfilling since last Slurm start.
         backfill_cycle_counter (int):
             Number of backfill scheduling cycles since last reset.
-        backfill_last_cycle_when (int):
+        backfill_cycle_last_when (int):
             Time when last backfill scheduling cycle happened. This is a unix
             timestamp.
-        backfill_last_cycle (int):
+        backfill_cycle_last (int):
             Time in microseconds of last backfill scheduling cycle. It counts
             only execution time, removing sleep time inside a scheduling cycle
             when it executes for an extended period time. Note that locks are
@@ -305,15 +323,24 @@ cdef class Statistics:
         backfill_cycle_mean (int):
             Mean time in microseconds of backfilling scheduling cycles since
             last reset.
+        backfill_cycle_sum (int):
+            Total time in microseconds of backfilling scheduling cycles since
+            last reset.
         backfill_last_depth (int):
             Number of processed jobs during last backfilling scheduling cycle.
             It counts every job even if that job can not be started due to
             dependencies or limits.
+        backfill_depth_sum (int):
+            Total number of jobs processed during all backfilling scheduling
+            cycles since last reset.
         backfill_last_depth_try (int):
             Number of processed jobs during last backfilling scheduling cycle.
             It counts only jobs with a chance to start using available
             resources. These jobs consume more scheduling time than jobs which
             are found can not be started due to dependencies or limits.
+        backfill_depth_try_sum (int):
+            Subset of `backfill_depth_sum` that the backfill scheduler
+            attempted to schedule.
         backfill_mean_depth (int):
             Mean count of jobs processed during all backfilling scheduling
             cycles since last reset. Jobs which are found to be ineligible to
@@ -324,14 +351,17 @@ cdef class Statistics:
         backfill_mean_depth_try (int):
             The subset of `backfill_mean_depth` that the backfill
             scheduler attempted to schedule.
-        backfill_queue_len (int):
+        backfill_queue_length (int):
             Number of jobs pending to be processed by backfilling algorithm. A
             job is counted once for each partition it is queued to use. A
             pending job array will normally be counted as one job (tasks of a
             job array which have already been started/requeued or individually
             modified will already have individual job records and are each
             counted as a separate job).
-        backfill_queue_len_mean (int):
+        backfill_queue_length_sum (int):
+            Total number of jobs pending to be processed by backfilling
+            algorithm since last reset.
+        backfill_queue_length_mean (int):
             Mean count of jobs pending to be processed by backfilling
             algorithm. A job is counted once for each partition it requested. A
             pending job array will normally be counted as one job (tasks of a
@@ -341,6 +371,9 @@ cdef class Statistics:
         backfill_table_size (int):
             Count of different time slots tested by the backfill scheduler in
             its last iteration.
+        backfill_table_size_sum (int):
+            Total number of different time slots tested by the backfill
+            scheduler.
         backfill_table_size_mean (int):
             Mean count of different time slots tested by the backfill
             scheduler. Larger counts increase the time required for the
@@ -354,7 +387,7 @@ cdef class Statistics:
             RPC Statistics organized by Type.
         rpcs_by_user (pyslurm.slurmctld.RPCUserStatistics):
             RPC Statistics organized by User.
-        pending_rpcs (pyslurm.slurmctld.PendingRPCStatistics):
+        rpcs_pending (pyslurm.slurmctld.RPCPendingStatistics):
             Statistics for pending RPCs.
     """
     cdef public:
@@ -381,32 +414,37 @@ cdef class Statistics:
         schedule_cycle_counter
         schedule_cycle_mean
         schedule_cycle_mean_depth
+        schedule_cycle_sum
         schedule_cycles_per_minute
         schedule_queue_length
-        schedule_exit_stats
+        schedule_exit
 
         backfill_active
         backfilled_jobs
         last_backfilled_jobs
         backfilled_het_jobs
         backfill_cycle_counter
-        backfill_last_cycle_when
-        backfill_last_cycle
+        backfill_cycle_last_when
         backfill_cycle_last
         backfill_cycle_max
         backfill_cycle_mean
+        backfill_cycle_sum
         backfill_last_depth
+        backfill_depth_sum
         backfill_last_depth_try
+        backfill_depth_try_sum
         backfill_mean_depth
         backfill_mean_depth_try
-        backfill_queue_len
-        backfill_queue_len_mean
+        backfill_queue_length
+        backfill_queue_length_sum
+        backfill_queue_length_mean
         backfill_table_size
+        backfill_table_size_sum
         backfill_table_size_mean
-        backfill_exit_stats
+        backfill_exit
 
         gettimeofday_latency
 
         rpcs_by_type
         rpcs_by_user
-        pending_rpcs
+        rpcs_pending
