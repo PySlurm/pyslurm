@@ -53,6 +53,7 @@ cdef class Reservations(MultiClusterMap):
 
     def __dealloc__(self):
         slurm_free_reservation_info_msg(self.info)
+        self.info = NULL
 
     def __cinit__(self):
         self.info = NULL
@@ -81,15 +82,19 @@ cdef class Reservations(MultiClusterMap):
 
         verify_rpc(slurm_load_reservations(0, &reservations.info))
 
-        # zero-out a dummy reserve_info_t
+        # prepare a dummy reserve_info_t struct.
         memset(&reservations.tmp_info, 0, sizeof(reserve_info_t))
 
         # Put each pointer into its own instance.
         for cnt in range(reservations.info.record_count):
             reservation = Reservation.from_ptr(&reservations.info.reservation_array[cnt])
 
-            # Prevent double free if xmalloc fails mid-loop and a MemoryError
-            # is raised by replacing it with a zeroed-out reserve_info_t.
+            # If we already parsed at least one Reservation, and if for some
+            # reason a MemoryError is raised after parsing subsequent
+            # reservations, invalid behaviour will be shown by Valgrind, since
+            # the Memory for the already parsed Reservation will be freed
+            # twice. So for all sucessfully parsed Reservations, replace it
+            # with a dummy struct that will be skipped in case of error.
             reservations.info.reservation_array[cnt] = reservations.tmp_info
 
             cluster = reservation.cluster
@@ -112,8 +117,6 @@ cdef class Reservation:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
-        self.start_time = datetime.now()
-        self.duration = "365-00:00:00"
         self.cluster = LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -133,14 +136,17 @@ cdef class Reservation:
             self.umsg = <resv_desc_msg_t*>try_xmalloc(sizeof(resv_desc_msg_t))
             if not self.umsg:
                 raise MemoryError("xmalloc failed for resv_desc_msg_t")
-            print("we here")
             slurm_init_resv_desc_msg(self.umsg)
 
-    def _dealloc_impl(self):
+    def _dealloc_umsg(self):
         slurm_free_resv_desc_msg(self.umsg)
         self.umsg = NULL
+
+    def _dealloc_impl(self):
+        self._dealloc_umsg()
         slurm_free_reserve_info_members(self.info)
         xfree(self.info)
+        self.info = NULL
 
     def __dealloc__(self):
         self._dealloc_impl()
@@ -161,8 +167,6 @@ cdef class Reservation:
     cdef Reservation from_ptr(reserve_info_t *in_ptr):
         cdef Reservation wrap = Reservation.__new__(Reservation)
         wrap._alloc_info()
-        wrap.passwd = {}
-        wrap.groups = {}
         wrap.cluster = LOCAL_CLUSTER
         memcpy(wrap.info, in_ptr, sizeof(reserve_info_t))
         return wrap
@@ -175,15 +179,16 @@ cdef class Reservation:
         return self.name
 
     def to_dict(self):
-        """Node information formatted as a dictionary.
+        """Reservation information formatted as a dictionary.
 
         Returns:
-            (dict): Node information as dict
+            (dict): Reservation information as dict
 
         Examples:
             >>> import pyslurm
-            >>> mynode = pyslurm.Node.load("mynode")
-            >>> mynode_dict = mynode.to_dict()
+            >>> resv = pyslurm.Reservation.load("maintenance")
+            >>> resv_dict = resv.to_dict()
+            >>> print(resv_dict)
         """
         return instance_to_dict(self)
 
@@ -215,6 +220,10 @@ cdef class Reservation:
     def create(self):
         """Create a Reservation.
 
+        If you did not specify atleast a `start_time` and `duration` or
+        `end_time`, then by default the Reservation will start effective
+        immediately, with a duration of one year.
+
         Returns:
             (pyslurm.Reservation): This function returns the current
                 Reservation instance object itself.
@@ -224,9 +233,13 @@ cdef class Reservation:
 
         Examples:
             >>> import pyslurm
-            >>> reservation = pyslurm.Reservation("debug").create()
+            >>> resv = pyslurm.Reservation("debug")
         """
         cdef char* new_name = NULL
+
+        if not self.start_time or not (self.duration and self.end_time):
+            raise RPCError(msg="You must atleast specify a start_time, "
+                           " combined with an end_time or a duration.")
 
         self.name = self._error_or_name()
         new_name = slurm_create_reservation(self.umsg)
@@ -234,14 +247,15 @@ cdef class Reservation:
         verify_rpc(slurm_errno())
         return self
 
-    def modify(self, Reservation changes):
+    def modify(self, Reservation changes=None):
         """Modify a Reservation.
 
         Args:
-            changes (pyslurm.Reservation):
+            changes (pyslurm.Reservation, optional=None):
                 Another Reservation object that contains all the changes to
-                apply. Check the `Other Parameters` of the Reservation class to
-                see which properties can be modified.
+                apply. This is optional - you can also directly modify a
+                Reservation object and just call `modify()`, and the changes
+                will be sent to `slurmctld`.
 
         Raises:
             (pyslurm.RPCError): When updating the Reservation was not
@@ -250,18 +264,27 @@ cdef class Reservation:
         Examples:
             >>> import pyslurm
             >>>
-            >>> mynode = pyslurm.Node.load("localhost")
-            >>> # Prepare the changes
-            >>> changes = pyslurm.Node(state="DRAIN", reason="DRAIN Reason")
-            >>> # Modify it
-            >>> mynode.modify(changes)
+            >>> resv = pyslurm.Reservation.load("maintenance")
+            >>> # Add 60 Minutes to the reservation
+            >>> resv.duration += 60
+            >>>
+            >>> # You can also add a slurm timestring.
+            >>> # For example, extend the duration by another day:
+            >>> resv.duration += pyslurm.utils.timestr_to_mins("1-00:00:00")
+            >>>
+            >>> # Now send the changes to the Controller:
+            >>> resv.modify()
         """
-        if not changes.umsg:
+        cdef Reservation updates = changes if changes is not None else self
+        if not updates.umsg:
             return
 
         self._error_or_name()
-        cstr.fmalloc(&changes.umsg.name, self.info.name)
-        verify_rpc(slurm_update_reservation(changes.umsg))
+        cstr.fmalloc(&updates.umsg.name, self.info.name)
+        verify_rpc(slurm_update_reservation(updates.umsg))
+
+        # Make sure we clean the object from any previous changes.
+        updates._dealloc_umsg()
 
     def delete(self):
         """Delete a Reservation.
@@ -303,15 +326,15 @@ cdef class Reservation:
         cstr.fmalloc2(&self.info.comment, &self.umsg.comment, val)
 
     @property
-    def core_count(self):
+    def cpus(self):
         return u32_parse(self.info.core_cnt, zero_is_noval=False)
 
-    @core_count.setter
-    def core_count(self, val):
+    @cpus.setter
+    def cpus(self, val):
         self.info.core_cnt = self.umsg.core_cnt = int(val)
 
     @property
-    def cores_by_node(self):
+    def cpus_by_node(self):
         out = {}
         for i in range(self.info.core_spec_cnt):
             node = cstr.to_unicode(self.info.core_spec[i].node_name)
@@ -410,7 +433,7 @@ cdef class Reservation:
     def duration(self):
         cdef time_t duration = 0
 
-        if self.info.end_time >= self.info.start_time:
+        if self.start_time and self.info.end_time >= self.info.start_time:
             duration = <time_t>ctime.difftime(self.info.end_time,
                                               self.info.start_time)
 
@@ -419,7 +442,8 @@ cdef class Reservation:
     @duration.setter
     def duration(self, val):
         val = timestr_to_mins(val)
-        self.umsg.duration = val
+        if not self.start_time:
+            self.start_time = datetime.now()
         self.end_time = self.start_time + (val * 60)
 
     @property
@@ -432,6 +456,11 @@ cdef class Reservation:
     @property
     def tres(self):
         return cstr.to_dict(self.info.tres_str)
+
+    @tres.setter
+    def tres(self, val):
+        cstr.fmalloc2(&self.info.tres_str, &self.umsg.tres_str,
+                      cstr.dict_to_str(val))
 
     @property
     def users(self):

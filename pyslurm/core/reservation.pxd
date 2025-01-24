@@ -53,6 +53,12 @@ cdef extern void slurm_free_reserve_info_members(reserve_info_t *resv)
 
 
 cdef class Reservations(MultiClusterMap):
+    """A [`Multi Cluster`][pyslurm.xcollections.MultiClusterMap] collection of [pyslurm.Reservation][] objects.
+
+    Args:
+        reservations (Union[list[str], dict[str, pyslurm.Reservation], str], optional=None):
+            Reservations to initialize this collection with.
+    """
 
     cdef:
         reserve_info_msg_t *info
@@ -60,12 +66,63 @@ cdef class Reservations(MultiClusterMap):
 
 
 cdef class Reservation:
+    """A Slurm Reservation.
 
+    Args:
+        name (str, optional=None):
+            Name of a Reservation.
+
+    !!! note
+
+        All Attributes of a Reservation, except for `name` and `cpus_by_node`,
+        are eligible to be updated. Although the `name` attribute can be
+        changed on the instance, the change will not be taken into account by
+        `slurmctld`
+
+    Attributes:
+        accounts (list[str]):
+            List of account names that have access to the Reservation.
+        burst_buffer (str):
+            Burst Buffer specification.
+        comment (str):
+            Arbitrary comment for the Reservation.
+        cpus (int):
+            Amount of CPUs used by the Reservation
+        cpus_by_node (dict[str, int]):
+            A Mapping where each key is the node-name, and the values are a
+            string of CPU-IDs reserved on the specific nodes.
+        end_time (int):
+            Unix Timestamp when the Reservation ends.
+        features (list[str]):
+            List of features required by the Reservation.
+        groups (list[str]):
+            List of Groups that can access the Reservation.
+        licenses (list[str]):
+            List of licenses to be reserved.
+        max_start_delay (int):
+            TODO
+        name (str):
+            Name of the Reservation.
+        node_count (int):
+            Count of Nodes required.
+        nodes (str):
+            Nodes to be reserved.
+        partition (str):
+            Name of the partition to be used.
+        start_time (int):
+            When the Reservation starts. This is a Unix timestamp.
+        duration (int):
+            How long, in minutes, the reservation runs for.
+        is_active (bool):
+            Whether the reservation is currently active or not.
+        tres (dict[str, int])
+            TRES for the Reservation.
+        users (list[str]):
+            List of user names permitted to use the Reservation.
+    """
     cdef:
         reserve_info_t *info
         resv_desc_msg_t *umsg
-        dict passwd
-        dict groups
 
     cdef readonly cluster
 
