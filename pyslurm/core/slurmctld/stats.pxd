@@ -207,7 +207,7 @@ cdef class RPCUser:
 
 
 cdef class RPCTypeStatistics(dict):
-    """Collection of [](pyslurm.slurmctld.RPCTypeStatistic)'s
+    """Collection of [pyslurm.slurmctld.RPCType][] objects.
 
     Attributes:
         count (int):
@@ -224,7 +224,7 @@ cdef class RPCTypeStatistics(dict):
 
 
 cdef class RPCUserStatistics(dict):
-    """Collection of [](pyslurm.slurmctld.RPCUser)'s
+    """Collection of [pyslurm.slurmctld.RPCUser][] objects.
 
     Attributes:
         count (int):
@@ -237,7 +237,7 @@ cdef class RPCUserStatistics(dict):
 
 
 cdef class RPCPendingStatistics(dict):
-    """Collection of [](pyslurm.slurmctld.RPCPendingStatistics)
+    """Collection of [pyslurm.slurmctld.RPCPending][] objects.
 
     Attributes:
         count (int):

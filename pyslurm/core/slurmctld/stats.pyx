@@ -272,6 +272,20 @@ cdef class Statistics:
 
     @staticmethod
     def load():
+        """Load the Statistics of the `slurmctld`.
+
+        Returns:
+            (pyslurm.slurmctld.Statistics): The Controller statistics.
+
+        Raises:
+            (pyslurm.RPCError): When fetching the Statistics failed.
+
+        Examples:
+            >>> from pyslurm import slurmctld
+            >>> stats = slurmctld.Statistics.load()
+            >>> print(stats.jobs_completed, stats.schedule_cycle_counter)
+            10 20
+        """
         cdef:
             stats_info_request_msg_t req
             stats_info_response_msg_t *resp = NULL
@@ -291,11 +305,30 @@ cdef class Statistics:
 
     @staticmethod
     def reset():
+        """Reset the Statistics of the `slurmctld`.
+
+        Raises:
+            (pyslurm.RPCError): When resetting the Statistics failed.
+
+        Examples:
+            >>> from pyslurm import slurmctld
+            >>> slurmctld.Statistics.reset()
+        """
         cdef stats_info_request_msg_t req
         req.command_id = slurm.STAT_COMMAND_RESET
         verify_rpc(slurm_reset_statistics(&req))
 
     def to_dict(self):
+        """Convert the statistics to a dictionary.
+
+        Returns:
+            (dict): Statistics as a dict.
+
+        Examples:
+            >>> from pyslurm import slurmctld
+            >>> stats = slurmctld.Statistics.load()
+            >>> stats_dict = stats.to_dict()
+        """
         out = instance_to_dict(self)
         out["rpcs_by_type"] = xcollections.dict_recursive(self.rpcs_by_type)
         out["rpcs_by_user"] = xcollections.dict_recursive(self.rpcs_by_user)
@@ -303,6 +336,26 @@ cdef class Statistics:
         out["schedule_exit"] = self.schedule_exit.to_dict()
         out["backfill_exit"] = self.backfill_exit.to_dict()
         return out
+
+
+def diag():
+    """Load the Statistics of the `slurmctld`.
+
+    This is a shortcut for [pyslurm.slurmctld.Statistics.load][]
+
+    Returns:
+        (pyslurm.slurmctld.Statistics): The Controller statistics.
+
+    Raises:
+        (pyslurm.RPCError): When fetching the Statistics failed.
+
+    Examples:
+        >>> from pyslurm import slurmctld
+        >>> stats = slurmctld.Statistics.load()
+        >>> print(stats.jobs_completed, stats.schedule_cycle_counter)
+        10 20
+    """
+    return Statistics.load()
 
 
 cdef parse_response(stats_info_response_msg_t *ptr):

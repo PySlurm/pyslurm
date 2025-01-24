@@ -6,6 +6,7 @@ from .config import (
 )
 from .enums import ShutdownMode
 from .stats import (
+    diag,
     Statistics,
     ScheduleExitStatistics,
     BackfillExitStatistics,
