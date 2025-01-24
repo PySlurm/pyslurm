@@ -3,6 +3,20 @@
 #########################################################################
 # Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
+#########################################################################
+# Much of the documentation here (with some modifications) has been taken from:
+# - https://slurm.schedmd.com/sdiag.html
+# - https://github.com/SchedMD/slurm/blob/c28fcf4f15981f891df7893099bceda21e2c5e6e/src/sdiag/sdiag.c
+#
+# So for completeness, the appropriate Copyright notices are also written
+# below:
+#
+# Copyright (C) 2010-2011 Barcelona Supercomputing Center.
+# Copyright (C) 2010-2022 SchedMD LLC.
+#
+# Please also check the Slurm DISCLAIMER at: pyslurm/slurm/SLURM_DISCLAIMER
+#########################################################################
+
 # This file is part of PySlurm
 #
 # PySlurm is free software; you can redistribute it and/or modify
@@ -87,7 +101,7 @@ cdef class BackfillExitStatistics:
         end_of_job_queue (int):
             Times the end of the job queue was reached.
         max_job_start (int):
-            Reached the number of jobs allowed to start limit
+            Reached the number of jobs allowed to start limit.
         max_job_test (int):
             Reached the number of jobs allowed to attempt backfill scheduling
             for.
@@ -149,9 +163,10 @@ cdef class RPCType:
         dropped (int):
             How many of these RPCs have been dropped.
         cycle_last (int):
-            Number of RPCs processed within the last RPC queue cycle.
+            Count of RPCs processed within the last RPC queue cycle.
         cycle_max (int):
-            Maximum number of RPCs processed within a RPC queue cycle.
+            Maximum count of RPCs that have been processed within a RPC queue
+            cycle.
     """
     cdef public:
         id
@@ -407,7 +422,6 @@ cdef class Statistics:
         jobs_failed
         jobs_pending
         jobs_running
-        # job_states_time
 
         schedule_cycle_last
         schedule_cycle_max

@@ -2,6 +2,19 @@
 # slurmctld/stats.pyx - pyslurm slurmctld statistics api (sdiag)
 #########################################################################
 # Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
+
+#########################################################################
+# The implementation here is inspired by:
+# - https://github.com/SchedMD/slurm/blob/c28fcf4f15981f891df7893099bceda21e2c5e6e/src/sdiag/sdiag.c
+#
+# So for completeness, the appropriate Copyright notices are also written
+# below:
+#
+# Copyright (C) 2010-2011 Barcelona Supercomputing Center.
+# Copyright (C) 2010-2022 SchedMD LLC.
+#
+# Please also check the Slurm DISCLAIMER at: pyslurm/slurm/SLURM_DISCLAIMER
+#########################################################################
 #
 # This file is part of PySlurm
 #
@@ -319,8 +332,6 @@ cdef parse_response(stats_info_response_msg_t *ptr):
     out.schedule_queue_length = int(ptr.schedule_queue_len)
     out.schedule_cycle_sum = int(ptr.schedule_cycle_sum)
 
-    # TODO: job_states_time ?
-
     if cycle_count > 0:
         out.schedule_cycle_mean = int(ptr.schedule_cycle_sum / cycle_count)
         out.schedule_cycle_mean_depth = int(ptr.schedule_cycle_depth / cycle_count)
@@ -328,7 +339,6 @@ cdef parse_response(stats_info_response_msg_t *ptr):
     ts = ptr.req_time - ptr.req_time_start
     if ts > 60:
         out.schedule_cycles_per_minute = int(cycle_count / (ts / 60))
-
 
     out.backfill_active = bool(ptr.bf_active)
     out.backfilled_jobs = ptr.bf_backfilled_jobs
