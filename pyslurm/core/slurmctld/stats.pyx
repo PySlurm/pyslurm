@@ -427,3 +427,68 @@ cdef parse_response(stats_info_response_msg_t *ptr):
     out.backfill_exit = BackfillExitStatistics.from_ptr(ptr)
 
     return out
+
+
+# Prepare some test data
+def _parse_test_data():
+    import datetime
+
+    cdef stats_info_response_msg_t stats
+    memset(&stats, 0, sizeof(stats))
+
+    stats.req_time = int(datetime.datetime.now().timestamp())
+    stats.req_time_start = int(datetime.datetime.now().timestamp()) - 200
+    stats.jobs_submitted = 20
+    stats.jobs_running = 3
+    stats.schedule_cycle_counter = 10
+    stats.schedule_cycle_last = 40
+    stats.schedule_cycle_sum = 45
+
+    stats.bf_cycle_counter = 100
+    stats.bf_active = 0
+    stats.bf_backfilled_jobs = 10
+    stats.bf_cycle_sum = 200
+    stats.bf_depth_try_sum = 300
+    stats.bf_queue_len_sum = 600
+    stats.bf_table_size_sum = 200
+
+    stats.rpc_type_size = 3
+    stats.rpc_type_id = <uint16_t*>xmalloc(sizeof(uint16_t) * stats.rpc_type_size)
+    stats.rpc_type_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * stats.rpc_type_size)
+    stats.rpc_type_time = <uint64_t*>xmalloc(sizeof(uint64_t) * stats.rpc_type_size)
+
+    for i in range(stats.rpc_type_size):
+        stats.rpc_type_id[i] = 2000+i
+        stats.rpc_type_cnt[i] = i+1
+        stats.rpc_type_time[i] = i+2
+
+    stats.rpc_user_size = 1
+    stats.rpc_user_id = <uint32_t*>xmalloc(sizeof(uint32_t) * stats.rpc_user_size)
+    stats.rpc_user_cnt = <uint32_t*>xmalloc(sizeof(uint32_t) * stats.rpc_user_size)
+    stats.rpc_user_time = <uint64_t*>xmalloc(sizeof(uint64_t) * stats.rpc_user_size)
+
+    for i in range(stats.rpc_user_size):
+        stats.rpc_user_id[i] = i
+        stats.rpc_user_cnt[i] = i+1
+        stats.rpc_user_time[i] = i+2
+
+    stats.bf_exit_cnt = BF_EXIT_COUNT
+    stats.bf_exit = <uint32_t*>xmalloc(sizeof(uint32_t) * BF_EXIT_COUNT)
+    for i in range(stats.bf_exit_cnt):
+        stats.bf_exit[i] = i+1
+
+    stats.schedule_exit_cnt = SCHED_EXIT_COUNT
+    stats.schedule_exit = <uint32_t*>xmalloc(sizeof(uint32_t) * SCHED_EXIT_COUNT)
+
+    for i in range(stats.schedule_exit_cnt):
+        stats.schedule_exit[i] = i+1
+
+    stats.rpc_queue_type_count = 5
+    stats.rpc_queue_count = <uint32_t*>xmalloc(sizeof(uint32_t) * stats.rpc_queue_type_count)
+    stats.rpc_queue_type_id = <uint32_t*>xmalloc(sizeof(uint32_t) * stats.rpc_queue_type_count)
+
+    for i in range(stats.rpc_queue_type_count):
+        stats.rpc_queue_count[i] = i+1
+        stats.rpc_queue_type_id[i] = 2000+i
+
+    return parse_response(&stats)

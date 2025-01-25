@@ -36,6 +36,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from libc.string cimport memset
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     stats_info_response_msg_t,
@@ -44,6 +45,7 @@ from pyslurm.slurm cimport (
     slurm_reset_statistics,
     slurm_free_stats_response_msg,
     xfree,
+    xmalloc,
 )
 from pyslurm.utils cimport cstr
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
