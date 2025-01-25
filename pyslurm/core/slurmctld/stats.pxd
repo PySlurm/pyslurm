@@ -252,6 +252,8 @@ cdef class RPCPendingStatistics(dict):
 cdef class Statistics:
     """Statistics for the `slurmctld`.
 
+    For more information, also check out the Slurm [sdiag documentation](https://slurm.schedmd.com/sdiag.html).
+
     Attributes:
         request_time (int):
             Time when the data was requested. This is a unix timestamp.
@@ -259,7 +261,7 @@ cdef class Statistics:
             The date when `slurmctld` started gathering statistics. This is a
             unix timestamp.
         server_thread_count (int):
-            The number of current active slurmctld threads.
+            The number of current active `slurmctld` threads.
         rpc_queue_enabled (bool):
             Whether RPC queuing is enabled.
         agent_queue_size (int):
@@ -281,7 +283,7 @@ cdef class Statistics:
         jobs_canceled (int):
             Number of jobs canceled since last reset.
         jobs_failed (int):
-            Number of jobs failed due to slurmd or other internal issues since
+            Number of jobs failed due to `slurmd` or other internal issues since
             last reset.
         jobs_pending (int):
             Number of jobs pending.
@@ -315,8 +317,7 @@ cdef class Statistics:
             start.
         last_backfilled_jobs (int):
             Number of jobs started thanks to backfilling since last time stats
-            where reset. By default these values are reset at midnight UTC
-            time.
+            where reset. (which is midnight UTC time in this case)
         backfilled_het_jobs (int):
             Number of heterogeneous job components started thanks to
             backfilling since last Slurm start.
@@ -326,16 +327,10 @@ cdef class Statistics:
             Time when last backfill scheduling cycle happened. This is a unix
             timestamp.
         backfill_cycle_last (int):
-            Time in microseconds of last backfill scheduling cycle. It counts
-            only execution time, removing sleep time inside a scheduling cycle
-            when it executes for an extended period time. Note that locks are
-            released during the sleep time so that other work can proceed.
+            Time in microseconds of last backfill scheduling cycle.
         backfill_cycle_max (int):
             Time in microseconds of maximum backfill scheduling cycle execution
-            since last reset. It counts only execution time, removing sleep
-            time inside a scheduling cycle when it executes for an extended
-            period time. Note that locks are released during the sleep time so
-            that other work can proceed.
+            since last reset.
         backfill_cycle_mean (int):
             Mean time in microseconds of backfilling scheduling cycles since
             last reset.
@@ -352,38 +347,26 @@ cdef class Statistics:
         backfill_last_depth_try (int):
             Number of processed jobs during last backfilling scheduling cycle.
             It counts only jobs with a chance to start using available
-            resources. These jobs consume more scheduling time than jobs which
-            are found can not be started due to dependencies or limits.
+            resources.
         backfill_depth_try_sum (int):
             Subset of `backfill_depth_sum` that the backfill scheduler
             attempted to schedule.
         backfill_mean_depth (int):
             Mean count of jobs processed during all backfilling scheduling
             cycles since last reset. Jobs which are found to be ineligible to
-            run when examined by the backfill scheduler are not counted (e.g.
-            jobs submitted to multiple partitions and already started, jobs
-            which have reached a QOS or account limit such as maximum running
-            jobs for an account, etc).
+            run when examined by the backfill scheduler are not counted.
         backfill_mean_depth_try (int):
             The subset of `backfill_mean_depth` that the backfill
             scheduler attempted to schedule.
         backfill_queue_length (int):
             Number of jobs pending to be processed by backfilling algorithm. A
-            job is counted once for each partition it is queued to use. A
-            pending job array will normally be counted as one job (tasks of a
-            job array which have already been started/requeued or individually
-            modified will already have individual job records and are each
-            counted as a separate job).
+            job is counted once for each partition it is queued to use.
         backfill_queue_length_sum (int):
             Total number of jobs pending to be processed by backfilling
             algorithm since last reset.
         backfill_queue_length_mean (int):
             Mean count of jobs pending to be processed by backfilling
-            algorithm. A job is counted once for each partition it requested. A
-            pending job array will normally be counted as one job (tasks of a
-            job array which have already been started/requeued or individually
-            modified will already have individual job records and are each
-            counted as a separate job).
+            algorithm.
         backfill_table_size (int):
             Count of different time slots tested by the backfill scheduler in
             its last iteration.
@@ -393,9 +376,7 @@ cdef class Statistics:
         backfill_table_size_mean (int):
             Mean count of different time slots tested by the backfill
             scheduler. Larger counts increase the time required for the
-            backfill operation. The table size is influenced by many scheduling
-            parameters, including: bf_min_age_reserve, bf_min_prio_reserve,
-            bf_resolution, and bf_window.
+            backfill operation.
         gettimeofday_latency (int):
             Latency of 1000 calls to the gettimeofday() syscall in
             microseconds, as measured at controller startup.
