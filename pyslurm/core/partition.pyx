@@ -31,6 +31,7 @@ from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
 from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm.core import slurmctld
 from pyslurm.core.slurmctld.config import _get_memory
 from pyslurm import xcollections
 from pyslurm.utils.helpers import (
@@ -78,7 +79,6 @@ cdef class Partitions(MultiClusterMap):
             Partitions partitions = Partitions()
             int flags = slurm.SHOW_ALL
             Partition partition
-            slurmctld.Config slurm_conf
             int power_save_enabled = 0
 
         verify_rpc(slurm_load_partitions(0, &partitions.info, flags))
@@ -801,7 +801,7 @@ def _preempt_mode_str_to_int(mode):
     return pmode
 
 
-def _preempt_mode_int_to_str(mode, slurmctld.Config slurm_conf):
+def _preempt_mode_int_to_str(mode, slurm_conf):
     if mode == slurm.NO_VAL16:
         return slurm_conf.preempt_mode if slurm_conf else None
     else:
