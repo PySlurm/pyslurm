@@ -293,8 +293,7 @@ cdef class Statistics:
             Maximum time in microseconds for any scheduling cycle since last
             reset.
         schedule_cycle_counter (int):
-            Total run time in microseconds for all scheduling cycles since last
-            reset.
+            Total amount of scheduling cycles ran since last reset.
         schedule_cycle_mean (int):
             Mean time in microseconds for all scheduling cycles since last
             reset.
@@ -303,7 +302,7 @@ cdef class Statistics:
             scheduling cycle.
         schedule_cycle_sum (int):
             Total run time in microseconds for all scheduling cycles since last
-            reset format.
+            reset.
         schedule_cycles_per_minute (int):
             Counter of scheduling executions per minute.
         schedule_queue_length (int):
