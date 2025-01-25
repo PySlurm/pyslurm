@@ -218,7 +218,7 @@ cdef class RPCTypeStatistics(dict):
             Total amount of time it has taken to process all RPCs made yet.
         queued (int):
             Total amount of RPCs queued.
-        queued (int):
+        dropped (int):
             Total amount of RPCs dropped.
     """
     @staticmethod
@@ -243,7 +243,7 @@ cdef class RPCPendingStatistics(dict):
 
     Attributes:
         count (int):
-            Total amount of RPCs made to the `slurmctld` since last reset.
+            Total amount of RPCs currently pending.
     """
     @staticmethod
     cdef RPCPendingStatistics from_ptr(stats_info_response_msg_t *ptr)
