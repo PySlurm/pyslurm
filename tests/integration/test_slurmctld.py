@@ -118,5 +118,5 @@ def test_statistics():
     slurmctld.Statistics.reset()
     new_stats = slurmctld.Statistics.load()
     assert new_stats.to_dict()
-    # Check that resetting it was actually sucessful.
+    # Check that resetting it was actually successful.
     assert data_since < new_stats.data_since
