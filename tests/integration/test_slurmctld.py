@@ -107,3 +107,16 @@ def test_fair_share_dampening_factor():
     with pytest.raises(pyslurm.RPCError,
            match=r"Invalid Dampening*"):
         slurmctld.set_fair_share_dampening_factor(99999999)
+
+
+def test_statistics():
+    stats = slurmctld.diag()
+    assert stats.to_dict()
+    assert len(stats.rpcs_by_type) > 0
+    data_since = stats.data_since
+
+    slurmctld.Statistics.reset()
+    new_stats = slurmctld.Statistics.load()
+    assert new_stats.to_dict()
+    # Check that resetting it was actually sucessful.
+    assert data_since < new_stats.data_since
