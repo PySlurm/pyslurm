@@ -22,30 +22,23 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from typing import Union, Any
 from pyslurm.utils import cstr
 from pyslurm.utils import ctime
-from pyslurm.utils.uint import *
-from pyslurm.core.error import RPCError, verify_rpc, slurm_errno
-from pyslurm.utils.ctime import timestamp_to_date, _raw_time
-from pyslurm.constants import UNLIMITED
-from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm.utils.uint import u32_parse
+from pyslurm import settings
 from pyslurm.core.slurmctld.config import _get_memory
 from datetime import datetime
 from pyslurm import xcollections
-from pyslurm.utils.helpers import (
-    uid_to_name,
-    gid_to_name,
-    _getgrall_to_dict,
-    _getpwall_to_dict,
-    cpubind_to_num,
-    instance_to_dict,
-    dehumanize,
-)
+from pyslurm.utils.helpers import instance_to_dict
 from pyslurm.utils.ctime import (
+    _raw_time,
     timestr_to_mins,
-    timestr_to_secs,
     date_to_timestamp,
+)
+from pyslurm.core.error import (
+    RPCError,
+    verify_rpc,
+    slurm_errno,
 )
 
 
@@ -117,7 +110,7 @@ cdef class Reservation:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
-        self.cluster = LOCAL_CLUSTER
+        self.cluster = settings.LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -167,7 +160,7 @@ cdef class Reservation:
     cdef Reservation from_ptr(reserve_info_t *in_ptr):
         cdef Reservation wrap = Reservation.__new__(Reservation)
         wrap._alloc_info()
-        wrap.cluster = LOCAL_CLUSTER
+        wrap.cluster = settings.LOCAL_CLUSTER
         memcpy(wrap.info, in_ptr, sizeof(reserve_info_t))
         return wrap
 
@@ -340,6 +333,8 @@ cdef class Reservation:
             node = cstr.to_unicode(self.info.core_spec[i].node_name)
             if node:
                 out[node] = cstr.to_unicode(self.info.core_spec[i].core_id)
+
+        return out
 
     @property
     def end_time(self):

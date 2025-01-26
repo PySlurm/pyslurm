@@ -45,7 +45,7 @@ from pyslurm.slurm cimport (
 from pyslurm.utils cimport cstr
 from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
-from pyslurm.utils.uint cimport *
+from pyslurm.utils.uint cimport u32_parse
 from pyslurm.xcollections cimport MultiClusterMap
 
 cdef extern void slurm_free_resv_desc_msg(resv_desc_msg_t *msg)
@@ -59,7 +59,6 @@ cdef class Reservations(MultiClusterMap):
         reservations (Union[list[str], dict[str, pyslurm.Reservation], str], optional=None):
             Reservations to initialize this collection with.
     """
-
     cdef:
         reserve_info_msg_t *info
         reserve_info_t tmp_info
@@ -70,14 +69,14 @@ cdef class Reservation:
 
     Args:
         name (str, optional=None):
-            Name of a Reservation.
+            Name for a Reservation.
 
     !!! note
 
         All Attributes of a Reservation, except for `name` and `cpus_by_node`,
         are eligible to be updated. Although the `name` attribute can be
         changed on the instance, the change will not be taken into account by
-        `slurmctld`
+        `slurmctld` when calling `modify()`.
 
     Attributes:
         accounts (list[str]):
