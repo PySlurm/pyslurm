@@ -109,7 +109,10 @@ cdef class CgroupConfig:
 
         out.mountpoint = conf.get("CgroupMountpoint", "/sys/fs/cgroup")
         out.plugin = conf.get("CgroupPlugin", "autodetect")
-        out.systemd_timeout = int(conf.get("SystemdTimeout", 1000))
+
+        systemd_timeout = conf.get("SystemdTimeout", "1000")
+        out.systemd_timeout = int(systemd_timeout.split(" ")[0])
+
         out.ignore_systemd = _yesno_to_bool(conf.get("IgnoreSystemd"))
         out.ignore_systemd_on_failure = _yesno_to_bool(conf.get("IgnoreSystemdOnFailure"))
         out.enable_controllers = _yesno_to_bool(conf.get("EnableControllers"))
@@ -205,13 +208,7 @@ cdef class Config:
         """
         cdef Config conf = Config.__new__(Config)
         verify_rpc(slurm_load_ctl_conf(0, &conf.ptr))
-
-        conf.cgroup_config = CgroupConfig.from_ptr(conf.ptr.cgroup_conf)
-        conf.accounting_gather_config = AccountingGatherConfig.from_ptr(
-                conf.ptr.acct_gather_conf)
-        conf.mpi_config = MPIConfig.from_ptr(conf.ptr.mpi_conf)
         # TODO: node_features_conf
-
         return conf
 
     def to_dict(self):
@@ -230,6 +227,25 @@ cdef class Config:
         out["accounting_gather_config"] = self.accounting_gather_config.to_dict()
         out["mpi_config"] = self.mpi_config.to_dict()
         return out
+
+    @property
+    def cgroup_config(self):
+        if not self._cgroup_config:
+            self._cgroup_config =  CgroupConfig.from_ptr(self.ptr.cgroup_conf)
+        return self._cgroup_config
+
+    @property
+    def accounting_gather_config(self):
+        if not self._accounting_gather_config:
+            self._accounting_gather_config = AccountingGatherConfig.from_ptr(
+                self.ptr.acct_gather_conf)
+        return self._accounting_gather_config
+
+    @property
+    def mpi_config(self):
+        if not self._mpi_config:
+            self._mpi_config = MPIConfig.from_ptr(self.ptr.mpi_conf)
+        return self._mpi_config
 
     @property
     def accounting_storage_enforce(self):
