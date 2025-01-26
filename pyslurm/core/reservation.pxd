@@ -97,7 +97,8 @@ cdef class Reservation:
         licenses (list[str]):
             List of licenses to be reserved.
         max_start_delay (int):
-            TODO
+            Maximum delay, in seconds, where Jobs are permitted to overlap with
+            the Reservation once Jobs are queued for it.
         name (str):
             Name of the Reservation.
         node_count (int):
