@@ -1059,12 +1059,11 @@ cdef class Config:
 
             {slurm.conf#OPT_X11Parameters}
     """
-    cdef slurm_conf_t *ptr
-
-    cdef public:
-        CgroupConfig cgroup_config
-        AccountingGatherConfig accounting_gather_config
-        MPIConfig mpi_config
+    cdef:
+        slurm_conf_t *ptr
+        CgroupConfig _cgroup_config
+        AccountingGatherConfig _accounting_gather_config
+        MPIConfig _mpi_config
 
 
 # Documentation for the attributes in the MPIConfig class have
