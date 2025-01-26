@@ -55,7 +55,6 @@ from pyslurm.utils cimport cstr
 from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.utils.uint cimport *
-from pyslurm.core cimport slurmctld
 from pyslurm.xcollections cimport MultiClusterMap
 
 
@@ -215,7 +214,7 @@ cdef class Partition:
     cdef:
         partition_info_t *ptr
         int power_save_enabled
-        slurmctld.Config slurm_conf
+        slurm_conf
 
     cdef readonly cluster
 
