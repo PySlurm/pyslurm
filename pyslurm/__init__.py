@@ -7,10 +7,6 @@ import sys
 
 sys.setdlopenflags(sys.getdlopenflags() | os.RTLD_GLOBAL | os.RTLD_DEEPBIND)
 
-# Initialize slurm api
-from pyslurm.api import slurm_init, slurm_fini
-slurm_init()
-
 from .version import __version__
 
 from pyslurm import db
@@ -35,3 +31,7 @@ from pyslurm.core import slurmctld
 
 # The old API in deprecated.pyx
 from pyslurm.deprecated import *
+
+# Initialize slurm api
+from pyslurm.api import slurm_init, slurm_fini
+slurm_init()

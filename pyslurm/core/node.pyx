@@ -28,7 +28,7 @@ from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
-from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import settings
 from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     uid_to_name,
@@ -222,7 +222,7 @@ cdef class Node:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
-        self.cluster = LOCAL_CLUSTER
+        self.cluster = settings.LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -270,7 +270,7 @@ cdef class Node:
         wrap._alloc_info()
         wrap.passwd = {}
         wrap.groups = {}
-        wrap.cluster = LOCAL_CLUSTER
+        wrap.cluster = settings.LOCAL_CLUSTER
         memcpy(wrap.info, in_ptr, sizeof(node_info_t))
         return wrap
 
