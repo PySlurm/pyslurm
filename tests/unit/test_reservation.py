@@ -32,7 +32,7 @@ def test_create_instance():
     assert resv.end_time == None
     assert resv.duration == 0
     assert resv.is_active is False
-    assert resv.cpus_by_node == {}
+    assert resv.cpu_ids_by_node == {}
     assert resv.to_dict()
 
     start = datetime.now()

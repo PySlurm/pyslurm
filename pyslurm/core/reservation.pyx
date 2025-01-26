@@ -327,7 +327,7 @@ cdef class Reservation:
         self.info.core_cnt = self.umsg.core_cnt = int(val)
 
     @property
-    def cpus_by_node(self):
+    def cpu_ids_by_node(self):
         out = {}
         for i in range(self.info.core_spec_cnt):
             node = cstr.to_unicode(self.info.core_spec[i].node_name)

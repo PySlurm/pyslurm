@@ -72,9 +72,9 @@ cdef class Reservation:
             Name for a Reservation.
         **kwargs (Any, optional=None):
             All Attributes of a Reservation are eligible to be set, except
-            `cpus_by_node`. Although the `name` attribute can also be changed
-            on the instance, the change will not be taken into account by
-            `slurmctld` when calling `modify()`.
+            `cpu_ids_by_node`. Although the `name` attribute can also be
+            changed on the instance, the change will not be taken into account
+            by `slurmctld` when calling `modify()`.
 
     Attributes:
         accounts (list[str]):
@@ -85,7 +85,7 @@ cdef class Reservation:
             Arbitrary comment for the Reservation.
         cpus (int):
             Amount of CPUs used by the Reservation
-        cpus_by_node (dict[str, int]):
+        cpu_ids_by_node (dict[str, int]):
             A Mapping where each key is the node-name, and the values are a
             string of CPU-IDs reserved on the specific nodes.
         end_time (int):
