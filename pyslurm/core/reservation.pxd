@@ -70,13 +70,11 @@ cdef class Reservation:
     Args:
         name (str, optional=None):
             Name for a Reservation.
-
-    !!! note
-
-        All Attributes of a Reservation, except for `name` and `cpus_by_node`,
-        are eligible to be updated. Although the `name` attribute can be
-        changed on the instance, the change will not be taken into account by
-        `slurmctld` when calling `modify()`.
+        **kwargs (Any, optional=None):
+            All Attributes of a Reservation are eligible to be set, except
+            `cpus_by_node`. Although the `name` attribute can also be changed
+            on the instance, the change will not be taken into account by
+            `slurmctld` when calling `modify()`.
 
     Attributes:
         accounts (list[str]):
@@ -114,7 +112,7 @@ cdef class Reservation:
             How long, in minutes, the reservation runs for.
         is_active (bool):
             Whether the reservation is currently active or not.
-        tres (dict[str, int])
+        tres (dict[str, int]):
             TRES for the Reservation.
         users (list[str]):
             List of user names permitted to use the Reservation.
