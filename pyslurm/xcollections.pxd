@@ -95,3 +95,4 @@ cdef class MultiClusterMap:
         _key_type
         _val_type
         _id_attr
+        _cluster

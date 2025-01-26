@@ -30,7 +30,7 @@ from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm.utils.ctime import timestamp_to_date, _raw_time
 from pyslurm.constants import UNLIMITED
-from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import settings
 from pyslurm.core import slurmctld
 from pyslurm.core.slurmctld.config import _get_memory
 from pyslurm import xcollections
@@ -168,7 +168,7 @@ cdef class Partition:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
-        self.cluster = LOCAL_CLUSTER
+        self.cluster = settings.LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -194,7 +194,7 @@ cdef class Partition:
     cdef Partition from_ptr(partition_info_t *in_ptr):
         cdef Partition wrap = Partition.__new__(Partition)
         wrap._alloc_impl()
-        wrap.cluster = LOCAL_CLUSTER
+        wrap.cluster = settings.LOCAL_CLUSTER
         memcpy(wrap.ptr, in_ptr, sizeof(partition_info_t))
         return wrap
 

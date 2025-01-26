@@ -22,6 +22,8 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from pyslurm import settings
+
 
 def slurm_init(config_path=None):
     """Initialize the Slurm API.
@@ -36,6 +38,7 @@ def slurm_init(config_path=None):
             None, so libslurm will automatically detect its config.
     """
     slurm.slurm_init(cstr.from_unicode(config_path))
+    settings.init()
 
 
 def slurm_fini():
