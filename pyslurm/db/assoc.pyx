@@ -29,7 +29,7 @@ from pyslurm.utils.helpers import (
 )
 from pyslurm.utils.uint import *
 from pyslurm.db.connection import _open_conn_or_error
-from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import settings
 from pyslurm import xcollections
 
 
@@ -65,7 +65,7 @@ cdef class Associations(MultiClusterMap):
         # Fetch Assoc Data
         assoc_data = SlurmList.wrap(slurmdb_associations_get(
             conn.ptr, cond.ptr))
-        
+
         if assoc_data.is_null:
             raise RPCError(msg="Failed to get Association data from slurmdbd")
 
@@ -135,7 +135,7 @@ cdef class Associations(MultiClusterMap):
         else:
             # Autodetects the last slurm error
             raise RPCError()
-        
+
         if not db_connection:
             # Autocommit if no connection was explicitly specified.
             conn.commit()
@@ -185,7 +185,7 @@ cdef class Association:
     def __init__(self, **kwargs):
         self._alloc_impl()
         self.id = 0
-        self.cluster = LOCAL_CLUSTER
+        self.cluster = settings.LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
 

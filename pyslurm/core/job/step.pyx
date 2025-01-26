@@ -26,7 +26,7 @@ from typing import Union
 from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
-from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import settings
 from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     signal_to_num,
@@ -159,7 +159,7 @@ cdef class JobStep:
         self.id = step_id
         self.stats = JobStepStatistics()
         self.pids = {}
-        cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
+        cstr.fmalloc(&self.ptr.cluster, settings.LOCAL_CLUSTER)
 
         # Initialize attributes, if any were provided
         for k, v in kwargs.items():

@@ -24,10 +24,8 @@
 
 from typing import Union, Any
 from pyslurm.core.error import RPCError, PyslurmError
-from pyslurm.core import slurmctld
-from typing import Any
 from pyslurm.utils.uint import *
-from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import settings
 from pyslurm import xcollections
 from pyslurm.utils.ctime import (
     date_to_timestamp,
@@ -106,7 +104,7 @@ cdef class JobFilter:
         if not self.clusters:
             # This is a requirement for some other parameters to function
             # correctly, like self.nodelist
-            return [LOCAL_CLUSTER]
+            return [settings.LOCAL_CLUSTER]
         elif self.clusters == "all":
             return None
         else:
@@ -450,7 +448,7 @@ cdef class Job:
         self._alloc_impl()
         self.ptr.jobid = int(job_id)
         cstr.fmalloc(&self.ptr.cluster,
-                     LOCAL_CLUSTER if not cluster else cluster)
+                     settings.LOCAL_CLUSTER if not cluster else cluster)
         self.qos_data = QualitiesOfService()
         self.steps = JobSteps()
         self.stats = JobStatistics()
@@ -511,7 +509,7 @@ cdef class Job:
             >>> db_job = pyslurm.db.Job.load(10000, with_script=True)
             >>> print(db_job.script)
         """
-        cluster = LOCAL_CLUSTER if not cluster else cluster
+        cluster = settings.LOCAL_CLUSTER if not cluster else cluster
         jfilter = JobFilter(ids=[int(job_id)], clusters=[cluster],
                             with_script=with_script, with_env=with_env)
         job = Jobs.load(jfilter).get((cluster, int(job_id)))
