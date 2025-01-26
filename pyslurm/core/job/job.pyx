@@ -34,7 +34,7 @@ from typing import Union
 from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
-from pyslurm.settings import LOCAL_CLUSTER
+from pyslurm import settings
 from pyslurm import xcollections
 from pyslurm.core.error import (
     RPCError,
@@ -236,7 +236,7 @@ cdef class Job:
         self.ptr.job_id = job_id
         self.passwd = {}
         self.groups = {}
-        cstr.fmalloc(&self.ptr.cluster, LOCAL_CLUSTER)
+        cstr.fmalloc(&self.ptr.cluster, settings.LOCAL_CLUSTER)
         self.steps = JobSteps()
         self.stats = JobStatistics()
         self.pids = {}
