@@ -110,7 +110,17 @@ cdef class Reservation:
         start_time (int):
             When the Reservation starts. This is a Unix timestamp.
         duration (int):
-            How long, in minutes, the reservation runs for.
+            How long, in minutes, the reservation runs for. Unless a
+            `start_time` has already been specified, setting this will set the
+            `start_time` the current time, meaning the Reservation will start
+            immediately.
+
+            For setting this attribute, instead of minutes you can also specify
+            a time-string like this:
+
+                duration = "1-00:00:00"
+
+            The above means that the Reservation will last for 1 day.
         is_active (bool):
             Whether the reservation is currently active or not.
         tres (dict[str, int]):
