@@ -21,6 +21,7 @@
 """test_reservation.py - integration test reservation functionalities."""
 
 import pyslurm
+from pyslurm import ReservationFlags, ReservationReoccurrence
 from datetime import datetime
 
 
@@ -33,6 +34,7 @@ def test_api_calls():
         duration=duration,
         users=["root"],
         node_count=1,
+        reoccurrence="DAILY"
     )
     resv.create()
 
@@ -55,6 +57,39 @@ def test_api_calls():
     assert resv.duration == 2 * 60 * 24
     assert resv.end_time == resv.start_time + (2 * 60 * 60 * 24)
 
+    assert resv.reoccurrence == ReservationReoccurrence.DAILY
+    assert resv.reoccurrence == "DAILY"
+    # Can only remove this once the Reservation exists. Setting another
+    # reoccurrence doesn't work, probably a bug in slurmctld..., because it
+    # makes no sense why that shouldn't work.
+    resv.reoccurrence = ReservationReoccurrence.NO
+    resv.modify()
+
+    resv = pyslurm.Reservation.load("testing")
+    assert resv.reoccurrence == "NO"
+
+    resv.flags = ReservationFlags.MAINTENANCE | ReservationFlags.FLEX
+    resv.modify()
+
+    resv = pyslurm.Reservation.load("testing")
+    assert resv.flags == ReservationFlags.MAINTENANCE | ReservationFlags.FLEX
+
+    assert ReservationFlags.PURGE not in resv.flags
+    resv.purge_time = "2-00:00:00"
+    resv.modify()
+
+    resv = pyslurm.Reservation.load("testing")
+    assert ReservationFlags.PURGE in resv.flags
+    assert resv.purge_time == 2 * 60 * 60 * 24
+
+    resv.purge_time = "3-00:00:00"
+    resv.modify()
+
+    resv = pyslurm.Reservation.load("testing")
+    assert ReservationFlags.PURGE in resv.flags
+    assert resv.purge_time == 3 * 60 * 60 * 24
+
+    assert resv.to_dict()
     resv.delete()
     reservations = pyslurm.Reservations.load()
     assert len(reservations) == 0

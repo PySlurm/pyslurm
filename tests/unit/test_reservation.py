@@ -21,6 +21,7 @@
 """test_reservation.py - Unit test basic reservation functionalities."""
 
 import pyslurm
+from pyslurm import ReservationFlags, ReservationReoccurrence
 from datetime import datetime
 
 
@@ -62,3 +63,18 @@ def test_create_instance():
     assert resv.start_time == int(start.timestamp())
     assert resv.end_time == end + (60 * 60 * 24)
     assert resv.duration == duration + (60 * 24)
+
+    assert resv.reoccurrence == ReservationReoccurrence.NO
+    assert resv.reoccurrence == "NO"
+    resv.reoccurrence = ReservationReoccurrence.DAILY
+
+    assert resv.flags == resv.flags.__class__(0)
+    resv.flags = ReservationFlags.MAINTENANCE | ReservationFlags.FLEX
+    assert resv.flags == ReservationFlags.MAINTENANCE | ReservationFlags.FLEX
+    resv.flags |= ReservationFlags.MAGNETIC
+    assert resv.flags == ReservationFlags.MAINTENANCE | ReservationFlags.FLEX | ReservationFlags.MAGNETIC
+
+    resv.flags = ["FLEX", "PURGE"]
+    assert resv.flags == ReservationFlags.FLEX | ReservationFlags.PURGE
+
+
