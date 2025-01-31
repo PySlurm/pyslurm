@@ -45,7 +45,12 @@ from pyslurm.slurm cimport (
 from pyslurm.utils cimport cstr
 from pyslurm.utils cimport ctime
 from pyslurm.utils.ctime cimport time_t
-from pyslurm.utils.uint cimport u32_parse
+from pyslurm.utils.uint cimport (
+    u32,
+    u32_parse,
+    u64_parse_bool_flag,
+    u64_set_bool_flag,
+)
 from pyslurm.xcollections cimport MultiClusterMap
 
 cdef extern void slurm_free_resv_desc_msg(resv_desc_msg_t *msg)
@@ -105,8 +110,14 @@ cdef class Reservation:
             Count of Nodes required.
         nodes (str):
             Nodes to be reserved.
+            When creating or updating a Reservation, you can also pass the
+            string `ALL`, when you want all nodes to be included in the
+            Reservation.
         partition (str):
             Name of the partition to be used.
+        purge_time (int):
+            When the Reservation is idle for this amount of seconds, it will be
+            removed.
         start_time (int):
             When the Reservation starts. This is a Unix timestamp.
         duration (int):
@@ -127,10 +138,27 @@ cdef class Reservation:
             TRES for the Reservation.
         users (list[str]):
             List of user names permitted to use the Reservation.
+        flags (pyslurm.ReservationFlags):
+            Optional Flags for the Reservation.
+            For convenience, instead of using [pyslurm.ReservationFlags][] in
+            combination with the logical Operators, you can set this attribute
+            via a [list][] of [str][]:
+
+                flags = ["MAINTENANCE", "FLEX", "MAGNETIC"]
+
+            When setting like this, the strings must match the names of members
+            in [pyslurm.ReservationFlags][].
+        reoccurrence (pyslurm.ReservationReoccurrence):
+            Describes if and when this Reservation reoccurs.
+            Since [pyslurm.ReservationReoccurrence] members are also just
+            strings, you can conveniently also set the attribute like this:
+
+                reoccurrence = "DAILY"
     """
     cdef:
         reserve_info_t *info
         resv_desc_msg_t *umsg
+        _reoccurrence
 
     cdef readonly cluster
 

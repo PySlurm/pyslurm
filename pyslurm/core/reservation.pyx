@@ -30,9 +30,12 @@ from pyslurm.core.slurmctld.config import _get_memory
 from datetime import datetime
 from pyslurm import xcollections
 from pyslurm.utils.helpers import instance_to_dict
+from pyslurm.utils.enums import SlurmEnum, SlurmFlag
+from enum import auto, StrEnum
 from pyslurm.utils.ctime import (
     _raw_time,
     timestr_to_mins,
+    timestr_to_secs,
     date_to_timestamp,
 )
 from pyslurm.core.error import (
@@ -63,7 +66,8 @@ cdef class Reservations(MultiClusterMap):
         """Load all Reservations in the system.
 
         Returns:
-            (pyslurm.Reservations): Collection of Reservation objects.
+            (pyslurm.Reservations): Collection of [pyslurm.Reservation][]
+                objects.
 
         Raises:
             (pyslurm.RPCError): When getting all the Reservations from the
@@ -75,10 +79,7 @@ cdef class Reservations(MultiClusterMap):
 
         verify_rpc(slurm_load_reservations(0, &reservations.info))
 
-        # prepare a dummy reserve_info_t struct.
         memset(&reservations.tmp_info, 0, sizeof(reserve_info_t))
-
-        # Put each pointer into its own instance.
         for cnt in range(reservations.info.record_count):
             reservation = Reservation.from_ptr(&reservations.info.reservation_array[cnt])
 
@@ -96,7 +97,6 @@ cdef class Reservations(MultiClusterMap):
 
             reservations.data[cluster][reservation.name] = reservation
 
-        # We have extracted all pointers
         reservations.info.record_count = 0
         return reservations
 
@@ -110,6 +110,7 @@ cdef class Reservation:
     def __init__(self, name=None, **kwargs):
         self._alloc_impl()
         self.name = name
+        self._reoccurrence = ReservationReoccurrence.NO
         self.cluster = settings.LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -130,6 +131,7 @@ cdef class Reservation:
             if not self.umsg:
                 raise MemoryError("xmalloc failed for resv_desc_msg_t")
             slurm_init_resv_desc_msg(self.umsg)
+            self.umsg.flags = 0
 
     def _dealloc_umsg(self):
         slurm_free_resv_desc_msg(self.umsg)
@@ -162,6 +164,9 @@ cdef class Reservation:
         wrap._alloc_info()
         wrap.cluster = settings.LOCAL_CLUSTER
         memcpy(wrap.info, in_ptr, sizeof(reserve_info_t))
+        wrap._reoccurrence = ReservationReoccurrence.from_flag(wrap.info.flags,
+                                                    default=ReservationReoccurrence.NO)
+        wrap.info.flags &= ~wrap.reoccurrence._flag
         return wrap
 
     def _error_or_name(self):
@@ -226,7 +231,16 @@ cdef class Reservation:
 
         Examples:
             >>> import pyslurm
-            >>> resv = pyslurm.Reservation("debug")
+            >>> from pyslurm import ReservationFlags, ReservationReoccurrence
+            >>> resv = pyslurm.Reservation(
+            ...     name = "debug",
+            ...     users = ["root"],
+            ...     nodes = "node001",
+            ...     duration = "1-00:00:00",
+            ...     flags = ReservationFlags.MAINTENANCE,
+            ...     reoccurrence = ReservationReoccurrence.DAILY,
+            ... )
+            >>> resv.create()
         """
         cdef char* new_name = NULL
 
@@ -356,8 +370,6 @@ cdef class Reservation:
     def features(self, val):
         cstr.from_list2(&self.info.features, &self.umsg.features, val)
 
-    # TODO: flags
-
     @property
     def groups(self):
         return cstr.to_list(self.info.groups)
@@ -414,7 +426,15 @@ cdef class Reservation:
     def partition(self, val):
         cstr.fmalloc2(&self.info.partition, &self.umsg.partition, val)
 
-    # TODO: purge_comp_time ?
+    @property
+    def purge_time(self):
+        return u32_parse(self.info.purge_comp_time)
+
+    @purge_time.setter
+    def purge_time(self, val):
+        self.info.purge_comp_time = self.umsg.purge_comp_time = timestr_to_secs(val)
+        if ReservationFlags.PURGE not in self.flags:
+            self.flags |= ReservationFlags.PURGE
 
     @property
     def start_time(self):
@@ -464,3 +484,66 @@ cdef class Reservation:
     @users.setter
     def users(self, val):
         cstr.from_list2(&self.info.users, &self.umsg.users, val)
+
+    @property
+    def reoccurrence(self):
+        return self._reoccurrence
+
+    @reoccurrence.setter
+    def reoccurrence(self, val):
+        v = ReservationReoccurrence(val)
+        current = self._reoccurrence
+        self._reoccurrence = v
+        if v == ReservationReoccurrence.NO:
+            self.umsg.flags |= current._clear_flag
+        else:
+            self.umsg.flags |= v._flag
+
+    @property
+    def flags(self):
+        return ReservationFlags(self.info.flags)
+
+    @flags.setter
+    def flags(self, val):
+        # TODO: What if I want to clear all flags?
+        flag = val
+        if isinstance(val, list):
+            flag = ReservationFlags.from_list(val)
+
+        self.info.flags = flag.value
+        self.umsg.flags = flag._get_flags_cleared()
+
+    # TODO: RESERVE_FLAG_SKIP ?
+
+
+class ReservationFlags(SlurmFlag):
+    MAINTENANCE           = slurm.RESERVE_FLAG_MAINT,      slurm.RESERVE_FLAG_NO_MAINT
+    MAGNETIC              = slurm.RESERVE_FLAG_MAGNETIC,   slurm.RESERVE_FLAG_NO_MAGNETIC
+    FLEX                  = slurm.RESERVE_FLAG_FLEX,       slurm.RESERVE_FLAG_NO_FLEX
+    IGNORE_RUNNING_JOBS   = slurm.RESERVE_FLAG_IGN_JOBS,   slurm.RESERVE_FLAG_NO_IGN_JOB
+    ANY_NODES             = slurm.RESERVE_FLAG_ANY_NODES,  slurm.RESERVE_FLAG_NO_ANY_NODES
+    STATIC_NODES          = slurm.RESERVE_FLAG_STATIC,     slurm.RESERVE_FLAG_NO_STATIC
+    PARTITION_NODES_ONLY  = slurm.RESERVE_FLAG_PART_NODES, slurm.RESERVE_FLAG_NO_PART_NODES
+    USER_DELETION         = slurm.RESERVE_FLAG_USER_DEL,   slurm.RESERVE_FLAG_NO_USER_DEL
+    PURGE                 = slurm.RESERVE_FLAG_PURGE_COMP, slurm.RESERVE_FLAG_NO_PURGE_COMP
+    SPECIFIC_NODES        = slurm.RESERVE_FLAG_SPEC_NODES
+    NO_JOB_HOLD_AFTER_END = slurm.RESERVE_FLAG_NO_HOLD_JOBS
+    OVERLAP               = slurm.RESERVE_FLAG_OVERLAP
+    ALL_NODES             = slurm.RESERVE_FLAG_ALL_NODES
+
+
+class ReservationReoccurrence(SlurmEnum):
+    """Different reocurrences for a Reservation
+
+    Args:
+        NO:
+            No reocurrence defined
+        DAILY:
+            Daily reocurrence.
+    """
+    NO      = auto()
+    DAILY   = auto(), slurm.RESERVE_FLAG_DAILY,   slurm.RESERVE_FLAG_NO_DAILY
+    HOURLY  = auto(), slurm.RESERVE_FLAG_HOURLY,  slurm.RESERVE_FLAG_NO_HOURLY
+    WEEKLY  = auto(), slurm.RESERVE_FLAG_WEEKLY,  slurm.RESERVE_FLAG_NO_WEEKLY
+    WEEKDAY = auto(), slurm.RESERVE_FLAG_WEEKDAY, slurm.RESERVE_FLAG_NO_WEEKDAY
+    WEEKEND = auto(), slurm.RESERVE_FLAG_WEEKEND, slurm.RESERVE_FLAG_NO_WEEKEND
