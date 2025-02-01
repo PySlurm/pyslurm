@@ -30,7 +30,11 @@ SLURM_VERSION = ".".join(pyslurm.__version__.split(".")[:-1])
 SLURM_DOCS_URL_BASE = "https://slurm.schedmd.com/archive"
 SLURM_DOCS_URL_VERSIONED = f"{SLURM_DOCS_URL_BASE}/slurm-{SLURM_VERSION}-latest"
 
-config_files = ["acct_gather.conf", "slurm.conf", "cgroup.conf", "mpi.conf"]
+config_files = ["acct_gather.conf",
+                "slurm.conf",
+                "cgroup.conf",
+                "mpi.conf",
+                "scontrol"]
 
 
 def replace_with_slurm_docs_url(match):
@@ -93,6 +97,18 @@ class DynamicDocstrings(griffe.Extension):
         except AttributeError:
             logger.debug(f"Object {obj.path} does not have a __doc__ attribute")
             return
+
+        # Hack to improve generated docs for Enums.
+        if hasattr(obj.parent, "bases"):
+            for base in obj.parent.bases:
+                b = base.lower()
+                if "enum" in b and not obj.name.startswith("_"):
+                    v = obj.value[:-1].split(" ")[-1]
+                    obj.value = v
+                    obj.labels = {}
+
+                    if "slurmflag" in b:
+                        obj.value = None
 
         if not docstring or not obj.docstring:
             return
