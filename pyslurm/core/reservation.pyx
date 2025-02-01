@@ -22,6 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from typing import Union, Any
 from pyslurm.utils import cstr
 from pyslurm.utils import ctime
 from pyslurm.utils.uint import u32_parse
@@ -87,7 +88,7 @@ cdef class Reservations(MultiClusterMap):
             # reason a MemoryError is raised after parsing subsequent
             # reservations, invalid behaviour will be shown by Valgrind, since
             # the Memory for the already parsed Reservation will be freed
-            # twice. So for all sucessfully parsed Reservations, replace it
+            # twice. So for all successfully parsed Reservations, replace it
             # with a dummy struct that will be skipped in case of error.
             reservations.info.reservation_array[cnt] = reservations.tmp_info
 
@@ -218,7 +219,7 @@ cdef class Reservation:
     def create(self):
         """Create a Reservation.
 
-        If you did not specify atleast a `start_time` and `duration` or
+        If you did not specify at least a `start_time` and `duration` or
         `end_time`, then by default the Reservation will start effective
         immediately, with a duration of one year.
 
@@ -245,7 +246,7 @@ cdef class Reservation:
         cdef char* new_name = NULL
 
         if not self.start_time or not (self.duration and self.end_time):
-            raise RPCError(msg="You must atleast specify a start_time, "
+            raise RPCError(msg="You must at least specify a start_time, "
                            " combined with an end_time or a duration.")
 
         self.name = self._error_or_name()
