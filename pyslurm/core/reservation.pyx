@@ -237,7 +237,7 @@ cdef class Reservation:
             ...     users = ["root"],
             ...     nodes = "node001",
             ...     duration = "1-00:00:00",
-            ...     flags = ReservationFlags.MAINTENANCE,
+            ...     flags = ReservationFlags.MAINTENANCE | ReservationFlags.FLEX,
             ...     reoccurrence = ReservationReoccurrence.DAILY,
             ... )
             >>> resv.create()
@@ -505,7 +505,6 @@ cdef class Reservation:
 
     @flags.setter
     def flags(self, val):
-        # TODO: What if I want to clear all flags?
         flag = val
         if isinstance(val, list):
             flag = ReservationFlags.from_list(val)
@@ -517,6 +516,10 @@ cdef class Reservation:
 
 
 class ReservationFlags(SlurmFlag):
+    """Flags for Reservations that can be set.
+
+    See {scontrol#OPT_Flags} for more info.
+    """
     MAINTENANCE           = slurm.RESERVE_FLAG_MAINT,      slurm.RESERVE_FLAG_NO_MAINT
     MAGNETIC              = slurm.RESERVE_FLAG_MAGNETIC,   slurm.RESERVE_FLAG_NO_MAGNETIC
     FLEX                  = slurm.RESERVE_FLAG_FLEX,       slurm.RESERVE_FLAG_NO_FLEX
@@ -533,13 +536,9 @@ class ReservationFlags(SlurmFlag):
 
 
 class ReservationReoccurrence(SlurmEnum):
-    """Different reocurrences for a Reservation
+    """Different reocurrences for a Reservation.
 
-    Args:
-        NO:
-            No reocurrence defined
-        DAILY:
-            Daily reocurrence.
+    See {scontrol#OPT_Flags} for more info.
     """
     NO      = auto()
     DAILY   = auto(), slurm.RESERVE_FLAG_DAILY,   slurm.RESERVE_FLAG_NO_DAILY
