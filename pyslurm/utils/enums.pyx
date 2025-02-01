@@ -23,9 +23,30 @@
 # cython: language_level=3
 
 from enum import Enum, Flag
+import inspect
+
+try:
+    from enum import EnumMeta as EnumType
+except ImportError:
+    from enum import EnumType
 
 
-class SlurmEnum(str, Enum):
+class DocstringSupport(EnumType):
+    def __new__(metacls, clsname, bases, classdict):
+        cls = super().__new__(metacls, clsname, bases, classdict)
+
+        # In the future, if we want to properly document enum members,
+        # implement this:
+        # source = inspect.getdoc(cls)
+        # docstrings = source.replace(" ", "").split("\n")
+
+        for member in cls:
+            member.__doc__ = ""
+
+        return cls
+
+
+class SlurmEnum(str, Enum, metaclass=DocstringSupport):
 
     def __new__(cls, name, *args):
         # https://docs.python.org/3/library/enum.html
@@ -63,7 +84,7 @@ class SlurmEnum(str, Enum):
         return out
 
 
-class SlurmFlag(Flag):
+class SlurmFlag(Flag, metaclass=DocstringSupport):
 
     def __new__(cls, flag, *args):
         obj = super()._new_member_(cls)
