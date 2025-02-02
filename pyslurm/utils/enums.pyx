@@ -87,7 +87,15 @@ class SlurmEnum(str, Enum, metaclass=DocstringSupport):
 class SlurmFlag(Flag, metaclass=DocstringSupport):
 
     def __new__(cls, flag, *args):
-        obj = super()._new_member_(cls)
+        parent = super()
+        if hasattr(parent, "_new_member_"):
+            # For Python >= 3.10, use _new_member_.
+            # We could very likely just also use object.__new__, but it works
+            # here, so no need to change it now.
+            obj = parent._new_member_(cls)
+        else:
+            obj = object.__new__(cls)
+
         obj._value_ = int(flag)
         obj._clear_flag = int(args[0]) if len(args) >= 1 else 0
         return obj
