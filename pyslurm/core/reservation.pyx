@@ -32,7 +32,7 @@ from datetime import datetime
 from pyslurm import xcollections
 from pyslurm.utils.helpers import instance_to_dict
 from pyslurm.utils.enums import SlurmEnum, SlurmFlag
-from enum import auto, StrEnum
+from enum import auto
 from pyslurm.utils.ctime import (
     _raw_time,
     timestr_to_mins,
