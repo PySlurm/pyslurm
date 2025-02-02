@@ -541,9 +541,9 @@ class ReservationReoccurrence(SlurmEnum):
 
     See {scontrol#OPT_Flags} for more info.
     """
-    NO      = auto()
-    DAILY   = auto(), slurm.RESERVE_FLAG_DAILY,   slurm.RESERVE_FLAG_NO_DAILY
-    HOURLY  = auto(), slurm.RESERVE_FLAG_HOURLY,  slurm.RESERVE_FLAG_NO_HOURLY
-    WEEKLY  = auto(), slurm.RESERVE_FLAG_WEEKLY,  slurm.RESERVE_FLAG_NO_WEEKLY
-    WEEKDAY = auto(), slurm.RESERVE_FLAG_WEEKDAY, slurm.RESERVE_FLAG_NO_WEEKDAY
-    WEEKEND = auto(), slurm.RESERVE_FLAG_WEEKEND, slurm.RESERVE_FLAG_NO_WEEKEND
+    NO      = "NO"
+    DAILY   = "DAILY",   slurm.RESERVE_FLAG_DAILY,   slurm.RESERVE_FLAG_NO_DAILY
+    HOURLY  = "HOURLY",  slurm.RESERVE_FLAG_HOURLY,  slurm.RESERVE_FLAG_NO_HOURLY
+    WEEKLY  = "WEEKLY",  slurm.RESERVE_FLAG_WEEKLY,  slurm.RESERVE_FLAG_NO_WEEKLY
+    WEEKDAY = "WEEKDAY", slurm.RESERVE_FLAG_WEEKDAY, slurm.RESERVE_FLAG_NO_WEEKDAY
+    WEEKEND = "WEEKEND", slurm.RESERVE_FLAG_WEEKEND, slurm.RESERVE_FLAG_NO_WEEKEND
