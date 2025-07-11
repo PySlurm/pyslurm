@@ -1238,6 +1238,10 @@ cdef class Job:
         return cstr.to_gres_dict(self.ptr.tres_per_node)
 
     @property
+    def tres_per_task(self):
+        return cstr.to_dict(self.ptr.tres_per_task)
+
+    @property
     def profile_types(self):
         return acctg_profile_int_to_list(self.ptr.profile)
 
