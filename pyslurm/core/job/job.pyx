@@ -714,7 +714,7 @@ cdef class Job:
         if self.ptr.nice == slurm.NO_VAL:
             return None
 
-        return self.ptr.nice - slurm.NICE_OFFSET
+        return int(self.ptr.nice) - slurm.NICE_OFFSET
 
     @property
     def qos(self):
