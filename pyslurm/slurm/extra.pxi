@@ -232,7 +232,7 @@ cdef extern void slurm_free_update_step_msg(step_update_request_msg_t *msg)
 # Slurm Node functions
 #
 
-cdef extern int slurm_get_select_nodeinfo(dynamic_plugin_data_t *nodeinfo, select_nodedata_type data_type, node_states state, void *data)
+# slurm_get_select_nodeinfo removed in Slurm 25.05
 cdef extern char *slurm_node_state_string_complete(uint32_t inx)
 cdef extern void slurm_free_update_node_msg(update_node_msg_t *msg)
 cdef extern void slurm_free_node_info_members(node_info_t *node)

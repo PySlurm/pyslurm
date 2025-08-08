@@ -507,14 +507,7 @@ cdef class Node:
 
     @property
     def allocated_memory(self):
-        cdef uint64_t alloc_memory = 0
-        if self.info.select_nodeinfo:
-            slurm_get_select_nodeinfo(
-                self.info.select_nodeinfo,
-                slurm.SELECT_NODEDATA_MEM_ALLOC,
-                slurm.NODE_STATE_ALLOCATED,
-                &alloc_memory)
-        return alloc_memory
+        return u64_parse(self.info.alloc_memory)
 
     @property
     def real_memory(self):
@@ -616,27 +609,11 @@ cdef class Node:
 
     @property
     def allocated_tres(self):
-        cdef char *alloc_tres = NULL
-        if self.info.select_nodeinfo:
-            slurm_get_select_nodeinfo(
-                self.info.select_nodeinfo,
-                slurm.SELECT_NODEDATA_TRES_ALLOC_FMT_STR,
-                slurm.NODE_STATE_ALLOCATED,
-                &alloc_tres
-            )
-        return cstr.to_dict(alloc_tres)
+        return cstr.to_dict(self.info.alloc_tres_fmt_str)
 
     @property
     def allocated_cpus(self):
-        cdef uint16_t alloc_cpus = 0
-        if self.info.select_nodeinfo:
-            slurm_get_select_nodeinfo(
-                self.info.select_nodeinfo,
-                slurm.SELECT_NODEDATA_SUBCNT,
-                slurm.NODE_STATE_ALLOCATED,
-                &alloc_cpus
-            )
-        return alloc_cpus
+        return u16_parse(self.info.alloc_cpus)
 
     @property
     def idle_cpus(self):
@@ -644,7 +621,11 @@ cdef class Node:
         if not efctv:
             return None
 
-        return efctv - self.allocated_cpus
+        alloc = self.allocated_cpus
+        if alloc is None:
+            alloc = 0
+
+        return efctv - alloc
 
     @property
     def cpu_binding(self):

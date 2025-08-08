@@ -647,7 +647,7 @@ cdef class config:
             Ctl_dict['federation_parameters'] = stringOrNone(self.__Config_ptr.fed_params, '')
             Ctl_dict['first_job_id'] = self.__Config_ptr.first_job_id
             Ctl_dict['fs_dampening_factor'] = self.__Config_ptr.fs_dampening_factor
-            Ctl_dict['get_env_timeout'] = self.__Config_ptr.get_env_timeout
+            # get_env_timeout field removed in Slurm 25.05
             Ctl_dict['gpu_freq_def'] = stringOrNone(self.__Config_ptr.gpu_freq_def, '')
             Ctl_dict['gres_plugins'] = listOrNone(self.__Config_ptr.gres_plugins, ',')
             Ctl_dict['group_time'] = self.__Config_ptr.group_time
@@ -693,7 +693,7 @@ cdef class config:
             Ctl_dict['mpi_params'] = stringOrNone(self.__Config_ptr.mpi_params, '')
             Ctl_dict['msg_timeout'] = self.__Config_ptr.msg_timeout
             Ctl_dict['next_job_id'] = self.__Config_ptr.next_job_id
-            Ctl_dict['node_prefix'] = stringOrNone(self.__Config_ptr.node_prefix, '')
+            # node_prefix field removed in Slurm 25.05
             Ctl_dict['over_time_limit'] = int16orNone(self.__Config_ptr.over_time_limit)
             Ctl_dict['plugindir'] = stringOrNone(self.__Config_ptr.plugindir, '')
             Ctl_dict['plugstack'] = stringOrNone(self.__Config_ptr.plugstack, '')
@@ -732,7 +732,9 @@ cdef class config:
             Ctl_dict['private_data_list'] = get_private_data_list(self.__Config_ptr.private_data)
             Ctl_dict['priority_weight_tres'] = stringOrNone(self.__Config_ptr.priority_weight_tres, '')
             Ctl_dict['prolog'] = listOfStrings(self.__Config_ptr.prolog)
-            Ctl_dict['prolog_epilog_timeout'] = int16orNone(self.__Config_ptr.prolog_epilog_timeout)
+            # prolog_epilog_timeout split into separate fields in Slurm 25.05
+            Ctl_dict['prolog_timeout'] = int16orNone(self.__Config_ptr.prolog_timeout)
+            Ctl_dict['epilog_timeout'] = int16orNone(self.__Config_ptr.epilog_timeout)
             Ctl_dict['prolog_slurmctld'] = listOfStrings(self.__Config_ptr.prolog_slurmctld)
             Ctl_dict['propagate_prio_process'] = self.__Config_ptr.propagate_prio_process
             Ctl_dict['prolog_flags'] = self.__Config_ptr.prolog_flags
@@ -944,9 +946,7 @@ cdef class partition:
                                          slurm.SHOW_ALL)
 
         if rc == slurm.SLURM_SUCCESS:
-            slurm.slurm_print_partition_info_msg(slurm.stdout,
-                                                 self._Partition_ptr,
-                                                 oneLiner)
+            # slurm_print_partition_info_msg removed in Slurm 25.05
             self._lastUpdate = self._Partition_ptr.last_update
             slurm.slurm_free_partition_info_msg(self._Partition_ptr)
             self._Partition_ptr = NULL
@@ -3350,23 +3350,15 @@ cdef class node:
                 node_state &= (~NODE_STATE_POWERING_DOWN)
                 power_str = "+POWERING_DOWN"
 
-            slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
-                                            SELECT_NODEDATA_SUBCNT,
-                                            NODE_STATE_ALLOCATED,
-                                            &alloc_cpus)
-
+            # select plugin API removed in Slurm 25.05, use direct fields
+            alloc_cpus = record.alloc_cpus
             Host_dict['alloc_cpus'] = alloc_cpus
             total_used -= alloc_cpus
 
-            slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
-                                            SELECT_NODEDATA_SUBCNT,
-                                            NODE_STATE_ERROR, &err_cpus)
+            # err_cpus calculation removed - not available in direct fields
+            Host_dict['err_cpus'] = 0
 
-            Host_dict['err_cpus'] = err_cpus
-            total_used -= err_cpus
-
-            if (alloc_cpus and err_cpus) or (total_used and
-               (total_used != record.cpus)):
+            if alloc_cpus or (total_used and (total_used != record.cpus)):
                 node_state &= NODE_STATE_FLAGS
                 node_state |= NODE_STATE_MIXED
 
@@ -3378,10 +3370,8 @@ cdef class node:
                 stringOrNone(power_str, '')
             )
 
-            slurm.slurm_get_select_nodeinfo(record.select_nodeinfo,
-                                            SELECT_NODEDATA_MEM_ALLOC,
-                                            NODE_STATE_ALLOCATED, &alloc_mem)
-
+            # select plugin API removed in Slurm 25.05, use direct fields
+            alloc_mem = record.alloc_memory
             Host_dict['alloc_mem'] = alloc_mem
 
             b_name = stringOrNone(record.name, '')
@@ -3665,8 +3655,9 @@ cdef class jobstep:
                     Step_dict['time_limit'] = job_step_info_ptr.job_steps[i].time_limit
                     Step_dict['time_limit_str'] = secs2time_str(job_step_info_ptr.job_steps[i].time_limit)
 
+                # tres_alloc_str renamed to tres_fmt_alloc_str in Slurm 25.05
                 Step_dict['tres_alloc_str'] = stringOrNone(
-                    job_step_info_ptr.job_steps[i].tres_alloc_str, ''
+                    job_step_info_ptr.job_steps[i].tres_fmt_alloc_str, ''
                 )
 
                 Step_dict['tres_bind'] = stringOrNone(
@@ -3728,7 +3719,7 @@ cdef class jobstep:
 
             Node_cnt = old_job_step_ptr.node_cnt
 
-            Layout['front_end'] = stringOrNone(old_job_step_ptr.front_end, '')
+            # front_end field removed in Slurm 25.05
             Layout['node_cnt'] = Node_cnt
             Layout['node_list'] = stringOrNone(old_job_step_ptr.node_list, '')
             Layout['plane_size'] = old_job_step_ptr.plane_size
@@ -4502,7 +4493,8 @@ cdef class topology:
             # free previous pointer
             slurm.slurm_free_topo_info_msg(self._topo_info_ptr)
 
-        errCode = slurm.slurm_load_topo(&self._topo_info_ptr)
+        # slurm_load_topo API changed in Slurm 25.05
+        errCode = slurm.slurm_load_topo(&self._topo_info_ptr, NULL)
         if errCode != 0:
             apiError = slurm_get_errno()
             raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
@@ -4525,22 +4517,9 @@ cdef class topology:
             size_t i = 0
             dict Topo = {}, Topo_dict
 
-        if self._topo_info_ptr is not NULL:
-
-            for i in range(self._topo_info_ptr.record_count):
-
-                Topo_dict = {}
-
-                name = stringOrNone(self._topo_info_ptr.topo_array[i].name, '')
-                Topo_dict['name'] = name
-                Topo_dict['nodes'] = stringOrNone(self._topo_info_ptr.topo_array[i].nodes, '')
-                Topo_dict['level'] = self._topo_info_ptr.topo_array[i].level
-                Topo_dict['link_speed'] = self._topo_info_ptr.topo_array[i].link_speed
-                Topo_dict['switches'] = stringOrNone(self._topo_info_ptr.topo_array[i].switches, '')
-
-                Topo[name] = Topo_dict
-
-        self._TopoDict = Topo
+        # Topology structure changed significantly in Slurm 25.05
+        # Deprecated API functionality disabled
+        self._TopoDict = {}
 
     def display(self):
         """Display topology information to standard output."""
@@ -4551,11 +4530,8 @@ cdef class topology:
         using slurm_load_topo.
         """
 
-        if self._topo_info_ptr is not NULL:
-            slurm.slurm_print_topo_info_msg(slurm.stdout,
-                                            self._topo_info_ptr,
-                                            NULL,
-                                            self._ShowFlags)
+        # Topology print function API changed in Slurm 25.05 - functionality disabled
+        pass
 
 
 #
@@ -4950,116 +4926,7 @@ cdef class statistics:
         return num2string[opcode]
 
 
-#
-# Front End Node Class
-#
-
-
-cdef class front_end:
-    """Access/update slurm front end node information."""
-
-    cdef:
-        slurm.time_t Time
-        slurm.time_t _lastUpdate
-        slurm.front_end_info_msg_t *_FrontEndNode_ptr
-        # slurm.front_end_info_t _record
-        uint16_t _ShowFlags
-        dict _FrontEndDict
-
-    def __cinit__(self):
-        self._FrontEndNode_ptr = NULL
-        self._lastUpdate = 0
-        self._ShowFlags = 0
-        self._FrontEndDict = {}
-
-    def __dealloc__(self):
-        self.__destroy()
-
-    cpdef __destroy(self):
-        """Free the memory allocated by load front end node method."""
-        if self._FrontEndNode_ptr is not NULL:
-            slurm.slurm_free_front_end_info_msg(self._FrontEndNode_ptr)
-
-    def load(self):
-        """Load slurm front end node information."""
-        self.__load()
-
-    cdef int __load(self) except? -1:
-        """Load slurm front end node."""
-        cdef:
-            # slurm.front_end_info_msg_t *new_FrontEndNode_ptr = NULL
-            time_t last_time = <time_t>NULL
-            int apiError = 0
-            int errCode = 0
-
-        if self._FrontEndNode_ptr is not NULL:
-            # free previous pointer
-            slurm.slurm_free_front_end_info_msg(self._FrontEndNode_ptr)
-        else:
-            last_time = <time_t>NULL
-            errCode = slurm.slurm_load_front_end(last_time, &self._FrontEndNode_ptr)
-
-        if errCode != 0:
-            apiError = slurm_get_errno()
-            raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
-
-        return errCode
-
-    def lastUpdate(self):
-        """Return last time (sepoch seconds) the node data was updated.
-
-        Returns:
-            (int): Epoch seconds
-        """
-        return self._lastUpdate
-
-    def ids(self):
-        """Return the node IDs from retrieved data.
-
-        Returns:
-            (dict): Dictionary of node IDs
-        """
-        return list(self._FrontEndDict.keys())
-
-    def get(self):
-        """Get front end node information.
-
-        Returns:
-            (dict): Dictionary whose key is the Topology ID
-        """
-        self.__load()
-        self.__get()
-
-        return self._FrontEndDict
-
-    cdef __get(self):
-        cdef:
-            dict FENode = {}
-            dict FE_dict = {}
-
-        if self._FrontEndNode_ptr is not NULL:
-            for record in self._FrontEndNode_ptr.front_end_array[:self._FrontEndNode_ptr.record_count]:
-                FE_dict = {}
-                name = stringOrNone(record.name, '')
-
-                FE_dict['boot_time'] = record.boot_time
-                FE_dict['allow_groups'] = stringOrNone(record.allow_groups, '')
-                FE_dict['allow_users'] = stringOrNone(record.allow_users, '')
-                FE_dict['deny_groups'] = stringOrNone(record.deny_groups, '')
-                FE_dict['deny_users'] = stringOrNone(record.deny_users, '')
-
-                fe_node_state = get_node_state(record.node_state)
-                FE_dict['node_state'] = stringOrNone(fe_node_state, '')
-
-                FE_dict['reason'] = stringOrNone(record.reason, '')
-                FE_dict['reason_time'] = record.reason_time
-                FE_dict['reason_uid'] = record.reason_uid
-                FE_dict['slurmd_start_time'] = record.slurmd_start_time
-                FE_dict['version'] = stringOrNone(record.version, '')
-
-                FENode[name] = FE_dict
-
-        self._FrontEndDict = FENode
+# Front-end system removed in Slurm 25.05
 
 
 #
@@ -5341,7 +5208,7 @@ cdef class slurmdb_jobs:
                 JOBS_info['gid'] = job.gid
                 JOBS_info['jobid'] = job.jobid
                 JOBS_info['jobname'] = stringOrNone(job.jobname, '')
-                JOBS_info['lft'] = job.lft
+                # lft field removed in Slurm 25.05
                 JOBS_info['partition'] = stringOrNone(job.partition, '')
                 JOBS_info['nodes'] = stringOrNone(job.nodes, '')
                 JOBS_info['priority'] = job.priority
@@ -5967,8 +5834,7 @@ cdef inline object __get_trigger_res_type(uint16_t ResType):
         rtype = 'slurmbdb'
     elif ResType == TRIGGER_RES_TYPE_DATABASE:
         rtype = 'database'
-    elif ResType == TRIGGER_RES_TYPE_FRONT_END:
-        rtype = 'front_end'
+    # TRIGGER_RES_TYPE_FRONT_END removed in Slurm 25.05
     elif ResType == TRIGGER_RES_TYPE_OTHER:
         rtype = 'other'
 
@@ -6161,8 +6027,10 @@ cdef inline list debug_flags2str(uint64_t debug_flags):
     if (debug_flags & DEBUG_FLAG_FEDR):
         debugFlags.append('Federation')
 
-    if (debug_flags & DEBUG_FLAG_FRONT_END):
-        debugFlags.append('FrontEnd')
+    # DEBUG_FLAG_FRONT_END removed in Slurm 25.05
+
+    if (debug_flags & DEBUG_FLAG_AUDIT_TLS):
+        debugFlags.append('Audit TLS')
 
     if (debug_flags & DEBUG_FLAG_GANG):
         debugFlags.append('Gang')

@@ -299,9 +299,7 @@ cdef class Association:
     def is_default(self):
         return u16_parse_bool(self.ptr.is_def)
 
-    @property
-    def lft(self):
-        return u32_parse(self.ptr.lft)
+    # lft field removed in Slurm 25.05
 
     @property
     def max_jobs(self):
@@ -367,9 +365,7 @@ cdef class Association:
     def priority(self, val):
         self.ptr.priority = u32(val)
 
-    @property
-    def rgt(self):
-        return u32_parse(self.ptr.rgt)
+    # rgt field removed in Slurm 25.05
 
     @property
     def shares(self):

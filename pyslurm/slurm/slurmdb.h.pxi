@@ -371,7 +371,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t id
         uint16_t is_def
         slurmdb_assoc_usage_t* leaf_usage
-        uint32_t lft
+        # uint32_t lft  # removed in Slurm 25.05
         char* lineage
         uint32_t max_jobs
         uint32_t max_jobs_accrue
@@ -391,7 +391,7 @@ cdef extern from "slurm/slurmdb.h":
         char* partition
         uint32_t priority
         list_t* qos_list
-        uint32_t rgt
+        # uint32_t rgt  # removed in Slurm 25.05
         uint32_t shares_raw
         uint32_t uid
         slurmdb_assoc_usage_t* usage
@@ -583,7 +583,7 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t het_job_offset
         uint32_t jobid
         char* jobname
-        uint32_t lft
+        # uint32_t lft  # removed in Slurm 25.05
         char* lineage
         char* licenses
         char* mcs_label
