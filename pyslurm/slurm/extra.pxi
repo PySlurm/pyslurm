@@ -35,7 +35,6 @@ ctypedef struct persist_conn_t:
     char *cluster_name
     time_t comm_fail_time
     uint16_t my_port
-    int fd
     uint16_t flags
     bool inited
     persist_conn_type_t persist_type
@@ -117,11 +116,12 @@ ctypedef struct slurm_msg_t:
     uint32_t body_offset
     buf_t *buffer
     persist_conn_t *conn
-    int conn_fd
     conmgr_fd_t *conmgr_fd
     void *data
     uint16_t flags
     uint8_t hash_index
+    char *tls_cert
+    void *tls_conn
     uint16_t msg_type
     uint16_t protocol_version
     forward_t forward
