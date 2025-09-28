@@ -479,10 +479,6 @@ cdef class Config:
         return u32_parse(self.ptr.first_job_id)
 
     @property
-    def get_environment_timeout(self):
-        return u16_parse(self.ptr.get_env_timeout)
-
-    @property
     def gres_types(self):
         return cstr.to_list(self.ptr.gres_plugins)
 
@@ -847,8 +843,12 @@ cdef class Config:
                                        self.ptr.prolog_cnt)
 
     @property
-    def prolog_epilog_timeout(self):
-        return u16_parse(self.ptr.prolog_epilog_timeout)
+    def prolog_timeout(self):
+        return u16_parse(self.ptr.prolog_timeout)
+
+    @property
+    def epilog_timeout(self):
+        return u16_parse(self.ptr.epilog_timeout)
 
     @property
     def prolog_slurmctld(self):
