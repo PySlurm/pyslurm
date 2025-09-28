@@ -43,7 +43,6 @@ from pyslurm.slurm cimport (
     slurm_free_node_info_members,
     slurm_free_update_node_msg,
     slurm_free_partition_info_msg,
-    slurm_get_select_nodeinfo,
     slurm_sprint_cpu_bind_type,
     slurm_node_state_string_complete,
     slurm_node_state_string,
