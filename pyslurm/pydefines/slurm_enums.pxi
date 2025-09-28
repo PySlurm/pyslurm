@@ -37,7 +37,6 @@ WAIT_ASSOC_TIME_LIMIT                   = slurm.WAIT_ASSOC_TIME_LIMIT
 WAIT_RESERVATION                        = slurm.WAIT_RESERVATION
 WAIT_NODE_NOT_AVAIL                     = slurm.WAIT_NODE_NOT_AVAIL
 WAIT_HELD_USER                          = slurm.WAIT_HELD_USER
-WAIT_FRONT_END                          = slurm.WAIT_FRONT_END
 FAIL_DOWN_PARTITION                     = slurm.FAIL_DOWN_PARTITION
 FAIL_DOWN_NODE                          = slurm.FAIL_DOWN_NODE
 FAIL_BAD_CONSTRAINTS                    = slurm.FAIL_BAD_CONSTRAINTS
@@ -248,22 +247,6 @@ SWITCH_PLUGIN_GENERIC  = slurm.SWITCH_PLUGIN_GENERIC
 SWITCH_PLUGIN_CRAY     = slurm.SWITCH_PLUGIN_CRAY
 
 # end enum switch_plugin_type
-
-# enum select_jobdata_type
-
-SELECT_JOBDATA_NETWORK  = slurm.SELECT_JOBDATA_NETWORK
-
-# end enum select_jobdata_type
-
-# enum select_nodedata_type
-
-SELECT_NODEDATA_SUBCNT               = slurm.SELECT_NODEDATA_SUBCNT
-SELECT_NODEDATA_PTR                  = slurm.SELECT_NODEDATA_PTR
-SELECT_NODEDATA_MEM_ALLOC            = slurm.SELECT_NODEDATA_MEM_ALLOC
-SELECT_NODEDATA_TRES_ALLOC_FMT_STR   = slurm.SELECT_NODEDATA_TRES_ALLOC_FMT_STR
-SELECT_NODEDATA_TRES_ALLOC_WEIGHTED  = slurm.SELECT_NODEDATA_TRES_ALLOC_WEIGHTED
-
-# end enum select_nodedata_type
 
 # enum select_print_mode
 
