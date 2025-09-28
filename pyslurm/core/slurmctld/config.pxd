@@ -285,6 +285,11 @@ cdef class Config:
             node when a Job completes.
 
             {slurm.conf#OPT_Epilog}
+        epilog_timeout (int):
+            The interval in seconds Slurm waits for Epilog before terminating
+            them.
+
+            {slurm.conf#OPT_EpilogTimeout}
         epilog_msg_time (int):
             The number of microseconds that the slurmctld daemon requires to
             process an epilog completion message from the slurmd daemons.
@@ -672,11 +677,11 @@ cdef class Config:
             it is asked to run a job step from a new job allocation.
 
             {slurm.conf#OPT_Prolog}
-        prolog_epilog_timeout (int):
+        prolog_timeout (int):
             The interval in seconds Slurm waits for Prolog and Epilog before
             terminating them.
 
-            {slurm.conf#OPT_PrologEpilogTimeout}
+            {slurm.conf#OPT_PrologTimeout}
         prolog_slurmctld (list[str]):
             List of pathnames of programs for the slurmctld daemon to execute
             before granting a new job allocation.

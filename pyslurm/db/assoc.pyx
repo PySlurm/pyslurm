@@ -300,10 +300,6 @@ cdef class Association:
         return u16_parse_bool(self.ptr.is_def)
 
     @property
-    def lft(self):
-        return u32_parse(self.ptr.lft)
-
-    @property
     def max_jobs(self):
         return u32_parse(self.ptr.max_jobs, zero_is_noval=False)
 
@@ -366,10 +362,6 @@ cdef class Association:
     @priority.setter
     def priority(self, val):
         self.ptr.priority = u32(val)
-
-    @property
-    def rgt(self):
-        return u32_parse(self.ptr.rgt)
 
     @property
     def shares(self):
