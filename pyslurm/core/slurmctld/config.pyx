@@ -458,6 +458,10 @@ cdef class Config:
                                        self.ptr.epilog_cnt)
 
     @property
+    def epilog_timeout(self):
+        return u16_parse(self.ptr.epilog_timeout)
+
+    @property
     def epilog_msg_time(self):
         return u32_parse(self.ptr.epilog_msg_time)
 
@@ -845,10 +849,6 @@ cdef class Config:
     @property
     def prolog_timeout(self):
         return u16_parse(self.ptr.prolog_timeout)
-
-    @property
-    def epilog_timeout(self):
-        return u16_parse(self.ptr.epilog_timeout)
 
     @property
     def prolog_slurmctld(self):
