@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2024-12-04T13:40:12.010546
+# Generated on 2025-09-28T15:03:24.516012
 #
 # The Original Copyright notice from slurmdb.h has been included
 # below:
@@ -49,23 +49,6 @@
 
 cdef extern from "slurm/slurmdb.h":
 
-    uint32_t QOS_FLAG_BASE
-    uint32_t QOS_FLAG_NOTSET
-    uint32_t QOS_FLAG_ADD
-    uint32_t QOS_FLAG_REMOVE
-    uint8_t QOS_FLAG_PART_MIN_NODE
-    uint8_t QOS_FLAG_PART_MAX_NODE
-    uint8_t QOS_FLAG_PART_TIME_LIMIT
-    uint8_t QOS_FLAG_ENFORCE_USAGE_THRES
-    uint8_t QOS_FLAG_NO_RESERVE
-    uint8_t QOS_FLAG_REQ_RESV
-    uint8_t QOS_FLAG_DENY_LIMIT
-    uint8_t QOS_FLAG_OVER_PART_QOS
-    uint16_t QOS_FLAG_NO_DECAY
-    uint16_t QOS_FLAG_USAGE_FACTOR_SAFE
-    uint16_t QOS_FLAG_RELATIVE
-    uint16_t QOS_FLAG_RELATIVE_SET
-    uint16_t QOS_FLAG_PART_QOS
     uint8_t QOS_COND_FLAG_WITH_DELETED
     uint32_t SLURMDB_RES_FLAG_BASE
     uint32_t SLURMDB_RES_FLAG_NOTSET
@@ -106,18 +89,6 @@ cdef extern from "slurm/slurmdb.h":
     uint32_t SLURMDB_FS_USE_PARENT
     uint16_t SLURMDB_CLASSIFIED_FLAG
     uint8_t SLURMDB_CLASS_BASE
-    uint8_t CLUSTER_FLAG_REGISTER
-    uint8_t CLUSTER_FLAG_A2
-    uint8_t CLUSTER_FLAG_A3
-    uint8_t CLUSTER_FLAG_A4
-    uint8_t CLUSTER_FLAG_A5
-    uint8_t CLUSTER_FLAG_A6
-    uint8_t CLUSTER_FLAG_A7
-    uint8_t CLUSTER_FLAG_MULTSD
-    uint16_t CLUSTER_FLAG_A9
-    uint16_t CLUSTER_FLAG_FE
-    uint16_t CLUSTER_FLAG_FED
-    uint16_t CLUSTER_FLAG_EXT
     uint8_t ASSOC_COND_FLAG_WITH_DELETED
     uint8_t ASSOC_COND_FLAG_WITH_USAGE
     uint8_t ASSOC_COND_FLAG_ONLY_DEFS
@@ -126,10 +97,14 @@ cdef extern from "slurm/slurmdb.h":
     uint8_t ASSOC_COND_FLAG_WOPI
     uint8_t ASSOC_COND_FLAG_WOPL
     uint8_t ASSOC_COND_FLAG_QOS_USAGE
+    uint16_t ASSOC_COND_FLAG_WITH_NG_USAGE
     uint8_t SLURMDB_EVENT_COND_OPEN
     uint8_t DB_CONN_FLAG_CLUSTER_DEL
     uint8_t DB_CONN_FLAG_ROLLBACK
     uint8_t DB_CONN_FLAG_FEDUPDATE
+    uint8_t COORD_SET_INDIRECT
+    uint8_t COORD_SET_DIRECT
+    uint8_t COORD_SET_BY_ACCT
 
 cdef extern from "slurm/slurmdb.h":
 
@@ -200,10 +175,41 @@ cdef extern from "slurm/slurmdb.h":
         SLURMDB_ADD_TRES
         SLURMDB_UPDATE_FEDS
 
+    ctypedef enum slurmdb_qos_flags_t:
+        QOS_FLAG_NONE
+        QOS_FLAG_PART_MIN_NODE
+        QOS_FLAG_PART_MAX_NODE
+        QOS_FLAG_PART_TIME_LIMIT
+        QOS_FLAG_ENFORCE_USAGE_THRES
+        QOS_FLAG_NO_RESERVE
+        QOS_FLAG_REQ_RESV
+        QOS_FLAG_DENY_LIMIT
+        QOS_FLAG_OVER_PART_QOS
+        QOS_FLAG_NO_DECAY
+        QOS_FLAG_USAGE_FACTOR_SAFE
+        QOS_FLAG_RELATIVE
+        QOS_FLAG_RELATIVE_SET
+        QOS_FLAG_PART_QOS
+        QOS_FLAG_DELETED
+        QOS_FLAG_BASE
+        QOS_FLAG_NOTSET
+        QOS_FLAG_ADD
+        QOS_FLAG_REMOVE
+        QOS_FLAG_INVALID
+
     cdef enum cluster_fed_states:
         CLUSTER_FED_STATE_NA
         CLUSTER_FED_STATE_ACTIVE
         CLUSTER_FED_STATE_INACTIVE
+
+    ctypedef enum slurmdb_cluster_flags_t:
+        CLUSTER_FLAG_NONE
+        CLUSTER_FLAG_REGISTER
+        CLUSTER_FLAG_DELETED
+        CLUSTER_FLAG_MULTSD
+        CLUSTER_FLAG_FED
+        CLUSTER_FLAG_EXT
+        CLUSTER_FLAG_INVALID
 
     ctypedef enum slurmdb_assoc_flags_t:
         ASSOC_FLAG_NONE
@@ -213,6 +219,7 @@ cdef extern from "slurm/slurmdb.h":
         ASSOC_FLAG_USER_COORD_NO
         ASSOC_FLAG_BASE
         ASSOC_FLAG_USER_COORD
+        ASSOC_FLAG_BLOCK_ADD
         ASSOC_FLAG_INVALID
 
     ctypedef struct slurmdb_tres_rec_t:
@@ -371,7 +378,6 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t id
         uint16_t is_def
         slurmdb_assoc_usage_t* leaf_usage
-        uint32_t lft
         char* lineage
         uint32_t max_jobs
         uint32_t max_jobs_accrue
@@ -391,7 +397,6 @@ cdef extern from "slurm/slurmdb.h":
         char* partition
         uint32_t priority
         list_t* qos_list
-        uint32_t rgt
         uint32_t shares_raw
         uint32_t uid
         slurmdb_assoc_usage_t* usage
@@ -441,7 +446,7 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t classification
         list_t* cluster_list
         list_t* federation_list
-        uint32_t flags
+        slurmdb_cluster_flags_t flags
         list_t* format_list
         list_t* rpc_version_list
         time_t usage_end
@@ -470,7 +475,7 @@ cdef extern from "slurm/slurmdb.h":
         int* dim_size
         uint16_t id
         slurmdb_cluster_fed_t fed
-        uint32_t flags
+        slurmdb_cluster_flags_t flags
         pthread_mutex_t lock
         char* name
         char* nodes
@@ -583,7 +588,6 @@ cdef extern from "slurm/slurmdb.h":
         uint32_t het_job_offset
         uint32_t jobid
         char* jobname
-        uint32_t lft
         char* lineage
         char* licenses
         char* mcs_label
@@ -598,7 +602,9 @@ cdef extern from "slurm/slurmdb.h":
         uint16_t restart_cnt
         uint32_t resvid
         char* resv_name
+        char* resv_req
         char* script
+        uint16_t segment_size
         uint32_t show_full
         time_t start
         uint32_t state
@@ -648,7 +654,7 @@ cdef extern from "slurm/slurmdb.h":
         time_t blocked_until
         char* description
         uint32_t id
-        uint32_t flags
+        slurmdb_qos_flags_t flags
         uint32_t grace_time
         uint32_t grp_jobs_accrue
         uint32_t grp_jobs
@@ -725,6 +731,7 @@ cdef extern from "slurm/slurmdb.h":
         char* nodes
         char* node_inx
         time_t time_end
+        time_t time_force
         time_t time_start
         time_t time_start_prev
         char* tres_str
@@ -733,6 +740,7 @@ cdef extern from "slurm/slurmdb.h":
 
     ctypedef struct slurmdb_step_rec_t:
         char* container
+        char* cwd
         uint32_t elapsed
         time_t end
         int32_t exitcode
@@ -750,11 +758,15 @@ cdef extern from "slurm/slurmdb.h":
         slurmdb_stats_t stats
         slurm_step_id_t step_id
         char* stepname
+        char* std_err
+        char* std_in
+        char* std_out
         char* submit_line
         uint32_t suspended
         uint64_t sys_cpu_sec
         uint32_t sys_cpu_usec
         uint32_t task_dist
+        uint32_t timelimit
         uint64_t tot_cpu_sec
         uint32_t tot_cpu_usec
         char* tres_alloc_str
@@ -910,6 +922,7 @@ cdef extern from "slurm/slurmdb.h":
         list_t* acct_list
         list_t* assoc_list
         char* name
+        char* partition
         list_t* tres_list
         uid_t uid
 
@@ -1276,3 +1289,7 @@ cdef extern from "slurm/slurmdb.h":
     list_t* slurmdb_wckeys_modify(void* db_conn, slurmdb_wckey_cond_t* wckey_cond, slurmdb_wckey_rec_t* wckey)
 
     list_t* slurmdb_wckeys_remove(void* db_conn, slurmdb_wckey_cond_t* wckey_cond)
+
+    char* slurmdb_expand_job_stdio_fields(char* path, slurmdb_job_rec_t* job)
+
+    char* slurmdb_expand_step_stdio_fields(char* path, slurmdb_step_rec_t* step)
