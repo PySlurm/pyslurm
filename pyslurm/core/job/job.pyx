@@ -468,7 +468,7 @@ cdef class Job:
             >>> pyslurm.Job(9999).modify(changes)
         """
         changes._create_job_submit_desc(is_update=True)
-        changes.ptr.job_id = self.id
+        changes.ptr.step_id.job_id = self.id
         verify_rpc(slurm_update_job(changes.ptr))
 
     def hold(self, mode=None):

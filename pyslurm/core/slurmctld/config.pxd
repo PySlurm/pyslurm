@@ -520,6 +520,10 @@ cdef class Config:
             Parameters for the MCS Plugin.
 
             {slurm.conf#OPT_MCSParameters}
+        metrics_type (str):
+            Name of the Metrics plugin used.
+
+            {slurm.conf#OPT_MetricsType}
         min_job_age (int):
             Minimum age (in seconds) of a completed Job before its record is
             cleared from slurmctlds memory.

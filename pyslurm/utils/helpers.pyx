@@ -418,3 +418,12 @@ def cpu_freq_int_to_str(freq):
     else:
         # This is in kHz
         return freq
+
+cdef slurm_step_id_t init_step_id():
+    cdef slurm_step_id_t _s
+    memset(&_s, 0, sizeof(slurm_step_id_t))
+    _s.sluid = 0
+    _s.job_id = slurm.NO_VAL
+    _s.step_het_comp = slurm.NO_VAL
+    _s.job_id = slurm.NO_VAL
+    return _s
