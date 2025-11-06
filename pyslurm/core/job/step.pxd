@@ -27,6 +27,7 @@ from .job cimport Job
 from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
+    slurm_step_id_t,
     job_step_info_t,
     slurm_get_job_steps,
     job_step_info_response_msg_t,
@@ -49,6 +50,7 @@ from pyslurm.utils.ctime cimport time_t
 from pyslurm.core.job.task_dist cimport TaskDistribution
 from pyslurm.db.stats cimport JobStepStatistics
 from pyslurm.core.job cimport stats
+from pyslurm.utils.helpers cimport init_step_id
 
 
 cdef class JobSteps(dict):

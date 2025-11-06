@@ -63,7 +63,7 @@ ctypedef struct return_code_msg_t:
 
 # https://github.com/SchedMD/slurm/blob/slurm-24-11-0-1/src/common/slurm_protocol_defs.h#L432
 ctypedef struct job_id_msg_t:
-    uint32_t job_id
+    slurm_step_id_t step_id
     uint16_t show_flags
 
 # https://github.com/SchedMD/slurm/blob/slurm-24-05-3-1/src/common/msg_type.h#L45

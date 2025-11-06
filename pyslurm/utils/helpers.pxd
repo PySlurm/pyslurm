@@ -23,11 +23,13 @@
 # cython: language_level=3
 
 from pyslurm cimport slurm
-from pyslurm.slurm cimport xfree, try_xmalloc, xmalloc
+from pyslurm.slurm cimport xfree, try_xmalloc, xmalloc, slurm_step_id_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from pyslurm.utils cimport cstr
 from libc.stdlib cimport free
+from libc.string cimport memset
 
 cpdef uid_to_name(uint32_t uid, err_on_invalid=*, dict lookup=*)
 cpdef gid_to_name(uint32_t gid, err_on_invalid=*, dict lookup=*)
 cpdef gres_from_tres_dict(dict tres_dict)
+cdef slurm_step_id_t init_step_id()

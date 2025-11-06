@@ -288,10 +288,6 @@ cdef class Config:
         return cstr.to_unicode(self.ptr.accounting_storage_type)
 
     @property
-    def accounting_storage_user(self):
-        return cstr.to_unicode(self.ptr.accounting_storage_user)
-
-    @property
     def accounting_store_flags(self):
         out = []
         flags = self.ptr.conf_flags
@@ -569,8 +565,8 @@ cdef class Config:
         return cstr.to_unicode(self.ptr.job_comp_user)
 
     @property
-    def job_container_type(self):
-        return cstr.to_unicode(self.ptr.job_container_plugin)
+    def namespace_plugin(self):
+        return cstr.to_unicode(self.ptr.namespace_plugin)
 
     @property
     def job_defaults(self):
@@ -685,6 +681,10 @@ cdef class Config:
     @property
     def mcs_parameters(self):
         return cstr.to_list(self.ptr.mcs_plugin_params)
+
+    @property
+    def metrics_type(self):
+        return cstr.to_unicode(self.ptr.metrics_type)
 
     @property
     def min_job_age(self):

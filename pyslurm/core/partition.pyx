@@ -748,20 +748,20 @@ def _split_oversubscribe_str(val):
 
 
 def _select_type_int_to_list(stype):
-    # The rest of the CR_* stuff are just some extra parameters to the select
+    # The rest of the SELECT_* stuff are just some extra parameters to the select
     # plugin
     out = _select_type_int_to_cons_res(stype)
 
-    if stype & slurm.CR_ONE_TASK_PER_CORE:
+    if stype & slurm.SELECT_ONE_TASK_PER_CORE:
         out.append("ONE_TASK_PER_CORE")
 
-    if stype & slurm.CR_PACK_NODES:
+    if stype & slurm.SELECT_PACK_NODES:
         out.append("PACK_NODES")
 
-    if stype & slurm.CR_CORE_DEFAULT_DIST_BLOCK:
+    if stype & slurm.SELECT_CORE_DEFAULT_DIST_BLOCK:
         out.append("CORE_DEFAULT_DIST_BLOCK")
 
-    if stype & slurm.CR_LLN:
+    if stype & slurm.SELECT_LLN:
         out.append("LLN")
 
     return out
@@ -772,19 +772,19 @@ def _select_type_int_to_cons_res(stype):
     # The 3 main select types are mutually exclusive, and may be combined with
     # CR_MEMORY
     # CR_BOARD exists but doesn't show up in the documentation, so ignore it.
-    if stype & slurm.CR_CPU and stype & slurm.CR_MEMORY:
+    if stype & slurm.SELECT_CPU and stype & slurm.SELECT_MEMORY:
         return "CPU_MEMORY"
-    elif stype & slurm.CR_CORE and stype & slurm.CR_MEMORY:
+    elif stype & slurm.SELECT_CORE and stype & slurm.SELECT_MEMORY:
         return "CORE_MEMORY"
-    elif stype & slurm.CR_SOCKET and stype & slurm.CR_MEMORY:
+    elif stype & slurm.SELECT_SOCKET and stype & slurm.SELECT_MEMORY:
         return "SOCKET_MEMORY"
-    elif stype & slurm.CR_CPU:
+    elif stype & slurm.SELECT_CPU:
         return "CPU"
-    elif stype & slurm.CR_CORE:
+    elif stype & slurm.SELECT_CORE:
         return "CORE"
-    elif stype & slurm.CR_SOCKET:
+    elif stype & slurm.SELECT_SOCKET:
         return "SOCKET"
-    elif stype & slurm.CR_MEMORY:
+    elif stype & slurm.SELECT_MEMORY:
         return "MEMORY"
     else:
         return []

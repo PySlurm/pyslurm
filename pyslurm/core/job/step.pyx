@@ -107,10 +107,11 @@ cdef class JobSteps(dict):
         cdef:
             JobStep step
             uint32_t cnt = 0
+            slurm_step_id_t step_id = init_step_id()
             dict steps = {}
 
-        rc = slurm_get_job_steps(<time_t>0, job_id, slurm.NO_VAL, &self.info,
-                                 flags)
+        step_id.job_id = job_id
+        rc = slurm_get_job_steps(&step_id, &self.info, flags)
         verify_rpc(rc)
 
         # zero-out a dummy job_step_info_t
@@ -235,10 +236,11 @@ cdef class JobStep:
         cdef:
             job_step_info_response_msg_t *info = NULL
             JobStep wrap = None
+            slurm_step_id_t _step_id = init_step_id()
 
-        job_id = job_id.id if isinstance(job_id, Job) else job_id
-        rc = slurm_get_job_steps(<time_t>0, job_id, dehumanize_step_id(step_id),
-                                       &info, slurm.SHOW_ALL)
+        _step_id.job_id = job_id.id if isinstance(job_id, Job) else job_id
+        _step_id.step_id = dehumanize_step_id(step_id)
+        rc = slurm_get_job_steps(&_step_id, &info, slurm.SHOW_ALL)
         verify_rpc(rc)
 
         if info and info.job_step_count == 1:
@@ -311,9 +313,8 @@ cdef class JobStep:
 
             >>> pyslurm.JobStep(9999, 1).send_signal(9)
         """
-        step_id = self.ptr.step_id.step_id
         sig = signal_to_num(signal)
-        verify_rpc(slurm_signal_job_step(self.job_id, step_id, sig))
+        verify_rpc(slurm_signal_job_step(&self.ptr.step_id, sig))
 
     def cancel(self):
         """Cancel a Job step.
@@ -327,8 +328,7 @@ cdef class JobStep:
             >>> import pyslurm
             >>> pyslurm.JobStep(9999, 1).cancel()
         """
-        step_id = self.ptr.step_id.step_id
-        verify_rpc(slurm_kill_job_step(self.job_id, step_id, 9, 0))
+        verify_rpc(slurm_kill_job_step(&self.ptr.step_id, 9, 0))
 
     def modify(self, JobStep changes):
         """Modify a job step.
@@ -353,8 +353,7 @@ cdef class JobStep:
         """
         cdef JobStep js = <JobStep>changes
         js._alloc_umsg()
-        js.umsg.step_id = self.ptr.step_id.step_id
-        js.umsg.job_id = self.ptr.step_id.job_id
+        js.umsg.step_id = self.ptr.step_id
         verify_rpc(slurm_update_step(js.umsg))
 
     def as_dict(self):
