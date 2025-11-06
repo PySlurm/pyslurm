@@ -654,9 +654,9 @@ cdef class Job:
         slurm_msg_t_init(&resp)
 
         memset(&msg, 0, sizeof(msg))
-        msg.job_id   = self.id
+        msg.step_id.job_id = self.id
         req.msg_type = slurm.REQUEST_BATCH_SCRIPT
-        req.data     = &msg
+        req.data = &msg
 
         rc = slurm_send_recv_controller_msg(&req, &resp, working_cluster_rec)
         verify_rpc(rc)
