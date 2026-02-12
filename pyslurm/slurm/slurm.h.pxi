@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2025-11-06T18:06:33.691815
+# Generated on 2026-02-12T20:29:47.128029
 #
 # The Original Copyright notice from slurm.h has been included
 # below:

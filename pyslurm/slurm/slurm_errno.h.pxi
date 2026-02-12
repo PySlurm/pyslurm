@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2025-11-06T18:06:33.417836
+# Generated on 2026-02-12T20:29:47.013986
 #
 # The Original Copyright notice from slurm_errno.h has been included
 # below:
@@ -361,6 +361,7 @@ cdef extern from "slurm/slurm_errno.h":
         ESLURM_REST_MISSING_GID
         ESLURM_REST_UNKNOWN_URL
         ESLURM_REST_UNKNOWN_URL_METHOD
+        ESLURM_REST_AUTH_FAIL
         ESLURM_DATA_PATH_NOT_FOUND
         ESLURM_DATA_PTR_NULL
         ESLURM_DATA_CONV_FAILED
