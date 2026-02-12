@@ -425,5 +425,5 @@ cdef slurm_step_id_t init_step_id():
     _s.sluid = 0
     _s.job_id = slurm.NO_VAL
     _s.step_het_comp = slurm.NO_VAL
-    _s.job_id = slurm.NO_VAL
+    _s.step_id = slurm.NO_VAL
     return _s
