@@ -80,7 +80,7 @@ cdef class Config:
 
     Attributes:
         cgroup_config (pyslurm.slurmctld.CgroupConfig):
-            The CGroup Configuration data
+            The CGroup Configuration data.
         accounting_gather_config (pyslurm.slurmctld.AccountingGatherConfig):
             The Accounting Gather Configuration data.
         mpi_config (pyslurm.slurmctld.MPIConfig):

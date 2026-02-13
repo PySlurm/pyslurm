@@ -36,6 +36,7 @@ from pyslurm.utils.helpers import (
 )
 from pyslurm.utils import cstr
 from typing import Union
+import re
 
 
 cdef class MPIConfig:
@@ -75,7 +76,7 @@ cdef class MPIConfig:
                 conf.get("PMIxEnv", ""), delim1=";", delim2="=")
         out.pmix_fence_barrier = _true_false_to_bool(conf.get("PMIxFenceBarrier", "false"))
         out.pmix_net_devices_ucx = conf.get("PMIxNetDevicesUCX")
-        out.pmix_timeout = int(conf.get("PMIxTimeout", 300))
+        out.pmix_timeout = int(_get_digits(conf.get("PMIxTimeout", "300")))
         out.pmix_tls_ucx = cstr.to_list(conf.get("PMIxTlsUCX", ""))
 
         return out
@@ -109,28 +110,26 @@ cdef class CgroupConfig:
 
         out.mountpoint = conf.get("CgroupMountpoint", "/sys/fs/cgroup")
         out.plugin = conf.get("CgroupPlugin", "autodetect")
-
-        systemd_timeout = conf.get("SystemdTimeout", "1000")
-        out.systemd_timeout = int(systemd_timeout.split(" ")[0])
-
+        out.systemd_timeout = int(_get_digits(conf.get("SystemdTimeout", "1000")))
         out.ignore_systemd = _yesno_to_bool(conf.get("IgnoreSystemd"))
         out.ignore_systemd_on_failure = _yesno_to_bool(conf.get("IgnoreSystemdOnFailure"))
         out.enable_controllers = _yesno_to_bool(conf.get("EnableControllers"))
 
-        out.allowed_ram_space = float(conf.get("AllowedRAMSpace", 100.0))
-        out.allowed_swap_space = float(conf.get("AllowedSwapSpace", 0.0))
+        out.allowed_ram_space = float(_get_digits(conf.get("AllowedRAMSpace", "100.0%")))
+        out.allowed_swap_space = float(_get_digits(conf.get("AllowedSwapSpace", "0.0%")))
         out.constrain_cores = _yesno_to_bool(conf.get("ConstrainCores", "no"))
         out.constrain_devices = _yesno_to_bool(conf.get("ConstrainDevices", "no"))
         out.constrain_ram_space = _yesno_to_bool(conf.get("ConstrainRAMSpace", "no"))
         out.constrain_swap_space = _yesno_to_bool(conf.get("ConstrainSwapSpace", "no"))
-        out.max_ram_percent = float(conf.get("MaxRAMPercent", 100.0))
-        out.max_swap_percent = float(conf.get("MaxSwapPercent", 100.0))
+        out.max_ram_percent = float(_get_digits(conf.get("MaxRAMPercent", "100.0%")))
+        out.max_swap_percent = float(_get_digits(conf.get("MaxSwapPercent", "100.0%")))
         out.memory_swappiness = float(conf.get("MemorySwappiness", -1.0))
-        out.min_ram_space = int(conf.get("MinRAMSpace", 30*1024))
+        out.min_ram_space = int(_get_digits(conf.get("MinRAMSpace", "30MB")))
 
         out.signal_children_processes = _yesno_to_bool(conf.get("SignalChildrenProcesses", "no"))
 
         return out
+
 
 cdef class AccountingGatherConfig:
 
@@ -230,6 +229,7 @@ cdef class Config:
 
     @property
     def cgroup_config(self):
+        # TODO: should these be none if there is actually no config?
         if not self._cgroup_config:
             self._cgroup_config =  CgroupConfig.from_ptr(self.ptr.cgroup_conf)
         return self._cgroup_config
@@ -1217,6 +1217,10 @@ cdef dict _parse_config_key_pairs(void *ptr, owned=False):
         key_pair = <config_key_pair_t*>item.data
         name = cstr.to_unicode(key_pair.name)
         val = cstr.to_unicode(key_pair.value)
+
+        if not val or val == "(null)":
+            val = None
+
         out[name] = val
 
     return out
@@ -1233,6 +1237,10 @@ def _str_to_bool(val, true_str, false_str):
         return False
     else:
         return False
+
+
+def _get_digits(val):
+    return re.split(r'\D+', val)[0]
 
 
 def _yesno_to_bool(val):
