@@ -204,6 +204,8 @@ cdef class Job:
             Name of the Partition the Job runs in.
         submit_host (str):
             Name of the Host this Job was submitted from.
+        submit_session_id (int):
+            ID of the session when the Job was submitted.
         batch_host (str):
             Name of the Host where the Batch-Script is executed.
         num_nodes (int):
@@ -288,6 +290,8 @@ cdef class Job:
             Whether the Job has allocated a set of contiguous nodes.
         licenses (list):
             List of licenses the Job needs.
+        allocated_licenses (list):
+            List of licenses the Job has allocated
         network (str):
             Network specification for the Job.
         command (str):
@@ -300,6 +304,8 @@ cdef class Job:
             An arbitrary comment set by the slurmctld for the Job.
         container (str):
             The container this Job uses.
+        container_id (str):
+            The OCI ID of the Container this Job uses.
         comment (str):
             An arbitrary comment set for the Job.
         standard_input (str):
@@ -370,6 +376,9 @@ cdef class Job:
             Task Sharing of a Generic Resource (e.g. GPU).
         kill_on_invalid_dependency (bool):
             Whether the Job should be killed on an invalid dependency.
+        kill_step_when_oom (bool):
+            Whether the whole Step should be killed when a single task is Out
+            of Memory.
         spreads_over_nodes (bool):
             Whether the Job should be spread over as many nodes as possible.
         is_cronjob (bool):
@@ -380,9 +389,15 @@ cdef class Job:
             Amount of CPU-Time used by the Job so far.
             This is the result of multiplying the run_time with the amount of
             cpus requested.
+        submit_line (str):
+            The sbatch command that was used to submit the Job.
         run_time_remaining (int):
             The amount of seconds the job has still left until hitting the
             `time_limit`.
+        extra (str):
+            Some additional information to the Job.
+        failed_node (str):
+            Name of the node that caused the Job to fail.
     """
     cdef:
         slurm_job_info_t *ptr
