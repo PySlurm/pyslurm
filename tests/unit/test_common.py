@@ -342,9 +342,10 @@ class TestMiscUtil:
         assert user_to_uid("root") == 0
         assert user_to_uid(0) == 0
         assert user_to_uid("0") == 0
+        assert uid_to_name(2**32-5) == str(2**32-5)
 
         with pytest.raises(KeyError):
-            name = uid_to_name(2**32-5)
+            name = uid_to_name(2**32-5, err_on_invalid=True)
 
         with pytest.raises(KeyError):
             name = user_to_uid("invalid_user")
@@ -360,9 +361,10 @@ class TestMiscUtil:
         assert group_to_gid("root") == 0
         assert group_to_gid(0) == 0
         assert group_to_gid("0") == 0
+        assert gid_to_name(2**32-5) == str(2**32-5)
 
         with pytest.raises(KeyError):
-            name = gid_to_name(2**32-5)
+            name = gid_to_name(2**32-5, err_on_invalid=True)
 
         with pytest.raises(KeyError):
             name = group_to_gid("invalid_group")

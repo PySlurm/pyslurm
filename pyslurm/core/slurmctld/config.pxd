@@ -80,7 +80,7 @@ cdef class Config:
 
     Attributes:
         cgroup_config (pyslurm.slurmctld.CgroupConfig):
-            The CGroup Configuration data
+            The CGroup Configuration data.
         accounting_gather_config (pyslurm.slurmctld.AccountingGatherConfig):
             The Accounting Gather Configuration data.
         mpi_config (pyslurm.slurmctld.MPIConfig):
@@ -121,10 +121,6 @@ cdef class Config:
             The accounting storage type used.
 
             {slurm.conf#OPT_AccountingStorageType}
-        accounting_storage_user (str):
-            The User accounting accessing the accounting database.
-
-            {slurm.conf#OPT_AccountingStorageUser}
         accounting_store_flags (list[str]):
             List of fields that the slurmctld also sends to the accounting
             database.
@@ -416,10 +412,10 @@ cdef class Config:
             User account user for accessing the job completion database.
 
             {slurm.conf#OPT_JobCompUser}
-        job_container_type (str):
+        namespace_plugin (str):
             Plugin used for job isolation through Linux namespaces.
 
-            {slurm.conf#OPT_JobContainerType}
+            {slurm.conf#OPT_NamespaceType}
         job_file_append (bool):
             This option controls what to do if a job's output or error file
             exist when the job is started. If `True`, then append to the
@@ -520,6 +516,10 @@ cdef class Config:
             Parameters for the MCS Plugin.
 
             {slurm.conf#OPT_MCSParameters}
+        metrics_type (str):
+            Name of the Metrics plugin used.
+
+            {slurm.conf#OPT_MetricsType}
         min_job_age (int):
             Minimum age (in seconds) of a completed Job before its record is
             cleared from slurmctlds memory.

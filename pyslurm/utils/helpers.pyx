@@ -43,7 +43,7 @@ MEMORY_UNITS = {
 }
 
 
-cpdef uid_to_name(uint32_t uid, err_on_invalid=True, dict lookup={}):
+cpdef uid_to_name(uint32_t uid, err_on_invalid=False, dict lookup={}):
     """Translate UID to a User-Name."""
     if uid == slurm.NO_VAL or uid == slurm.INFINITE:
         return None
@@ -63,10 +63,10 @@ cpdef uid_to_name(uint32_t uid, err_on_invalid=True, dict lookup={}):
             if err_on_invalid:
                 raise e
 
-    return None
+    return str(uid)
 
 
-cpdef gid_to_name(uint32_t gid, err_on_invalid=True, dict lookup={}):
+cpdef gid_to_name(uint32_t gid, err_on_invalid=False, dict lookup={}):
     """Translate a uid to a Group-Name."""
     if gid == slurm.NO_VAL or gid == slurm.INFINITE:
         return None
@@ -86,7 +86,7 @@ cpdef gid_to_name(uint32_t gid, err_on_invalid=True, dict lookup={}):
             if err_on_invalid:
                 raise e
 
-    return None
+    return str(gid)
 
 
 def user_to_uid(user, err_on_invalid=True):
@@ -418,3 +418,12 @@ def cpu_freq_int_to_str(freq):
     else:
         # This is in kHz
         return freq
+
+cdef slurm_step_id_t init_step_id():
+    cdef slurm_step_id_t _s
+    memset(&_s, 0, sizeof(slurm_step_id_t))
+    _s.sluid = 0
+    _s.job_id = slurm.NO_VAL
+    _s.step_het_comp = slurm.NO_VAL
+    _s.step_id = slurm.NO_VAL
+    return _s

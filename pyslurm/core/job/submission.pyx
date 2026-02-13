@@ -102,7 +102,7 @@ cdef class JobSubmitDescription:
         self._create_job_submit_desc()
         verify_rpc(slurm_submit_batch_job(self.ptr, &resp))
 
-        job_id = resp.job_id
+        job_id = resp.step_id.job_id
         slurm_free_submit_response_response_msg(resp)
 
         return job_id

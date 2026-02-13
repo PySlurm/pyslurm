@@ -468,7 +468,7 @@ cdef class Job:
             >>> pyslurm.Job(9999).modify(changes)
         """
         changes._create_job_submit_desc(is_update=True)
-        changes.ptr.job_id = self.id
+        changes.ptr.step_id.job_id = self.id
         verify_rpc(slurm_update_job(changes.ptr))
 
     def hold(self, mode=None):
@@ -654,9 +654,9 @@ cdef class Job:
         slurm_msg_t_init(&resp)
 
         memset(&msg, 0, sizeof(msg))
-        msg.job_id   = self.id
+        msg.step_id.job_id = self.id
         req.msg_type = slurm.REQUEST_BATCH_SCRIPT
-        req.data     = &msg
+        req.data = &msg
 
         rc = slurm_send_recv_controller_msg(&req, &resp, working_cluster_rec)
         verify_rpc(rc)
@@ -827,6 +827,10 @@ cdef class Job:
         return cstr.to_unicode(self.ptr.alloc_node)
 
     @property
+    def submit_session_id(self):
+        return u32_parse(self.ptr.alloc_sid)
+
+    @property
     def batch_host(self):
         return cstr.to_unicode(self.ptr.batch_host)
 
@@ -989,6 +993,10 @@ cdef class Job:
         return cstr.to_list(self.ptr.licenses)
 
     @property
+    def allocated_licenses(self):
+        return cstr.to_list(self.ptr.licenses_allocated)
+
+    @property
     def network(self):
         return cstr.to_unicode(self.ptr.network)
 
@@ -1011,6 +1019,10 @@ cdef class Job:
     @property
     def container(self):
         return cstr.to_unicode(self.ptr.container)
+
+    @property
+    def container_id(self):
+        return cstr.to_unicode(self.ptr.container_id)
 
     @property
     def comment(self):
@@ -1268,6 +1280,10 @@ cdef class Job:
         return u64_parse_bool_flag(self.ptr.bitflags, slurm.KILL_INV_DEP)
 
     @property
+    def kill_step_when_oom(self):
+        return u16_parse_bool(self.ptr.oom_kill_step)
+
+    @property
     def spreads_over_nodes(self):
         return u64_parse_bool_flag(self.ptr.bitflags, slurm.SPREAD_JOB)
 
@@ -1284,12 +1300,24 @@ cdef class Job:
         return self.cpus * self.run_time
 
     @property
+    def submit_line(self):
+        return cstr.to_unicode(self.ptr.submit_line)
+
+    @property
     def run_time_remaining(self):
         limit = self.time_limit
         if limit is None:
             return None
 
         return (self.time_limit*60) - self.run_time
+
+    @property
+    def extra(self):
+        return cstr.to_unicode(self.ptr.extra)
+
+    @property
+    def failed_node(self):
+        return cstr.to_unicode(self.ptr.failed_node)
 
     def get_resource_layout_per_node(self):
         """Retrieve the resource layout of this Job on each node.

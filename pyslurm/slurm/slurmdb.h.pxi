@@ -9,7 +9,7 @@
 # * C-Macros are listed with their appropriate uint type
 # * Any definitions that cannot be translated are not included in this file
 #
-# Generated on 2025-09-28T15:03:24.516012
+# Generated on 2026-02-12T20:29:47.283339
 #
 # The Original Copyright notice from slurmdb.h has been included
 # below:
@@ -70,6 +70,7 @@ cdef extern from "slurm/slurmdb.h":
     uint8_t SLURMDB_JOB_FLAG_SCHED
     uint8_t SLURMDB_JOB_FLAG_BACKFILL
     uint8_t SLURMDB_JOB_FLAG_START_R
+    uint8_t SLURMDB_JOB_FLAG_ALTERED
     uint8_t JOBCOND_FLAG_DUP
     uint8_t JOBCOND_FLAG_NO_STEP
     uint8_t JOBCOND_FLAG_NO_TRUNC
@@ -195,7 +196,6 @@ cdef extern from "slurm/slurmdb.h":
         QOS_FLAG_NOTSET
         QOS_FLAG_ADD
         QOS_FLAG_REMOVE
-        QOS_FLAG_INVALID
 
     cdef enum cluster_fed_states:
         CLUSTER_FED_STATE_NA
@@ -209,7 +209,6 @@ cdef extern from "slurm/slurmdb.h":
         CLUSTER_FLAG_MULTSD
         CLUSTER_FLAG_FED
         CLUSTER_FLAG_EXT
-        CLUSTER_FLAG_INVALID
 
     ctypedef enum slurmdb_assoc_flags_t:
         ASSOC_FLAG_NONE
@@ -220,13 +219,13 @@ cdef extern from "slurm/slurmdb.h":
         ASSOC_FLAG_BASE
         ASSOC_FLAG_USER_COORD
         ASSOC_FLAG_BLOCK_ADD
-        ASSOC_FLAG_INVALID
 
     ctypedef struct slurmdb_tres_rec_t:
         uint64_t alloc_secs
         uint32_t rec_count
         uint64_t count
         uint32_t id
+        char modifier
         char* name
         char* type
 
@@ -302,7 +301,6 @@ cdef extern from "slurm/slurmdb.h":
         SLURMDB_ACCT_FLAG_USER_COORD_NO
         SLURMDB_ACCT_FLAG_BASE
         SLURMDB_ACCT_FLAG_USER_COORD
-        SLURMDB_ACCT_FLAG_INVALID
 
     ctypedef struct slurmdb_account_cond_t:
         slurmdb_assoc_cond_t* assoc_cond
@@ -858,6 +856,7 @@ cdef extern from "slurm/slurmdb.h":
         list_t* assoc_list
         slurmdb_bf_usage_t* bf_usage
         list_t* coord_accts
+        uint32_t def_qos_id
         char* default_acct
         char* default_wckey
         uint32_t flags
