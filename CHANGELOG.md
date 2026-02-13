@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Split up `prolog_epilog_timeout` in `prolog_timeout` and `epilog_timeout` in `pyslurm.slurmctld.Config`
 - Renamed `job_container_type` to `namespace_plugin` in `pyslurm.slurmctld.Config`
-- The `uid_to_name` and `gid_to_name` functions that are used in a few places now don't error by default if the user/group doesn't exist anymore
+- The `uid_to_name` and `gid_to_name` functions that are used in a few places now don't error by default if the user/group doesn't exist anymore.
   Now, if the user/group is gone already, the UID/GID is simply returned as a `str`.
 
 ### Removed
