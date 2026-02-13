@@ -22,6 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for Slurm 25.11.x
 - Added new member `metrics_type` to `pyslurm.slurmctld.Config`
+- The following new members have been added to the `pyslurm.Job` class:
+  - `submit_session_id`
+  - `allocated_licenses`
+  - `container_id`
+  - `kill_step_when_oom`
+  - `submit_line`
+  - `extra`
+  - `failed_node`
+
+### Fixed
+
+- Fixed an issue when parsing additional configs like `cgroup.conf` or `mpi.conf` when loading the slurm configuration with `pyslurm.slurmctld.Config.load()`
 
 ### Changed
 
