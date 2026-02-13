@@ -437,30 +437,6 @@ def slurm_load_slurmd_status():
 
     return Status
 
-#
-# Slurm Config Class
-#
-
-def get_private_data_list(data):
-    """Retrieve the enciphered Private Data configuration.
-
-    Returns:
-        (list): Private data
-    """
-
-    result = []
-    exponent = 7
-    types = ['jobs', 'node', 'partitions', 'usage', 'users', 'accounts', 'reservations', 'cloud_nodes']
-    preview = data
-    rest = data
-    while rest != 0:
-        rest = data % pow(2, exponent)
-        if rest != preview:
-            result.append(types[exponent])
-        exponent = exponent - 1
-        preview = rest
-    return result
-
 
 cpdef long slurm_get_rem_time(uint32_t JobID=0) except? -1:
     """Get the remaining time in seconds for a slurm job step.
@@ -535,71 +511,6 @@ def slurm_pid2jobid(uint32_t JobPID=0):
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
     return errCode, JobID
-
-
-cdef secs2time_str(uint32_t time):
-    """Convert seconds to Slurm string format.
-
-    This method converts time in seconds (86400) to Slurm's string format
-    (1-00:00:00).
-
-    Args:
-        time (int): Time in seconds
-
-    Returns:
-        str: Slurm time string.
-    """
-    cdef:
-        char *time_str
-        double days, hours, minutes, seconds
-
-    if time == slurm.INFINITE:
-        time_str = "UNLIMITED"
-    else:
-        seconds = time % 60
-        minutes = (time / 60) % 60
-        hours = (time / 3600) % 24
-        days = time / 86400
-
-        if days < 0 or  hours < 0 or minutes < 0 or seconds < 0:
-            time_str = "INVALID"
-        elif days:
-            return "%ld-%2.2ld:%2.2ld:%2.2ld" % (days, hours,
-                                                  minutes, seconds)
-        else:
-            return "%2.2ld:%2.2ld:%2.2ld" % (hours, minutes, seconds)
-
-
-cdef mins2time_str(uint32_t time):
-    """Convert minutes to Slurm string format.
-
-    This method converts time in minutes (14400) to Slurm's string format
-    (10-00:00:00).
-
-    Args:
-        time (int): Time in minutes
-
-    Returns:
-        str: Slurm time string.
-    """
-    cdef:
-        double days, hours, minutes, seconds
-
-    if time == slurm.INFINITE:
-        return "UNLIMITED"
-    else:
-        seconds = 0
-        minutes = time % 60
-        hours = (time / 60) % 24
-        days = time / 1440
-
-        if days < 0 or  hours < 0 or minutes < 0 or seconds < 0:
-            time_str = "INVALID"
-        elif days:
-            return "%ld-%2.2ld:%2.2ld:%2.2ld" % (days, hours,
-                                                  minutes, seconds)
-        else:
-            return "%2.2ld:%2.2ld:%2.2ld" % (hours, minutes, seconds)
 
 
 #
@@ -1050,9 +961,6 @@ cdef class qos:
                     QOS_info['name'] = name
                     # QOS_info['*preempt_bitstr'] =
                     # QOS_info['preempt_list'] = qos.preempt_list
-
-                    qos_preempt_mode = get_preempt_mode(qos.preempt_mode)
-                    QOS_info['preempt_mode'] = stringOrNone(qos_preempt_mode, '')
 
                     QOS_info['priority'] = qos.priority
                     QOS_info['usage_factor'] = qos.usage_factor
@@ -1744,19 +1652,6 @@ cdef class slurmdb_reports:
 #
 
 
-def get_last_slurm_error():
-    """Get and return the last error from a slurm API call.
-
-    Returns:
-        (int): Slurm error number and the associated error string
-    """
-    rc = slurm_get_errno()
-
-    if rc == 0:
-        return (rc, 'Success')
-    else:
-        return (rc, stringOrNone(slurm.slurm_strerror(rc), ''))
-
 cdef inline dict __get_licenses(char *licenses):
     """Returns a dict of licenses from the slurm license string.
 
@@ -1785,18 +1680,6 @@ cdef inline dict __get_licenses(char *licenses):
             licDict["%s" % key] = value
 
     return licDict
-
-
-def get_node_use(inx):
-    """Returns a string that represents the block node mode.
-
-    Args:
-        ResType: Slurm block node usage
-
-    Returns:
-        use (str): Block node usage string
-    """
-    return slurm.slurm_node_state_string(inx)
 
 
 def get_trigger_res_type(uint16_t inx):
@@ -1913,155 +1796,6 @@ cdef inline object __get_trigger_type(uint32_t TriggerType):
     return "%s" % rtype
 
 
-def get_debug_flags(uint64_t inx):
-    """Returns a string that represents the slurm debug flags.
-
-    Args:
-        flags (int): Slurm debug flags
-
-    Returns:
-        (str): Debug flag string
-    """
-    return debug_flags2str(inx)
-
-cdef inline list debug_flags2str(uint64_t debug_flags):
-    cdef list debugFlags = []
-
-    if (debug_flags & DEBUG_FLAG_ACCRUE):
-        debugFlags.append('Accrue')
-
-    if (debug_flags & DEBUG_FLAG_AGENT):
-        debugFlags.append('Agent')
-
-    if (debug_flags & DEBUG_FLAG_BACKFILL):
-        debugFlags.append('Backfill')
-
-    if (debug_flags & DEBUG_FLAG_BACKFILL_MAP):
-        debugFlags.append('BackfillMap')
-
-    if (debug_flags & DEBUG_FLAG_BURST_BUF):
-        debugFlags.append('BurstBuffer')
-
-    if (debug_flags & DEBUG_FLAG_CGROUP):
-        debugFlags.append('Cgroup')
-
-    if (debug_flags & DEBUG_FLAG_CPU_FREQ):
-        debugFlags.append('CpuFrequency')
-
-    if (debug_flags & DEBUG_FLAG_CPU_BIND):
-        debugFlags.append('CPU_Bind')
-
-    if (debug_flags & DEBUG_FLAG_DB_ARCHIVE):
-        debugFlags.append('DB_Archive')
-
-    if (debug_flags & DEBUG_FLAG_DB_ASSOC):
-        debugFlags.append('DB_Assoc')
-
-    if (debug_flags & DEBUG_FLAG_DB_TRES):
-        debugFlags.append('DB_TRES')
-
-    if (debug_flags & DEBUG_FLAG_DB_JOB):
-        debugFlags.append('DB_Job')
-
-    if (debug_flags & DEBUG_FLAG_DB_QOS):
-        debugFlags.append('DB_QOS')
-
-    if (debug_flags & DEBUG_FLAG_DB_QUERY):
-        debugFlags.append('DB_Query')
-
-    if (debug_flags & DEBUG_FLAG_DB_RESV):
-        debugFlags.append('DB_Reservation')
-
-    if (debug_flags & DEBUG_FLAG_DB_RES):
-        debugFlags.append('DB_Resource')
-
-    if (debug_flags & DEBUG_FLAG_DB_STEP):
-        debugFlags.append('DB_Step')
-
-    if (debug_flags & DEBUG_FLAG_DB_USAGE):
-        debugFlags.append('DB_Usage')
-
-    if (debug_flags & DEBUG_FLAG_DB_WCKEY):
-        debugFlags.append('DB_WCKey')
-
-    if (debug_flags & DEBUG_FLAG_ENERGY):
-        debugFlags.append('Energy')
-
-    if (debug_flags & DEBUG_FLAG_FEDR):
-        debugFlags.append('Federation')
-
-    if (debug_flags & DEBUG_FLAG_GANG):
-        debugFlags.append('Gang')
-
-    if (debug_flags & DEBUG_FLAG_GRES):
-        debugFlags.append('Gres')
-
-    if (debug_flags & DEBUG_FLAG_HETJOB):
-        debugFlags.append('HeteroJobs')
-
-    if (debug_flags & DEBUG_FLAG_INTERCONNECT):
-        debugFlags.append('Interconnect')
-
-    if (debug_flags & DEBUG_FLAG_JAG):
-        debugFlags.append('Jag')
-
-    if (debug_flags & DEBUG_FLAG_NODE_FEATURES):
-        debugFlags.append('NodeFeatures')
-
-    if (debug_flags & DEBUG_FLAG_LICENSE):
-        debugFlags.append('License')
-
-    if (debug_flags & DEBUG_FLAG_NO_CONF_HASH):
-        debugFlags.append('NO_CONF_HASH')
-
-    if (debug_flags & DEBUG_FLAG_POWER):
-        debugFlags.append('Power')
-
-    if (debug_flags & DEBUG_FLAG_PRIO):
-        debugFlags.append('Priority')
-
-    if (debug_flags & DEBUG_FLAG_PROTOCOL):
-        debugFlags.append('Protocol')
-
-    if (debug_flags & DEBUG_FLAG_RESERVATION):
-        debugFlags.append('Reservation')
-
-    if (debug_flags & DEBUG_FLAG_ROUTE):
-        debugFlags.append('Route')
-
-    if (debug_flags & DEBUG_FLAG_SELECT_TYPE):
-        debugFlags.append('SelectType')
-
-    if (debug_flags & DEBUG_FLAG_SCRIPT):
-        debugFlags.append('Script')
-
-    if (debug_flags & DEBUG_FLAG_STEPS):
-        debugFlags.append('Steps')
-
-    if (debug_flags & DEBUG_FLAG_SWITCH):
-        debugFlags.append('Switch')
-
-    if (debug_flags & DEBUG_FLAG_TRACE_JOBS):
-        debugFlags.append('TraceJobs')
-
-    if (debug_flags & DEBUG_FLAG_TRIGGERS):
-        debugFlags.append('Triggers')
-
-    return debugFlags
-
-
-def get_node_state(uint32_t inx):
-    """Returns a string that represents the state of the slurm node.
-
-    Args:
-        inx (int): Slurm node state
-
-    Returns:
-        state (str): Node state string
-    """
-    return slurm.slurm_node_state_string(inx)
-
-
 def get_rm_partition_state(int inx):
     """Returns a string that represents the partition state.
 
@@ -2093,51 +1827,6 @@ cdef inline object __get_rm_partition_state(int inx):
 
     return "%s" % rm_part_state
 
-
-def get_preempt_mode(uint16_t inx):
-    """Returns a string that represents the preempt mode.
-
-    Args:
-        inx (int): Slurm preempt mode
-            * PREEMPT_MODE_OFF        0x0000
-            * PREEMPT_MODE_SUSPEND    0x0001
-            * PREEMPT_MODE_REQUEUE    0x0002
-            * PREEMPT_MODE_CANCEL     0x0008
-            * PREEMPT_MODE_GANG       0x8000
-
-    Returns:
-        mode (str): Preempt mode string
-    """
-    return slurm.slurm_preempt_mode_string(inx)
-
-
-def get_partition_state(uint16_t inx):
-    """Returns a string that represents the state of the slurm partition.
-
-    Args:
-        inx (int): Slurm partition state
-            * PARTITION_DOWN      0x01
-            * PARTITION_UP        0x01 | 0x02
-            * PARTITION_DRAIN     0x02
-            * PARTITION_INACTIVE  0x00
-
-    Returns:
-        (str): Partition state string
-    """
-    state = ""
-    if inx:
-        if inx == PARTITION_UP:
-            state = "UP"
-        elif inx == PARTITION_DOWN:
-            state = "DOWN"
-        elif inx == PARTITION_INACTIVE:
-            state = "INACTIVE"
-        elif inx == PARTITION_DRAIN:
-            state = "DRAIN"
-        else:
-            state = "UNKNOWN"
-
-    return state
 
 cdef inline object __get_partition_state(int inx, int extended=0):
     """Returns a string that represents the state of the partition.
@@ -2258,48 +1947,6 @@ cdef inline dict __get_partition_mode(uint16_t flags=0, uint16_t max_share=0):
     return mode
 
 
-def get_job_state(inx):
-    """Return the state of the slurm job state.
-
-    Args:
-        inx (int): Slurm job state
-            * JOB_PENDING     0
-            * JOB_RUNNING     1
-            * JOB_SUSPENDED   2
-            * JOB_COMPLETE    3
-            * JOB_CANCELLED   4
-            * JOB_FAILED      5
-            * JOB_TIMEOUT     6
-            * JOB_NODE_FAIL   7
-            * JOB_PREEMPTED   8
-            * JOB_BOOT_FAIL   10
-            * JOB_DEADLINE    11
-            * JOB_OOM         12
-            * JOB_END
-
-    Returns:
-        (str): Job state string
-    """
-    try:
-        job_state = stringOrNone(slurm.slurm_job_state_string(inx), '')
-        return job_state
-    except:
-        pass
-
-
-def get_job_state_reason(inx):
-    """Returns a reason why the slurm job is in a provided state.
-
-    Args:
-        inx (int): Slurm job state reason
-
-    Returns:
-        (str): Reason string
-    """
-    job_reason = stringOrNone(slurm.slurm_job_state_reason_string(inx), '')
-    return job_reason
-
-
 def epoch2date(epochSecs):
     """Convert epoch secs to a python time string.
 
@@ -2312,18 +1959,6 @@ def epoch2date(epochSecs):
     try:
         dateTime = p_time.gmtime(epochSecs)
         return "%s" % p_time.strftime("%a %b %d %H:%M:%S %Y", dateTime)
-    except:
-        pass
-
-
-def __convertDefaultTime(uint32_t inx):
-    try:
-        if inx == 0xffffffff:
-            return 'infinite'
-        elif inx == 0xfffffffe:
-            return 'no_value'
-        else:
-            return '%s' % inx
     except:
         pass
 
