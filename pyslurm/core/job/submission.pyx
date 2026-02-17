@@ -215,6 +215,7 @@ cdef class JobSubmitDescription:
         cstr.fmalloc(&ptr.network, self.network)
         cstr.fmalloc(&ptr.qos, self.qos)
         cstr.fmalloc(&ptr.container, self.container)
+        cstr.fmalloc(&ptr.container_id, self.container_id)
         cstr.fmalloc(&ptr.std_in, self.standard_in)
         cstr.fmalloc(&ptr.std_out, self.standard_output)
         cstr.fmalloc(&ptr.std_err, self.standard_error)
@@ -228,8 +229,10 @@ cdef class JobSubmitDescription:
         cstr.fmalloc(&ptr.cpus_per_tres,
                      cstr.from_gres_dict(self.cpus_per_gpu, "gpu"))
         cstr.fmalloc(&ptr.admin_comment, self.admin_comment)
-        cstr.fmalloc(&self.ptr.dependency,
+        cstr.fmalloc(&ptr.dependency,
                      _parse_dependencies(self.dependencies))
+        cstr.fmalloc(&ptr.req_context, self.selinux_context)
+        cstr.fmalloc(&ptr.extra, self.extra)
         cstr.from_list(&ptr.clusters, self.clusters)
         cstr.from_list(&ptr.exc_nodes, self.excluded_nodes)
         cstr.from_list(&ptr.req_nodes, self.required_nodes)
@@ -253,6 +256,8 @@ cdef class JobSubmitDescription:
         ptr.ntasks_per_node = u16(self.ntasks_per_node)
         ptr.threads_per_core = u16(self.threads_per_core)
         ptr.ntasks_per_core = u16(self.ntasks_per_core)
+        ptr.segment_size = u16(self.segment_size)
+        ptr.resv_port_cnt = u16(self.reserved_ports)
         u64_set_bool_flag(&ptr.bitflags, self.spreads_over_nodes,
                           slurm.SPREAD_JOB)
         u64_set_bool_flag(&ptr.bitflags, self.kill_on_invalid_dependency,
@@ -295,6 +300,8 @@ cdef class JobSubmitDescription:
         # --hint
         # spank_env
         # --propagate for rlimits
+
+        # TODO: maybe pn_min_cpus needed?
 
     def _set_defaults(self):
         if not self.ntasks:
