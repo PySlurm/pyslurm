@@ -207,7 +207,7 @@ cdef class Partition:
     def as_dict(self):
         return self.to_dict()
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Partition information formatted as a dictionary.
 
         Returns:
@@ -218,7 +218,7 @@ cdef class Partition:
             >>> mypart = pyslurm.Partition.load("mypart")
             >>> mypart_dict = mypart.to_dict()
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     @staticmethod
     def load(name):

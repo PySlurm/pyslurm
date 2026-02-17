@@ -534,7 +534,7 @@ cdef class Job:
     def as_dict(self):
         return self.to_dict()
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Convert Database Job information to a dictionary.
 
         Returns:
@@ -545,14 +545,7 @@ cdef class Job:
             >>> myjob = pyslurm.db.Job.load(10000)
             >>> myjob_dict = myjob.to_dict()
         """
-        cdef dict out = instance_to_dict(self)
-
-        if self.stats:
-            out["stats"] = self.stats.to_dict()
-        if self.steps:
-            out["steps"] = self.steps.to_dict()
-
-        return out
+        return instance_to_dict(self, recursive)
 
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.id})'

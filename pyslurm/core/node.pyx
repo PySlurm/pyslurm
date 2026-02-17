@@ -403,7 +403,7 @@ cdef class Node:
     def as_dict(self):
         return self.to_dict()
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Node information formatted as a dictionary.
 
         Returns:
@@ -414,7 +414,7 @@ cdef class Node:
             >>> mynode = pyslurm.Node.load("mynode")
             >>> mynode_dict = mynode.to_dict()
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     @property
     def name(self):

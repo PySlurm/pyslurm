@@ -214,13 +214,13 @@ cdef class Association:
         wrap.ptr = in_ptr
         return wrap
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Database Association information formatted as a dictionary.
 
         Returns:
             (dict): Database Association information as dict
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     def __eq__(self, other):
         if isinstance(other, Association):

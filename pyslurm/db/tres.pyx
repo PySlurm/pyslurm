@@ -91,8 +91,8 @@ cdef class TrackableResourceLimits:
 
         return out
 
-    def to_dict(self, flatten_limits=False):
-        cdef dict inst_dict = instance_to_dict(self)
+    def to_dict(self, flatten_limits=False, recursive=False):
+        cdef dict inst_dict = instance_to_dict(self, recursive)
 
         if flatten_limits:
             vals = inst_dict.pop("fs")
@@ -258,6 +258,8 @@ cdef class TrackableResource:
     @property
     def count(self):
         return u64_parse(self.ptr.count)
+    def to_dict(self, recursive = False):
+        return instance_to_dict(self, recursive)
 
     # rec_count
     # alloc_secs

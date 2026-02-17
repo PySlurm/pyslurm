@@ -44,8 +44,8 @@ cdef class JobSteps(dict):
         data = super().__repr__()
         return f'pyslurm.db.{self.__class__.__name__}({data})'
 
-    def to_dict(self):
-        return xcollections.dict_recursive(self)
+    def to_dict(self, recursive = False):
+        return xcollections.dict_recursive(self, recursive)
 
 
 cdef class JobStep:
@@ -68,15 +68,13 @@ cdef class JobStep:
         wrap.stats = JobStepStatistics.from_step(wrap)
         return wrap
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Convert Database JobStep information to a dictionary.
 
         Returns:
             (dict): Database JobStep information as dict
         """
-        cdef dict out = instance_to_dict(self)
-        out["stats"] = self.stats.to_dict()
-        return out
+        return instance_to_dict(self, recursive)
 
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.id})'

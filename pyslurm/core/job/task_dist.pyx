@@ -89,8 +89,8 @@ cdef class TaskDistribution:
             dist_str = f"{dist_str},{'Pack' if self.pack else 'NoPack'}"
 
         return dist_str
-        
-    def to_dict(self):
+
+    def to_dict(self, recursive = False):
         return {
             "nodes": self.nodes,
             "sockets": self.sockets,

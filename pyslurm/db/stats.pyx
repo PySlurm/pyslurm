@@ -34,8 +34,8 @@ cdef class JobStatistics:
         for attr, val in instance_to_dict(self).items():
             setattr(self, attr, 0)
 
-    def to_dict(self):
-        return instance_to_dict(self)
+    def to_dict(self, recursive = False):
+        return instance_to_dict(self, recursive)
 
     @staticmethod
     def from_steps(steps):
@@ -92,8 +92,8 @@ cdef class JobStepStatistics:
         self.min_cpu_time_node = None
         self.min_cpu_time_task = None
 
-    def to_dict(self):
-        return instance_to_dict(self)
+    def to_dict(self, recursive = False):
+        return instance_to_dict(self, recursive)
 
     @staticmethod
     cdef JobStepStatistics from_step(JobStep step):

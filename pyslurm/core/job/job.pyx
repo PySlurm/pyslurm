@@ -332,17 +332,13 @@ cdef class Job:
     def as_dict(self):
         return self.to_dict()
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Job information formatted as a dictionary.
 
         Returns:
             (dict): Job information as dict
         """
-        cdef dict out = instance_to_dict(self)
-        out["steps"] = self.steps.to_dict()
-        out["stats"] = self.stats.to_dict()
-        out["pids"] = self.pids
-        return out
+        return instance_to_dict(self, recursive)
 
     def send_signal(self, signal, steps="children", hurry=False):
         """Send a signal to a running Job.

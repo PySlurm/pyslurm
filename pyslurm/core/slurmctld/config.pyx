@@ -46,7 +46,7 @@ cdef class MPIConfig:
                            "Use slurmctld.Config.load() and access the "
                            "mpi_config attribute there")
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """MPI config formatted as a dictionary.
 
         Returns:
@@ -57,7 +57,7 @@ cdef class MPIConfig:
             >>> config = slurmctld.Config.load()
             >>> mpi_config = config.mpi_config.to_dict()
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     @staticmethod
     cdef MPIConfig from_ptr(void *ptr):
@@ -89,7 +89,7 @@ cdef class CgroupConfig:
                            "Use slurmctld.Config.load() and access the "
                            "cgroup_config attribute there")
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Cgroup config formatted as a dictionary.
 
         Returns:
@@ -100,7 +100,7 @@ cdef class CgroupConfig:
             >>> config = slurmctld.Config.load()
             >>> cgroup_config = config.cgroup_config.to_dict()
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     @staticmethod
     cdef CgroupConfig from_ptr(void *ptr):
@@ -138,7 +138,7 @@ cdef class AccountingGatherConfig:
                            "Use slurmctld.Config.load() and access the "
                            "accounting_gather_config attribute there")
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """AccountingGather config formatted as a dictionary.
 
         Returns:
@@ -149,7 +149,7 @@ cdef class AccountingGatherConfig:
             >>> config = slurmctld.Config.load()
             >>> acctg_config_dict = config.accounting_gather_config.to_dict()
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     @staticmethod
     cdef AccountingGatherConfig from_ptr(void *ptr):
@@ -210,7 +210,7 @@ cdef class Config:
         # TODO: node_features_conf
         return conf
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Slurmctld config formatted as a dictionary.
 
         Returns:
@@ -221,10 +221,7 @@ cdef class Config:
             >>> config = pyslurm.slurmctld.Config.load()
             >>> config_dict = config.as_dict()
         """
-        out = instance_to_dict(self)
-        out["cgroup_config"] = self.cgroup_config.to_dict()
-        out["accounting_gather_config"] = self.accounting_gather_config.to_dict()
-        out["mpi_config"] = self.mpi_config.to_dict()
+        out = instance_to_dict(self, recursive)
         return out
 
     @property
