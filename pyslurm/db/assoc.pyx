@@ -22,15 +22,47 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import RPCError
+from pyslurm.core.error import RPCError, verify_rpc, slurm_errno
 from pyslurm.utils.helpers import (
     instance_to_dict,
     user_to_uid,
 )
 from pyslurm.utils.uint import *
-from pyslurm.db.connection import _open_conn_or_error
 from pyslurm import settings
 from pyslurm import xcollections
+from pyslurm.db.error import JobsRunningError, DefaultAccountError
+
+
+cdef class AssociationList(SlurmList):
+
+    def __init__(self, owned=True):
+        self.info = slurm.slurm_list_create(slurm.slurmdb_destroy_assoc_rec)
+        self.owned = owned
+
+    def append(self, Association assoc):
+        slurm.slurm_list_append(self.info, assoc.ptr)
+        assoc.owned = False
+        self.cnt = slurm.slurm_list_count(self.info)
+
+    def __iter__(self):
+        return super().__iter__()
+
+    def __next__(self):
+        if self.is_null or self.is_itr_null:
+            raise StopIteration
+
+        if self.itr_cnt < self.cnt:
+            self.itr_cnt += 1
+            assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>slurm.slurm_list_next(self.itr))
+            assoc.owned = False
+            return assoc
+
+        self._dealloc_itr()
+        raise StopIteration
+
+    def extend(self, list_in):
+        for item in list_in:
+            self.append(<Association>item)
 
 
 cdef class Associations(MultiClusterMap):
@@ -43,39 +75,34 @@ cdef class Associations(MultiClusterMap):
                          key_type=int)
 
     @staticmethod
-    def load(AssociationFilter db_filter=None, Connection db_connection=None):
+    def load(Connection db_conn, AssociationFilter db_filter=None):
         cdef:
             Associations out = Associations()
             Association assoc
             AssociationFilter cond = db_filter
             SlurmList assoc_data
             SlurmListItem assoc_ptr
-            Connection conn
             QualitiesOfService qos_data
             TrackableResources tres_data
 
-        # Prepare SQL Filter
+        db_conn.validate()
+
         if not db_filter:
             cond = AssociationFilter()
         cond._create()
 
-        # Setup DB Conn
-        conn = _open_conn_or_error(db_connection)
-
-        # Fetch Assoc Data
         assoc_data = SlurmList.wrap(slurmdb_associations_get(
-            conn.ptr, cond.ptr))
+            db_conn.ptr, cond.ptr))
 
         if assoc_data.is_null:
-            raise RPCError(msg="Failed to get Association data from slurmdbd")
+            raise RPCError(msg="Failed to get Association data from slurmdbd.")
 
         # Fetch other necessary dependencies needed for translating some
         # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(db_connection=conn,
+        qos_data = QualitiesOfService.load(db_conn=db_conn,
                                            name_is_key=False)
-        tres_data = TrackableResources.load(db_connection=conn)
+        tres_data = TrackableResources.load(db_conn=db_conn)
 
-        # Setup Association objects
         for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
             assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>assoc_ptr.data)
             assoc.qos_data = qos_data
@@ -90,14 +117,16 @@ cdef class Associations(MultiClusterMap):
         return out
 
     @staticmethod
-    def modify(db_filter, Association changes, Connection db_connection=None):
+    def modify(Connection db_conn, db_filter, Association changes):
         cdef:
             AssociationFilter afilter
-            Connection conn
             SlurmList response
             SlurmListItem response_ptr
             list out = []
 
+        db_conn.validate()
+
+        # TODO: make db_filter optional?
         # Prepare SQL Filter
         if isinstance(db_filter, Associations):
             assoc_ids = [ass.id for ass in db_filter]
@@ -106,18 +135,13 @@ cdef class Associations(MultiClusterMap):
             afilter = <AssociationFilter>db_filter
         afilter._create()
 
-        # Setup DB conn
-        conn = _open_conn_or_error(db_connection)
-
         # Any data that isn't parsed yet or needs validation is done in this
         # function.
-        _create_assoc_ptr(changes, conn)
+        _create_assoc_ptr(changes, db_conn)
 
-        # Modify associations, get the result
-        # This returns a List of char* with the associations that were
-        # modified
+        # Returns a List of char* with the associations that were modified
         response = SlurmList.wrap(slurmdb_associations_modify(
-            conn.ptr, afilter.ptr, changes.ptr))
+            db_conn.ptr, afilter.ptr, changes.ptr))
 
         if not response.is_null and response.cnt:
             for response_ptr in response:
@@ -130,16 +154,65 @@ cdef class Associations(MultiClusterMap):
 
         elif not response.is_null:
             # There was no real error, but simply nothing has been modified
-            raise RPCError(msg="Nothing was modified")
+            return None
         else:
             # Autodetects the last slurm error
             raise RPCError()
 
-        if not db_connection:
-            # Autocommit if no connection was explicitly specified.
-            conn.commit()
-
         return out
+
+    @staticmethod
+    def create(Connection db_conn, associations, auto_add=True):
+        cdef:
+            Association assoc
+            AssociationList assoc_list = AssociationList(owned=False)
+
+        if not associations:
+            return
+
+        conn.validate()
+
+        for i, assoc in enumerate(associations):
+            # Make sure to remove any duplicate associations, i.e. associations
+            # having the same account name set. For some reason, the slurmdbd
+            # doesn't like that.
+            if assoc not in assoc_list:
+                assoc_list.append(assoc)
+
+        verify_rpc(slurmdb_associations_add(db_conn.ptr, assoc_list.info))
+
+    def delete(self, Connection db_conn):
+        cdef:
+            AssociationFilter afilter
+            SlurmList response
+            SlurmListItem response_ptr
+
+        db_conn.validate()
+
+        ids = [assoc.id for assoc in self.values()]
+        if not ids:
+            return
+
+        a_filter = AssociationFilter(ids=ids)
+        a_filter._create()
+
+        response = SlurmList.wrap(slurmdb_associations_remove(db_conn.ptr,
+                                                              a_filter.ptr))
+        rc = slurm_errno()
+
+        if rc == slurm.SLURM_SUCCESS or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
+            return
+
+       #if rc == slurm.ESLURM_ACCESS_DENIED or response.is_null:
+       #    verify_rpc(rc)
+
+        # Handle the error cases.
+        if rc == slurm.ESLURM_JOBS_RUNNING_ON_ASSOC:
+            raise JobsRunningError.from_response(response, rc)
+        elif rc == slurm.ESLURM_NO_REMOVE_DEFAULT_ACCOUNT:
+            raise DefaultAccountError.from_response(response, rc)
+        else:
+            verify_rpc(rc)
 
 
 cdef class AssociationFilter:
@@ -174,12 +247,25 @@ cdef class AssociationFilter:
         cdef slurmdb_assoc_cond_t *ptr = self.ptr
 
         make_char_list(&ptr.user_list, self.users)
+        make_char_list(&ptr.id_list, self.ids)
+        make_char_list(&ptr.acct_list, self.accounts)
+        make_char_list(&ptr.parent_acct_list, self.parent_accounts)
+        make_char_list(&ptr.cluster_list, self.clusters)
+        make_char_list(&ptr.partition_list, self.partitions)
+        # TODO: These should be QOS ids, not names
+        make_char_list(&ptr.qos_list, self.qos)
+        # TODO: ASSOC_COND_FLAGS
+
+
+cdef class AssociationLimits:
+    pass
 
 
 cdef class Association:
 
     def __cinit__(self):
         self.ptr = NULL
+        self.owned = True
 
     def __init__(self, **kwargs):
         self._alloc_impl()
@@ -189,7 +275,8 @@ cdef class Association:
             setattr(self, k, v)
 
     def __dealloc__(self):
-        self._dealloc_impl()
+        if self.owned:
+            self._dealloc_impl()
 
     def _dealloc_impl(self):
         slurmdb_destroy_assoc_rec(self.ptr)
@@ -223,7 +310,8 @@ cdef class Association:
 
     def __eq__(self, other):
         if isinstance(other, Association):
-            return self.id == other.id and self.cluster == other.cluster
+#            return self.id == other.id and self.cluster == other.cluster
+            return self.cluster == other.cluster and self.partition == other.partition and self.account == other.account and self.user == other.user
         return NotImplemented
 
     @property
@@ -254,21 +342,8 @@ cdef class Association:
 
     # uint16_t flags (ASSOC_FLAG_*)
 
-    @property
-    def group_jobs(self):
-        return u32_parse(self.ptr.grp_jobs, zero_is_noval=False)
-
-    @group_jobs.setter
-    def group_jobs(self, val):
-        self.ptr.grp_jobs = u32(val, zero_is_noval=False)
-
-    @property
-    def group_jobs_accrue(self):
-        return u32_parse(self.ptr.grp_jobs_accrue, zero_is_noval=False)
-
     @group_jobs_accrue.setter
     def group_jobs_accrue(self, val):
-        self.ptr.grp_jobs_accrue = u32(val, zero_is_noval=False)
 
     @property
     def group_submit_jobs(self):
@@ -347,6 +422,10 @@ cdef class Association:
         return u32_parse(self.ptr.parent_id, zero_is_noval=False)
 
     @property
+    def lineage(self):
+        return cstr.to_unicode(self.ptr.lineage)
+
+    @property
     def partition(self):
         return cstr.to_unicode(self.ptr.partition)
 
@@ -378,11 +457,17 @@ cdef class Association:
     def user(self, val):
         cstr.fmalloc(&self.ptr.user, val)
 
+    @property
+    def user_id(self):
+        return u32_parse(self.ptr.uid, zero_is_noval=False)
+
 
 cdef _parse_assoc_ptr(Association ass):
     cdef:
         TrackableResources tres = ass.tres_data
         QualitiesOfService qos = ass.qos_data
+
+    policy = ass.policy
 
     ass.group_tres = TrackableResources.from_cstr(
             ass.ptr.grp_tres, tres)
@@ -400,12 +485,16 @@ cdef _parse_assoc_ptr(Association ass):
             ass.ptr.max_tres_pn, tres)
     ass.qos = qos_list_to_pylist(ass.ptr.qos_list, qos)
 
+    policy.group_jobs = u32_parse(ass.ptr.grp_jobs, zero_is_noval=False)
+    policy.group_jobs_accrue = u32_parse(ass.ptr.grp_jobs_accrue, zero_is_noval=False)
+    # TODO: default_qos
+
 
 cdef _create_assoc_ptr(Association ass, conn=None):
     # _set_tres_limits will also check if specified TRES are valid and
     # translate them to its ID which is why we need to load the current TRES
     # available in the system.
-    ass.tres_data = TrackableResources.load(db_connection=conn)
+    ass.tres_data = TrackableResources.load(db_conn=conn)
     _set_tres_limits(&ass.ptr.grp_tres, ass.group_tres, ass.tres_data)
     _set_tres_limits(&ass.ptr.grp_tres_mins, ass.group_tres_mins,
                     ass.tres_data)
@@ -423,6 +512,9 @@ cdef _create_assoc_ptr(Association ass, conn=None):
     # _set_qos_list will also check if specified QoS are valid and translate
     # them to its ID, which is why we need to load the current QOS available
     # in the system.
-    ass.qos_data = QualitiesOfService.load(db_connection=conn)
+    ass.qos_data = QualitiesOfService.load(db_conn=conn)
     _set_qos_list(&ass.ptr.qos_list, self.qos, ass.qos_data)
+
+    ass.ptr.group_jobs = u32(ass.policy.group_jobs, zero_is_noval=False)
+    ass.ptr.group_jobs_accrue = u32(ass.policy.group_jobs_accrue, zero_is_noval=False)
 

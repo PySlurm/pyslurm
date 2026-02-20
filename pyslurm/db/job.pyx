@@ -42,7 +42,6 @@ from pyslurm.utils.helpers import (
     _get_exit_code,
     gres_from_tres_dict,
 )
-from pyslurm.db.connection import _open_conn_or_error
 from pyslurm.enums import SchedulerType
 
 
@@ -202,7 +201,7 @@ cdef class Jobs(MultiClusterMap):
         self._reset_stats()
 
     @staticmethod
-    def load(JobFilter db_filter=None, Connection db_connection=None):
+    def load(Connection db_conn, JobFilter db_filter=None):
         """Load Jobs from the Slurm Database
 
         Implements the slurmdb_jobs_get RPC.
@@ -211,9 +210,8 @@ cdef class Jobs(MultiClusterMap):
             db_filter (pyslurm.db.JobFilter):
                 A search filter that the slurmdbd will apply when retrieving
                 Jobs from the database.
-            db_connection (pyslurm.db.Connection):
-                An open database connection. By default if none is specified,
-                one will be opened automatically.
+            db_conn (pyslurm.db.Connection):
+                An open database connection.
 
         Returns:
             (pyslurm.db.Jobs): A Collection of database Jobs.
@@ -247,28 +245,26 @@ cdef class Jobs(MultiClusterMap):
             JobFilter cond = db_filter
             SlurmList job_data
             SlurmListItem job_ptr
-            Connection conn
             QualitiesOfService qos_data
             TrackableResources tres_data
+
+        db_conn.validate()
 
         # Prepare SQL Filter
         if not db_filter:
             cond = JobFilter()
         cond._create()
 
-        # Setup DB Conn
-        conn = _open_conn_or_error(db_connection)
-
         # Fetch Job data
-        job_data = SlurmList.wrap(slurmdb_jobs_get(conn.ptr, cond.ptr))
+        job_data = SlurmList.wrap(slurmdb_jobs_get(db_conn.ptr, cond.ptr))
         if job_data.is_null:
             raise RPCError(msg="Failed to get Jobs from slurmdbd")
 
         # Fetch other necessary dependencies needed for translating some
         # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(db_connection=conn,
+        qos_data = QualitiesOfService.load(db_conn=db_conn,
                                            name_is_key=False)
-        tres_data = TrackableResources.load(db_connection=conn)
+        tres_data = TrackableResources.load(db_conn=db_conn)
 
         # TODO: How to handle the possibility of duplicate job ids that could
         # appear if IDs on a cluster are reset?
@@ -311,7 +307,7 @@ cdef class Jobs(MultiClusterMap):
             self._add_stats(job)
 
     @staticmethod
-    def modify(db_filter, Job changes, db_connection=None):
+    def modify(Connection db_conn, db_filter, Job changes):
         """Modify Slurm database Jobs.
 
         Implements the slurm_job_modify RPC.
@@ -324,22 +320,8 @@ cdef class Jobs(MultiClusterMap):
                 changes to apply. Check the `Other Parameters` of the
                 [pyslurm.db.Job][] class to see which properties can be
                 modified.
-            db_connection (pyslurm.db.Connection):
-                A Connection to the slurmdbd. By default, if no connection is
-                supplied, one will automatically be created internally. This
-                means that when the changes were considered successful by the
-                slurmdbd, those modifications will be **automatically
-                committed**.
-
-                If you however decide to provide your own Connection instance
-                (which must be already opened before), and the changes were
-                successful, they will basically be in a kind of "staging
-                area". By the time this function returns, the changes are not
-                actually made.
-                You are then responsible to decide whether the changes should
-                be committed or rolled back by using the respective methods on
-                the connection object. This way, you have a chance to see
-                which Jobs were modified before you commit the changes.
+            db_conn (pyslurm.db.Connection):
+                A Connection to the slurmdbd.
 
         Returns:
             (list[int]): A list of Jobs that were modified
@@ -387,10 +369,11 @@ cdef class Jobs(MultiClusterMap):
         """
         cdef:
             JobFilter cond
-            Connection conn
             SlurmList response
             SlurmListItem response_ptr
             list out = []
+
+        db_conn.validate()
 
         # Prepare SQL Filter
         if isinstance(db_filter, Jobs):
@@ -400,14 +383,11 @@ cdef class Jobs(MultiClusterMap):
             cond = <JobFilter>db_filter
         cond._create()
 
-        # Setup DB Conn
-        conn = _open_conn_or_error(db_connection)
-
         # Modify Jobs, get the result
         # This returns a List of char* with the Jobs ids that were
         # modified
         response = SlurmList.wrap(
-                slurmdb_job_modify(conn.ptr, cond.ptr, changes.ptr))
+                slurmdb_job_modify(db_conn.ptr, cond.ptr, changes.ptr))
 
         if not response.is_null and response.cnt:
             for response_ptr in response:
@@ -431,10 +411,6 @@ cdef class Jobs(MultiClusterMap):
         else:
             # Autodetects the last slurm error
             raise RPCError()
-
-        if not db_connection:
-            # Autocommit if no connection was explicitly specified.
-            conn.commit()
 
         return out
 
@@ -551,7 +527,7 @@ cdef class Job:
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.id})'
 
-    def modify(self, changes, db_connection=None):
+    def modify(self, Connection db_conn, changes):
         """Modify a Slurm database Job.
 
         Args:
@@ -560,7 +536,7 @@ cdef class Job:
                 changes to apply. Check the `Other Parameters` of the
                 [pyslurm.db.Job][] class to see which properties can be
                 modified.
-            db_connection (pyslurm.db.Connection):
+            db_conn (pyslurm.db.Connection):
                 A slurmdbd connection. See
                 [pyslurm.db.Jobs.modify][pyslurm.db.job.Jobs.modify] for more
                 info on this parameter.
@@ -569,7 +545,7 @@ cdef class Job:
             (pyslurm.RPCError): When modifying the Job failed.
         """
         cdef JobFilter jfilter = JobFilter(ids=[self.id])
-        Jobs.modify(jfilter, changes, db_connection)
+        Jobs.modify(db_conn, jfilter, changes)
 
     @property
     def account(self):

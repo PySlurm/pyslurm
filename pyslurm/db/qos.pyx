@@ -24,7 +24,6 @@
 
 from pyslurm.core.error import RPCError
 from pyslurm.utils.helpers import instance_to_dict
-from pyslurm.db.connection import _open_conn_or_error
 
 
 cdef class QualitiesOfService(dict):
@@ -33,8 +32,8 @@ cdef class QualitiesOfService(dict):
         pass
 
     @staticmethod
-    def load(QualityOfServiceFilter db_filter=None,
-             Connection db_connection=None, name_is_key=True):
+    def load(Connection db_conn, QualityOfServiceFilter db_filter=None,
+             name_is_key=True):
         """Load QoS data from the Database
 
         Args:
@@ -49,18 +48,14 @@ cdef class QualitiesOfService(dict):
             QualityOfServiceFilter cond = db_filter
             SlurmList qos_data
             SlurmListItem qos_ptr
-            Connection conn
 
-        # Prepare SQL Filter
+        db_conn.validate()
+
         if not db_filter:
             cond = QualityOfServiceFilter()
         cond._create()
 
-        # Setup DB Conn
-        conn = _open_conn_or_error(db_connection)
-
-        # Fetch QoS Data
-        qos_data = SlurmList.wrap(slurmdb_qos_get(conn.ptr, cond.ptr))
+        qos_data = SlurmList.wrap(slurmdb_qos_get(db_conn.ptr, cond.ptr))
 
         if qos_data.is_null:
             raise RPCError(msg="Failed to get QoS data from slurmdbd")

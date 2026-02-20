@@ -22,17 +22,22 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import RPCError
+from pyslurm.core.error import RPCError, PyslurmError
+from contextlib import contextmanager
 
 
-def _open_conn_or_error(conn):
-    if not conn:
-        conn = Connection.open()
+class InvalidConnectionError(PyslurmError):
+    pass
 
-    if not conn.is_open:
-        raise ValueError("Database connection is not open")
 
-    return conn
+@contextmanager
+def connect():
+    """A managed Slurm DB Connection"""
+    connection = Connection.open()
+    try:
+        yield connection
+    finally:
+        connection.close()
 
 
 cdef class Connection:
@@ -51,6 +56,10 @@ cdef class Connection:
     def __repr__(self):
         state = "open" if self.is_open else "closed"
         return f'pyslurm.db.{self.__class__.__name__} is {state}'
+
+    def validate(self):
+        if not self.is_open:
+            raise InvalidConnectionError("Connection is closed")
 
     @staticmethod
     def open():
@@ -92,11 +101,17 @@ cdef class Connection:
 
     def commit(self):
         """Commit recent changes."""
+        if not self.is_open:
+            return
+
         if slurmdb_connection_commit(self.ptr, 1) == slurm.SLURM_ERROR:
             raise RPCError("Failed to commit database changes.")
 
     def rollback(self):
         """Rollback recent changes."""
+        if not self.is_open:
+            return
+
         if slurmdb_connection_commit(self.ptr, 0) == slurm.SLURM_ERROR:
             raise RPCError("Failed to rollback database changes.")
 

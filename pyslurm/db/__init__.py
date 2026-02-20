@@ -19,7 +19,7 @@
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from .connection import Connection
+from .connection import Connection, connect
 from .step import JobStep, JobSteps
 from .stats import JobStatistics, JobStepStatistics
 from .job import (
@@ -43,4 +43,19 @@ from .assoc import (
     Associations,
     Association,
     AssociationFilter,
+)
+from .user import (
+    Users,
+    User,
+    UserFilter,
+)
+from .account import (
+    Accounts,
+    Account,
+    AccountFilter,
+)
+from .wckey import (
+    WCKeys,
+    WCKey,
+    WCKeyFilter,
 )

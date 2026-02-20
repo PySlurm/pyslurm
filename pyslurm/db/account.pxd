@@ -1,7 +1,7 @@
 #########################################################################
-# assoc.pxd - pyslurm slurmdbd association api
+# account.pxd - pyslurm slurmdbd account api
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -22,17 +22,19 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
+    slurmdb_account_rec_t,
     slurmdb_assoc_rec_t,
     slurmdb_assoc_cond_t,
-    slurmdb_destroy_assoc_rec,
-    slurmdb_destroy_assoc_cond,
-    slurmdb_init_assoc_rec,
-    slurmdb_associations_get,
-    slurmdb_associations_modify,
-    slurmdb_associations_add,
-    slurmdb_associations_remove,
+    slurmdb_account_cond_t,
+    slurmdb_accounts_get,
+    slurmdb_accounts_add,
+    slurmdb_accounts_remove,
+    slurmdb_accounts_modify,
+    slurmdb_destroy_account_rec,
+    slurmdb_destroy_account_cond,
     try_xmalloc,
 )
 from pyslurm.db.util cimport (
@@ -48,68 +50,53 @@ from pyslurm.db.tres cimport (
 )
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
-from pyslurm.utils.uint cimport *
 from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
+from pyslurm.db.assoc cimport Associations, Association, _parse_assoc_ptr
 from pyslurm.xcollections cimport MultiClusterMap
-
-cdef _parse_assoc_ptr(Association ass)
-cdef _create_assoc_ptr(Association ass, conn=*)
+from pyslurm.utils.uint cimport u16_set_bool_flag
 
 
-cdef class Associations(MultiClusterMap):
+cdef class Accounts(dict):
     pass
 
 
-cdef class AssociationFilter:
-    cdef slurmdb_assoc_cond_t *ptr
+cdef class AccountFilter:
+    cdef slurmdb_account_cond_t *ptr
 
     cdef public:
-        users
-        ids
-        accounts
-        parent_accounts
-        clusters
-        partitions
-        qos
+        with_assocs
+        with_deleted
+        with_coordinators
+        names
+        organizations
+        descriptions
 
 
-cdef class AssociationLimits:
+cdef class Account:
+    """Slurm Database Account.
 
-    cdef public:
-        group_tres
-        group_tres_mins
-        group_tres_run_mins
-        max_tres_mins_per_job
-        max_tres_run_mins_per_user
-        max_tres_per_job
-        max_tres_per_node
-        qos
-
-        group_jobs
-
-
-cdef class Association:
+    Attributes:
+        name (str):
+            Name of the Account.
+        description (str):
+            Description of the Account.
+        organization (str):
+            Organization of the Account.
+        is_deleted (bool):
+            Whether this Account has been deleted or not.
+        association (pyslurm.db.Association):
+            This accounts association.
+    """
     cdef:
-        slurmdb_assoc_rec_t *ptr
-        slurmdb_assoc_rec_t *umsg
-        QualitiesOfService qos_data
-        TrackableResources tres_data
-        owned
+        slurmdb_account_rec_t *ptr
+
+    cdef readonly:
+        cluster
 
     cdef public:
-        group_tres
-        group_tres_mins
-        group_tres_run_mins
-        max_tres_mins_per_job
-        max_tres_run_mins_per_user
-        max_tres_per_job
-        max_tres_per_node
-        qos
-        default_qos
+        associations
+        coordinators
+        association
 
     @staticmethod
-    cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr)
-
-
-cdef class AssociationList(SlurmList):
-    pass
+    cdef Account from_ptr(slurmdb_account_rec_t *in_ptr)

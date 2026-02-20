@@ -28,7 +28,6 @@ from pyslurm.constants import UNLIMITED
 from pyslurm.core.error import RPCError
 from pyslurm.utils.helpers import instance_to_dict, dehumanize
 from pyslurm.utils import cstr
-from pyslurm.db.connection import _open_conn_or_error
 from pyslurm import xcollections
 import json
 import re
@@ -292,28 +291,21 @@ cdef class TrackableResources:
         elif hasattr(self, tres.type):
             setattr(self, tres.type, tres)
         elif tres.type:
-            print(tres.type, tres.name, tres.type_and_name)
             self.other[tres.type_and_name] = tres
 
     @staticmethod
-    def load(Connection db_connection=None):
+    def load(Connection db_conn):
         """Load Trackable Resources from the Database."""
         cdef:
             TrackableResources out = TrackableResources()
             TrackableResource tres
-            Connection conn
             SlurmList tres_data
             SlurmListItem tres_ptr
             TrackableResourceFilter db_filter = TrackableResourceFilter()
 
-        # Prepare SQL Filter
+        db_conn.validate()
         db_filter._create()
-
-        # Setup DB Conn
-        conn = _open_conn_or_error(db_connection)
-
-        # Fetch TRES data
-        tres_data = SlurmList.wrap(slurmdb_tres_get(conn.ptr, db_filter.ptr))
+        tres_data = SlurmList.wrap(slurmdb_tres_get(db_conn.ptr, db_filter.ptr))
 
         if tres_data.is_null:
             raise RPCError(msg="Failed to get TRES data from slurmdbd")
