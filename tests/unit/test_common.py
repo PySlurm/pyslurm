@@ -195,6 +195,10 @@ class TestStrings:
         expected = {"gpu": 1}
         assert cstr.to_gres_dict(input_str) == expected
 
+        input_str = "gres:gpu"
+        expected = {"gpu": 1}
+        assert cstr.to_gres_dict(input_str) == expected
+
         input_str = "gres:gpu:INVALID_COUNT"
         expected = {}
         assert cstr.to_gres_dict(input_str) == expected
