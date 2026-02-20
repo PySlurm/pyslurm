@@ -76,10 +76,10 @@ class SlurmEnum(str, Enum, metaclass=DocstringSupport):
         return name.upper()
 
     @classmethod
-    def from_flag(cls, flag, default):
+    def from_flag(cls, flags, default):
         out = cls(default)
         for item in cls:
-            if item._flag & flag:
+            if flags & item._flag or flags == item._flag:
                 return item
         return out
 
