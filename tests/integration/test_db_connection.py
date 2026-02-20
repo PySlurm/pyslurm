@@ -30,12 +30,12 @@ def test_create_instance():
 
 
 def test_open():
-    conn = pyslurm.db.Connection.open() 
+    conn = pyslurm.db.Connection.open()
     assert conn.is_open
 
 
 def test_close():
-    conn = pyslurm.db.Connection.open() 
+    conn = pyslurm.db.Connection.open()
     assert conn.is_open
 
     conn.close()
@@ -45,12 +45,12 @@ def test_close():
 
 
 def test_commit():
-    conn = pyslurm.db.Connection.open() 
+    conn = pyslurm.db.Connection.open()
     assert conn.is_open
     conn.commit()
 
 
 def test_rollback():
-    conn = pyslurm.db.Connection.open() 
+    conn = pyslurm.db.Connection.open()
     assert conn.is_open
     conn.rollback()
