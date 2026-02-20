@@ -40,4 +40,7 @@ from pyslurm.deprecated import *
 
 # Initialize slurm api
 from pyslurm.api import slurm_init, slurm_fini
-slurm_init()
+
+_auto_init_disabled = bool(os.environ.get("PYSLURM_DISABLE_AUTO_INIT", False))
+if not _auto_init_disabled:
+    slurm_init()
