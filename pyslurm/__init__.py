@@ -13,6 +13,8 @@ from pyslurm import db
 from pyslurm import utils
 from pyslurm import constants
 
+from pyslurm.enums import *
+
 from pyslurm.core.job import (
     Job,
     Jobs,
