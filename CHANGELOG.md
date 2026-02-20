@@ -15,6 +15,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New Classes to interact with Database QoS (WIP)
     - `pyslurm.db.QualityOfService`
     - `pyslurm.db.QualitiesOfService`
+- New members added for the `pyslurm.Job` class:
+    - `preferred_features`
+    - `gpus`
+    - `gres`
+    - `tres`
+    - `tres_per_node`
+    - `tres_per_job`
+    - `tres_per_socket`
+    - `allocated_tres`
+    - `requested_tres`
+    - `reserved_ports`
+    - `selinux_context`
+    - `segment_size`
+    - `spread_segments`
+    - `consolidate_segments`
+    - `slurm_protocol_version`
+- New members added for the `pyslurm.JobStep` class:
+    - `gpus`
+    - `gres`
+    - `tres`
+    - `tres_per_node`
+    - `tres_per_task`
+    - `tres_per_step`
+    - `tres_per_socket`
+    - `container_id`
+    - `array_id`
+    - `array_task_id`
+    - `standard_input`
+    - `standard_output`
+    - `standard_error`
+    - `working_directory`
+- New members added for the `pyslurm.db.Job` class:
+    - `gpus`
+    - `gres`
+    - `tres`
+    - `allocated_tres`
+    - `requested_tres`
+    - `standard_input`
+    - `standard_output`
+    - `standard_error`
+    - `heterogenous_id`
+    - `heterogenous_offset`
+    - `requeue_count`
+    - `requested_reservations`
+    - `reservation_id`
+    - `wckey_id`
+    - `lineage`
+    - `licenses`
+    - `segment_size`
+    - `scheduler`
+    - `start_rpc_received`
+- New members added for the `pyslurm.db.JobStep` class:
+    - `gpus`
+    - `gres`
+    - `tres`
+    - `standard_input`
+    - `standard_output`
+    - `standard_error`
+    - `working_directory`
+- New members added for the `pyslurm.JobSubmitDescription` class:
+    - `container_id`
+    - `selinux_context`
+    - `segment_size`
+    - `reserved_ports`
+    - `extra`
+
+### Deprecated
+
+- The `gres_per_node` attribute of `pyslurm.Job` will soon be removed. Use `gres` instead.
+
+### Changed
+
+- `pyslurm.db.TrackableResources` no longer inherits from `dict`, and now has properly all possible TRES in Slurm defined.
+- Type for `tres_per_task` in `pyslurm.Job` has been changed to `pyslurm.db.TrackableResources`
 
 ## [25.11.0](https://github.com/PySlurm/pyslurm/releases/tag/v25.11.0) - 2026-02-13
 
