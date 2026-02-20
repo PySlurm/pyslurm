@@ -73,8 +73,7 @@ cdef class Associations(MultiClusterMap):
         # attributes (i.e QoS IDs to its name)
         qos_data = QualitiesOfService.load(db_connection=conn,
                                            name_is_key=False)
-        tres_data = TrackableResources.load(db_connection=conn,
-                                            name_is_key=False)
+        tres_data = TrackableResources.load(db_connection=conn)
 
         # Setup Association objects
         for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
@@ -214,13 +213,13 @@ cdef class Association:
         wrap.ptr = in_ptr
         return wrap
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Database Association information formatted as a dictionary.
 
         Returns:
             (dict): Database Association information as dict
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     def __eq__(self, other):
         if isinstance(other, Association):
@@ -385,19 +384,19 @@ cdef _parse_assoc_ptr(Association ass):
         TrackableResources tres = ass.tres_data
         QualitiesOfService qos = ass.qos_data
 
-    ass.group_tres = TrackableResourceLimits.from_ids(
+    ass.group_tres = TrackableResources.from_cstr(
             ass.ptr.grp_tres, tres)
-    ass.group_tres_mins = TrackableResourceLimits.from_ids(
+    ass.group_tres_mins = TrackableResources.from_cstr(
             ass.ptr.grp_tres_mins, tres)
-    ass.group_tres_run_mins = TrackableResourceLimits.from_ids(
+    ass.group_tres_run_mins = TrackableResources.from_cstr(
             ass.ptr.grp_tres_mins, tres)
-    ass.max_tres_mins_per_job = TrackableResourceLimits.from_ids(
+    ass.max_tres_mins_per_job = TrackableResources.from_cstr(
             ass.ptr.max_tres_mins_pj, tres)
-    ass.max_tres_run_mins_per_user = TrackableResourceLimits.from_ids(
+    ass.max_tres_run_mins_per_user = TrackableResources.from_cstr(
             ass.ptr.max_tres_run_mins, tres)
-    ass.max_tres_per_job = TrackableResourceLimits.from_ids(
+    ass.max_tres_per_job = TrackableResources.from_cstr(
             ass.ptr.max_tres_pj, tres)
-    ass.max_tres_per_node = TrackableResourceLimits.from_ids(
+    ass.max_tres_per_node = TrackableResources.from_cstr(
             ass.ptr.max_tres_pn, tres)
     ass.qos = qos_list_to_pylist(ass.ptr.qos_list, qos)
 

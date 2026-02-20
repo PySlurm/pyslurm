@@ -144,8 +144,8 @@ cdef class JobSteps(dict):
         cdef JobSteps steps = JobSteps()
         return steps._load_data(slurm.NO_VAL, slurm.SHOW_ALL)
 
-    def to_dict(self):
-        return xcollections.dict_recursive(self)
+    def to_dict(self, recursive = False):
+        return xcollections.dict_recursive(self, recursive)
 
 
 cdef class JobStep:
@@ -359,21 +359,13 @@ cdef class JobStep:
     def as_dict(self):
         return self.to_dict()
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """JobStep information formatted as a dictionary.
 
         Returns:
             (dict): JobStep information as dict
         """
-        cdef dict out = instance_to_dict(self)
-
-        dist = self.distribution
-        if dist:
-            out["distribution"] = dist.to_dict()
-
-        out["stats"] = self.stats.to_dict()
-        out["pids"] = self.pids
-        return out
+        return instance_to_dict(self, recursive)
 
     @property
     def id(self):
@@ -448,6 +440,17 @@ cdef class JobStep:
         return cstr.to_unicode(self.ptr.container)
 
     @property
+    def container_id(self):
+        return cstr.to_unicode(self.ptr.container_id)
+
+    def array_id(self):
+        return u32_parse(self.ptr.array_job_id)
+
+    @property
+    def array_task_id(self):
+        return u32_parse(self.ptr.array_task_id)
+
+    @property
     def allocated_nodes(self):
         return cstr.to_list(self.ptr.nodes)
 
@@ -498,3 +501,54 @@ cdef class JobStep:
     @property
     def slurm_protocol_version(self):
         return u32_parse(self.ptr.start_protocol_ver)
+
+    cdef _get_stdio(self, char *path):
+        cdef char *tmp_path = slurm.slurm_expand_step_stdio_fields(path, self.ptr)
+        path_str = cstr.to_unicode(tmp_path)
+        xfree(tmp_path)
+        return path_str
+
+    @property
+    def standard_input(self):
+        return self._get_stdio(self.ptr.std_in)
+
+    @property
+    def standard_output(self):
+        return self._get_stdio(self.ptr.std_out)
+
+    @property
+    def standard_error(self):
+        return self._get_stdio(self.ptr.std_err)
+
+    @property
+    def working_directory(self):
+        return cstr.to_unicode(self.ptr.cwd)
+
+    @property
+    def gres(self):
+        tres = self.tres
+        return tres.gres if tres else {}
+
+    @property
+    def gpus(self):
+        return {k: v for k, v in self.gres.items() if isinstance(v, GPU)}
+
+    @property
+    def tres(self):
+        return TrackableResources.from_cstr(self.ptr.tres_fmt_alloc_str)
+
+    @property
+    def tres_per_step(self):
+        return TrackableResources.from_cstr(self.ptr.tres_per_step)
+
+    @property
+    def tres_per_socket(self):
+        return TrackableResources.from_cstr(self.ptr.tres_per_socket)
+
+    @property
+    def tres_per_node(self):
+        return TrackableResources.from_cstr(self.ptr.tres_per_node)
+
+    @property
+    def tres_per_task(self):
+        return TrackableResources.from_cstr(self.ptr.tres_per_task)

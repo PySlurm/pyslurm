@@ -177,7 +177,7 @@ cdef class Reservation:
                            "Reservation instance?")
         return self.name
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Reservation information formatted as a dictionary.
 
         Returns:
@@ -189,7 +189,7 @@ cdef class Reservation:
             >>> resv_dict = resv.to_dict()
             >>> print(resv_dict)
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     @staticmethod
     def load(name):

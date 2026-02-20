@@ -54,7 +54,7 @@ cdef class TaskDistribution:
 
         if tdist:
             tdist.state = dist
-        
+
         return tdist
 
     def _to_str_no_flags(self):
@@ -89,8 +89,8 @@ cdef class TaskDistribution:
             dist_str = f"{dist_str},{'Pack' if self.pack else 'NoPack'}"
 
         return dist_str
-        
-    def to_dict(self):
+
+    def to_dict(self, recursive = False):
         return {
             "nodes": self.nodes,
             "sockets": self.sockets,
@@ -108,7 +108,7 @@ cdef class TaskDistribution:
         dist_str = self._to_str_no_flags()
         if dist_str == "plane":
             return slurm.SLURM_DIST_PLANE
-            
+
         dist_state = _parse_str_to_task_dist_int(dist_str)
         if dist_state == slurm.SLURM_DIST_UNKNOWN:
             raise ValueError(f"Invalid distribution specification: {dist_str}")
@@ -119,7 +119,7 @@ cdef class TaskDistribution:
             dist_state = <task_dist_states_t>(dist_state | slurm.SLURM_DIST_PACK_NODES)
         elif self.pack is not None and not self.pack:
             dist_state = <task_dist_states_t>(dist_state | slurm.SLURM_DIST_NO_PACK_NODES)
-        
+
         return dist_state
 
     @staticmethod
@@ -152,7 +152,7 @@ cdef class TaskDistribution:
                 tdist.cores = tdist.sockets
             else:
                 tdist.cores = dist_methods[2]
-        
+
         if len(dist_items) > 1:
             if dist_items[1].casefold() == "pack":
                 tdist.pack = True

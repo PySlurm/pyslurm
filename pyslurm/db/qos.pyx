@@ -160,13 +160,13 @@ cdef class QualityOfService:
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.name})'
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Database QualityOfService information formatted as a dictionary.
 
         Returns:
             (dict): Database QualityOfService information as dict
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     @staticmethod
     def load(name):

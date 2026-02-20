@@ -332,17 +332,13 @@ cdef class Job:
     def as_dict(self):
         return self.to_dict()
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Job information formatted as a dictionary.
 
         Returns:
             (dict): Job information as dict
         """
-        cdef dict out = instance_to_dict(self)
-        out["steps"] = self.steps.to_dict()
-        out["stats"] = self.stats.to_dict()
-        out["pids"] = self.pids
-        return out
+        return instance_to_dict(self, recursive)
 
     def send_signal(self, signal, steps="children", hurry=False):
         """Send a signal to a running Job.
@@ -888,11 +884,11 @@ cdef class Job:
 
     @property
     def federation_siblings_active(self):
-        return u64_parse(self.ptr.fed_siblings_active)
+        return cstr.to_list(self.ptr.fed_siblings_active_str)
 
     @property
     def federation_siblings_viable(self):
-        return u64_parse(self.ptr.fed_siblings_viable)
+        return cstr.to_list(self.ptr.fed_siblings_viable_str)
 
     @property
     def cpus(self):
@@ -967,6 +963,10 @@ cdef class Job:
     @property
     def constraints(self):
         return cstr.to_list(self.ptr.features)
+
+    @property
+    def preferred_features(self):
+        return cstr.to_list(self.ptr.prefer)
 
     @property
     def cluster(self):
@@ -1247,11 +1247,47 @@ cdef class Job:
 
     @property
     def gres_per_node(self):
+        # DEPRECATED - removed in the next major release
         return cstr.to_gres_dict(self.ptr.tres_per_node)
 
     @property
+    def gpus(self):
+        return {k: v for k, v in self.gres.items() if isinstance(v, GPU)}
+
+    @property
+    def gres(self):
+        job_running = slurm.IS_JOB_RUNNING(self.ptr)
+        tres = self.allocated_tres if job_running else self.requested_tres
+        return tres.gres if tres else {}
+
+    @property
+    def tres(self):
+        job_running = slurm.IS_JOB_RUNNING(self.ptr)
+        return self.allocated_tres if job_running else self.requested_tres
+
+    @property
+    def tres_per_node(self):
+        return TrackableResources.from_cstr(self.ptr.tres_per_node)
+
+    @property
     def tres_per_task(self):
-        return cstr.to_dict(self.ptr.tres_per_task)
+        return TrackableResources.from_cstr(self.ptr.tres_per_task)
+
+    @property
+    def tres_per_job(self):
+        return TrackableResources.from_cstr(self.ptr.tres_per_job)
+
+    @property
+    def tres_per_socket(self):
+        return TrackableResources.from_cstr(self.ptr.tres_per_socket)
+
+    @property
+    def allocated_tres(self):
+        return TrackableResources.from_cstr(self.ptr.tres_alloc_str)
+
+    @property
+    def requested_tres(self):
+        return TrackableResources.from_cstr(self.ptr.tres_req_str)
 
     @property
     def profile_types(self):
@@ -1318,6 +1354,30 @@ cdef class Job:
     @property
     def failed_node(self):
         return cstr.to_unicode(self.ptr.failed_node)
+
+    @property
+    def reserved_ports(self):
+        return cstr.to_unicode(self.ptr.resv_ports)
+
+    @property
+    def selinux_context(self):
+        return cstr.to_unicode(self.ptr.selinux_context)
+
+    @property
+    def segment_size(self):
+        return u16_parse(self.ptr.segment_size)
+
+    @property
+    def spread_segments(self):
+        return u64_parse_bool_flag(self.ptr.bitflags, slurm.SPREAD_SEGMENTS)
+
+    @property
+    def consolidate_segments(self):
+        return u64_parse_bool_flag(self.ptr.bitflags, slurm.CONSOLIDATE_SEGMENTS)
+
+    @property
+    def slurm_protocol_version(self):
+        return u16_parse(self.ptr.start_protocol_ver)
 
     def get_resource_layout_per_node(self):
         """Retrieve the resource layout of this Job on each node.

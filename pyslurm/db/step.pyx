@@ -44,8 +44,8 @@ cdef class JobSteps(dict):
         data = super().__repr__()
         return f'pyslurm.db.{self.__class__.__name__}({data})'
 
-    def to_dict(self):
-        return xcollections.dict_recursive(self)
+    def to_dict(self, recursive = False):
+        return xcollections.dict_recursive(self, recursive)
 
 
 cdef class JobStep:
@@ -68,15 +68,13 @@ cdef class JobStep:
         wrap.stats = JobStepStatistics.from_step(wrap)
         return wrap
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Convert Database JobStep information to a dictionary.
 
         Returns:
             (dict): Database JobStep information as dict
         """
-        cdef dict out = instance_to_dict(self)
-        out["stats"] = self.stats.to_dict()
-        return out
+        return instance_to_dict(self, recursive)
 
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.id})'
@@ -113,9 +111,6 @@ cdef class JobStep:
         val = TrackableResources.find_count_in_str(self.ptr.tres_alloc_str,
                                                    slurm.TRES_MEM)
         return val
-
-    # Only in Parent Job available:
-    # resvcpu?
 
     @property
     def container(self):
@@ -180,6 +175,7 @@ cdef class JobStep:
     def name(self):
         return cstr.to_unicode(self.ptr.stepname)
 
+# TODO
 #    @property
 #    def distribution(self):
 #        # ptr.task_dist
@@ -199,4 +195,42 @@ cdef class JobStep:
 
     @property
     def suspended_time(self):
-        return _raw_time(self.ptr.elapsed)
+        return _raw_time(self.ptr.suspended)
+
+    @property
+    def working_directory(self):
+        return cstr.to_unicode(self.ptr.cwd)
+
+    cdef _get_stdio(self, char *path):
+        cdef char *tmp_path = slurm.slurmdb_expand_step_stdio_fields(path, self.ptr)
+        path_str = cstr.to_unicode(tmp_path)
+        xfree(tmp_path)
+        return path_str
+
+    @property
+    def standard_input(self):
+        return self._get_stdio(self.ptr.std_in)
+
+    @property
+    def standard_output(self):
+        return self._get_stdio(self.ptr.std_out)
+
+    @property
+    def standard_error(self):
+        return self._get_stdio(self.ptr.std_err)
+
+    @property
+    def time_limit(self):
+        return _raw_time(self.ptr.timelimit)
+
+    @property
+    def tres(self):
+        return TrackableResources.from_cstr(self.ptr.tres_alloc_str, self.tres_data)
+
+    @property
+    def gres(self):
+        return self.tres.gres if self.tres else {}
+
+    @property
+    def gpus(self):
+        return {k: v for k, v in self.gres.items() if isinstance(v, GPU)}

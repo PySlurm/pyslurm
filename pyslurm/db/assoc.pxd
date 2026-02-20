@@ -43,7 +43,6 @@ from pyslurm.db.util cimport (
 from pyslurm.db.tres cimport (
     _set_tres_limits,
     TrackableResources,
-    TrackableResourceLimits,
 )
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr

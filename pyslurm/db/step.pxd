@@ -31,16 +31,17 @@ from pyslurm.slurm cimport (
     slurmdb_destroy_job_cond,
     slurmdb_destroy_job_rec,
     slurmdb_destroy_step_rec,
-    try_xmalloc,
     slurmdb_job_cond_def_start_end,
     slurm_job_state_string,
     slurm_job_state_reason_string,
+    try_xmalloc,
+    xfree,
 )
 from pyslurm.db.util cimport SlurmList, SlurmListItem
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.db.stats cimport JobStepStatistics
-from pyslurm.db.tres cimport TrackableResources, TrackableResource
+from pyslurm.db.tres cimport TrackableResources, TrackableResource, GPU
 
 
 cdef class JobSteps(dict):
@@ -93,10 +94,32 @@ cdef class JobStep:
         submit_command (str):
             Full command issued to start the Step
         suspended_time (int):
-            Amount of seconds the Step was suspended
+            Amount of seconds the Step was suspended.
+        working_directory (str):
+            Working directory of the Step
+        standard_input (str):
+            The path to the file for the standard input stream.
+        standard_output (str):
+            The path to the log file for the standard output stream.
+        standard_error (str):
+            The path to the log file for the standard error stream.
+        time_limit (int):
+            Time limit in Minutes for this step.
+        gpus (dict[GPU]):
+            A mapping of GPUs the Step has allocated.
+        gres (dict):
+            The Generic Resources the Step has allocated
+        tres (pyslurm.db.TrackableResources):
+            The TRES the Step has allocated.
     """
-    cdef slurmdb_step_rec_t *ptr
-    cdef public JobStepStatistics stats
+    cdef:
+        slurmdb_step_rec_t *ptr
+        TrackableResources tres_data
+
+    cdef public:
+        JobStepStatistics stats
 
     @staticmethod
     cdef JobStep from_ptr(slurmdb_step_rec_t *step)
+
+    cdef _get_stdio(self, char *path)

@@ -35,7 +35,7 @@ from .enums import ShutdownMode
 
 cdef class PingResponse:
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Slurmctld ping response formatted as dictionary.
 
         Returns:
@@ -46,7 +46,7 @@ cdef class PingResponse:
             >>> ctld_primary = slurmctld.Config.ping(0)
             >>> primary_dict = ctld_primary.to_dict()
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
 
 def ping(index):

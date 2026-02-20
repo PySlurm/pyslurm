@@ -40,8 +40,10 @@ from pyslurm.utils.helpers import (
     nodelist_to_range_str,
     instance_to_dict,
     _get_exit_code,
+    gres_from_tres_dict,
 )
 from pyslurm.db.connection import _open_conn_or_error
+from pyslurm.enums import SchedulerType
 
 
 cdef class JobFilter:
@@ -247,6 +249,7 @@ cdef class Jobs(MultiClusterMap):
             SlurmListItem job_ptr
             Connection conn
             QualitiesOfService qos_data
+            TrackableResources tres_data
 
         # Prepare SQL Filter
         if not db_filter:
@@ -265,17 +268,14 @@ cdef class Jobs(MultiClusterMap):
         # attributes (i.e QoS IDs to its name)
         qos_data = QualitiesOfService.load(db_connection=conn,
                                            name_is_key=False)
-
-        # TODO: also get trackable resources with slurmdb_tres_get and store
-        # it in each job instance. tres_alloc_str and tres_req_str only
-        # contain the numeric tres ids, but it probably makes more sense to
-        # convert them to its type name for the user in advance.
+        tres_data = TrackableResources.load(db_connection=conn)
 
         # TODO: How to handle the possibility of duplicate job ids that could
         # appear if IDs on a cluster are reset?
         for job_ptr in SlurmList.iter_and_pop(job_data):
             job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
             job.qos_data = qos_data
+            job.tres_data = tres_data
             job._create_steps()
             job.stats = JobStatistics.from_steps(job.steps)
 
@@ -529,12 +529,13 @@ cdef class Job:
         step_list = SlurmList.wrap(self.ptr.steps, owned=False)
         for step_ptr in SlurmList.iter_and_pop(step_list):
             step = JobStep.from_ptr(<slurmdb_step_rec_t*>step_ptr.data)
+            step.tres_data = self.tres_data
             self.steps[step.id] = step
 
     def as_dict(self):
         return self.to_dict()
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Convert Database Job information to a dictionary.
 
         Returns:
@@ -545,14 +546,7 @@ cdef class Job:
             >>> myjob = pyslurm.db.Job.load(10000)
             >>> myjob_dict = myjob.to_dict()
         """
-        cdef dict out = instance_to_dict(self)
-
-        if self.stats:
-            out["stats"] = self.stats.to_dict()
-        if self.steps:
-            out["steps"] = self.steps.to_dict()
-
-        return out
+        return instance_to_dict(self, recursive)
 
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.id})'
@@ -716,8 +710,13 @@ cdef class Job:
     def group_name(self):
         return gid_to_name(self.ptr.gid)
 
-    # uint32_t het_job_id
-    # uint32_t het_job_offset
+    @property
+    def heterogeneous_id(self):
+        return u32_parse(self.ptr.het_job_id, noval=0)
+
+    @property
+    def heterogeneous_offset(self):
+        return u32_parse(self.ptr.het_job_offset, noval=0)
 
     @property
     def id(self):
@@ -748,10 +747,13 @@ cdef class Job:
     @property
     def qos(self):
         _qos = self.qos_data.get(self.ptr.qosid, None)
-        if _qos:
-            return _qos.name
-        else:
-            return None
+        return _qos.name if _qos else None
+
+    # requested QOS - qos_req
+
+    @property
+    def requeue_count(self):
+        return u16_parse(self.ptr.restart_cnt, on_noval=0)
 
     @property
     def cpus(self):
@@ -772,12 +774,16 @@ cdef class Job:
         return val
 
     @property
+    def requested_reservations(self):
+        return cstr.to_list(self.ptr.resv_req)
+
+    @property
     def reservation(self):
         return cstr.to_unicode(self.ptr.resv_name)
 
-#    @property
-#    def reservation_id(self):
-#        return u32_parse(self.ptr.resvid)
+    @property
+    def reservation_id(self):
+        return u32_parse(self.ptr.resvid)
 
     @property
     def script(self):
@@ -814,7 +820,7 @@ cdef class Job:
 
     @property
     def suspended_time(self):
-        return _raw_time(self.ptr.elapsed)
+        return _raw_time(self.ptr.suspended)
 
     @property
     def system_comment(self):
@@ -850,6 +856,10 @@ cdef class Job:
     def wckey(self, val):
         cstr.fmalloc(&self.ptr.wckey, val)
 
+    @property
+    def wckey_id(self):
+        return u32_parse(self.ptr.wckeyid)
+
 #    @property
 #    def wckey_id(self):
 #        return u32_parse(self.ptr.wckeyid)
@@ -858,10 +868,60 @@ cdef class Job:
     def working_directory(self):
         return cstr.to_unicode(self.ptr.work_dir)
 
-#    @property
-#    def tres_allocated(self):
-#        return TrackableResources.from_str(self.ptr.tres_alloc_str)
+    @property
+    def lineage(self):
+        return cstr.to_unicode(self.ptr.lineage)
 
-#    @property
-#    def tres_requested(self):
-#        return TrackableResources.from_str(self.ptr.tres_req_str)
+    @property
+    def licenses(self):
+        return cstr.to_list(self.ptr.licenses)
+
+    cdef _get_stdio(self, char *path):
+        cdef char *tmp_path = slurm.slurmdb_expand_job_stdio_fields(path, self.ptr)
+        path_str = cstr.to_unicode(tmp_path)
+        xfree(tmp_path)
+        return path_str
+
+    @property
+    def standard_input(self):
+        return self._get_stdio(self.ptr.std_in)
+
+    @property
+    def standard_output(self):
+        return self._get_stdio(self.ptr.std_out)
+
+    @property
+    def standard_error(self):
+        return self._get_stdio(self.ptr.std_err)
+
+    @property
+    def segment_size(self):
+        return u16_parse(self.ptr.segment_size)
+
+    @property
+    def scheduler(self):
+        return SchedulerType.from_flag(self.ptr.flags, default=SchedulerType.UNKNOWN)
+
+    @property
+    def start_rpc_received(self):
+        return u32_parse_bool_flag(self.ptr.flags, slurm.SLURMDB_JOB_FLAG_START_R)
+
+    @property
+    def tres(self):
+        return self.allocated_tres or self.requested_tres
+
+    @property
+    def gres(self):
+        return self.tres.gres if self.tres else {}
+
+    @property
+    def gpus(self):
+        return {k: v for k, v in self.gres.items() if isinstance(v, GPU)}
+
+    @property
+    def allocated_tres(self):
+        return TrackableResources.from_cstr(self.ptr.tres_alloc_str, self.tres_data)
+
+    @property
+    def requested_tres(self):
+        return TrackableResources.from_cstr(self.ptr.tres_req_str, self.tres_data)

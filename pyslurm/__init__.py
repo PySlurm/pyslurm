@@ -13,6 +13,8 @@ from pyslurm import db
 from pyslurm import utils
 from pyslurm import constants
 
+from pyslurm.enums import *
+
 from pyslurm.core.job import (
     Job,
     Jobs,
@@ -40,4 +42,7 @@ from pyslurm.deprecated import *
 
 # Initialize slurm api
 from pyslurm.api import slurm_init, slurm_fini
-slurm_init()
+
+_auto_init_disabled = bool(os.environ.get("PYSLURM_DISABLE_AUTO_INIT", False))
+if not _auto_init_disabled:
+    slurm_init()

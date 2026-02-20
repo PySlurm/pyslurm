@@ -49,6 +49,7 @@ from pyslurm.utils.uint cimport *
 from pyslurm.utils.ctime cimport time_t
 from pyslurm.core.job.task_dist cimport TaskDistribution
 from pyslurm.db.stats cimport JobStepStatistics
+from pyslurm.db.tres cimport TrackableResources, GPU
 from pyslurm.core.job cimport stats
 from pyslurm.utils.helpers cimport init_step_id
 
@@ -123,6 +124,8 @@ cdef class JobStep:
             Process ID of the srun command.
         container (str):
             Path to the container OCI.
+        container_id (str):
+            The ID of the OCI Container.
         allocated_nodes (str):
             Nodes the Job is using.
         start_time (int):
@@ -150,6 +153,34 @@ cdef class JobStep:
             Command that was specified with srun.
         slurm_protocol_version (int):
             Slurm protocol version in use.
+        array_id (int):
+            The ID of the Array Job. Will return `None` when this Step doesn't
+            belong to an Array Job.
+        array_task_id (int):
+            Array Task ID of this Step if it is an Array-Job. May return `None`
+            if this isn't an Array Job.
+        standard_input (str):
+            The path to the file for the standard input stream.
+        standard_output (str):
+            The path to the log file for the standard output stream.
+        standard_error (str):
+            The path to the log file for the standard error stream.
+        working_directory (str):
+            Working directory of the Step
+        gpus (dict[GPU]):
+            A mapping of GPUs the Step has allocated.
+        gres (dict):
+            The Generic Resources the Step has allocated
+        tres (pyslurm.db.TrackableResources):
+            The TRES the Step has allocated.
+        tres_per_node (pyslurm.db.TrackableResources):
+            The TRES Per Node the Step has allocated
+        tres_per_task (pyslurm.db.TrackableResources):
+            The TRES Per Task the Step has allocated
+        tres_per_step (pyslurm.db.TrackableResources):
+            The TRES Per Step allocated
+        tres_per_socket (pyslurm.db.TrackableResources):
+            The TRES Per Socket the Step has allocated/requested
     """
 
     cdef:
@@ -162,3 +193,5 @@ cdef class JobStep:
 
     @staticmethod
     cdef JobStep from_ptr(job_step_info_t *in_ptr)
+
+    cdef _get_stdio(self, char *path)

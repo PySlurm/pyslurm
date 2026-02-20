@@ -41,6 +41,7 @@ from pyslurm.slurm cimport (
     slurm_job_state_reason_string,
     slurmdb_create_job_rec,
     slurmdb_job_modify,
+    xfree,
 )
 from pyslurm.db.util cimport (
     SlurmList,
@@ -52,8 +53,14 @@ from pyslurm.db.stats cimport JobStatistics
 from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
 from pyslurm.db.qos cimport QualitiesOfService
-from pyslurm.db.tres cimport TrackableResources, TrackableResource
+from pyslurm.db.tres cimport (
+    TrackableResources,
+    TrackableResource,
+    GPU,
+)
 from pyslurm.xcollections cimport MultiClusterMap
+from pyslurm.utils.uint cimport u32_parse_bool_flag
+from libc.stdint cimport uint32_t
 
 
 cdef class JobFilter:
@@ -310,10 +317,51 @@ cdef class Job:
             Name of the WCKey for this Job
         working_directory (str):
             Working directory of the Job
+        heterogeneous_id (int):
+            Heterogeneous job id.
+        heterogeneous_offset (int):
+            Heterogeneous job offset.
+        requeue_count (int):
+            Amount of times the Job has been requeued.
+        requested_reservations (list[str]):
+            The list of Reservations this Job requests.
+        reservation_id (int):
+            ID of the Reservation in use.
+        wckey_id (int):
+            ID of the WCKey used.
+        lineage (str):
+            Association Lineage of the Job.
+        licenses (list[str]):
+            Licenses for the Job.
+        standard_input (str):
+            The path to the file for the standard input stream.
+        standard_output (str):
+            The path to the log file for the standard output stream.
+        standard_error (str):
+            The path to the log file for the standard error stream.
+        segment_size (int):
+            When a block topology is used, this defines the size of the
+            segments that have been used to create the job allocation.
+        scheduler (pyslurm.SchedulerType):
+            The scheduler which started this Job.
+        start_rpc_received (bool):
+            Whether the Job received the Start RPC.
+        gpus (dict[GPU]):
+            A mapping of GPUs the Job has requested or allocated.
+        gres (dict):
+            The Generic Resources the Job has either requested or allocated.
+        tres (pyslurm.db.TrackableResources):
+            The TRES the Job has either requested or allocated.
+        allocated_tres (pyslurm.db.TrackableResources):
+            TRES the Job has allocated when already running.
+            Will return `None` if it is still pending.
+        requested_tres (pyslurm.db.TrackableResources):
+            TRES the Job has requested.
     """
     cdef:
         slurmdb_job_rec_t *ptr
         QualitiesOfService qos_data
+        TrackableResources tres_data
 
     cdef public:
         JobSteps steps
@@ -321,3 +369,5 @@ cdef class Job:
 
     @staticmethod
     cdef Job from_ptr(slurmdb_job_rec_t *in_ptr)
+
+    cdef _get_stdio(self, char *path)

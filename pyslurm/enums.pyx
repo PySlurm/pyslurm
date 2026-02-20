@@ -1,7 +1,7 @@
 #########################################################################
-# test_db_connection.py - database connection api integration tests
+# enums.pyx - pyslurm enums for various types
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2026 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -18,39 +18,31 @@
 # You should have received a copy of the GNU General Public License along
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-"""test_db_connection.py - Test database connecting api functionalities."""
-
-import pytest
-import pyslurm
-
-
-def test_create_instance():
-    with pytest.raises(RuntimeError):
-        pyslurm.db.Connection()
+#
+# cython: c_string_type=unicode, c_string_encoding=default
+# cython: language_level=3
 
 
-def test_open():
-    conn = pyslurm.db.Connection.open()
-    assert conn.is_open
+from enum import auto
+from pyslurm.utils.enums import SlurmEnum
+from pyslurm cimport slurm
 
 
-def test_close():
-    conn = pyslurm.db.Connection.open()
-    assert conn.is_open
-
-    conn.close()
-    assert not conn.is_open
-    # no-op
-    conn.close()
+# TODO: Move everything enum related here.
 
 
-def test_commit():
-    conn = pyslurm.db.Connection.open()
-    assert conn.is_open
-    conn.commit()
+class SchedulerType(SlurmEnum):
+    SUBMIT = auto(), slurm.SLURMDB_JOB_FLAG_SUBMIT
+    MAIN = auto(), slurm.SLURMDB_JOB_FLAG_SCHED
+    BACKFILL = auto(), slurm.SLURMDB_JOB_FLAG_BACKFILL
+    UNKNOWN = auto()
 
 
-def test_rollback():
-    conn = pyslurm.db.Connection.open()
-    assert conn.is_open
-    conn.rollback()
+SchedulerType.SUBMIT.__doc__ = "Scheduled immediately on submit"
+SchedulerType.MAIN.__doc__ = "Scheduled by the Main Scheduler"
+SchedulerType.SUBMIT.__doc__ = "Scheduled by the Backfill Scheduler"
+
+
+__all__ = [
+    "SchedulerType",
+]

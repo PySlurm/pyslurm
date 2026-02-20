@@ -328,6 +328,9 @@ cdef class JobSubmitDescription:
         container (str):
             Path to an OCI container bundle.
             This is the same as --container from sbatch.
+        container_id (str):
+            Unique name for the Container
+            This is the same as --container-id from sbatch.
         cpus_per_task (int):
             The amount of cpus required for each task.
 
@@ -552,6 +555,15 @@ cdef class JobSubmitDescription:
             after all nodes in the allocation are ready. Setting it to False,
             the default, means that it is not waited for the nodes to be
             ready. (i.e booted)
+        selinux_context (str):
+            Request a specific SELinux Context
+        segment_size (int):
+            When a block topology is used, this defines the size of the
+            segments that will be used to create the job allocation
+        reserved_ports (int):
+            Number of ports that should be reserved for communication
+        extra (str):
+            Any arbitrary string
     """
     cdef:
         slurm.job_desc_msg_t *ptr
@@ -611,6 +623,7 @@ cdef class JobSubmitDescription:
         time_limit
         time_limit_min
         container
+        container_id
         cpus_per_task
         cpus_per_gpu
         sockets_per_node
@@ -640,3 +653,7 @@ cdef class JobSubmitDescription:
         get_user_environment
         min_cpus_per_node
         wait_all_nodes
+        selinux_context
+        segment_size
+        reserved_ports
+        extra

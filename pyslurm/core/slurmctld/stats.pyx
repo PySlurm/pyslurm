@@ -76,8 +76,8 @@ cdef class ScheduleExitStatistics:
         out.max_time = ptr.schedule_exit[5]
         return out
 
-    def to_dict(self):
-        return instance_to_dict(self)
+    def to_dict(self, recursive = False):
+        return instance_to_dict(self, recursive)
 
 
 cdef class BackfillExitStatistics:
@@ -105,8 +105,8 @@ cdef class BackfillExitStatistics:
         out.state_changed = ptr.bf_exit[5]
         return out
 
-    def to_dict(self):
-        return instance_to_dict(self)
+    def to_dict(self, recursive = False):
+        return instance_to_dict(self, recursive)
 
 
 cdef class RPCPending:
@@ -116,8 +116,8 @@ cdef class RPCPending:
         self.name = None
         self.count = 0
 
-    def to_dict(self):
-        return instance_to_dict(self)
+    def to_dict(self, recursive = False):
+        return instance_to_dict(self, recursive)
 
 
 cdef class RPCType:
@@ -133,8 +133,8 @@ cdef class RPCType:
         self.cycle_last = 0
         self.cycle_max = 0
 
-    def to_dict(self):
-        return instance_to_dict(self)
+    def to_dict(self, recursive = False):
+        return instance_to_dict(self, recursive)
 
 
 cdef class RPCUser:
@@ -146,14 +146,17 @@ cdef class RPCUser:
         self.time = 0
         self.average_time = 0
 
-    def to_dict(self):
-        return instance_to_dict(self)
+    def to_dict(self, recursive = False):
+        return instance_to_dict(self, recursive)
 
 
 cdef class RPCTypeStatistics(dict):
 
     def __init__(self):
         super().__init__()
+
+    def to_dict(self, recursive = False):
+        return xcollections.dict_recursive(self, recursive)
 
     @staticmethod
     cdef RPCTypeStatistics from_ptr(stats_info_response_msg_t *ptr,
@@ -202,6 +205,9 @@ cdef class RPCUserStatistics(dict):
     def __init__(self):
         super().__init__()
 
+    def to_dict(self, recursive = False):
+        return xcollections.dict_recursive(self, recursive)
+
     @staticmethod
     cdef RPCUserStatistics from_ptr(stats_info_response_msg_t *ptr):
         out = RPCUserStatistics()
@@ -236,6 +242,9 @@ cdef class RPCPendingStatistics(dict):
 
     def __init__(self):
         super().__init__()
+
+    def to_dict(self, recursive = False):
+        return xcollections.dict_recursive(self, recursive)
 
     @staticmethod
     cdef RPCPendingStatistics from_ptr(stats_info_response_msg_t *ptr):
@@ -318,7 +327,7 @@ cdef class Statistics:
         req.command_id = slurm.STAT_COMMAND_RESET
         verify_rpc(slurm_reset_statistics(&req))
 
-    def to_dict(self):
+    def to_dict(self, recursive = False):
         """Convert the statistics to a dictionary.
 
         Returns:
@@ -329,13 +338,7 @@ cdef class Statistics:
             >>> stats = slurmctld.Statistics.load()
             >>> stats_dict = stats.to_dict()
         """
-        out = instance_to_dict(self)
-        out["rpcs_by_type"] = xcollections.dict_recursive(self.rpcs_by_type)
-        out["rpcs_by_user"] = xcollections.dict_recursive(self.rpcs_by_user)
-        out["rpcs_pending"] = xcollections.dict_recursive(self.rpcs_pending)
-        out["schedule_exit"] = self.schedule_exit.to_dict()
-        out["backfill_exit"] = self.backfill_exit.to_dict()
-        return out
+        return instance_to_dict(self, recursive)
 
 
 def diag():

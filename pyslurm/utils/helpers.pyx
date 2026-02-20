@@ -329,15 +329,18 @@ def cpubind_to_num(cpu_bind):
     return flags
 
 
-def instance_to_dict(inst):
+def instance_to_dict(inst, recursive=False):
     cdef dict out = {}
     for attr in dir(inst):
         val = getattr(inst, attr)
-        if attr.startswith("_") or callable(val):
-            # Ignore everything starting with "_" and all functions.
-            continue
-        out[attr] = val
+        private_attr = attr.startswith("_")
 
+        if not private_attr and recursive and hasattr(val, "to_dict"):
+            val = val.to_dict(recursive=recursive)
+        elif private_attr or callable(val):
+            continue
+
+        out[attr] = val
     return out
 
 
@@ -418,6 +421,7 @@ def cpu_freq_int_to_str(freq):
     else:
         # This is in kHz
         return freq
+
 
 cdef slurm_step_id_t init_step_id():
     cdef slurm_step_id_t _s

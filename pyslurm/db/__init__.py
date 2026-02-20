@@ -29,6 +29,8 @@ from .job import (
     JobSearchFilter,
 )
 from .tres import (
+    GenericResourceLayout,
+    GPU,
     TrackableResource,
     TrackableResources,
 )
