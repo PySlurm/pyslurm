@@ -42,8 +42,10 @@ class AdminLevel(SlurmEnum):
 
 cdef class Users(dict):
 
-    def __init__(self, **kwargs):
-        super().__init__(kwargs)
+    def __init__(self, users={}, **kwargs):
+        super().__init__()
+        self.update(accounts)
+        self.update(kwargs)
 
     @staticmethod
     def load(Connection db_conn, UserFilter db_filter=None):
@@ -102,11 +104,12 @@ cdef class Users(dict):
             SlurmList response
             SlurmListItem response_ptr
 
-        db_conn.validate()
-
+        # TODO: test again when this is empty, does it really delete everything?
         names = list(self.keys())
         if not names:
             return
+
+        db_conn.validate()
 
         u_filter = UserFilter(names=names)
         u_filter._create()
@@ -173,10 +176,35 @@ cdef class Users(dict):
         user_list = SlurmList.create(slurmdb_destroy_user_rec, owned=False)
 
         for user in users:
+            if user.default_account:
+                has_default_assoc = False
+                for assoc in user.associations:
+                    if not assoc.is_default:
+                        continue
+
+                    if has_default_assoc:
+                        raise ValueError("Multiple Associations declared as default")
+
+                    has_default_assoc = True
+                    if not assoc.account:
+                        assoc.account = user.default_account
+                    elif assoc.account != user.default_account:
+                        raise ValueError("Ambigous account definition")
+
+                # Do we really need to specify a default association anyway?
+                if not has_default_assoc:
+                    # Caller didn't specify any default association, so we
+                    # create a basic one.
+                    assoc = Association(user=user.name,
+                                        account=user.default_account, is_default=True)
+                    user.associations.append(assoc)
+
             assocs_to_add.extend(user.associations)
             slurm.slurm_list_append(user_list.info, user.ptr)
 
         verify_rpc(slurmdb_users_add(db_conn.ptr, user_list.info))
+        # TODO: Maybe don't create the associations automatically? And don't do
+        # any hidden stuff?
         Associations.create(db_conn, assocs_to_add)
 
 
@@ -293,7 +321,7 @@ cdef class User:
         Users({self.name: self}).delete(db_conn)
 
     def modify(self, Connection db_conn):
-        Users({self.name: self}).modify(self, db_conn)
+        Users({self.name: self}).modify(db_conn, self)
 
     @property
     def name(self):
@@ -314,6 +342,10 @@ cdef class User:
     @property
     def default_account(self):
         return cstr.to_unicode(self.ptr.default_acct)
+
+    @default_account.setter
+    def default_account(self, val):
+        cstr.fmalloc(&self.ptr.default_acct, val)
 
     @property
     def default_wckey(self):

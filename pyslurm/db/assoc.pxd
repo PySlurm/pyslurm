@@ -73,21 +73,6 @@ cdef class AssociationFilter:
         qos
 
 
-cdef class AssociationLimits:
-
-    cdef public:
-        group_tres
-        group_tres_mins
-        group_tres_run_mins
-        max_tres_mins_per_job
-        max_tres_run_mins_per_user
-        max_tres_per_job
-        max_tres_per_node
-        qos
-
-        group_jobs
-
-
 cdef class Association:
     cdef:
         slurmdb_assoc_rec_t *ptr
@@ -97,6 +82,8 @@ cdef class Association:
         owned
 
     cdef public:
+        default_qos
+
         group_tres
         group_tres_mins
         group_tres_run_mins
@@ -105,7 +92,17 @@ cdef class Association:
         max_tres_per_job
         max_tres_per_node
         qos
-        default_qos
+        group_jobs
+        group_jobs_accrue
+        group_submit_jobs
+        group_wall_time
+        max_jobs
+        max_jobs_accrue
+        max_submit_jobs
+        max_wall_time_per_job
+        min_priority_threshold
+        priority
+        shares
 
     @staticmethod
     cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr)

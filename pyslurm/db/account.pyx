@@ -34,8 +34,10 @@ from pyslurm.db.error import DefaultAccountError, JobsRunningError
 
 cdef class Accounts(dict):
 
-    def __init__(self, accounts=None):
+    def __init__(self, accounts={}, **kwargs):
         super().__init__()
+        self.update(accounts)
+        self.update(kwargs)
 
     @staticmethod
     def load(Connection db_conn, AccountFilter db_filter=None):
@@ -85,6 +87,7 @@ cdef class Accounts(dict):
                     account.association = assoc
                 else:
                     # These must be User Associations.
+                    # TODO: maybe rename to user_associations
                     account.associations.append(assoc)
 
         return out
@@ -100,17 +103,15 @@ cdef class Accounts(dict):
         account_list = SlurmList.create(slurmdb_destroy_account_rec, owned=False)
 
         for account in accounts:
-#           if not account.associations and add_assoc:
-#               # For convenience, we create the associations by default
-#               # automatically, just like sacctmgr. Can be disabled for more
-#               # control.
-#               assoc = Association(account=account.name)
-#               account.associations.append(assoc)
+            if not account.association:
+                account.association = Association(account=account.name)
 
-            assocs_to_add.extend(account.associations)
+            assocs_to_add.append(account.association)
             slurm.slurm_list_append(account_list.info, account.ptr)
 
         verify_rpc(slurmdb_accounts_add(db_conn.ptr, account_list.info))
+        # TODO: Maybe don't create the associations automatically? And don't do
+        # any hidden stuff?
         Associations.create(db_conn, assocs_to_add)
 
     def delete(self, Connection db_conn):
@@ -119,9 +120,15 @@ cdef class Accounts(dict):
             SlurmList response
             list out = []
 
+        # Check is required because for some reason if the acct_cond doesn't
+        # contain any valid conditions, slurmdbd will delete all accounts.
+        names = list(self.keys())
+        if not names:
+            return
+
         db_conn.validate()
 
-        a_filter = AccountFilter(names=list(self.keys()))
+        a_filter = AccountFilter(names=names)
         a_filter._create()
 
         response = SlurmList.wrap(slurmdb_accounts_remove(db_conn.ptr, a_filter.ptr))
@@ -189,10 +196,13 @@ cdef class Account:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, description=None, organization=None, **kwargs):
         self._alloc_impl()
-        self.name = name
         self._init_defaults()
+        self.name = name
+        self.description = description or name
+        self.organization = organization or name
+
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -240,8 +250,22 @@ cdef class Account:
             return self.name == other.name
         return NotImplemented
 
+    @staticmethod
+    def load(Connection db_conn, name):
+        account = Accounts.load(db_conn=db_conn).get(name)
+        if not account:
+            raise RPCError(msg=f"Account {name} does not exist.")
+
+        return account
+
     def create(self, Connection db_conn):
         Accounts.create(db_conn, [self])
+
+    def delete(self, Connection db_conn):
+        Accounts({self.name: self}).delete(db_conn)
+
+    def modify(self, Connection db_conn):
+        Accounts({self.name: self}).modify(self, db_conn)
 
     @property
     def name(self):

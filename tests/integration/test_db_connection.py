@@ -33,6 +33,11 @@ def test_open():
     conn = pyslurm.db.Connection.open()
     assert conn.is_open
 
+    with pyslurm.db.connect() as conn2:
+        pass
+
+    assert not conn2.is_open
+
 
 def test_close():
     conn = pyslurm.db.Connection.open()

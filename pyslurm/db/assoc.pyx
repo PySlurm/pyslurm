@@ -170,13 +170,18 @@ cdef class Associations(MultiClusterMap):
         if not associations:
             return
 
-        conn.validate()
+        db_conn.validate()
 
         for i, assoc in enumerate(associations):
             # Make sure to remove any duplicate associations, i.e. associations
             # having the same account name set. For some reason, the slurmdbd
             # doesn't like that.
             if assoc not in assoc_list:
+#               print(assoc.user)
+#               print(assoc.account)
+#               print(assoc.is_default)
+#               print(assoc.parent_account)
+#               print(assoc.cluster)
                 assoc_list.append(assoc)
 
         verify_rpc(slurmdb_associations_add(db_conn.ptr, assoc_list.info))
@@ -257,10 +262,6 @@ cdef class AssociationFilter:
         # TODO: ASSOC_COND_FLAGS
 
 
-cdef class AssociationLimits:
-    pass
-
-
 cdef class Association:
 
     def __cinit__(self):
@@ -270,6 +271,12 @@ cdef class Association:
     def __init__(self, **kwargs):
         self._alloc_impl()
         self.id = 0
+
+        # Only when an Account-Association is initialized, we default to
+        # "root" as the Parent Account.
+        user = kwargs.get("user")
+        self.parent_account = kwargs.pop("parent_account",
+                                         "root" if not user else None)
         self.cluster = settings.LOCAL_CLUSTER
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -338,29 +345,6 @@ cdef class Association:
     def comment(self, val):
         cstr.fmalloc(&self.ptr.comment, val)
 
-    # uint32_t def_qos_id
-
-    # uint16_t flags (ASSOC_FLAG_*)
-
-    @group_jobs_accrue.setter
-    def group_jobs_accrue(self, val):
-
-    @property
-    def group_submit_jobs(self):
-        return u32_parse(self.ptr.grp_submit_jobs, zero_is_noval=False)
-
-    @group_submit_jobs.setter
-    def group_submit_jobs(self, val):
-        self.ptr.grp_submit_jobs = u32(val, zero_is_noval=False)
-
-    @property
-    def group_wall_time(self):
-        return u32_parse(self.ptr.grp_wall, zero_is_noval=False)
-
-    @group_wall_time.setter
-    def group_wall_time(self, val):
-        self.ptr.grp_wall = u32(val, zero_is_noval=False)
-
     @property
     def id(self):
         return u32_parse(self.ptr.id)
@@ -369,53 +353,26 @@ cdef class Association:
     def id(self, val):
         self.ptr.id = val
 
+
+    # uint32_t def_qos_id
+
+    # uint16_t flags (ASSOC_FLAG_*)
+
     @property
     def is_default(self):
         return u16_parse_bool(self.ptr.is_def)
 
-    @property
-    def max_jobs(self):
-        return u32_parse(self.ptr.max_jobs, zero_is_noval=False)
-
-    @max_jobs.setter
-    def max_jobs(self, val):
-        self.ptr.max_jobs = u32(val, zero_is_noval=False)
-
-    @property
-    def max_jobs_accrue(self):
-        return u32_parse(self.ptr.max_jobs_accrue, zero_is_noval=False)
-
-    @max_jobs_accrue.setter
-    def max_jobs_accrue(self, val):
-        self.ptr.max_jobs_accrue = u32(val, zero_is_noval=False)
-
-    @property
-    def max_submit_jobs(self):
-        return u32_parse(self.ptr.max_submit_jobs, zero_is_noval=False)
-
-    @max_submit_jobs.setter
-    def max_submit_jobs(self, val):
-        self.ptr.max_submit_jobs = u32(val, zero_is_noval=False)
-
-    @property
-    def max_wall_time_per_job(self):
-        return u32_parse(self.ptr.max_wall_pj, zero_is_noval=False)
-
-    @max_wall_time_per_job.setter
-    def max_wall_time_per_job(self, val):
-        self.ptr.max_wall_pj = u32(val, zero_is_noval=False)
-
-    @property
-    def min_priority_threshold(self):
-        return u32_parse(self.ptr.min_prio_thresh, zero_is_noval=False)
-
-    @min_priority_threshold.setter
-    def min_priority_threshold(self, val):
-        self.ptr.min_prio_thresh = u32(val, zero_is_noval=False)
+    @is_default.setter
+    def is_default(self, val):
+        self.ptr.is_def = u16_bool(val)
 
     @property
     def parent_account(self):
         return cstr.to_unicode(self.ptr.parent_acct)
+
+    @parent_account.setter
+    def parent_account(self, val):
+        cstr.fmalloc(&self.ptr.parent_acct, val)
 
     @property
     def parent_account_id(self):
@@ -432,22 +389,6 @@ cdef class Association:
     @partition.setter
     def partition(self, val):
         cstr.fmalloc(&self.ptr.partition, val)
-
-    @property
-    def priority(self):
-        return u32_parse(self.ptr.priority, zero_is_noval=False)
-
-    @priority.setter
-    def priority(self, val):
-        self.ptr.priority = u32(val)
-
-    @property
-    def shares(self):
-        return u32_parse(self.ptr.shares_raw, zero_is_noval=False)
-
-    @shares.setter
-    def shares(self, val):
-        self.ptr.shares_raw = u32(val)
 
     @property
     def user(self):
@@ -467,8 +408,6 @@ cdef _parse_assoc_ptr(Association ass):
         TrackableResources tres = ass.tres_data
         QualitiesOfService qos = ass.qos_data
 
-    policy = ass.policy
-
     ass.group_tres = TrackableResources.from_cstr(
             ass.ptr.grp_tres, tres)
     ass.group_tres_mins = TrackableResources.from_cstr(
@@ -485,8 +424,17 @@ cdef _parse_assoc_ptr(Association ass):
             ass.ptr.max_tres_pn, tres)
     ass.qos = qos_list_to_pylist(ass.ptr.qos_list, qos)
 
-    policy.group_jobs = u32_parse(ass.ptr.grp_jobs, zero_is_noval=False)
-    policy.group_jobs_accrue = u32_parse(ass.ptr.grp_jobs_accrue, zero_is_noval=False)
+    ass.group_jobs = u32_parse(ass.ptr.grp_jobs, zero_is_noval=False)
+    ass.group_jobs_accrue = u32_parse(ass.ptr.grp_jobs_accrue, zero_is_noval=False)
+    ass.group_submit_jobs = u32_parse(ass.ptr.grp_submit_jobs, zero_is_noval=False)
+    ass.group_wall_time = u32_parse(ass.ptr.grp_wall, zero_is_noval=False)
+    ass.max_jobs = u32_parse(ass.ptr.max_jobs, zero_is_noval=False)
+    ass.max_jobs_accrue = u32_parse(ass.ptr.max_jobs_accrue, zero_is_noval=False)
+    ass.max_submit_jobs = u32_parse(ass.ptr.max_submit_jobs, zero_is_noval=False)
+    ass.max_wall_time_per_job = u32_parse(ass.ptr.max_wall_pj, zero_is_noval=False)
+    ass.min_priority_threshold = u32_parse(ass.ptr.min_prio_thresh, zero_is_noval=False)
+    ass.priority = u32_parse(ass.ptr.priority, zero_is_noval=False)
+    ass.shares = u32_parse(ass.ptr.shares_raw, zero_is_noval=False)
     # TODO: default_qos
 
 
@@ -513,8 +461,16 @@ cdef _create_assoc_ptr(Association ass, conn=None):
     # them to its ID, which is why we need to load the current QOS available
     # in the system.
     ass.qos_data = QualitiesOfService.load(db_conn=conn)
-    _set_qos_list(&ass.ptr.qos_list, self.qos, ass.qos_data)
+    _set_qos_list(&ass.ptr.qos_list, ass.qos, ass.qos_data)
 
-    ass.ptr.group_jobs = u32(ass.policy.group_jobs, zero_is_noval=False)
-    ass.ptr.group_jobs_accrue = u32(ass.policy.group_jobs_accrue, zero_is_noval=False)
-
+    ass.ptr.grp_jobs = u32(ass.group_jobs, zero_is_noval=False)
+    ass.ptr.grp_jobs_accrue = u32(ass.group_jobs_accrue, zero_is_noval=False)
+    ass.ptr.grp_submit_jobs = u32(ass.group_submit_jobs, zero_is_noval=False)
+    ass.ptr.grp_wall = u32(ass.group_wall_time, zero_is_noval=False)
+    ass.ptr.max_jobs = u32(ass.max_jobs, zero_is_noval=False)
+    ass.ptr.max_jobs_accrue = u32(ass.max_jobs_accrue, zero_is_noval=False)
+    ass.ptr.max_submit_jobs = u32(ass.max_submit_jobs, zero_is_noval=False)
+    ass.ptr.max_wall_pj = u32(ass.max_wall_time_per_job, zero_is_noval=False)
+    ass.ptr.min_prio_thresh = u32(ass.min_priority_threshold, zero_is_noval=False)
+    ass.ptr.priority = u32(ass.priority)
+    ass.ptr.shares_raw = u32(ass.shares)
