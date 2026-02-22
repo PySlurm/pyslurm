@@ -79,7 +79,7 @@ class SlurmEnum(str, Enum, metaclass=DocstringSupport):
     def from_flag(cls, flags, default):
         out = cls(default)
         for item in cls:
-            if flags & item._flag or flags == item._flag:
+            if flags == item._flag:
                 return item
         return out
 
