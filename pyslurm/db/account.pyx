@@ -92,6 +92,38 @@ cdef class Accounts(dict):
 
         return out
 
+    def modify(self, Connection db_conn, Account changes):
+        cdef:
+            AccountFilter acct_filter
+            SlurmList response
+            SlurmListItem response_ptr
+            list out = []
+
+        db_conn.validate()
+
+        acct_filter = AccountFilter(names=list(self.keys()))
+        acct_filter._create()
+
+        response = SlurmList.wrap(slurmdb_accounts_modify(
+            db_conn.ptr, acct_filter.ptr, changes.ptr))
+
+        if not response.is_null and response.cnt:
+            for response_ptr in response:
+                response_str = cstr.to_unicode(<char*>response_ptr.data)
+                if not response_str:
+                    continue
+
+                out.append(response_str)
+
+        elif not response.is_null:
+            # There was no real error, but simply nothing has been modified
+            return out
+        else:
+            # Autodetects the last slurm error
+            raise RPCError(msg="Failed to modify accounts.")
+
+        return out
+
     @staticmethod
     def create(Connection db_conn, accounts):
         cdef:
@@ -237,13 +269,13 @@ cdef class Account:
         wrap._init_defaults()
         return wrap
 
-    def to_dict(self):
+    def to_dict(self, recursive=False):
         """Database Account information formatted as a dictionary.
 
         Returns:
             (dict): Database Account information as dict.
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     def __eq__(self, other):
         if isinstance(other, Account):
@@ -254,6 +286,8 @@ cdef class Account:
     def load(Connection db_conn, name):
         account = Accounts.load(db_conn=db_conn).get(name)
         if not account:
+            # TODO: Maybe don't raise here and just return None and let the
+            # Caller handle it?
             raise RPCError(msg=f"Account {name} does not exist.")
 
         return account
@@ -264,8 +298,8 @@ cdef class Account:
     def delete(self, Connection db_conn):
         Accounts({self.name: self}).delete(db_conn)
 
-    def modify(self, Connection db_conn):
-        Accounts({self.name: self}).modify(self, db_conn)
+    def modify(self, Connection db_conn, Account changes):
+        Accounts({self.name: self}).modify(db_conn, changes)
 
     @property
     def name(self):

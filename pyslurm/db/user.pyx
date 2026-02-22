@@ -31,20 +31,14 @@ from pyslurm.utils.uint import *
 from pyslurm import xcollections
 from pyslurm.utils.enums import SlurmEnum
 from pyslurm.db.error import JobsRunningError
-
-
-class AdminLevel(SlurmEnum):
-    UNDEFINED     = "UNDEFINED",     slurm.SLURMDB_ADMIN_NOTSET
-    NONE          = "NONE",          slurm.SLURMDB_ADMIN_NONE
-    OPERATOR      = "OPERATOR",      slurm.SLURMDB_ADMIN_OPERATOR
-    ADMINISTRATOR = "ADMINISTRATOR", slurm.SLURMDB_ADMIN_SUPER_USER
+from pyslurm.enums import AdminLevel
 
 
 cdef class Users(dict):
 
     def __init__(self, users={}, **kwargs):
         super().__init__()
-        self.update(accounts)
+        self.update(users)
         self.update(kwargs)
 
     @staticmethod
@@ -293,13 +287,13 @@ cdef class User:
         wrap._init_defaults()
         return wrap
 
-    def to_dict(self):
+    def to_dict(self, recursive=False):
         """Database User information formatted as a dictionary.
 
         Returns:
             (dict): Database User information as dict.
         """
-        return instance_to_dict(self)
+        return instance_to_dict(self, recursive)
 
     def __eq__(self, other):
         if isinstance(other, User):
@@ -311,7 +305,6 @@ cdef class User:
         user = Users.load(db_conn=db_conn).get(name)
         if not user:
             raise RPCError(msg=f"User {name} does not exist.")
-
         return user
 
     def create(self, Connection db_conn):
@@ -320,8 +313,8 @@ cdef class User:
     def delete(self, Connection db_conn):
         Users({self.name: self}).delete(db_conn)
 
-    def modify(self, Connection db_conn):
-        Users({self.name: self}).modify(db_conn, self)
+    def modify(self, Connection db_conn, User changes):
+        Users({self.name: self}).modify(db_conn, changes)
 
     @property
     def name(self):

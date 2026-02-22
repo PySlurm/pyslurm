@@ -307,7 +307,7 @@ cdef class Association:
         wrap.ptr = in_ptr
         return wrap
 
-    def to_dict(self, recursive = False):
+    def to_dict(self, recursive=False):
         """Database Association information formatted as a dictionary.
 
         Returns:
