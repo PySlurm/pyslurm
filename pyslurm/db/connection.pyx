@@ -24,6 +24,14 @@
 
 from pyslurm.core.error import RPCError, PyslurmError
 from contextlib import contextmanager
+from pyslurm.db.user import UserAPI
+from pyslurm.db.account import AccountAPI
+
+
+cdef class ConnectionWrapper:
+
+    def __init__(self, db_conn: Connection):
+        self.db_conn = db_conn
 
 
 class InvalidConnectionError(PyslurmError):
@@ -31,7 +39,7 @@ class InvalidConnectionError(PyslurmError):
 
 
 @contextmanager
-def connect():
+def connect(commit_on_success=True, rollback_on_error=True):
     """A managed Slurm DB Connection"""
     connection = Connection.open()
     try:
@@ -61,8 +69,14 @@ cdef class Connection:
         if not self.is_open:
             raise InvalidConnectionError("Connection is closed")
 
+    def check_commit(self, rc):
+        if self.commit_on_success and rc == slurm.SLURM_SUCCESS:
+            self.commit()
+        elif self.rollback_on_error and rc != slurm.SLURM_SUCCESS:
+            self.rollback()
+
     @staticmethod
-    def open():
+    def open(commit_on_success=True, rollback_on_error=True):
         """Open a new connection to the slurmdbd
 
         Raises:
@@ -82,6 +96,12 @@ cdef class Connection:
         if not conn.ptr:
             raise RPCError(msg="Failed to open onnection to slurmdbd")
 
+        conn.commit_on_success = commit_on_success
+        conn.rollback_on_error = rollback_on_error
+
+        # APIs
+        conn.users = UserAPI(conn)
+        conn.accounts = AccountAPI(conn)
         return conn
 
     def close(self):

@@ -29,22 +29,19 @@ from pyslurm.utils.helpers import (
 )
 from pyslurm.utils.uint import *
 from pyslurm import xcollections
-from pyslurm.db.error import DefaultAccountError, JobsRunningError
+from pyslurm.db.error import (
+    DefaultAccountError,
+    JobsRunningError,
+    parse_basic_response,
+)
 
 
-cdef class Accounts(dict):
+cdef class AccountAPI(ConnectionWrapper):
 
-    def __init__(self, accounts={}, **kwargs):
-        super().__init__()
-        self.update(accounts)
-        self.update(kwargs)
-
-    @staticmethod
-    def load(Connection db_conn, AccountFilter db_filter=None):
+    def load(self, db_filter: AccountFilter = None):
         cdef:
             Accounts out = Accounts()
             Account account
-            AccountFilter cond = db_filter
             SlurmList account_data
             SlurmListItem account_ptr
             SlurmList assoc_data
@@ -53,23 +50,23 @@ cdef class Accounts(dict):
             QualitiesOfService qos_data
             TrackableResources tres_data
 
-        db_conn.validate()
+        self.db_conn.validate()
 
         if not db_filter:
-            cond = AccountFilter()
+            db_filter = AccountFilter()
 
-        if cond.with_assocs is not False:
-            cond.with_assocs = True
+        if db_filter.with_assocs is not False:
+            db_filter.with_assocs = True
 
-        cond._create()
-        account_data = SlurmList.wrap(slurmdb_accounts_get(db_conn.ptr, cond.ptr))
+        db_filter._create()
+        account_data = SlurmList.wrap(slurmdb_accounts_get(self.db_conn.ptr, db_filter.ptr))
 
         if account_data.is_null:
             raise RPCError(msg="Failed to get Account data from slurmdbd.")
 
-        qos_data = QualitiesOfService.load(db_conn=db_conn,
+        qos_data = QualitiesOfService.load(db_conn=self.db_conn,
                                            name_is_key=False)
-        tres_data = TrackableResources.load(db_conn=db_conn)
+        tres_data = TrackableResources.load(db_conn=self.db_conn)
 
         for account_ptr in SlurmList.iter_and_pop(account_data):
             account = Account.from_ptr(<slurmdb_account_rec_t*>account_ptr.data)
@@ -92,79 +89,24 @@ cdef class Accounts(dict):
 
         return out
 
-    def modify(self, Connection db_conn, Account changes):
+
+    def delete(self, db_filter: AccountFilter):
         cdef:
-            AccountFilter acct_filter
-            SlurmList response
-            SlurmListItem response_ptr
-            list out = []
-
-        db_conn.validate()
-
-        acct_filter = AccountFilter(names=list(self.keys()))
-        acct_filter._create()
-
-        response = SlurmList.wrap(slurmdb_accounts_modify(
-            db_conn.ptr, acct_filter.ptr, changes.ptr))
-
-        if not response.is_null and response.cnt:
-            for response_ptr in response:
-                response_str = cstr.to_unicode(<char*>response_ptr.data)
-                if not response_str:
-                    continue
-
-                out.append(response_str)
-
-        elif not response.is_null:
-            # There was no real error, but simply nothing has been modified
-            return out
-        else:
-            # Autodetects the last slurm error
-            raise RPCError(msg="Failed to modify accounts.")
-
-        return out
-
-    @staticmethod
-    def create(Connection db_conn, accounts):
-        cdef:
-            Account account
-            SlurmList account_list
-            list assocs_to_add = []
-
-        db_conn.validate()
-        account_list = SlurmList.create(slurmdb_destroy_account_rec, owned=False)
-
-        for account in accounts:
-            if not account.association:
-                account.association = Association(account=account.name)
-
-            assocs_to_add.append(account.association)
-            slurm.slurm_list_append(account_list.info, account.ptr)
-
-        verify_rpc(slurmdb_accounts_add(db_conn.ptr, account_list.info))
-        # TODO: Maybe don't create the associations automatically? And don't do
-        # any hidden stuff?
-        Associations.create(db_conn, assocs_to_add)
-
-    def delete(self, Connection db_conn):
-        cdef:
-            AccountFilter a_filter
             SlurmList response
             list out = []
 
         # Check is required because for some reason if the acct_cond doesn't
         # contain any valid conditions, slurmdbd will delete all accounts.
-        names = list(self.keys())
-        if not names:
+        # TODO: Maybe make it configurable
+        if not db_filter.names:
             return
 
-        db_conn.validate()
+        self.db_conn.validate()
+        db_filter._create()
 
-        a_filter = AccountFilter(names=names)
-        a_filter._create()
-
-        response = SlurmList.wrap(slurmdb_accounts_remove(db_conn.ptr, a_filter.ptr))
+        response = SlurmList.wrap(slurmdb_accounts_remove(self.db_conn.ptr, db_filter.ptr))
         rc = slurm_errno()
+        self.db_conn.check_commit(rc)
 
         if rc == slurm.SLURM_SUCCESS or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
             return
@@ -179,6 +121,96 @@ cdef class Accounts(dict):
             raise DefaultAccountError.from_response(response, rc)
         else:
             verify_rpc(rc)
+
+
+    def modify(self, db_filter: AccountFilter, changes: Account):
+        cdef:
+            SlurmList response
+            SlurmListItem response_ptr
+            list out = []
+
+        self.db_conn.validate()
+        db_filter._create()
+
+        response = SlurmList.wrap(slurmdb_accounts_modify(
+            self.db_conn.ptr, db_filter.ptr, changes.ptr)
+        )
+        rc = slurm_errno()
+        self.db_conn.check_commit(rc)
+
+        if rc == slurm.SLURM_SUCCESS:
+            return parse_basic_response(response)
+        elif rc == slurm.SLURM_NO_CHANGE_IN_DATA:
+            return out
+        else:
+            # verify_rpc(rc)
+            raise RPCError(msg="Failed to modify accounts.")
+
+
+#       if not response.is_null and response.cnt:
+#           for response_ptr in response:
+#               response_str = cstr.to_unicode(<char*>response_ptr.data)
+#               if not response_str:
+#                   continue
+
+#               out.append(response_str)
+
+#       elif not response.is_null:
+#           # There was no real error, but simply nothing has been modified
+#           return out
+#       else:
+#           # Autodetects the last slurm error
+#           raise RPCError(msg="Failed to modify accounts.")
+
+
+    def create(self, accounts):
+        cdef:
+            Account account
+            SlurmList account_list
+            list assocs_to_add = []
+
+        self.db_conn.validate()
+        account_list = SlurmList.create(slurmdb_destroy_account_rec, owned=False)
+
+        for account in accounts:
+            if not account.association:
+                account.association = Association(account=account.name)
+
+            assocs_to_add.append(account.association)
+            slurm.slurm_list_append(account_list.info, account.ptr)
+
+        rc = slurmdb_accounts_add(self.db_conn.ptr, account_list.info)
+        # TODO: Only commit here when we don't add any associations?
+        # So we don't leave any Accounts without associations behind?
+        self.db_conn.check_commit(rc)
+        verify_rpc(rc)
+        # TODO: Maybe don't create the associations automatically? And don't do
+        # any hidden stuff?
+        Associations.create(self.db_conn, assocs_to_add)
+
+
+cdef class Accounts(dict):
+
+    def __init__(self, accounts={}, **kwargs):
+        super().__init__()
+        self.update(accounts)
+        self.update(kwargs)
+
+    @staticmethod
+    def load(db_conn: Connection, db_filter: AccountFilter = None):
+        return db_conn.accounts.load(db_filter)
+
+    def delete(self, db_conn: Connection):
+        db_filter = AccountFilter(names=list(self.keys()))
+        db_conn.accounts.delete(db_filter)
+
+    def modify(self, db_conn: Connection, changes: Account):
+        db_filter = AccountFilter(names=list(self.keys()))
+        return db_conn.accounts.modify(db_filter, changes)
+
+    @staticmethod
+    def create(db_conn: Connection, accounts):
+        db_conn.accounts.create(accounts)
 
 
 cdef class AccountFilter:
@@ -284,7 +316,7 @@ cdef class Account:
 
     @staticmethod
     def load(Connection db_conn, name):
-        account = Accounts.load(db_conn=db_conn).get(name)
+        account = db_conn.accounts.load().get(name)
         if not account:
             # TODO: Maybe don't raise here and just return None and let the
             # Caller handle it?
@@ -293,7 +325,7 @@ cdef class Account:
         return account
 
     def create(self, Connection db_conn):
-        Accounts.create(db_conn, [self])
+        db_conn.accounts.create([self])
 
     def delete(self, Connection db_conn):
         Accounts({self.name: self}).delete(db_conn)

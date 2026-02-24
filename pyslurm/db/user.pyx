@@ -30,19 +30,13 @@ from pyslurm.utils.helpers import (
 from pyslurm.utils.uint import *
 from pyslurm import xcollections
 from pyslurm.utils.enums import SlurmEnum
-from pyslurm.db.error import JobsRunningError
+from pyslurm.db.error import JobsRunningError, parse_basic_response
 from pyslurm.enums import AdminLevel
 
 
-cdef class Users(dict):
+cdef class UserAPI(ConnectionWrapper):
 
-    def __init__(self, users={}, **kwargs):
-        super().__init__()
-        self.update(users)
-        self.update(kwargs)
-
-    @staticmethod
-    def load(Connection db_conn, UserFilter db_filter=None):
+    def load(self, db_filter: UserFilter = None):
         cdef:
             Users out = Users()
             User user
@@ -55,7 +49,7 @@ cdef class Users(dict):
             QualitiesOfService qos_data
             TrackableResources tres_data
 
-        db_conn.validate()
+        self.db_conn.validate()
 
         if not db_filter:
             cond = UserFilter()
@@ -66,14 +60,14 @@ cdef class Users(dict):
             cond.with_assocs = True
         cond._create()
 
-        user_data = SlurmList.wrap(slurmdb_users_get(db_conn.ptr, cond.ptr))
+        user_data = SlurmList.wrap(slurmdb_users_get(self.db_conn.ptr, cond.ptr))
 
         if user_data.is_null:
             raise RPCError(msg="Failed to get User data from slurmdbd")
 
-        qos_data = QualitiesOfService.load(db_conn=db_conn,
+        qos_data = QualitiesOfService.load(db_conn=self.db_conn,
                                            name_is_key=False)
-        tres_data = TrackableResources.load(db_conn=db_conn)
+        tres_data = TrackableResources.load(db_conn=self.db_conn)
 
         for user_ptr in SlurmList.iter_and_pop(user_data):
             user = User.from_ptr(<slurmdb_user_rec_t*>user_ptr.data)
@@ -92,24 +86,21 @@ cdef class Users(dict):
 
         return out
 
-    def delete(self, Connection db_conn):
+
+    def delete(self, db_filter: UserFilter):
         cdef:
-            UserFilter u_filter
             SlurmList response
-            SlurmListItem response_ptr
 
         # TODO: test again when this is empty, does it really delete everything?
-        names = list(self.keys())
-        if not names:
+        if not db_filter.names:
             return
 
-        db_conn.validate()
+        self.db_conn.validate()
+        db_filter._create()
 
-        u_filter = UserFilter(names=names)
-        u_filter._create()
-
-        response = SlurmList.wrap(slurmdb_users_remove(db_conn.ptr, u_filter.ptr))
+        response = SlurmList.wrap(slurmdb_users_remove(self.db_conn.ptr, db_filter.ptr))
         rc = slurm_errno()
+        self.db_conn.check_commit(rc)
 
         if rc == slurm.SLURM_SUCCESS or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
             return
@@ -120,53 +111,85 @@ cdef class Users(dict):
         # Handle the error case. Running Jobs should be the only possible error
         # where slurmdbd sends a response list.
         if rc == slurm.ESLURM_JOBS_RUNNING_ON_ASSOC:
+            # TODO: The slurmdbd actually deletes the associations, even if
+            # Jobs are running. The client side must then decide whether to
+            # rollback or actually commit the changes. sacctmgr does the
+            # rollback.
+
+            # Should we also do this here automatically to prevent
+            # anyone accidentally forgetting this? Or let the caller handle it?
+            # If we do it, then it might rollback changes that were done
+            # earlier and haven't been committed yet.
             raise JobsRunningError.from_response(response, rc)
         else:
             verify_rpc(rc)
 
-    def modify(self, Connection db_conn, User changes):
+
+    def modify(self, db_filter: UserFilter, changes: User):
         cdef:
-            UserFilter u_filter
-            AssociationFilter a_filter
             SlurmList response
             SlurmListItem response_ptr
             list out = []
 
-        db_conn.validate()
+        # TODO: Properly check if the filter is empty, cause it will then probably
+        # target all users. Or maybe that is fine and we need to clearly document
+        # to take caution
+        #if not db_filter.names:
+        #    return
 
-        u_filter = UserFilter(names=list(self.keys()))
-#        a_filter = AssociationFilter()
+        self.db_conn.validate()
+        db_filter._create()
 
- #       u_filter.ptr.assoc_cond = a_filter.ptr
-        u_filter._create()
         response = SlurmList.wrap(slurmdb_users_modify(
-            db_conn.ptr, u_filter.ptr, changes.ptr))
+            self.db_conn.ptr, db_filter.ptr, changes.ptr)
+        )
+        rc = slurm_errno()
+        self.db_conn.check_commit(rc)
 
-        if not response.is_null and response.cnt:
-            for response_ptr in response:
-                response_str = cstr.to_unicode(<char*>response_ptr.data)
-                if not response_str:
-                    continue
-
-                out.append(response_str)
-
-        elif not response.is_null:
-            # There was no real error, but simply nothing has been modified
+        if rc == slurm.SLURM_SUCCESS:
+            return parse_basic_response(response)
+        elif rc == slurm.SLURM_NO_CHANGE_IN_DATA:
             return out
         else:
-            # Autodetects the last slurm error
+            # verify_rpc(rc)
+            # ESLURM_ONE_CHANGE - when the name is changed, only 1 user can be
+            # specified at a time
+
+            # SLURM_ERROR - general error
             raise RPCError(msg="Failed to modify users.")
 
-        return out
+#       if not response.is_null and response.cnt:
+#           for response_ptr in response:
+#               response_str = cstr.to_unicode(<char*>response_ptr.data)
+#               if not response_str:
+#                   continue
 
-    @staticmethod
-    def create(Connection db_conn, users):
+#               out.append(response_str)
+
+#       elif not response.is_null:
+#           # There was no real error, but simply nothing has been modified
+#           return out
+#       else:
+#           # TODO: handle errors better
+#           # ESLURM_NO_CHANGE_IN_DATA
+
+#           # ESLURM_ONE_CHANGE - when the name is changed, only 1 user can be
+#           # specified at a time
+
+#           # Autodetects the last slurm error
+#           raise RPCError(msg="Failed to modify users.")
+
+
+    def create(self, users):
         cdef:
             User user
             SlurmList user_list
             list assocs_to_add = []
 
-        db_conn.validate()
+        if not users:
+            return
+
+        self.db_conn.validate()
         user_list = SlurmList.create(slurmdb_destroy_user_rec, owned=False)
 
         for user in users:
@@ -196,10 +219,37 @@ cdef class Users(dict):
             assocs_to_add.extend(user.associations)
             slurm.slurm_list_append(user_list.info, user.ptr)
 
-        verify_rpc(slurmdb_users_add(db_conn.ptr, user_list.info))
+        rc = slurmdb_users_add(self.db_conn.ptr, user_list.info)
+        # TODO: Only commit here when we don't add any associations?
+        # So we don't leave any Users without associations behind?
+        self.db_conn.check_commit(rc)
+        verify_rpc(rc)
         # TODO: Maybe don't create the associations automatically? And don't do
         # any hidden stuff?
-        Associations.create(db_conn, assocs_to_add)
+        Associations.create(self.db_conn, assocs_to_add)
+
+
+cdef class Users(dict):
+
+    def __init__(self, users={}, **kwargs):
+        super().__init__()
+        self.update(users)
+        self.update(kwargs)
+
+    @staticmethod
+    def load(db_conn: Connection, db_filter: UserFilter = None):
+        return db_conn.users.load(db_filter)
+
+    def delete(self, Connection db_conn):
+        db_filter = UserFilter(names=list(self.keys()))
+        db_conn.users.delete(db_filter)
+
+    def modify(self, db_conn: Connection, changes: User):
+        db_filter = UserFilter(names=list(self.keys()))
+        return db_conn.users.modify(db_filter, changes)
+
+    def create(self, db_conn: Connection):
+        db_conn.users.create(list(self.values()))
 
 
 cdef class UserFilter:
@@ -302,13 +352,13 @@ cdef class User:
 
     @staticmethod
     def load(Connection db_conn, name):
-        user = Users.load(db_conn=db_conn).get(name)
+        user = db_conn.users.load().get(name)
         if not user:
             raise RPCError(msg=f"User {name} does not exist.")
         return user
 
     def create(self, Connection db_conn):
-        Users.create(db_conn, [self])
+        db_conn.users.create([self])
 
     def delete(self, Connection db_conn):
         Users({self.name: self}).delete(db_conn)

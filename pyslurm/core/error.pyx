@@ -100,12 +100,14 @@ class RPCError(PyslurmError):
         super().__init__(self.msg)
 
 
-def verify_rpc(errno):
+def verify_rpc(errno, msg=None):
     """Verify a Slurm RPC
 
     Args:
         errno (int):
             A Slurm error value
+        msg (str):
+            An optional message
     """
     if errno != slurm.SLURM_SUCCESS:
-        raise RPCError(errno)
+        raise RPCError(errno, msg)

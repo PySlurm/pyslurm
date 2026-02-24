@@ -63,6 +63,23 @@ class DefaultAccountError(RPCError):
         return err
 
 
+def get_responses(SlurmList response):
+    cdef SlurmListItem response_ptr
+
+    #TODO: check also for count?
+    if response.is_null:
+        return []
+
+    for response_ptr in response:
+        response_str = response_ptr.to_str()
+        if response_str:
+            yield response_str
+
+
+def parse_basic_response(SlurmList response):
+    return get_responses(response)
+
+
 def parse_default_account_errors(SlurmList response):
     cdef SlurmListItem response_ptr
 

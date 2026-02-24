@@ -48,12 +48,16 @@ from pyslurm.db.tres cimport (
     _set_tres_limits,
     TrackableResources,
 )
-from pyslurm.db.connection cimport Connection
+from pyslurm.db.connection cimport Connection, ConnectionWrapper
 from pyslurm.utils cimport cstr
 from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
 from pyslurm.db.assoc cimport Associations, Association, _parse_assoc_ptr, AssociationFilter, AssociationList
 from pyslurm.xcollections cimport MultiClusterMap
 from pyslurm.utils.uint cimport u16_set_bool_flag
+
+
+cdef class UserAPI(ConnectionWrapper):
+    pass
 
 
 cdef class Users(dict):
