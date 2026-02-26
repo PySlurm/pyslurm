@@ -50,7 +50,7 @@ from pyslurm.db.util cimport (
 )
 from pyslurm.db.step cimport JobStep, JobSteps
 from pyslurm.db.stats cimport JobStatistics
-from pyslurm.db.connection cimport Connection
+from pyslurm.db.connection cimport Connection, ConnectionWrapper
 from pyslurm.utils cimport cstr
 from pyslurm.db.qos cimport QualitiesOfService
 from pyslurm.db.tres cimport (
@@ -61,6 +61,10 @@ from pyslurm.db.tres cimport (
 from pyslurm.xcollections cimport MultiClusterMap
 from pyslurm.utils.uint cimport u32_parse_bool_flag
 from libc.stdint cimport uint32_t
+
+
+cdef class JobsAPI(ConnectionWrapper):
+    pass
 
 
 cdef class JobFilter:
@@ -140,6 +144,7 @@ cdef class JobFilter:
     cdef slurmdb_job_cond_t *ptr
 
     cdef public:
+        Connection _db_conn
         ids
         start_time
         end_time
@@ -183,6 +188,7 @@ cdef class Jobs(MultiClusterMap):
             Total amount of requested memory in Mebibytes.
     """
     cdef public:
+        Connection _db_conn
         stats
         cpus
         nodes
@@ -364,6 +370,7 @@ cdef class Job:
         TrackableResources tres_data
 
     cdef public:
+        Connection _db_conn
         JobSteps steps
         JobStatistics stats
 

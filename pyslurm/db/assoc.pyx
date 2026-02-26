@@ -33,141 +33,144 @@ from pyslurm import xcollections
 from pyslurm.db.error import JobsRunningError, DefaultAccountError
 
 
-def load(db_conn: Connection, db_filter: AssociationFilter = None):
-    cdef:
-        Associations out = Associations()
-        Association assoc
-        SlurmList assoc_data
-        SlurmListItem assoc_ptr
-        QualitiesOfService qos_data
-        TrackableResources tres_data
+cdef class AssociationAPI(ConnectionWrapper):
 
-    db_conn.validate()
+    def load(self, db_filter: AssociationFilter = None):
+        cdef:
+            Associations out = Associations()
+            Association assoc
+            SlurmList assoc_data
+            SlurmListItem assoc_ptr
+            QualitiesOfService qos_data
+            TrackableResources tres_data
 
-    if not db_filter:
-        db_filter = AssociationFilter()
-    db_filter._create()
+        self.db_conn.validate()
 
-    assoc_data = SlurmList.wrap(slurmdb_associations_get(
-        db_conn.ptr, db_filter.ptr)
-    )
+        if not db_filter:
+            db_filter = AssociationFilter()
+        db_filter._create()
 
-    if assoc_data.is_null:
-        raise RPCError(msg="Failed to get Association data from slurmdbd.")
+        assoc_data = SlurmList.wrap(slurmdb_associations_get(
+            self.db_conn.ptr, db_filter.ptr)
+        )
 
-    # Fetch other necessary dependencies needed for translating some
-    # attributes (i.e QoS IDs to its name)
-    qos_data = QualitiesOfService.load(db_conn=db_conn,
-                                       name_is_key=False)
-    tres_data = TrackableResources.load(db_conn=db_conn)
+        if assoc_data.is_null:
+            raise RPCError(msg="Failed to get Association data from slurmdbd.")
 
-    for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
-        assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>assoc_ptr.data)
-        assoc.qos_data = qos_data
-        assoc.tres_data = tres_data
-        _parse_assoc_ptr(assoc)
+        # Fetch other necessary dependencies needed for translating some
+        # attributes (i.e QoS IDs to its name)
+        qos_data = self.db_conn.qos.load(name_is_key=False)
+        tres_data = self.db_conn.tres.load()
 
-        cluster = assoc.cluster
-        if cluster not in out.data:
-            out.data[cluster] = {}
-        out.data[cluster][assoc.id] = assoc
+        for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
+            assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>assoc_ptr.data)
+            assoc.qos_data = qos_data
+            assoc.tres_data = tres_data
+            self.db_conn.apply_reuse(assoc)
+            _parse_assoc_ptr(assoc)
 
-    return out
+            cluster = assoc.cluster
+            if cluster not in out.data:
+                out.data[cluster] = {}
+            out.data[cluster][assoc.id] = assoc
+
+        self.db_conn.apply_reuse(out)
+        return out
 
 
-def delete(db_conn: Connection, db_filter: AssociationFilter):
-    cdef:
-        SlurmList response
-        SlurmListItem response_ptr
+    def delete(self, db_filter: AssociationFilter):
+        cdef:
+            SlurmList response
+            SlurmListItem response_ptr
 
-    # TODO: Properly check if the filter is empty, cause it will then probably
-    # target all assocs. Or maybe that is fine and we need to clearly document
-    # to take caution
-    # if not db_filter.ids:
-    #    return
+        # TODO: Properly check if the filter is empty, cause it will then probably
+        # target all assocs. Or maybe that is fine and we need to clearly document
+        # to take caution
+        # if not db_filter.ids:
+        #    return
 
-    db_conn.validate()
-    a_filter._create()
+        self.db_conn.validate()
+        a_filter._create()
 
-    response = SlurmList.wrap(slurmdb_associations_remove(
-        db_conn.ptr, db_filter.ptr)
-    )
-    rc = slurm_errno()
-    db_conn.check_commit(rc)
+        response = SlurmList.wrap(slurmdb_associations_remove(
+            self.db_conn.ptr, db_filter.ptr)
+        )
+        rc = slurm_errno()
+        self.db_conn.check_commit(rc)
 
-    if rc == slurm.SLURM_SUCCESS or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
-        return
+        if rc == slurm.SLURM_SUCCESS or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
+            return
 
-   #if rc == slurm.ESLURM_ACCESS_DENIED or response.is_null:
-   #    verify_rpc(rc)
+       #if rc == slurm.ESLURM_ACCESS_DENIED or response.is_null:
+       #    verify_rpc(rc)
 
-    # Handle the error cases.
-    if rc == slurm.ESLURM_JOBS_RUNNING_ON_ASSOC:
-        raise JobsRunningError.from_response(response, rc)
-    elif rc == slurm.ESLURM_NO_REMOVE_DEFAULT_ACCOUNT:
-        raise DefaultAccountError.from_response(response, rc)
-    else:
+        # Handle the error cases.
+        if rc == slurm.ESLURM_JOBS_RUNNING_ON_ASSOC:
+            raise JobsRunningError.from_response(response, rc)
+        elif rc == slurm.ESLURM_NO_REMOVE_DEFAULT_ACCOUNT:
+            raise DefaultAccountError.from_response(response, rc)
+        else:
+            verify_rpc(rc)
+
+
+    def modify(self, db_filter: AssociationFilter, changes: Association):
+        cdef:
+            SlurmList response
+            SlurmListItem response_ptr
+            list out = []
+
+        self.db_conn.validate()
+        db_filter._create()
+
+        # Any data that isn't parsed yet or needs validation is done in this
+        # function.
+        _create_assoc_ptr(changes, self.db_conn)
+
+        # Returns a List of char* with the associations that were modified
+        response = SlurmList.wrap(slurmdb_associations_modify(
+            self.db_conn.ptr, db_filter.ptr, changes.ptr))
+        rc = slurm_errno()
+        self.db_conn.check_commit(rc)
+
+        if not response.is_null and response.cnt:
+            for response_ptr in response:
+                response_str = cstr.to_unicode(<char*>response_ptr.data)
+                if not response_str:
+                    continue
+
+                # TODO: Better format
+                out.append(response_str)
+
+        elif not response.is_null:
+            # There was no real error, but simply nothing has been modified
+            return None
+        else:
+            # Autodetects the last slurm error
+            raise RPCError()
+
+        return out
+
+
+    def create(self, associations):
+        cdef:
+            Association assoc
+            AssociationList assoc_list = AssociationList(owned=False)
+
+        if not associations:
+            return
+
+        self.db_conn.validate()
+
+        for i, assoc in enumerate(associations):
+            # Make sure to remove any duplicate associations, i.e. associations
+            # having the same account name set. For some reason, the slurmdbd
+            # doesn't like that.
+            if assoc not in assoc_list:
+                assoc_list.append(assoc)
+
+        rc = slurmdb_associations_add(self.db_conn.ptr, assoc_list.info)
+        self.db_conn.check_commit(rc)
         verify_rpc(rc)
-
-
-def modify(db_conn: Connection, db_filter: AssociationFilter, changes: Association):
-    cdef:
-        SlurmList response
-        SlurmListItem response_ptr
-        list out = []
-
-    db_conn.validate()
-    db_filter._create()
-
-    # Any data that isn't parsed yet or needs validation is done in this
-    # function.
-    _create_assoc_ptr(changes, db_conn)
-
-    # Returns a List of char* with the associations that were modified
-    response = SlurmList.wrap(slurmdb_associations_modify(
-        db_conn.ptr, db_filter.ptr, changes.ptr))
-    rc = slurm_errno()
-    db_conn.check_commit(rc)
-
-    if not response.is_null and response.cnt:
-        for response_ptr in response:
-            response_str = cstr.to_unicode(<char*>response_ptr.data)
-            if not response_str:
-                continue
-
-            # TODO: Better format
-            out.append(response_str)
-
-    elif not response.is_null:
-        # There was no real error, but simply nothing has been modified
-        return None
-    else:
-        # Autodetects the last slurm error
-        raise RPCError()
-
-    return out
-
-
-def create(db_conn: Connection, associations):
-    cdef:
-        Association assoc
-        AssociationList assoc_list = AssociationList(owned=False)
-
-    if not associations:
-        return
-
-    db_conn.validate()
-
-    for i, assoc in enumerate(associations):
-        # Make sure to remove any duplicate associations, i.e. associations
-        # having the same account name set. For some reason, the slurmdbd
-        # doesn't like that.
-        if assoc not in assoc_list:
-            assoc_list.append(assoc)
-
-    rc = slurmdb_associations_add(db_conn.ptr, assoc_list.info)
-    db_conn.check_commit(rc)
-    verify_rpc(rc)
 
 
 cdef class AssociationList(SlurmList):
@@ -210,22 +213,25 @@ cdef class Associations(MultiClusterMap):
                          val_type=Association,
                          id_attr=Association.id,
                          key_type=int)
+        self._db_conn = None
 
     @staticmethod
-    def load(db_conn: Connection, db_filter: AssociationFilter = None):
-        return load(db_conn, db_filter)
+    def load(db_conn: Connection, db_filter: AssociationFilter | None = None):
+        return db_conn.associations.load(db_filter)
 
-    def delete(self, db_conn: Connection):
+    def delete(self, db_conn: Connection | None = None):
+        db_conn = Connection.reuse(self._db_conn, db_conn)
         db_filter = AssociationFilter(ids=list(self.keys()))
-        delete(db_conn, db_filter, changes)
+        db_conn.associations.delete(db_filter, changes)
 
-    def modify(self, db_conn: Connection, changes: Association):
+    def modify(self, changes: Association, db_conn: Connection | None = None):
+        db_conn = Connection.reuse(self._db_conn, db_conn)
         db_filter = AssociationFilter(ids=list(self.keys()))
-        return modify(db_conn, db_filter, changes)
+        return db_conn.associations.modify(db_filter, changes)
 
-    @staticmethod
-    def create(db_conn: Connection, associations):
-        create(db_conn, associations)
+    def create(self, db_conn: Connection | None = None):
+        db_conn = Connection.reuse(self._db_conn, db_conn)
+        db_conn.associations.create(list(self.values()))
 
 
 cdef class AssociationFilter:
@@ -328,6 +334,23 @@ cdef class Association:
 #            return self.id == other.id and self.cluster == other.cluster
             return self.cluster == other.cluster and self.partition == other.partition and self.account == other.account and self.user == other.user
         return NotImplemented
+
+#   @staticmethod
+#   def load(db_conn: Connection, name: str):
+#       user = db_conn.users.load().get(name)
+#       if not user:
+#           raise RPCError(msg=f"User {name} does not exist.")
+#       return user
+
+    def create(self, db_conn: Connection = None):
+        db_conn = Connection.reuse(self._db_conn, db_conn)
+        db_conn.associations.create([self])
+
+    def delete(self, db_conn: Connection = None):
+        Associations({self.id: self}).delete(self._db_conn or db_conn)
+
+    def modify(self, changes: Association, db_conn: Connection | None = None):
+        Associations({self.id: self}).modify(changes, self._db_conn or db_conn)
 
     @property
     def account(self):
@@ -450,7 +473,7 @@ cdef _create_assoc_ptr(Association ass, conn=None):
     # _set_tres_limits will also check if specified TRES are valid and
     # translate them to its ID which is why we need to load the current TRES
     # available in the system.
-    ass.tres_data = TrackableResources.load(db_conn=conn)
+    ass.tres_data = conn.tres.load()
     _set_tres_limits(&ass.ptr.grp_tres, ass.group_tres, ass.tres_data)
     _set_tres_limits(&ass.ptr.grp_tres_mins, ass.group_tres_mins,
                     ass.tres_data)
@@ -468,7 +491,7 @@ cdef _create_assoc_ptr(Association ass, conn=None):
     # _set_qos_list will also check if specified QoS are valid and translate
     # them to its ID, which is why we need to load the current QOS available
     # in the system.
-    ass.qos_data = QualitiesOfService.load(db_conn=conn)
+    ass.qos_data = conn.qos.load()
     _set_qos_list(&ass.ptr.qos_list, ass.qos, ass.qos_data)
 
     ass.ptr.grp_jobs = u32(ass.group_jobs, zero_is_noval=False)

@@ -31,6 +31,13 @@ from pyslurm.slurm cimport (
 )
 
 
+cdef class ConnectionConfig:
+    cdef public:
+        commit_on_success
+        rollback_on_error
+        reuse_connection
+
+
 cdef class ConnectionWrapper:
     cdef:
         Connection db_conn
@@ -48,10 +55,12 @@ cdef class Connection:
         uint16_t flags
 
     cdef public:
-        commit_on_success
-        rollback_on_error
+        config
 
     cdef readonly:
         users
         accounts
-
+        associations
+        tres
+        qos
+        jobs

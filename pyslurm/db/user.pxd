@@ -61,11 +61,8 @@ cdef class UserAPI(ConnectionWrapper):
 
 
 cdef class Users(dict):
-    pass
-
-
-#   cdef class UserAddRequest:
-#       cdef slurmdb_add_assoc_cond_t *ptr
+    cdef public:
+        Connection _db_conn
 
 
 cdef class UserFilter:
@@ -106,6 +103,7 @@ cdef class User:
         associations
         coordinators
         wckeys
+        Connection _db_conn
 
     cdef readonly:
         default_association

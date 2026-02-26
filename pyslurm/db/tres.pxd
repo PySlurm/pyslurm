@@ -37,13 +37,17 @@ from pyslurm.db.util cimport (
     SlurmList,
     SlurmListItem,
 )
-from pyslurm.db.connection cimport Connection
+from pyslurm.db.connection cimport Connection, ConnectionWrapper
 
 cdef find_tres_count(char *tres_str, typ, on_noval=*, on_inf=*)
 cdef find_tres_limit(char *tres_str, typ)
 cdef merge_tres_str(char **tres_str, typ, val)
 cdef _tres_ids_to_names(char *tres_str, dict tres_id_map)
 cdef _set_tres_limits(char **dest, src, tres_data)
+
+
+cdef class TrackeblResourceAPI(ConnectionWrapper):
+    pass
 
 
 cdef class FilesystemResources(dict):

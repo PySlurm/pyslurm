@@ -64,19 +64,20 @@ cdef class AccountAPI(ConnectionWrapper):
         if account_data.is_null:
             raise RPCError(msg="Failed to get Account data from slurmdbd.")
 
-        qos_data = QualitiesOfService.load(db_conn=self.db_conn,
-                                           name_is_key=False)
-        tres_data = TrackableResources.load(db_conn=self.db_conn)
+        qos_data = self.db_conn.qos.load(name_is_key=False)
+        tres_data = self.db_conn.tres.load()
 
         for account_ptr in SlurmList.iter_and_pop(account_data):
             account = Account.from_ptr(<slurmdb_account_rec_t*>account_ptr.data)
             out[account.name] = account
+            self.db_conn.apply_reuse(account)
 
             assoc_data = SlurmList.wrap(account.ptr.assoc_list, owned=False)
             for assoc_ptr in SlurmList.iter_and_pop(assoc_data):
                 assoc = Association.from_ptr(<slurmdb_assoc_rec_t*>assoc_ptr.data)
                 assoc.qos_data = qos_data
                 assoc.tres_data = tres_data
+                self.db_conn.apply_reuse(assoc)
                 _parse_assoc_ptr(assoc)
 
                 if not assoc.user:
@@ -87,6 +88,7 @@ cdef class AccountAPI(ConnectionWrapper):
                     # TODO: maybe rename to user_associations
                     account.associations.append(assoc)
 
+        self.db_conn.apply_reuse(out)
         return out
 
 
@@ -186,7 +188,7 @@ cdef class AccountAPI(ConnectionWrapper):
         verify_rpc(rc)
         # TODO: Maybe don't create the associations automatically? And don't do
         # any hidden stuff?
-        Associations.create(self.db_conn, assocs_to_add)
+        self.db_conn.associations.create(assocs_to_add)
 
 
 cdef class Accounts(dict):
@@ -195,22 +197,25 @@ cdef class Accounts(dict):
         super().__init__()
         self.update(accounts)
         self.update(kwargs)
+        self._db_conn = None
 
     @staticmethod
     def load(db_conn: Connection, db_filter: AccountFilter = None):
         return db_conn.accounts.load(db_filter)
 
-    def delete(self, db_conn: Connection):
+    def delete(self, db_conn: Connection | None = None):
+        db_conn = Connection.reuse(self._db_conn, db_conn)
         db_filter = AccountFilter(names=list(self.keys()))
         db_conn.accounts.delete(db_filter)
 
-    def modify(self, db_conn: Connection, changes: Account):
+    def modify(self, changes: Account, db_conn: Connection | None = None):
+        db_conn = Connection.reuse(self._db_conn, db_conn)
         db_filter = AccountFilter(names=list(self.keys()))
         return db_conn.accounts.modify(db_filter, changes)
 
-    @staticmethod
-    def create(db_conn: Connection, accounts):
-        db_conn.accounts.create(accounts)
+    def create(self, db_conn: Connection | None = None):
+        db_conn = Connection.reuse(self._db_conn, db_conn)
+        db_conn.accounts.create(list(self.values()))
 
 
 cdef class AccountFilter:
@@ -315,23 +320,22 @@ cdef class Account:
         return NotImplemented
 
     @staticmethod
-    def load(Connection db_conn, name):
+    def load(db_conn: Connection, name: str):
         account = db_conn.accounts.load().get(name)
         if not account:
             # TODO: Maybe don't raise here and just return None and let the
             # Caller handle it?
             raise RPCError(msg=f"Account {name} does not exist.")
-
         return account
 
-    def create(self, Connection db_conn):
-        db_conn.accounts.create([self])
+    def create(self, db_conn: Connection | None = None):
+        Accounts({self.name: self}).create(self._db_conn or db_conn)
 
-    def delete(self, Connection db_conn):
-        Accounts({self.name: self}).delete(db_conn)
+    def delete(self, db_conn: Connection | None = None):
+        Accounts({self.name: self}).delete(self._db_conn or db_conn)
 
-    def modify(self, Connection db_conn, Account changes):
-        Accounts({self.name: self}).modify(db_conn, changes)
+    def modify(self, changes: Account, db_conn: Connection | None = None):
+        Accounts({self.name: self}).modify(changes, self._db_conn or db_conn)
 
     @property
     def name(self):

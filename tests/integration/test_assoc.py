@@ -35,7 +35,7 @@ def _modify_account(account, conn):
     changes = Account(description=new_desc)
     assert account.description != new_desc
     assoc_before = account.association.to_dict(recursive=True)
-    account.modify(conn, changes)
+    account.modify(changes, conn)
     account = Account.load(conn, account.name)
     assoc_after = account.association.to_dict(recursive=True)
     assert account.description == new_desc
@@ -49,7 +49,7 @@ def _modify_user(user, conn):
     )
     assert user.admin_level == pyslurm.AdminLevel.NONE
     assoc_before = user.default_association.to_dict(recursive=True)
-    user.modify(conn, user_changes)
+    user.modify(user_changes, conn)
     user = User.load(conn, user.name)
     assoc_after = user.default_association.to_dict(recursive=True)
     assert user.admin_level == pyslurm.AdminLevel.ADMINISTRATOR
@@ -58,25 +58,25 @@ def _modify_user(user, conn):
 
 
 def _load_assoc(assoc_id, conn):
-    assocs = pyslurm.db.Associations.load(conn)
+    assocs = conn.associations.load()
     return assocs.get(assoc_id)
 
 
 def _load_account(name, conn):
-    accounts = pyslurm.db.Accounts.load(conn)
+    accounts = conn.accounts.load()
     assert len(accounts)
     return accounts.get(name)
 
 
 def _load_user(name, conn):
-    users = pyslurm.db.Users.load(conn)
+    users = conn.users.load()
     assert len(users)
     return users.get(name)
 
 
 def _delete_account(account, conn):
     account = Account.load(conn, account.name)
-    account.delete(conn)
+    account.delete()
     conn.commit()
     assert not _load_account(account.name, conn)
     assert not _load_assoc(account.association.id, conn)
@@ -119,7 +119,7 @@ def _add_user(user, conn):
 def _delete_user(user, conn):
     assoc_id = user.default_association.id
     user = User.load(conn, user.name)
-    user.delete(conn)
+    user.delete()
     conn.commit()
     assert not _load_user(user.name, conn)
     assert not _load_assoc(assoc_id, conn)

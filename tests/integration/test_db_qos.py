@@ -27,29 +27,32 @@ import util
 
 
 def test_load_single():
-    qos = pyslurm.db.QualityOfService.load("normal")
+    with pyslurm.db.connect() as conn:
+        qos = pyslurm.db.QualityOfService.load(conn, "normal")
 
-    assert qos.name == "normal"
-    assert qos.id == 1
+        assert qos.name == "normal"
+        assert qos.id == 1
 
-    with pytest.raises(pyslurm.RPCError):
-        pyslurm.db.QualityOfService.load("qos_non_existent")
+        with pytest.raises(pyslurm.RPCError):
+            pyslurm.db.QualityOfService.load(conn, "qos_non_existent")
 
 
 def test_parse_all(submit_job):
-    qos = pyslurm.db.QualityOfService.load("normal")
-    qos_dict = qos.to_dict()
+    with pyslurm.db.connect() as conn:
+        qos = pyslurm.db.QualityOfService.load(conn, "normal")
+        qos_dict = qos.to_dict()
 
-    assert qos_dict
-    assert qos_dict["name"] == qos.name
+        assert qos_dict
+        assert qos_dict["name"] == qos.name
 
 
 def test_load_all():
-    qos = pyslurm.db.QualitiesOfService.load()
-    assert qos
-
+    with pyslurm.db.connect() as conn:
+        qos = conn.qos.load()
+        assert qos
 
 def test_load_with_filter_name():
-    qfilter = pyslurm.db.QualityOfServiceFilter(names=["non_existent"])
-    qos = pyslurm.db.QualitiesOfService.load(qfilter)
-    assert not qos
+    with pyslurm.db.connect() as conn:
+        db_filter = pyslurm.db.QualityOfServiceFilter(names=["non_existent"])
+        qos = conn.qos.load(db_filter)
+        assert not qos

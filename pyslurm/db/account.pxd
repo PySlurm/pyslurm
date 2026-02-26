@@ -61,7 +61,8 @@ cdef class AccountAPI(ConnectionWrapper):
 
 
 cdef class Accounts(dict):
-    pass
+    cdef public:
+        Connection _db_conn
 
 
 cdef class AccountFilter:
@@ -101,6 +102,7 @@ cdef class Account:
         associations
         coordinators
         association
+        Connection _db_conn
 
     @staticmethod
     cdef Account from_ptr(slurmdb_account_rec_t *in_ptr)

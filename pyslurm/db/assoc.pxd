@@ -46,7 +46,7 @@ from pyslurm.db.tres cimport (
     _set_tres_limits,
     TrackableResources,
 )
-from pyslurm.db.connection cimport Connection
+from pyslurm.db.connection cimport Connection, ConnectionWrapper
 from pyslurm.utils cimport cstr
 from pyslurm.utils.uint cimport *
 from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
@@ -56,8 +56,13 @@ cdef _parse_assoc_ptr(Association ass)
 cdef _create_assoc_ptr(Association ass, conn=*)
 
 
-cdef class Associations(MultiClusterMap):
+cdef class AssociationAPI(ConnectionWrapper):
     pass
+
+
+cdef class Associations(MultiClusterMap):
+    cdef public:
+        Connection _db_conn
 
 
 cdef class AssociationFilter:
@@ -82,6 +87,7 @@ cdef class Association:
         owned
 
     cdef public:
+        Connection _db_conn
         default_qos
 
         group_tres

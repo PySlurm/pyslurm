@@ -45,6 +45,200 @@ from pyslurm.utils.helpers import (
 from pyslurm.enums import SchedulerType
 
 
+cdef class JobsAPI(ConnectionWrapper):
+
+    def load(self, db_filter: JobFilter | None = None):
+        """Load Jobs from the Slurm Database
+
+        Implements the slurmdb_jobs_get RPC.
+
+        Args:
+            db_filter (pyslurm.db.JobFilter):
+                A search filter that the slurmdbd will apply when retrieving
+                Jobs from the database.
+
+        Returns:
+            (pyslurm.db.Jobs): A Collection of database Jobs.
+
+        Raises:
+            (pyslurm.RPCError): When getting the Jobs from the Database was not
+                successful
+
+        Examples:
+            Without a Filter the default behaviour applies, which is
+            simply retrieving all Jobs from the same day:
+
+            >>> import pyslurm
+            >>> db_jobs = pyslurm.db.Jobs.load()
+            >>> print(db_jobs)
+            pyslurm.db.Jobs({1: pyslurm.db.Job(1), 2: pyslurm.db.Job(2)})
+            >>> print(db_jobs[1])
+            pyslurm.db.Job(1)
+
+            Now with a Job Filter, so only Jobs that have specific Accounts
+            are returned:
+
+            >>> import pyslurm
+            >>> accounts = ["acc1", "acc2"]
+            >>> db_filter = pyslurm.db.JobFilter(accounts=accounts)
+            >>> db_jobs = pyslurm.db.Jobs.load(db_filter)
+        """
+        cdef:
+            Jobs out = Jobs()
+            Job job
+            JobFilter cond = db_filter
+            SlurmList job_data
+            SlurmListItem job_ptr
+            QualitiesOfService qos_data
+            TrackableResources tres_data
+
+        self.db_conn.validate()
+
+        # Prepare SQL Filter
+        if not db_filter:
+            db_filter = JobFilter()
+
+        db_filter._db_conn = db_conn
+        db_filter._create()
+
+        # Fetch Job data
+        job_data = SlurmList.wrap(slurmdb_jobs_get(self.db_conn.ptr, db_filter.ptr))
+        if job_data.is_null:
+            raise RPCError(msg="Failed to get Jobs from slurmdbd")
+
+        # Fetch other necessary dependencies needed for translating some
+        # attributes (i.e QoS IDs to its name)
+        qos_data = self.db_conn.qos.load(name_is_key=False)
+        tres_data = self.db_conn.tres.load()
+
+        # TODO: How to handle the possibility of duplicate job ids that could
+        # appear if IDs on a cluster are reset?
+        for job_ptr in SlurmList.iter_and_pop(job_data):
+            job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
+            job.qos_data = qos_data
+            job.tres_data = tres_data
+            job._create_steps()
+            job.stats = JobStatistics.from_steps(job.steps)
+
+            elapsed = job.elapsed_time if job.elapsed_time else 0
+            cpus = job.cpus if job.cpus else 1
+            job.stats.elapsed_cpu_time = elapsed * cpus
+
+            cluster = job.cluster
+            if cluster not in out.data:
+                out.data[cluster] = {}
+            out[cluster][job.id] = job
+
+            out._add_stats(job)
+
+        return out
+
+    def modify(self, db_filter: JobFilter | Jobs, changes: Job):
+        """Modify Slurm database Jobs.
+
+        Implements the slurm_job_modify RPC.
+
+        Args:
+            db_filter (Union[pyslurm.db.JobFilter, pyslurm.db.Jobs]):
+                A filter to decide which Jobs should be modified.
+            changes (pyslurm.db.Job):
+                Another [pyslurm.db.Job][] object that contains all the
+                changes to apply. Check the `Other Parameters` of the
+                [pyslurm.db.Job][] class to see which properties can be
+                modified.
+
+        Returns:
+            (list[int]): A list of Jobs that were modified
+
+        Raises:
+            (pyslurm.RPCError): When a failure modifying the Jobs occurred.
+
+        Examples:
+            In its simplest form, you can do something like this:
+
+            >>> import pyslurm
+            >>>
+            >>> db_filter = pyslurm.db.JobFilter(ids=[9999])
+            >>> changes = pyslurm.db.Job(comment="A comment for the job")
+            >>> modified_jobs = pyslurm.db.Jobs.modify(db_filter, changes)
+            >>> print(modified_jobs)
+            [9999]
+
+            In the above example, the changes will be automatically committed
+            if successful.
+            You can however also control this manually by providing your own
+            connection object:
+
+            >>> import pyslurm
+            >>>
+            >>> db_conn = pyslurm.db.Connection.open()
+            >>> db_filter = pyslurm.db.JobFilter(ids=[9999])
+            >>> changes = pyslurm.db.Job(comment="A comment for the job")
+            >>> modified_jobs = pyslurm.db.Jobs.modify(
+            ...             db_filter, changes, db_conn)
+
+            Now you can first examine which Jobs have been modified:
+
+            >>> print(modified_jobs)
+            [9999]
+
+            And then you can actually commit the changes:
+
+            >>> db_conn.commit()
+
+            You can also explicitly rollback these changes instead of
+            committing, so they will not become active:
+
+            >>> db_conn.rollback()
+        """
+        cdef:
+            JobFilter cond
+            SlurmList response
+            SlurmListItem response_ptr
+            list out = []
+
+        self.db_conn.validate()
+
+        # Prepare SQL Filter
+        if isinstance(db_filter, Jobs):
+            job_ids = [job.id for job in self]
+            cond = JobFilter(ids=job_ids)
+
+        cond._db_conn = db_conn
+        cond._create()
+
+        # Modify Jobs, get the result
+        # This returns a List of char* with the Jobs ids that were
+        # modified
+        response = SlurmList.wrap(
+                slurmdb_job_modify(self.db_conn.ptr, cond.ptr, changes.ptr))
+
+        if not response.is_null and response.cnt:
+            for response_ptr in response:
+                response_str = cstr.to_unicode(<char*>response_ptr.data)
+                if not response_str:
+                    continue
+
+                # The strings in the list returned above have a structure
+                # like this:
+                #
+                # "<job_id> submitted at <timestamp>"
+                #
+                # We are just interested in the Job-ID, so extract it
+                job_id = response_str.split(" ")[0]
+                if job_id and job_id.isdigit():
+                    out.append(int(job_id))
+
+        elif not response.is_null:
+            # There was no real error, but simply nothing has been modified
+            raise RPCError(msg="Nothing was modified")
+        else:
+            # Autodetects the last slurm error
+            raise RPCError()
+
+        return out
+
+
 cdef class JobFilter:
 
     def __cinit__(self):
@@ -53,6 +247,7 @@ cdef class JobFilter:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+        self._db_conn = None
 
     def __dealloc__(self):
         self._dealloc()
@@ -75,7 +270,7 @@ cdef class JobFilter:
             return None
 
         qos_id_list = []
-        qos_data = QualitiesOfService.load()
+        qos_data = self._db_conn.qos.load(self._db_conn, name_is_key=True)
         for user_input in self.qos:
             found = False
             for qos in qos_data.values():
@@ -199,6 +394,7 @@ cdef class Jobs(MultiClusterMap):
                          id_attr=Job.id,
                          key_type=int)
         self._reset_stats()
+        self._db_conn = None
 
     @staticmethod
     def load(Connection db_conn, JobFilter db_filter=None):
@@ -239,75 +435,9 @@ cdef class Jobs(MultiClusterMap):
             >>> db_filter = pyslurm.db.JobFilter(accounts=accounts)
             >>> db_jobs = pyslurm.db.Jobs.load(db_filter)
         """
-        cdef:
-            Jobs out = Jobs()
-            Job job
-            JobFilter cond = db_filter
-            SlurmList job_data
-            SlurmListItem job_ptr
-            QualitiesOfService qos_data
-            TrackableResources tres_data
+        return db_conn.jobs.load(db_filter)
 
-        db_conn.validate()
-
-        # Prepare SQL Filter
-        if not db_filter:
-            cond = JobFilter()
-        cond._create()
-
-        # Fetch Job data
-        job_data = SlurmList.wrap(slurmdb_jobs_get(db_conn.ptr, cond.ptr))
-        if job_data.is_null:
-            raise RPCError(msg="Failed to get Jobs from slurmdbd")
-
-        # Fetch other necessary dependencies needed for translating some
-        # attributes (i.e QoS IDs to its name)
-        qos_data = QualitiesOfService.load(db_conn=db_conn,
-                                           name_is_key=False)
-        tres_data = TrackableResources.load(db_conn=db_conn)
-
-        # TODO: How to handle the possibility of duplicate job ids that could
-        # appear if IDs on a cluster are reset?
-        for job_ptr in SlurmList.iter_and_pop(job_data):
-            job = Job.from_ptr(<slurmdb_job_rec_t*>job_ptr.data)
-            job.qos_data = qos_data
-            job.tres_data = tres_data
-            job._create_steps()
-            job.stats = JobStatistics.from_steps(job.steps)
-
-            elapsed = job.elapsed_time if job.elapsed_time else 0
-            cpus = job.cpus if job.cpus else 1
-            job.stats.elapsed_cpu_time = elapsed * cpus
-
-            cluster = job.cluster
-            if cluster not in out.data:
-                out.data[cluster] = {}
-            out[cluster][job.id] = job
-
-            out._add_stats(job)
-
-        return out
-
-    def _reset_stats(self):
-        self.stats = JobStatistics()
-        self.cpus = 0
-        self.nodes = 0
-        self.memory = 0
-
-    def _add_stats(self, job):
-        self.stats.add(job.stats)
-        self.cpus += job.cpus
-        self.nodes += job.num_nodes
-        self.memory += job.memory
-
-    def calc_stats(self):
-        """(Re)Calculate Statistics for the Job Collection."""
-        self._reset_stats()
-        for job in self.values():
-            self._add_stats(job)
-
-    @staticmethod
-    def modify(Connection db_conn, db_filter, Job changes):
+    def modify(self, changes: Job, db_conn: Connection | None = None):
         """Modify Slurm database Jobs.
 
         Implements the slurm_job_modify RPC.
@@ -367,52 +497,27 @@ cdef class Jobs(MultiClusterMap):
 
             >>> db_conn.rollback()
         """
-        cdef:
-            JobFilter cond
-            SlurmList response
-            SlurmListItem response_ptr
-            list out = []
+        db_conn = Connection.reuse(self._db_conn, db_conn)
+        db_filter = JobFilter(names=list(self.keys()))
+        return db_conn.jobs.modify(db_filter, changes)
 
-        db_conn.validate()
+    def _reset_stats(self):
+        self.stats = JobStatistics()
+        self.cpus = 0
+        self.nodes = 0
+        self.memory = 0
 
-        # Prepare SQL Filter
-        if isinstance(db_filter, Jobs):
-            job_ids = [job.id for job in self]
-            cond = JobFilter(ids=job_ids)
-        else:
-            cond = <JobFilter>db_filter
-        cond._create()
+    def _add_stats(self, job):
+        self.stats.add(job.stats)
+        self.cpus += job.cpus
+        self.nodes += job.num_nodes
+        self.memory += job.memory
 
-        # Modify Jobs, get the result
-        # This returns a List of char* with the Jobs ids that were
-        # modified
-        response = SlurmList.wrap(
-                slurmdb_job_modify(db_conn.ptr, cond.ptr, changes.ptr))
-
-        if not response.is_null and response.cnt:
-            for response_ptr in response:
-                response_str = cstr.to_unicode(<char*>response_ptr.data)
-                if not response_str:
-                    continue
-
-                # The strings in the list returned above have a structure
-                # like this:
-                #
-                # "<job_id> submitted at <timestamp>"
-                #
-                # We are just interested in the Job-ID, so extract it
-                job_id = response_str.split(" ")[0]
-                if job_id and job_id.isdigit():
-                    out.append(int(job_id))
-
-        elif not response.is_null:
-            # There was no real error, but simply nothing has been modified
-            raise RPCError(msg="Nothing was modified")
-        else:
-            # Autodetects the last slurm error
-            raise RPCError()
-
-        return out
+    def calc_stats(self):
+        """(Re)Calculate Statistics for the Job Collection."""
+        self._reset_stats()
+        for job in self.values():
+            self._add_stats(job)
 
 
 cdef class Job:
@@ -450,10 +555,18 @@ cdef class Job:
         return wrap
 
     @staticmethod
-    def load(job_id, cluster=None, with_script=False, with_env=False):
+    def load(
+        db_conn: Connection,
+        job_id: int,
+        cluster = None,
+        with_script = False,
+        with_env = False
+    ):
         """Load the information for a specific Job from the Database.
 
         Args:
+            db_conn (pyslurm.db.Connection):
+                A slurmdbd connection.
             job_id (int):
                 ID of the Job to be loaded.
             cluster (str):
@@ -527,7 +640,7 @@ cdef class Job:
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.id})'
 
-    def modify(self, Connection db_conn, changes):
+    def modify(self, changes, db_conn: Connection | None = None):
         """Modify a Slurm database Job.
 
         Args:
@@ -544,8 +657,7 @@ cdef class Job:
         Raises:
             (pyslurm.RPCError): When modifying the Job failed.
         """
-        cdef JobFilter jfilter = JobFilter(ids=[self.id])
-        Jobs.modify(db_conn, jfilter, changes)
+        Jobs({self.id: self}).modify(changes, self._db_conn or db_conn)
 
     @property
     def account(self):

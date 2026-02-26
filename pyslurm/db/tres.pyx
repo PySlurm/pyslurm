@@ -42,6 +42,37 @@ TRES_NAME_REQUIRED = ["fs", "license", "interconnect", "gres"]
 gres_pattern = re.compile(r'[/:]')
 
 
+cdef class TrackableResourceAPI(ConnectionWrapper):
+
+    def load(self, db_filter: TrackableResourceFilter = None):
+        """Load Trackable Resources from the Database."""
+        cdef:
+            TrackableResources out = TrackableResources()
+            TrackableResource tres
+            SlurmList tres_data
+            SlurmListItem tres_ptr
+
+        self.db_conn.validate()
+
+        if not db_filter:
+            db_filter = TrackableResourceFilter()
+
+        db_filter._create()
+        tres_data = SlurmList.wrap(slurmdb_tres_get(self.db_conn.ptr, db_filter.ptr))
+
+        if tres_data.is_null:
+            raise RPCError(msg="Failed to get TRES data from slurmdbd")
+
+        # Setup TRES objects
+        for tres_ptr in SlurmList.iter_and_pop(tres_data):
+            tres = TrackableResource.from_ptr(
+                    <slurmdb_tres_rec_t*>tres_ptr.data)
+            out._handle_tres_type(tres)
+            out._id_map[tres.id] = tres
+
+        return out
+
+
 cdef class FilesystemResources(dict):
 
     def to_dict(self, recursive=False):
@@ -296,28 +327,7 @@ cdef class TrackableResources:
     @staticmethod
     def load(Connection db_conn):
         """Load Trackable Resources from the Database."""
-        cdef:
-            TrackableResources out = TrackableResources()
-            TrackableResource tres
-            SlurmList tres_data
-            SlurmListItem tres_ptr
-            TrackableResourceFilter db_filter = TrackableResourceFilter()
-
-        db_conn.validate()
-        db_filter._create()
-        tres_data = SlurmList.wrap(slurmdb_tres_get(db_conn.ptr, db_filter.ptr))
-
-        if tres_data.is_null:
-            raise RPCError(msg="Failed to get TRES data from slurmdbd")
-
-        # Setup TRES objects
-        for tres_ptr in SlurmList.iter_and_pop(tres_data):
-            tres = TrackableResource.from_ptr(
-                    <slurmdb_tres_rec_t*>tres_ptr.data)
-            out._handle_tres_type(tres)
-            out._id_map[tres.id] = tres
-
-        return out
+        return db_conn.tres.load()
 
     @staticmethod
     cdef find_count_in_str(char *tres_str, typ, on_noval=0, on_inf=0):

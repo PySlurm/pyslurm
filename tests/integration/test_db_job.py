@@ -38,7 +38,9 @@ import json
 def test_load_single(submit_job):
     job = submit_job()
     util.wait()
-    db_job = pyslurm.db.Job.load(job.id)
+
+    with pyslurm.db.connect() as conn:
+        db_job = pyslurm.db.Job.load(job.id)
 
     assert db_job.id == job.id
 
@@ -49,7 +51,10 @@ def test_load_single(submit_job):
 def test_parse_all(submit_job):
     job = submit_job()
     util.wait()
-    db_job = pyslurm.db.Job.load(job.id)
+
+    with pyslurm.db.connect() as conn:
+        db_job = pyslurm.db.Job.load(job.id)
+
     job_dict = db_job.to_dict()
 
     assert job_dict["stats"]
@@ -60,8 +65,9 @@ def test_to_json(submit_job):
     job = submit_job()
     util.wait()
 
-    jfilter = pyslurm.db.JobFilter(ids=[job.id])
-    jobs = pyslurm.db.Jobs.load(jfilter)
+    with pyslurm.db.connect() as conn:
+        jfilter = pyslurm.db.JobFilter(ids=[job.id])
+        jobs = conn.jobs.load(jfilter)
 
     json_data = jobs.to_json()
     dict_data = json.loads(json_data)
@@ -74,29 +80,30 @@ def test_modify(submit_job):
     job = submit_job()
     util.wait(5)
 
-    jfilter = pyslurm.db.JobFilter(ids=[job.id])
-    changes = pyslurm.db.Job(comment="test comment")
-    pyslurm.db.Jobs.modify(jfilter, changes)
+    with pyslurm.db.connect() as conn:
+        jfilter = pyslurm.db.JobFilter(ids=[job.id])
+        changes = pyslurm.db.Job(comment="test comment")
+        pyslurm.db.Jobs.modify(jfilter, changes)
 
     job = pyslurm.db.Job.load(job.id)
     assert job.comment == "test comment"
 
 
-def test_modify_with_existing_conn(submit_job):
+def test_modify_with_no_auto_commit(submit_job):
     job = submit_job()
     util.wait(5)
 
-    conn = pyslurm.db.Connection.open()
-    jfilter = pyslurm.db.JobFilter(ids=[job.id])
-    changes = pyslurm.db.Job(comment="test comment")
-    pyslurm.db.Jobs.modify(jfilter, changes, conn)
+    with pyslurm.db.connect(commit_on_success=False) as conn:
+        jfilter = pyslurm.db.JobFilter(ids=[job.id])
+        changes = pyslurm.db.Job(comment="test comment")
+        conn.jobs.modify(jfilter, changes)
 
-    job = pyslurm.db.Job.load(job.id)
-    assert job.comment != "test comment"
+        job = pyslurm.db.Job.load(job.id)
+        assert job.comment != "test comment"
 
-    conn.commit()
-    job = pyslurm.db.Job.load(job.id)
-    assert job.comment == "test comment"
+        conn.commit()
+        job = pyslurm.db.Job.load(job.id)
+        assert job.comment == "test comment"
 
 
 def test_if_steps_exist(submit_job):
@@ -128,12 +135,16 @@ def test_load_with_script(submit_job):
     script = util.create_job_script()
     job = submit_job(script=script)
     util.wait(5)
-    db_job = pyslurm.db.Job.load(job.id, with_script=True)
+
+    with pyslurm.db.connect() as conn:
+        db_job = pyslurm.db.Job.load(job.id, with_script=True)
     assert db_job.script == script
 
 
 def test_load_with_env(submit_job):
     job = submit_job()
     util.wait(5)
-    db_job = pyslurm.db.Job.load(job.id, with_env=True)
+
+    with pyslurm.db.connect() as conn:
+        db_job = pyslurm.db.Job.load(job.id, with_env=True)
     assert db_job.environment

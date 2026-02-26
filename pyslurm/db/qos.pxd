@@ -38,15 +38,20 @@ from pyslurm.db.util cimport (
     SlurmListItem,
     make_char_list,
 )
-from pyslurm.db.connection cimport Connection
+from pyslurm.db.connection cimport Connection, ConnectionWrapper
 from pyslurm.utils cimport cstr
 from pyslurm.utils.uint cimport u16_set_bool_flag
 
 cdef _set_qos_list(list_t **in_list, vals, QualitiesOfService data)
 
 
-cdef class QualitiesOfService(dict):
+cdef class QualityOfServiceAPI(ConnectionWrapper):
     pass
+
+
+cdef class QualitiesOfService(dict):
+    cdef public:
+        Connection _db_conn
 
 
 cdef class QualityOfServiceFilter:
@@ -61,6 +66,9 @@ cdef class QualityOfServiceFilter:
 
 
 cdef class QualityOfService:
+    cdef public:
+        Connection _db_conn
+
     cdef slurmdb_qos_rec_t *ptr
 
     @staticmethod
