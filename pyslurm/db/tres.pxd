@@ -46,7 +46,7 @@ cdef _tres_ids_to_names(char *tres_str, dict tres_id_map)
 cdef _set_tres_limits(char **dest, src, tres_data)
 
 
-cdef class TrackeblResourceAPI(ConnectionWrapper):
+cdef class TrackableResourceAPI(ConnectionWrapper):
     pass
 
 
