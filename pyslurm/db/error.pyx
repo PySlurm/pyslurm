@@ -96,7 +96,7 @@ def get_assoc_response(SlurmList response):
         yield parse_assoc_str(resp)
 
 
-def parse_default_account_errors_2(SlurmList response):
+def parse_default_account_errors(SlurmList response):
     assocs = []
     for item in get_assoc_response(response):
         info = AssociationChangeInfo(
