@@ -1,7 +1,7 @@
 #########################################################################
 # user.pyx - pyslurm slurmdbd user api
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2026 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -22,7 +22,13 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import RPCError, slurm_errno, verify_rpc
+from pyslurm.core.error import (
+    RPCError,
+    slurm_errno,
+    verify_rpc,
+    NotFoundError,
+    _get_modify_arguments_for,
+)
 from pyslurm.utils.helpers import (
     instance_to_dict,
     user_to_uid,
@@ -32,11 +38,12 @@ from pyslurm import xcollections
 from pyslurm.utils.enums import SlurmEnum
 from pyslurm.db.error import JobsRunningError, parse_basic_response
 from pyslurm.enums import AdminLevel
+from typing import Any, Union, Optional, List, Dict
 
 
 cdef class UserAPI(ConnectionWrapper):
 
-    def load(self, db_filter: UserFilter = None):
+    def load(self, db_filter: Optional[UserFilter] = None):
         cdef:
             Users out = Users()
             User user
@@ -127,9 +134,10 @@ cdef class UserAPI(ConnectionWrapper):
             verify_rpc(rc)
 
 
-    def modify(self, db_filter: UserFilter, changes: User):
+    def modify(self, db_filter: UserFilter, changes: Optional[User] = None, **kwargs: Any):
         cdef:
             SlurmList response
+            User _changes
             SlurmListItem response_ptr
             list out = []
 
@@ -139,11 +147,13 @@ cdef class UserAPI(ConnectionWrapper):
         #if not db_filter.names:
         #    return
 
+        _changes = _get_modify_arguments_for(User, changes, **kwargs)
+
         self.db_conn.validate()
         db_filter._create()
 
         response = SlurmList.wrap(slurmdb_users_modify(
-            self.db_conn.ptr, db_filter.ptr, changes.ptr)
+            self.db_conn.ptr, db_filter.ptr, _changes.ptr)
         )
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
@@ -182,7 +192,7 @@ cdef class UserAPI(ConnectionWrapper):
 #           raise RPCError(msg="Failed to modify users.")
 
 
-    def create(self, users):
+    def create(self, users: List[str]):
         cdef:
             User user
             SlurmList user_list
@@ -240,20 +250,20 @@ cdef class Users(dict):
         self._db_conn = None
 
     @staticmethod
-    def load(db_conn: Connection, db_filter: UserFilter = None):
+    def load(db_conn: Connection, db_filter: Optional[UserFilter] = None):
         return db_conn.users.load(db_filter)
 
-    def delete(self, db_conn: Connection | None = None):
+    def delete(self, db_conn: Optional[Connection] = None):
         db_conn = Connection.reuse(self._db_conn, db_conn)
         db_filter = UserFilter(names=list(self.keys()))
         db_conn.users.delete(db_filter)
 
-    def modify(self, changes: User, db_conn: Connection | None = None):
+    def modify(self, changes: Optional[User] = None, db_conn: Optional[Connection] = None, **kwargs: Any):
         db_conn = Connection.reuse(self._db_conn, db_conn)
         db_filter = UserFilter(names=list(self.keys()))
-        return db_conn.users.modify(db_filter, changes)
+        return db_conn.users.modify(db_filter, changes=changes, **kwargs)
 
-    def create(self, db_conn: Connection | None = None):
+    def create(self, db_conn: Optional[Connection] = None):
         db_conn = Connection.reuse(self._db_conn, db_conn)
         db_conn.users.create(list(self.values()))
 
@@ -263,7 +273,7 @@ cdef class UserFilter:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -303,7 +313,7 @@ cdef class User:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name: str = None, **kwargs: Any):
         self._alloc_impl()
         self.name = name
         self._init_defaults()
@@ -343,7 +353,7 @@ cdef class User:
         wrap._init_defaults()
         return wrap
 
-    def to_dict(self, recursive=False):
+    def to_dict(self, recursive: bool = False):
         """Database User information formatted as a dictionary.
 
         Returns:
@@ -351,7 +361,7 @@ cdef class User:
         """
         return instance_to_dict(self, recursive)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, User):
             return self.name == other.name
         return NotImplemented
@@ -360,17 +370,22 @@ cdef class User:
     def load(db_conn: Connection, name: str):
         user = db_conn.users.load().get(name)
         if not user:
-            raise RPCError(msg=f"User {name} does not exist.")
+            raise NotFoundError(msg=f"User {name} does not exist.")
         return user
 
-    def create(self, db_conn: Connection = None):
+    def create(self, db_conn: Optional[Connection] = None):
         Users({self.name: self}).create(self._db_conn or db_conn)
 
-    def delete(self, db_conn: Connection = None):
+    def delete(self, db_conn: Optional[Connection] = None):
         Users({self.name: self}).delete(self._db_conn or db_conn)
 
-    def modify(self, changes: User, db_conn: Connection | None = None):
-        Users({self.name: self}).modify(changes, self._db_conn or db_conn)
+    def modify(
+        self,
+        changes: Optional[User] = None,
+        db_conn: Optional[Connection] = None,
+        **kwargs: Any
+    ):
+        Users({self.name: self}).modify(changes=changes, db_conn=(self._db_conn or db_conn), **kwargs)
 
     @property
     def name(self):

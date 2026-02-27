@@ -1,7 +1,7 @@
 #########################################################################
 # account.pyx - pyslurm slurmdbd account api
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2026 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -22,7 +22,13 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import RPCError, verify_rpc, slurm_errno
+from pyslurm.core.error import (
+    RPCError,
+    slurm_errno,
+    verify_rpc,
+    NotFoundError,
+    _get_modify_arguments_for,
+)
 from pyslurm.utils.helpers import (
     instance_to_dict,
     user_to_uid,
@@ -34,11 +40,12 @@ from pyslurm.db.error import (
     JobsRunningError,
     parse_basic_response,
 )
+from typing import Any, Union, Optional, List, Dict
 
 
 cdef class AccountAPI(ConnectionWrapper):
 
-    def load(self, db_filter: AccountFilter = None):
+    def load(self, db_filter: Optional[AccountFilter] = None):
         cdef:
             Accounts out = Accounts()
             Account account
@@ -125,17 +132,20 @@ cdef class AccountAPI(ConnectionWrapper):
             verify_rpc(rc)
 
 
-    def modify(self, db_filter: AccountFilter, changes: Account):
+    def modify(self, db_filter: AccountFilter, changes: Optional[Account] = None, **kwargs: Any):
         cdef:
             SlurmList response
+            Account _changes
             SlurmListItem response_ptr
             list out = []
+
+        _changes = _get_modify_arguments_for(Account, changes, **kwargs)
 
         self.db_conn.validate()
         db_filter._create()
 
         response = SlurmList.wrap(slurmdb_accounts_modify(
-            self.db_conn.ptr, db_filter.ptr, changes.ptr)
+            self.db_conn.ptr, db_filter.ptr, _changes.ptr)
         )
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
@@ -165,7 +175,7 @@ cdef class AccountAPI(ConnectionWrapper):
 #           raise RPCError(msg="Failed to modify accounts.")
 
 
-    def create(self, accounts):
+    def create(self, accounts: List[str]):
         cdef:
             Account account
             SlurmList account_list
@@ -193,27 +203,27 @@ cdef class AccountAPI(ConnectionWrapper):
 
 cdef class Accounts(dict):
 
-    def __init__(self, accounts={}, **kwargs):
+    def __init__(self, accounts={}, **kwargs: Any):
         super().__init__()
         self.update(accounts)
         self.update(kwargs)
         self._db_conn = None
 
     @staticmethod
-    def load(db_conn: Connection, db_filter: AccountFilter = None):
+    def load(db_conn: Connection, db_filter: Optional[AccountFilter] = None):
         return db_conn.accounts.load(db_filter)
 
-    def delete(self, db_conn: Connection | None = None):
+    def delete(self, db_conn: Optional[Connection] = None):
         db_conn = Connection.reuse(self._db_conn, db_conn)
         db_filter = AccountFilter(names=list(self.keys()))
         db_conn.accounts.delete(db_filter)
 
-    def modify(self, changes: Account, db_conn: Connection | None = None):
+    def modify(self, changes: Optional[Account] = None, db_conn: Optional[Connection] = None, **kwargs: Any):
         db_conn = Connection.reuse(self._db_conn, db_conn)
         db_filter = AccountFilter(names=list(self.keys()))
-        return db_conn.accounts.modify(db_filter, changes)
+        return db_conn.accounts.modify(db_filter, changes, **kwargs)
 
-    def create(self, db_conn: Connection | None = None):
+    def create(self, db_conn: Optional[Connection] = None):
         db_conn = Connection.reuse(self._db_conn, db_conn)
         db_conn.accounts.create(list(self.values()))
 
@@ -223,7 +233,7 @@ cdef class AccountFilter:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -265,7 +275,7 @@ cdef class Account:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, name=None, description=None, organization=None, **kwargs):
+    def __init__(self, name: str = None, description: str = None, organization: str = None, **kwargs: Any):
         self._alloc_impl()
         self._init_defaults()
         self.name = name
@@ -306,7 +316,7 @@ cdef class Account:
         wrap._init_defaults()
         return wrap
 
-    def to_dict(self, recursive=False):
+    def to_dict(self, recursive: bool = False):
         """Database Account information formatted as a dictionary.
 
         Returns:
@@ -314,7 +324,7 @@ cdef class Account:
         """
         return instance_to_dict(self, recursive)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, Account):
             return self.name == other.name
         return NotImplemented
@@ -325,17 +335,17 @@ cdef class Account:
         if not account:
             # TODO: Maybe don't raise here and just return None and let the
             # Caller handle it?
-            raise RPCError(msg=f"Account {name} does not exist.")
+            raise NotFoundError(msg=f"Account {name} does not exist.")
         return account
 
-    def create(self, db_conn: Connection | None = None):
+    def create(self, db_conn: Optional[Connection] = None):
         Accounts({self.name: self}).create(self._db_conn or db_conn)
 
-    def delete(self, db_conn: Connection | None = None):
+    def delete(self, db_conn: Optional[Connection] = None):
         Accounts({self.name: self}).delete(self._db_conn or db_conn)
 
-    def modify(self, changes: Account, db_conn: Connection | None = None):
-        Accounts({self.name: self}).modify(changes, self._db_conn or db_conn)
+    def modify(self, changes: Optional[Account] = None, db_conn: Optional[Connection] = None, **kwargs: Any):
+        Accounts({self.name: self}).modify(changes=changes, db_conn=(self._db_conn or db_conn), **kwargs)
 
     @property
     def name(self):

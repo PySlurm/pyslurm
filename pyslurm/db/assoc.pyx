@@ -1,7 +1,7 @@
 #########################################################################
 # assoc.pyx - pyslurm slurmdbd association api
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2026 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -22,7 +22,13 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import RPCError, verify_rpc, slurm_errno
+from pyslurm.core.error import (
+    RPCError,
+    slurm_errno,
+    verify_rpc,
+    NotFoundError,
+    _get_modify_arguments_for,
+)
 from pyslurm.utils.helpers import (
     instance_to_dict,
     user_to_uid,
@@ -31,11 +37,12 @@ from pyslurm.utils.uint import *
 from pyslurm import settings
 from pyslurm import xcollections
 from pyslurm.db.error import JobsRunningError, DefaultAccountError
+from typing import Any, Union, Optional, List, Dict
 
 
 cdef class AssociationAPI(ConnectionWrapper):
 
-    def load(self, db_filter: AssociationFilter = None):
+    def load(self, db_filter: Optional[AssociationFilter] = None):
         cdef:
             Associations out = Associations()
             Association assoc
@@ -112,23 +119,28 @@ cdef class AssociationAPI(ConnectionWrapper):
         else:
             verify_rpc(rc)
 
-
-    def modify(self, db_filter: AssociationFilter, changes: Association):
+    def modify(self, db_filter: AssociationFilter, changes: Optional[Association] = None, **kwargs: Any):
         cdef:
+            Association _changes
             SlurmList response
             SlurmListItem response_ptr
             list out = []
+
+        # TODO: prohibit mixing multiple user assocs with account assocs
+        # This is not possible, and the request will simply affect nothing...
+
+        _changes = _get_modify_arguments_for(Association, changes, **kwargs)
 
         self.db_conn.validate()
         db_filter._create()
 
         # Any data that isn't parsed yet or needs validation is done in this
         # function.
-        _create_assoc_ptr(changes, self.db_conn)
+        _create_assoc_ptr(_changes, self.db_conn)
 
         # Returns a List of char* with the associations that were modified
         response = SlurmList.wrap(slurmdb_associations_modify(
-            self.db_conn.ptr, db_filter.ptr, changes.ptr))
+            self.db_conn.ptr, db_filter.ptr, _changes.ptr))
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
 
@@ -150,8 +162,7 @@ cdef class AssociationAPI(ConnectionWrapper):
 
         return out
 
-
-    def create(self, associations):
+    def create(self, associations: List[Association]):
         cdef:
             Association assoc
             AssociationList assoc_list = AssociationList(owned=False)
@@ -215,23 +226,45 @@ cdef class Associations(MultiClusterMap):
                          key_type=int)
         self._db_conn = None
 
+    def _do_api_call(self, fn, **kwargs):
+        res_user = []
+        res_accts = []
+        db_filter_users = AssociationFilter(users=[], ids=[])
+        db_filter_accounts = AssociationFilter(accounts=[], ids=[])
+
+        # We need to split User Associations from Account associations
+        # If we mix both, the request will not do anything...
+        for assoc in self.values():
+            if assoc.user:
+                db_filter_users.users.append(assoc.user)
+                db_filter_users.ids.append(assoc.id)
+            else:
+                db_filter_accounts.accounts.append(assoc.account)
+                db_filter_accounts.ids.append(assoc.id)
+
+        if db_filter_users.users:
+            res_user = fn(db_filter_users, **kwargs)
+
+        if db_filter_accounts.accounts:
+            res_accts = fn(db_filter_accounts, **kwargs)
+
+        return res_user + res_accts
+
     @staticmethod
-    def load(db_conn: Connection, db_filter: AssociationFilter | None = None):
+    def load(db_conn: Connection, db_filter: Optional[AssociationFilter] = None):
         return db_conn.associations.load(db_filter)
 
-    def delete(self, db_conn: Connection | None = None):
+    def delete(self, db_conn: Optional[Connection] = None):
         db_conn = Connection.reuse(self._db_conn, db_conn)
-        db_filter = AssociationFilter(ids=list(self.keys()))
-        db_conn.associations.delete(db_filter, changes)
+        self._do_api_call(db_conn.associations.delete, changes=changes)
 
-    def modify(self, changes: Association, db_conn: Connection | None = None):
+    def modify(self, changes: Optional[Association] = None, db_conn: Optional[Connection] = None, **kwargs: Any):
         db_conn = Connection.reuse(self._db_conn, db_conn)
-        db_filter = AssociationFilter(ids=list(self.keys()))
-        return db_conn.associations.modify(db_filter, changes)
+        return self._do_api_call(db_conn.associations.modify, changes=changes, **kwargs)
 
-    def create(self, db_conn: Connection | None = None):
+    def create(self, db_conn: Optional[Connection] = None):
         db_conn = Connection.reuse(self._db_conn, db_conn)
-        db_conn.associations.create(list(self.values()))
+        self._do_api_call(db_conn.associations.create, associations=list(self.values()))
 
 
 cdef class AssociationFilter:
@@ -239,7 +272,7 @@ cdef class AssociationFilter:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -282,7 +315,7 @@ cdef class Association:
         self.ptr = NULL
         self.owned = True
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         self._alloc_impl()
         self.id = 0
 
@@ -321,7 +354,7 @@ cdef class Association:
         wrap.ptr = in_ptr
         return wrap
 
-    def to_dict(self, recursive=False):
+    def to_dict(self, recursive: bool = False):
         """Database Association information formatted as a dictionary.
 
         Returns:
@@ -329,28 +362,28 @@ cdef class Association:
         """
         return instance_to_dict(self, recursive)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, Association):
 #            return self.id == other.id and self.cluster == other.cluster
             return self.cluster == other.cluster and self.partition == other.partition and self.account == other.account and self.user == other.user
         return NotImplemented
 
-#   @staticmethod
-#   def load(db_conn: Connection, name: str):
-#       user = db_conn.users.load().get(name)
-#       if not user:
-#           raise RPCError(msg=f"User {name} does not exist.")
-#       return user
+    @staticmethod
+    def load(db_conn: Connection, id: Union[str, int]):
+        assoc = db_conn.associations.load().get(int(id))
+        if not assoc:
+            raise NotFoundError(msg=f"Association with id '{id}' does not exist.")
+        return assoc
 
-    def create(self, db_conn: Connection = None):
+    def create(self, db_conn: Optional[Connection] = None):
         db_conn = Connection.reuse(self._db_conn, db_conn)
         db_conn.associations.create([self])
 
-    def delete(self, db_conn: Connection = None):
+    def delete(self, db_conn: Optional[Connection] = None):
         Associations({self.id: self}).delete(self._db_conn or db_conn)
 
-    def modify(self, changes: Association, db_conn: Connection | None = None):
-        Associations({self.id: self}).modify(changes, self._db_conn or db_conn)
+    def modify(self, changes: Optional[Association] = None, db_conn: Optional[Connection] = None, **kwargs: Any):
+        Associations({self.id: self}).modify(changes=changes, db_conn=(self._db_conn or db_conn), **kwargs)
 
     @property
     def account(self):

@@ -30,31 +30,58 @@ from pyslurm.db import (
 )
 
 
-def _modify_account(account, conn):
-    new_desc = "this is a new description"
-    changes = Account(description=new_desc)
-    assert account.description != new_desc
+def _modify_account(account, conn, with_kwargs, **kwargs):
+    changes = Account(**kwargs)
+
+    assert account.description != changes.description
     assoc_before = account.association.to_dict(recursive=True)
-    account.modify(changes, conn)
+
+    if with_kwargs:
+        account.modify(db_conn=conn, **kwargs)
+    else:
+        account.modify(changes, conn)
+
     account = Account.load(conn, account.name)
     assoc_after = account.association.to_dict(recursive=True)
-    assert account.description == new_desc
+    assert account.description == changes.description
     # Make sure we didn't change anything in the Association
     assert assoc_before == assoc_after
 
 
-def _modify_user(user, conn):
-    user_changes = User(
-        admin_level = pyslurm.AdminLevel.ADMINISTRATOR
-    )
+def _modify_user(user, conn, with_kwargs, **kwargs):
+    changes = User(**kwargs)
+
     assert user.admin_level == pyslurm.AdminLevel.NONE
     assoc_before = user.default_association.to_dict(recursive=True)
-    user.modify(user_changes, conn)
+
+    if with_kwargs:
+        user.modify(db_conn=conn, **kwargs)
+    else:
+        user.modify(changes, conn)
+
     user = User.load(conn, user.name)
     assoc_after = user.default_association.to_dict(recursive=True)
-    assert user.admin_level == pyslurm.AdminLevel.ADMINISTRATOR
+    assert user.admin_level == changes.admin_level
     # Make sure we didn't change anything in the Association
     assert assoc_before == assoc_after
+
+
+def _modify_assoc(assoc, conn, with_kwargs, **kwargs):
+    changes = Association(**kwargs)
+
+    assert assoc.group_jobs == "UNLIMITED"
+    assert assoc.group_submit_jobs == "UNLIMITED"
+
+    if with_kwargs:
+        assoc.modify(db_conn=conn, **kwargs)
+    else:
+        assoc.modify(changes, conn)
+
+    assoc = Association.load(conn, assoc.id)
+    assert assoc.group_jobs == changes.group_jobs
+    assert assoc.group_submit_jobs == changes.group_submit_jobs
+    assert assoc.group_jobs != "UNLIMITED"
+    assert assoc.group_submit_jobs != "UNLIMITED"
 
 
 def _load_assoc(assoc_id, conn):
@@ -127,10 +154,31 @@ def _delete_user(user, conn):
 
 def _test_modify_delete(user, account, conn):
     assert conn.is_open
-    _modify_account(account, conn)
-    _modify_user(user, conn)
+    _modify_account(account, conn, with_kwargs=False, description="this is a new description")
+    _modify_account(account, conn, with_kwargs=True, description="another description")
+
+    _modify_user(user, conn, with_kwargs=False, admin_level="ADMINISTRATOR")
+    _modify_user(user, conn, with_kwargs=True, admin_level="OPERATOR")
+
+    _modify_assoc(user.default_association, conn, with_kwargs=False,
+                  group_jobs=10, group_submit_jobs=20)
+    _modify_assoc(user.default_association, conn, with_kwargs=True,
+                  group_jobs=50, group_submit_jobs=100)
+
     _delete_account(account, conn)
     _delete_user(user, conn)
+
+
+def _test_api(user, account, conn):
+    # Save them, before reloading
+    user_name = user.name
+    acc_name = account.name
+
+    account = _add_account(account, conn)
+    user = _add_user(user, conn)
+    assert user.name == user_name
+    assert account.name == acc_name
+    _test_modify_delete(user, account, conn)
 
 
 def test_user_and_account_no_assoc():
@@ -141,12 +189,7 @@ def test_user_and_account_no_assoc():
     with pyslurm.db.connect() as conn:
         account = Account(name=acc_name)
         user = User(name=user_name, default_account=acc_name)
-
-        account = _add_account(account, conn)
-        user = _add_user(user, conn)
-        assert user.name == user_name
-        assert account.name == acc_name
-        _test_modify_delete(user, account, conn)
+        _test_api(user, account, conn)
 
 
 def test_user_and_accounts_with_assoc_empty():
@@ -159,9 +202,4 @@ def test_user_and_accounts_with_assoc_empty():
         account = Account(name=acc_name, association=account_assoc)
         user_assoc = Association(user=user_name, account=acc_name)
         user = User(name=user_name, associations=[user_assoc])
-
-        account = _add_account(account, conn)
-        user = _add_user(user, conn)
-        assert user.name == user_name
-        assert account.name == acc_name
-        _test_modify_delete(user, account, conn)
+        _test_api(user, account, conn)

@@ -492,4 +492,7 @@ def _validate_tres_single(local_tres, dict tres_id_map):
 
 
 cdef _set_tres_limits(char **dest, src, tres_data):
+    if not src:
+        return
+    # TODO: Allow users to pass a dict
     cstr.from_dict(dest, src._validate(tres_data))

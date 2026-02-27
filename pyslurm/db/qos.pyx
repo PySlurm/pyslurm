@@ -22,15 +22,22 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import RPCError
+from pyslurm.core.error import (
+    RPCError,
+    slurm_errno,
+    verify_rpc,
+    NotFoundError,
+    _get_modify_arguments_for,
+)
 from pyslurm.utils.helpers import instance_to_dict
+from typing import Any, Union, Optional, List, Dict
 
 
 cdef class QualityOfServiceAPI(ConnectionWrapper):
 
     def load(
         self,
-        db_filter: QualityOfServiceFilter | None = None,
+        db_filter: Optional[QualityOfServiceFilter] = None,
         name_is_key: bool = True
     ):
         """Load QoS data from the Database
@@ -70,7 +77,7 @@ cdef class QualityOfServiceAPI(ConnectionWrapper):
 
 cdef class QualitiesOfService(dict):
 
-    def __init__(self, qos={}, **kwargs):
+    def __init__(self, qos={}, **kwargs: Any):
         super().__init__()
         self.update(qos)
         self.update(kwargs)
@@ -79,7 +86,7 @@ cdef class QualitiesOfService(dict):
     @staticmethod
     def load(
         db_conn: Connection,
-        db_filter: Connection | None = None,
+        db_filter: Optional[Connection] = None,
         name_is_key: bool = True
     ):
         """Load QoS data from the Database
@@ -98,7 +105,7 @@ cdef class QualityOfServiceFilter:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -152,9 +159,11 @@ cdef class QualityOfService:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, name=None):
+    def __init__(self, name: str = None, **kwargs: Any):
         self._alloc_impl()
         self.name = name
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __dealloc__(self):
         self._dealloc_impl()
@@ -179,7 +188,7 @@ cdef class QualityOfService:
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.name})'
 
-    def to_dict(self, recursive = False):
+    def to_dict(self, recursive: bool = False):
         """Database QualityOfService information formatted as a dictionary.
 
         Returns:
@@ -205,7 +214,7 @@ cdef class QualityOfService:
         """
         qos = db_conn.qos.load(name_is_key=True).get(name)
         if not qos:
-            raise RPCError(msg=f"QualityOfService {name} does not exist")
+            raise NotFoundError(msg=f"QualityOfService {name} does not exist")
 
         return qos
 

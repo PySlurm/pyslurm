@@ -23,7 +23,12 @@
 # cython: language_level=3
 
 from typing import Union, Any
-from pyslurm.core.error import RPCError, PyslurmError
+from pyslurm.core.error import (
+    RPCError,
+    ArgumentError,
+    NotFoundError,
+    _get_modify_arguments_for,
+)
 from pyslurm.utils.uint import *
 from pyslurm import settings
 from pyslurm import xcollections
@@ -98,7 +103,7 @@ cdef class JobsAPI(ConnectionWrapper):
         if not db_filter:
             db_filter = JobFilter()
 
-        db_filter._db_conn = db_conn
+        db_filter._db_conn = self.db_conn
         db_filter._create()
 
         # Fetch Job data
@@ -119,6 +124,7 @@ cdef class JobsAPI(ConnectionWrapper):
             job.tres_data = tres_data
             job._create_steps()
             job.stats = JobStatistics.from_steps(job.steps)
+            self.db_conn.apply_reuse(job)
 
             elapsed = job.elapsed_time if job.elapsed_time else 0
             cpus = job.cpus if job.cpus else 1
@@ -133,7 +139,12 @@ cdef class JobsAPI(ConnectionWrapper):
 
         return out
 
-    def modify(self, db_filter: JobFilter | Jobs, changes: Job):
+    def modify(
+        self,
+        db_filter: JobFilter | Jobs,
+        changes: Job | None = None,
+        **kwargs: Any
+    ):
         """Modify Slurm database Jobs.
 
         Implements the slurm_job_modify RPC.
@@ -193,9 +204,12 @@ cdef class JobsAPI(ConnectionWrapper):
         """
         cdef:
             JobFilter cond
+            Job _changes
             SlurmList response
             SlurmListItem response_ptr
             list out = []
+
+        _changes = _get_modify_arguments_for(Job, changes, **kwargs)
 
         self.db_conn.validate()
 
@@ -203,15 +217,17 @@ cdef class JobsAPI(ConnectionWrapper):
         if isinstance(db_filter, Jobs):
             job_ids = [job.id for job in self]
             cond = JobFilter(ids=job_ids)
+        else:
+            cond = db_filter
 
-        cond._db_conn = db_conn
+        cond._db_conn = self.db_conn
         cond._create()
 
         # Modify Jobs, get the result
         # This returns a List of char* with the Jobs ids that were
         # modified
         response = SlurmList.wrap(
-                slurmdb_job_modify(self.db_conn.ptr, cond.ptr, changes.ptr))
+                slurmdb_job_modify(self.db_conn.ptr, cond.ptr, _changes.ptr))
 
         if not response.is_null and response.cnt:
             for response_ptr in response:
@@ -437,14 +453,15 @@ cdef class Jobs(MultiClusterMap):
         """
         return db_conn.jobs.load(db_filter)
 
-    def modify(self, changes: Job, db_conn: Connection | None = None):
-        """Modify Slurm database Jobs.
-
-        Implements the slurm_job_modify RPC.
+    def modify(
+        self,
+        changes: Job | None = None,
+        db_conn: Connection | None = None,
+        **kwargs: Any
+    ):
+        """Modify all Database Jobs in this collection.
 
         Args:
-            db_filter (Union[pyslurm.db.JobFilter, pyslurm.db.Jobs]):
-                A filter to decide which Jobs should be modified.
             changes (pyslurm.db.Job):
                 Another [pyslurm.db.Job][] object that contains all the
                 changes to apply. Check the `Other Parameters` of the
@@ -452,54 +469,19 @@ cdef class Jobs(MultiClusterMap):
                 modified.
             db_conn (pyslurm.db.Connection):
                 A Connection to the slurmdbd.
+            **kwargs (Any):
+                Instead of providing a separate `Job` object that has the
+                changes, you can also pass them as keyword args.
 
         Returns:
             (list[int]): A list of Jobs that were modified
 
         Raises:
             (pyslurm.RPCError): When a failure modifying the Jobs occurred.
-
-        Examples:
-            In its simplest form, you can do something like this:
-
-            >>> import pyslurm
-            >>>
-            >>> db_filter = pyslurm.db.JobFilter(ids=[9999])
-            >>> changes = pyslurm.db.Job(comment="A comment for the job")
-            >>> modified_jobs = pyslurm.db.Jobs.modify(db_filter, changes)
-            >>> print(modified_jobs)
-            [9999]
-
-            In the above example, the changes will be automatically committed
-            if successful.
-            You can however also control this manually by providing your own
-            connection object:
-
-            >>> import pyslurm
-            >>>
-            >>> db_conn = pyslurm.db.Connection.open()
-            >>> db_filter = pyslurm.db.JobFilter(ids=[9999])
-            >>> changes = pyslurm.db.Job(comment="A comment for the job")
-            >>> modified_jobs = pyslurm.db.Jobs.modify(
-            ...             db_filter, changes, db_conn)
-
-            Now you can first examine which Jobs have been modified:
-
-            >>> print(modified_jobs)
-            [9999]
-
-            And then you can actually commit the changes:
-
-            >>> db_conn.commit()
-
-            You can also explicitly rollback these changes instead of
-            committing, so they will not become active:
-
-            >>> db_conn.rollback()
         """
         db_conn = Connection.reuse(self._db_conn, db_conn)
-        db_filter = JobFilter(names=list(self.keys()))
-        return db_conn.jobs.modify(db_filter, changes)
+        db_filter = JobFilter(ids=list(self.keys()))
+        return db_conn.jobs.modify(db_filter=db_filter, changes=changes, **kwargs)
 
     def _reset_stats(self):
         self.stats = JobStatistics()
@@ -583,27 +565,15 @@ cdef class Job:
             (pyslurm.db.Job): Returns a new Database Job instance
 
         Raises:
-            (pyslurm.RPCError): If requesting the information for the database
+            (pyslurm.NotFoundError): If requesting the information for the database
                 Job was not successful.
-
-        Examples:
-            >>> import pyslurm
-            >>> db_job = pyslurm.db.Job.load(10000)
-
-            In the above example, attributes like `script` and `environment`
-            are not populated. You must explicitly request one of them to be
-            loaded:
-
-            >>> import pyslurm
-            >>> db_job = pyslurm.db.Job.load(10000, with_script=True)
-            >>> print(db_job.script)
         """
         cluster = settings.LOCAL_CLUSTER if not cluster else cluster
         jfilter = JobFilter(ids=[int(job_id)], clusters=[cluster],
                             with_script=with_script, with_env=with_env)
-        job = Jobs.load(jfilter).get((cluster, int(job_id)))
+        job = db_conn.jobs.load(jfilter).get((cluster, int(job_id)))
         if not job:
-            raise RPCError(msg=f"Job {job_id} does not exist on "
+            raise NotFoundError(msg=f"Job {job_id} does not exist on "
                            f"Cluster {cluster}")
 
         # TODO: There might be multiple entries when job ids were reset.
@@ -620,6 +590,8 @@ cdef class Job:
             step = JobStep.from_ptr(<slurmdb_step_rec_t*>step_ptr.data)
             step.tres_data = self.tres_data
             self.steps[step.id] = step
+            # TODO:
+            # self.db_conn.apply_reuse(step)
 
     def as_dict(self):
         return self.to_dict()
@@ -640,8 +612,13 @@ cdef class Job:
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.id})'
 
-    def modify(self, changes, db_conn: Connection | None = None):
-        """Modify a Slurm database Job.
+    def modify(
+        self,
+        changes: Job | None = None,
+        db_conn: Connection | None = None,
+        **kwargs: Any
+    ):
+        """Modify this Database Job.
 
         Args:
             changes (pyslurm.db.Job):
@@ -657,7 +634,8 @@ cdef class Job:
         Raises:
             (pyslurm.RPCError): When modifying the Job failed.
         """
-        Jobs({self.id: self}).modify(changes, self._db_conn or db_conn)
+        jobs = Jobs({self.id: self})
+        jobs.modify(changes=changes, db_conn=(self._db_conn or db_conn), **kwargs)
 
     @property
     def account(self):
@@ -947,10 +925,6 @@ cdef class Job:
     @property
     def wckey_id(self):
         return u32_parse(self.ptr.wckeyid)
-
-#    @property
-#    def wckey_id(self):
-#        return u32_parse(self.ptr.wckeyid)
 
     @property
     def working_directory(self):
