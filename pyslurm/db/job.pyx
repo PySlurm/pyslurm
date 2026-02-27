@@ -48,11 +48,12 @@ from pyslurm.utils.helpers import (
     gres_from_tres_dict,
 )
 from pyslurm.enums import SchedulerType
+from typing import Any, Optional
 
 
 cdef class JobsAPI(ConnectionWrapper):
 
-    def load(self, db_filter: JobFilter | None = None):
+    def load(self, db_filter: Optional[JobFilter] = None):
         """Load Jobs from the Slurm Database
 
         Implements the slurmdb_jobs_get RPC.
@@ -141,8 +142,8 @@ cdef class JobsAPI(ConnectionWrapper):
 
     def modify(
         self,
-        db_filter: JobFilter | Jobs,
-        changes: Job | None = None,
+        db_filter: Union[JobFilter, Jobs],
+        changes: Optional[Job] = None,
         **kwargs: Any
     ):
         """Modify Slurm database Jobs.
@@ -455,8 +456,8 @@ cdef class Jobs(MultiClusterMap):
 
     def modify(
         self,
-        changes: Job | None = None,
-        db_conn: Connection | None = None,
+        changes: Optional[Job] = None,
+        db_conn: Optional[Connection] = None,
         **kwargs: Any
     ):
         """Modify all Database Jobs in this collection.
@@ -614,8 +615,8 @@ cdef class Job:
 
     def modify(
         self,
-        changes: Job | None = None,
-        db_conn: Connection | None = None,
+        changes: Optional[Job] = None,
+        db_conn: Optional[Connection] = None,
         **kwargs: Any
     ):
         """Modify this Database Job.

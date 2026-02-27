@@ -94,7 +94,7 @@ def test_modify(submit_job):
         assert job.comment == comment
 
     # With filter via **kwargs
-    with pyslurm.db.connect(commit_on_success=False) as conn:
+    with pyslurm.db.connect(transaction_mode="manual") as conn:
         comment = "comment two"
         job = pyslurm.db.Job.load(conn, job.id)
         assert job.comment != comment

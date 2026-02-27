@@ -46,7 +46,7 @@ class DocstringSupport(EnumType):
         return cls
 
 
-class SlurmEnum(str, Enum, metaclass=DocstringSupport):
+class StrEnum(str, Enum, metaclass=DocstringSupport):
 
     def __new__(cls, name, *args):
         # https://docs.python.org/3/library/enum.html
@@ -62,9 +62,6 @@ class SlurmEnum(str, Enum, metaclass=DocstringSupport):
         v = str(name)
         new_string = str.__new__(cls, v)
         new_string._value_ = v
-
-        new_string._flag = int(args[0]) if len(args) >= 1 else 0
-        new_string._clear_flag = int(args[1]) if len(args) >= 2 else 0
         return new_string
 
     def __str__(self):
@@ -73,7 +70,19 @@ class SlurmEnum(str, Enum, metaclass=DocstringSupport):
     @staticmethod
     def _generate_next_value_(name, _start, _count, _last_values):
         # We just care about the name of the member to be defined.
-        return name.upper()
+        return name.lower()
+
+
+class SlurmEnum(StrEnum):
+
+    def __new__(cls, name, *args):
+        v = str(name)
+        new_string = str.__new__(cls, v)
+        new_string._value_ = v
+
+        new_string._flag = int(args[0]) if len(args) >= 1 else 0
+        new_string._clear_flag = int(args[1]) if len(args) >= 2 else 0
+        return new_string
 
     @classmethod
     def from_flag(cls, flags, default):

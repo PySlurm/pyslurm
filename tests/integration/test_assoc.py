@@ -157,8 +157,8 @@ def _test_modify_delete(user, account, conn):
     _modify_account(account, conn, with_kwargs=False, description="this is a new description")
     _modify_account(account, conn, with_kwargs=True, description="another description")
 
-    _modify_user(user, conn, with_kwargs=False, admin_level="ADMINISTRATOR")
-    _modify_user(user, conn, with_kwargs=True, admin_level="OPERATOR")
+    _modify_user(user, conn, with_kwargs=False, admin_level="administrator")
+    _modify_user(user, conn, with_kwargs=True, admin_level="operator")
 
     _modify_assoc(user.default_association, conn, with_kwargs=False,
                   group_jobs=10, group_submit_jobs=20)
@@ -170,7 +170,7 @@ def _test_modify_delete(user, account, conn):
 
 
 def _test_api(user, account, conn):
-    # Save them, before reloading
+    # Save them before reloading
     user_name = user.name
     acc_name = account.name
 

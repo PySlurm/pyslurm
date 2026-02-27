@@ -33,8 +33,7 @@ from pyslurm.slurm cimport (
 
 cdef class ConnectionConfig:
     cdef public:
-        commit_on_success
-        rollback_on_error
+        transaction_mode
         reuse_connection
 
 

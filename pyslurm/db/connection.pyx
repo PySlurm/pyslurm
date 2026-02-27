@@ -30,19 +30,24 @@ from pyslurm.db.assoc import AssociationAPI
 from pyslurm.db.tres import TrackableResourceAPI
 from pyslurm.db.qos import QualityOfServiceAPI
 from pyslurm.db.job import JobsAPI
-from typing import Any
+from typing import Any, Optional
+from pyslurm.utils.enums import StrEnum
+from enum import auto
+
+
+class TransactionMode(StrEnum):
+    PER_OPERATION   = auto()
+    MANUAL          = auto()
 
 
 cdef class ConnectionConfig:
 
     def __init__(
         self,
-        commit_on_success: bool = True,
-        rollback_on_error: bool = True,
+        transaction_mode: TransactionMode = TransactionMode.PER_OPERATION,
         reuse_connection: bool = True,
     ):
-        self.commit_on_success = commit_on_success
-        self.rollback_on_error = rollback_on_error
+        self.transaction_mode = transaction_mode
         self.reuse_connection = reuse_connection
 
 
@@ -61,7 +66,7 @@ class ConfigError(PyslurmError):
 
 
 @contextmanager
-def connect(config: ConnectionConfig | None = None, **kwargs: Any):
+def connect(config: Optional[ConnectionConfig] = None, **kwargs: Any):
     """A managed Slurm DB Connection"""
     if config is not None and kwargs:
         raise ConfigError("Must provide either a config directly, or kwargs, not both")
@@ -92,8 +97,8 @@ cdef class Connection:
 
     @staticmethod
     def reuse(
-        reusable_conn: Connection | None = None,
-        explicit_conn: Connection | None = None
+        reusable_conn: Optional[Connection] = None,
+        explicit_conn: Optional[Connection] = None
     ):
         if explicit_conn:
             return explicit_conn
@@ -111,13 +116,16 @@ cdef class Connection:
             raise InvalidConnectionError("Connection is closed")
 
     def check_commit(self, rc):
-        if self.config.commit_on_success and rc == slurm.SLURM_SUCCESS:
+        if self.config.transaction_mode != TransactionMode.PER_OPERATION:
+            return
+
+        if rc == slurm.SLURM_SUCCESS:
             self.commit()
-        elif self.config.rollback_on_error and rc != slurm.SLURM_SUCCESS:
+        else:
             self.rollback()
 
     @staticmethod
-    def open(config: ConnectionConfig | None = None, **kwargs: Any):
+    def open(config: Optional[ConnectionConfig] = None, **kwargs: Any):
         """Open a new connection to the slurmdbd
 
         Raises:
@@ -169,7 +177,7 @@ cdef class Connection:
     def commit(self):
         """Commit recent changes."""
         if not self.is_open:
-            return
+            raise InvalidConnectionError("Tried to commit when Connection is already closed.")
 
         if slurmdb_connection_commit(self.ptr, 1) == slurm.SLURM_ERROR:
             raise RPCError("Failed to commit database changes.")
@@ -177,7 +185,7 @@ cdef class Connection:
     def rollback(self):
         """Rollback recent changes."""
         if not self.is_open:
-            return
+            raise InvalidConnectionError("Tried to rollback when Connection is already closed.")
 
         if slurmdb_connection_commit(self.ptr, 0) == slurm.SLURM_ERROR:
             raise RPCError("Failed to rollback database changes.")

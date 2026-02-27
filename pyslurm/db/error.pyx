@@ -24,6 +24,16 @@
 
 from pyslurm.core.error import RPCError, slurm_errno, verify_rpc
 from pyslurm.db.util cimport SlurmList, SlurmListItem
+import re
+
+
+# The response involving assoc modification and deletions is a string that can
+# be in the following form:
+#
+# C = X         A = X       U = X       P = X
+#
+# And we have to parse this stuff... The Partition (P) is optional
+assoc_str_pattern = re.compile(r'(\w)\s*=\s*(\w+)')
 
 
 class AssociationChangeInfo:
@@ -76,47 +86,37 @@ def get_responses(SlurmList response):
             yield response_str
 
 
-def parse_basic_response(SlurmList response):
-    return get_responses(response)
+def parse_assoc_str(value):
+    matches = assoc_str_pattern.findall(value)
+    return dict(matches)
 
 
-def parse_default_account_errors(SlurmList response):
-    cdef SlurmListItem response_ptr
+def get_assoc_response(SlurmList response):
+    for resp in get_responses(response):
+        yield parse_assoc_str(resp)
 
+
+def parse_default_account_errors_2(SlurmList response):
     assocs = []
-    for response_ptr in response:
-        response_str = response_ptr.to_str()
-        if not response_str:
-            continue
-
-        # The response is a string in the following form:
-        # C = X         A = X       U = X       P = X
-        #
-        # And we have to parse this stuff... The Partition (P) is optional
-        resp = response_str.rstrip().lstrip()
-        splitted = resp.split("  ")
-        values = []
-        for item in splitted:
-            if not item:
-                continue
-
-            key, value = item.split("=")
-            values.append(value.strip())
-
+    for item in get_assoc_response(response):
         info = AssociationChangeInfo(
-            cluster = values[0],
-            account = values[1],
-            user = values[2],
+            cluster = item["C"],
+            account = item["A"],
+            user = item["U"],
         )
         assoc_str = f"{info.cluster}-{info.account}-{info.user}"
 
-        if len(values) > 3:
-            info.partition = values[3]
+        if len(item) > 3:
+            info.partition = item["P"]
             assoc_str = f"{assoc_str}-{info.partition}"
 
         assocs.append(info)
 
     return assocs
+
+
+def parse_basic_response(SlurmList response):
+    return list(get_responses(response))
 
 
 def parse_running_job_errors(SlurmList response):
