@@ -24,6 +24,7 @@
 
 from pyslurm.core.error import RPCError, slurm_errno, verify_rpc
 from pyslurm.db.util cimport SlurmList, SlurmListItem
+from pyslurm cimport slurm
 import re
 
 
@@ -34,6 +35,39 @@ import re
 #
 # And we have to parse this stuff... The Partition (P) is optional
 assoc_str_pattern = re.compile(r'(\w)\s*=\s*(\w+)')
+
+
+def handle_response(SlurmList response, rc):
+    out = []
+    if not response.is_null and response.cnt:
+        if rc == slurm.ESLURM_JOBS_RUNNING_ON_ASSOC:
+            # The slurmdbd actually deletes the associations, even if
+            # Jobs are running. The client side must then decide whether to
+            # rollback or actually commit the changes. sacctmgr does the
+            # rollback.
+
+            # By default, any errors are automatically rollbacked, for safety.
+            # User can disable this behaviour.
+            raise JobsRunningError.from_response(response, rc)
+        elif rc == slurm.ESLURM_NO_REMOVE_DEFAULT_ACCOUNT:
+            raise DefaultAccountError.from_response(response, rc)
+
+        out = parse_basic_response(response)
+    elif not response.is_null or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
+        # Nothing was modified
+        # TODO: Should this be an error actually?
+        pass
+    elif rc == slurm.ESLURM_INVALID_PARENT_ACCOUNT:
+        # When modifying Associations failed.
+        # TODO: proper error
+        verify_rpc(rc)
+    else:
+        # ESLURM_ONE_CHANGE - may happen when name of a user is attempted to be
+        # changed. only 1 user can be specified at a time. Could also detect
+        # that earlier
+        verify_rpc(rc)
+
+    return out
 
 
 class AssociationChangeInfo:
@@ -76,7 +110,6 @@ class DefaultAccountError(RPCError):
 def get_responses(SlurmList response):
     cdef SlurmListItem response_ptr
 
-    #TODO: check also for count?
     if response.is_null:
         return []
 

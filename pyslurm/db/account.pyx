@@ -35,11 +35,7 @@ from pyslurm.utils.helpers import (
 )
 from pyslurm.utils.uint import *
 from pyslurm import xcollections
-from pyslurm.db.error import (
-    DefaultAccountError,
-    JobsRunningError,
-    parse_basic_response,
-)
+from pyslurm.db.error import handle_response
 from typing import Any, Union, Optional, List, Dict
 
 
@@ -98,12 +94,8 @@ cdef class AccountAPI(ConnectionWrapper):
         self.db_conn.apply_reuse(out)
         return out
 
-
     def delete(self, db_filter: AccountFilter):
-        cdef:
-            SlurmList response
-            list out = []
-
+        out = []
         # Check is required because for some reason if the acct_cond doesn't
         # contain any valid conditions, slurmdbd will delete all accounts.
         # TODO: Maybe make it configurable
@@ -116,28 +108,15 @@ cdef class AccountAPI(ConnectionWrapper):
         response = SlurmList.wrap(slurmdb_accounts_remove(self.db_conn.ptr, db_filter.ptr))
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
+        return handle_response(response, rc)
 
-        if rc == slurm.SLURM_SUCCESS or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
-            return
-
-#       if rc == slurm.ESLURM_ACCESS_DENIED or response.is_null:
-#           verify_rpc(rc)
-
-        # Handle the error cases.
-        if rc == slurm.ESLURM_JOBS_RUNNING_ON_ASSOC:
-            raise JobsRunningError.from_response(response, rc)
-        elif rc == slurm.ESLURM_NO_REMOVE_DEFAULT_ACCOUNT:
-            raise DefaultAccountError.from_response(response, rc)
-        else:
-            verify_rpc(rc)
-
-
-    def modify(self, db_filter: AccountFilter, changes: Optional[Account] = None, **kwargs: Any):
-        cdef:
-            SlurmList response
-            Account _changes
-            SlurmListItem response_ptr
-            list out = []
+    def modify(
+        self,
+        db_filter: AccountFilter,
+        changes: Optional[Account] = None,
+        **kwargs: Any
+    ):
+        cdef Account _changes
 
         _changes = _get_modify_arguments_for(Account, changes, **kwargs)
 
@@ -149,33 +128,9 @@ cdef class AccountAPI(ConnectionWrapper):
         )
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
+        return handle_response(response, rc)
 
-        if rc == slurm.SLURM_SUCCESS:
-            return parse_basic_response(response)
-        elif rc == slurm.SLURM_NO_CHANGE_IN_DATA:
-            return out
-        else:
-            # verify_rpc(rc)
-            raise RPCError(msg="Failed to modify accounts.")
-
-
-#       if not response.is_null and response.cnt:
-#           for response_ptr in response:
-#               response_str = cstr.to_unicode(<char*>response_ptr.data)
-#               if not response_str:
-#                   continue
-
-#               out.append(response_str)
-
-#       elif not response.is_null:
-#           # There was no real error, but simply nothing has been modified
-#           return out
-#       else:
-#           # Autodetects the last slurm error
-#           raise RPCError(msg="Failed to modify accounts.")
-
-
-    def create(self, accounts: List[str]):
+    def create(self, accounts: List[Account]):
         cdef:
             Account account
             SlurmList account_list
@@ -192,13 +147,32 @@ cdef class AccountAPI(ConnectionWrapper):
             slurm.slurm_list_append(account_list.info, account.ptr)
 
         rc = slurmdb_accounts_add(self.db_conn.ptr, account_list.info)
-        # TODO: Only commit here when we don't add any associations?
-        # So we don't leave any Accounts without associations behind?
+
+        # Could also solve this construct via a simple try..finally, but I just
+        # don't want to execute commit/rollback potentially twice, even if it
+        # is completely fine.
+        try:
+            if rc == slurm.SLURM_SUCCESS:
+                self.db_conn.associations.create(assocs_to_add)
+        except RPCError:
+            # Just re-raise - required rollback was already taken care of
+            raise
+        except Exception:
+            # Doing this catch-all thing might be too cautious, but just in
+            # case anything goes wrong before Associations were attempted to be
+            # added, we make sure that adding the users is also rollbacked.
+            #
+            # Because we don't want to leave Users with no associations behind
+            # in the system, if associations were requested to be added.
+            self.db_conn.check_commit(slurm.SLURM_ERROR)
+            raise
+
+        # TODO: SLURM_NO_CHANGE_IN_DATA
+        # Should this be an error?
+
+        # Rollback or commit in case no associations were attempted to be added
         self.db_conn.check_commit(rc)
         verify_rpc(rc)
-        # TODO: Maybe don't create the associations automatically? And don't do
-        # any hidden stuff?
-        self.db_conn.associations.create(assocs_to_add)
 
 
 cdef class Accounts(dict):

@@ -36,7 +36,7 @@ from pyslurm.utils.helpers import (
 from pyslurm.utils.uint import *
 from pyslurm import settings
 from pyslurm import xcollections
-from pyslurm.db.error import JobsRunningError, DefaultAccountError
+from pyslurm.db.error import handle_response
 from typing import Any, Union, Optional, List, Dict
 
 
@@ -84,12 +84,8 @@ cdef class AssociationAPI(ConnectionWrapper):
         self.db_conn.apply_reuse(out)
         return out
 
-
     def delete(self, db_filter: AssociationFilter):
-        cdef:
-            SlurmList response
-            SlurmListItem response_ptr
-
+        out = []
         # TODO: Properly check if the filter is empty, cause it will then probably
         # target all assocs. Or maybe that is fine and we need to clearly document
         # to take caution
@@ -104,28 +100,13 @@ cdef class AssociationAPI(ConnectionWrapper):
         )
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
-
-        if rc == slurm.SLURM_SUCCESS or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
-            return
-
-       #if rc == slurm.ESLURM_ACCESS_DENIED or response.is_null:
-       #    verify_rpc(rc)
-
-        # Handle the error cases.
-        if rc == slurm.ESLURM_JOBS_RUNNING_ON_ASSOC:
-            raise JobsRunningError.from_response(response, rc)
-        elif rc == slurm.ESLURM_NO_REMOVE_DEFAULT_ACCOUNT:
-            raise DefaultAccountError.from_response(response, rc)
-        else:
-            verify_rpc(rc)
+        return handle_response(response, rc)
 
     def modify(self, db_filter: AssociationFilter, changes: Optional[Association] = None, **kwargs: Any):
         cdef:
             Association _changes
-            SlurmList response
-            SlurmListItem response_ptr
-            list out = []
 
+        out = []
         # TODO: prohibit mixing multiple user assocs with account assocs
         # This is not possible, and the request will simply affect nothing...
 
@@ -143,24 +124,7 @@ cdef class AssociationAPI(ConnectionWrapper):
             self.db_conn.ptr, db_filter.ptr, _changes.ptr))
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
-
-        if not response.is_null and response.cnt:
-            for response_ptr in response:
-                response_str = cstr.to_unicode(<char*>response_ptr.data)
-                if not response_str:
-                    continue
-
-                # TODO: Better format
-                out.append(response_str)
-
-        elif not response.is_null:
-            # There was no real error, but simply nothing has been modified
-            return None
-        else:
-            # Autodetects the last slurm error
-            raise RPCError()
-
-        return out
+        return handle_response(response, rc)
 
     def create(self, associations: List[Association]):
         cdef:
@@ -180,6 +144,8 @@ cdef class AssociationAPI(ConnectionWrapper):
                 assoc_list.append(assoc)
 
         rc = slurmdb_associations_add(self.db_conn.ptr, assoc_list.info)
+        # TODO: SLURM_NO_CHANGE_IN_DATA
+        # Should this be an error?
         self.db_conn.check_commit(rc)
         verify_rpc(rc)
 

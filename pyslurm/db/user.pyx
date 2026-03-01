@@ -36,7 +36,7 @@ from pyslurm.utils.helpers import (
 from pyslurm.utils.uint import *
 from pyslurm import xcollections
 from pyslurm.utils.enums import SlurmEnum
-from pyslurm.db.error import JobsRunningError, parse_basic_response
+from pyslurm.db.error import handle_response
 from pyslurm.enums import AdminLevel
 from typing import Any, Union, Optional, List, Dict
 
@@ -46,15 +46,9 @@ cdef class UserAPI(ConnectionWrapper):
     def load(self, db_filter: Optional[UserFilter] = None):
         cdef:
             Users out = Users()
-            User user
             UserFilter cond = db_filter
-            SlurmList user_data
             SlurmListItem user_ptr
-            SlurmList assoc_data
             SlurmListItem assoc_ptr
-            Association assoc
-            QualitiesOfService qos_data
-            TrackableResources tres_data
 
         self.db_conn.validate()
 
@@ -95,10 +89,8 @@ cdef class UserAPI(ConnectionWrapper):
         self.db_conn.apply_reuse(out)
         return out
 
-
     def delete(self, db_filter: UserFilter):
-        cdef:
-            SlurmList response
+        out = []
 
         # TODO: test again when this is empty, does it really delete everything?
         if not db_filter.names:
@@ -110,36 +102,12 @@ cdef class UserAPI(ConnectionWrapper):
         response = SlurmList.wrap(slurmdb_users_remove(self.db_conn.ptr, db_filter.ptr))
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
-
-        if rc == slurm.SLURM_SUCCESS or rc == slurm.SLURM_NO_CHANGE_IN_DATA:
-            return
-
-       #if rc == slurm.ESLURM_ACCESS_DENIED or response.is_null:
-       #    verify_rpc(rc)
-
-        # Handle the error case. Running Jobs should be the only possible error
-        # where slurmdbd sends a response list.
-        if rc == slurm.ESLURM_JOBS_RUNNING_ON_ASSOC:
-            # TODO: The slurmdbd actually deletes the associations, even if
-            # Jobs are running. The client side must then decide whether to
-            # rollback or actually commit the changes. sacctmgr does the
-            # rollback.
-
-            # Should we also do this here automatically to prevent
-            # anyone accidentally forgetting this? Or let the caller handle it?
-            # If we do it, then it might rollback changes that were done
-            # earlier and haven't been committed yet.
-            raise JobsRunningError.from_response(response, rc)
-        else:
-            verify_rpc(rc)
-
+        return handle_response(response, rc)
 
     def modify(self, db_filter: UserFilter, changes: Optional[User] = None, **kwargs: Any):
         cdef:
-            SlurmList response
             User _changes
             SlurmListItem response_ptr
-            list out = []
 
         # TODO: Properly check if the filter is empty, cause it will then probably
         # target all users. Or maybe that is fine and we need to clearly document
@@ -158,41 +126,9 @@ cdef class UserAPI(ConnectionWrapper):
         rc = slurm_errno()
         self.db_conn.check_commit(rc)
 
-        if rc == slurm.SLURM_SUCCESS:
-            return parse_basic_response(response)
-        elif rc == slurm.SLURM_NO_CHANGE_IN_DATA:
-            return out
-        else:
-            # verify_rpc(rc)
-            # ESLURM_ONE_CHANGE - when the name is changed, only 1 user can be
-            # specified at a time
+        return handle_response(response, rc)
 
-            # SLURM_ERROR - general error
-            raise RPCError(msg="Failed to modify users.")
-
-#       if not response.is_null and response.cnt:
-#           for response_ptr in response:
-#               response_str = cstr.to_unicode(<char*>response_ptr.data)
-#               if not response_str:
-#                   continue
-
-#               out.append(response_str)
-
-#       elif not response.is_null:
-#           # There was no real error, but simply nothing has been modified
-#           return out
-#       else:
-#           # TODO: handle errors better
-#           # ESLURM_NO_CHANGE_IN_DATA
-
-#           # ESLURM_ONE_CHANGE - when the name is changed, only 1 user can be
-#           # specified at a time
-
-#           # Autodetects the last slurm error
-#           raise RPCError(msg="Failed to modify users.")
-
-
-    def create(self, users: List[str]):
+    def create(self, users: List[User]):
         cdef:
             User user
             SlurmList user_list
@@ -232,13 +168,32 @@ cdef class UserAPI(ConnectionWrapper):
             slurm.slurm_list_append(user_list.info, user.ptr)
 
         rc = slurmdb_users_add(self.db_conn.ptr, user_list.info)
-        # TODO: Only commit here when we don't add any associations?
-        # So we don't leave any Users without associations behind?
+
+        # Could also solve this construct via a simple try..finally, but I just
+        # don't want to execute commit/rollback potentially twice, even if it
+        # is completely fine.
+        try:
+            if rc == slurm.SLURM_SUCCESS:
+                self.db_conn.associations.create(assocs_to_add)
+        except RPCError:
+            # Just re-raise - required rollback was already taken care of
+            raise
+        except Exception:
+            # Doing this catch-all thing might be too cautious, but just in
+            # case anything goes wrong before Associations were attempted to be
+            # added, we make sure that adding the users is also rollbacked.
+            #
+            # Because we don't want to leave Users with no associations behind
+            # in the system, if associations were requested to be added.
+            self.db_conn.check_commit(slurm.SLURM_ERROR)
+            raise
+
+        # TODO: SLURM_NO_CHANGE_IN_DATA
+        # Should this be an error?
+
+        # Rollback or commit in case no associations were attempted to be added
         self.db_conn.check_commit(rc)
         verify_rpc(rc)
-        # TODO: Maybe don't create the associations automatically? And don't do
-        # any hidden stuff?
-        self.db_conn.associations.create(assocs_to_add)
 
 
 cdef class Users(dict):
