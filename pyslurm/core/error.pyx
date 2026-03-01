@@ -27,6 +27,19 @@ from pyslurm cimport slurm
 cimport libc.errno
 
 
+def _check_modify_arguments(changes, **kwargs):
+    if changes is None and not kwargs:
+        raise ArgumentError("Nothing to change was provided")
+
+    if changes is not None and kwargs:
+        raise ArgumentError("Provide either a changes object or keyword arguments, not both")
+
+
+def _get_modify_arguments_for(cls, changes, **kwargs):
+    _check_modify_arguments(changes, **kwargs)
+    return changes or cls(**kwargs)
+
+
 def slurm_strerror(errno):
     """Convert a slurm errno to a string.
 
@@ -69,7 +82,15 @@ class PyslurmError(Exception):
     """The base Exception for all Pyslurm errors."""
 
 
-class RPCError(PyslurmError):
+class ClientError(PyslurmError):
+    pass
+
+
+class ServerError(PyslurmError):
+    pass
+
+
+class RPCError(ServerError):
     """Exception for handling Slurm RPC errors.
 
     Args:
@@ -100,12 +121,26 @@ class RPCError(PyslurmError):
         super().__init__(self.msg)
 
 
-def verify_rpc(errno):
+class InvalidUsageError(ClientError):
+    pass
+
+
+class ArgumentError(InvalidUsageError):
+    pass
+
+
+class NotFoundError(RPCError):
+    pass
+
+
+def verify_rpc(errno, msg=None):
     """Verify a Slurm RPC
 
     Args:
         errno (int):
             A Slurm error value
+        msg (str):
+            An optional message
     """
     if errno != slurm.SLURM_SUCCESS:
-        raise RPCError(errno)
+        raise RPCError(errno, msg)

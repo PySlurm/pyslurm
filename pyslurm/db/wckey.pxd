@@ -1,7 +1,7 @@
 #########################################################################
-# qos.pxd - pyslurm slurmdbd qos api
+# wckey.pxd - pyslurm slurmdbd wckey api
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -22,54 +22,50 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
-    slurmdb_qos_rec_t,
-    slurmdb_qos_cond_t,
-    slurmdb_destroy_qos_rec,
-    slurmdb_destroy_qos_cond,
-    slurmdb_qos_get,
-    slurm_preempt_mode_num,
-    list_t,
+    slurmdb_wckey_rec_t,
+    slurmdb_wckey_cond_t,
+    slurmdb_wckeys_get,
+    slurmdb_destroy_wckey_rec,
+    slurmdb_destroy_wckey_cond,
     try_xmalloc,
 )
 from pyslurm.db.util cimport (
     SlurmList,
     SlurmListItem,
     make_char_list,
+    slurm_list_to_pylist,
+    qos_list_to_pylist,
 )
-from pyslurm.db.connection cimport Connection, ConnectionWrapper
+from pyslurm.db.tres cimport (
+    _set_tres_limits,
+    TrackableResources,
+)
+from pyslurm.db.connection cimport Connection
 from pyslurm.utils cimport cstr
+from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
+from pyslurm.db.assoc cimport Associations, Association, _parse_assoc_ptr
+from pyslurm.xcollections cimport MultiClusterMap
 from pyslurm.utils.uint cimport u16_set_bool_flag
 
-cdef _set_qos_list(list_t **in_list, vals, QualitiesOfService data)
 
-
-cdef class QualityOfServiceAPI(ConnectionWrapper):
+cdef class WCKeys(MultiClusterMap):
     pass
 
 
-cdef class QualitiesOfService(dict):
+cdef class WCKeyFilter:
+    cdef slurmdb_wckey_cond_t *ptr
+
     cdef public:
-        Connection _db_conn
+        names
 
 
-cdef class QualityOfServiceFilter:
-   cdef slurmdb_qos_cond_t *ptr
-
-   cdef public:
-       names
-       ids
-       descriptions
-       preempt_modes
-       with_deleted
-
-
-cdef class QualityOfService:
-    cdef public:
-        Connection _db_conn
-
-    cdef slurmdb_qos_rec_t *ptr
+cdef class WCKey:
+    cdef:
+        slurmdb_wckey_rec_t *ptr
+        _cluster
 
     @staticmethod
-    cdef QualityOfService from_ptr(slurmdb_qos_rec_t *in_ptr)
+    cdef WCKey from_ptr(slurmdb_wckey_rec_t *in_ptr)
