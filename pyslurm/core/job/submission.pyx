@@ -168,7 +168,7 @@ cdef class JobSubmitDescription:
                 continue
 
             spec = attr.upper()
-            val = pyenviron.get(f"PYSLURM_JOBDESC_{spec)}")
+            val = pyenviron.get(f"PYSLURM_JOBDESC_{spec}")
             if (val is not None
                     and (getattr(self, attr) is None or overwrite)):
 
