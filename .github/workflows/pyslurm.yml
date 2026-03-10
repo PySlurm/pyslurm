@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  unit-tests:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -16,13 +16,13 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Pull Slurm container
         run: docker pull giovtorres/slurm-docker:25.11.2
 
       - name: Start Slurm container
-        run: docker compose -f docker-compose-github.yml up -d
+        run: docker compose up -d
 
       - name: Wait for Slurm services
         run: |
@@ -46,6 +46,13 @@ jobs:
             sleep 2
           done
           docker exec slurmctl sinfo
+
+      - name: Tune Slurm config for tests
+        run: |
+          docker exec slurmctl bash -c "
+            sed -i -E 's/CPUs=[0-9]+/CPUs=4/' /etc/slurm/slurm.conf
+            scontrol reconfigure
+          "
 
       - name: Build and install PySlurm
         run: |
@@ -64,57 +71,6 @@ jobs:
             source /opt/pyslurm-venv/bin/activate
             cd /pyslurm
             pytest tests/unit -v
-          "
-
-  integration-tests:
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    strategy:
-      matrix:
-        python-version: ["3.12"]
-      fail-fast: false
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Pull Slurm container
-        run: docker pull giovtorres/slurm-docker:25.11.2
-
-      - name: Start Slurm container
-        run: docker compose -f docker-compose-github.yml up -d
-
-      - name: Wait for Slurm services
-        run: |
-          echo "Waiting for Slurm controller..."
-          for i in $(seq 1 30); do
-            if docker exec slurmctl scontrol ping 2>/dev/null | grep -q "UP"; then
-              echo "Slurm controller is ready"
-              break
-            fi
-            echo "Attempt $i/30..."
-            sleep 2
-          done
-
-          echo "Waiting for compute nodes..."
-          for i in $(seq 1 30); do
-            if docker exec slurmctl sinfo -h -o "%T %D" 2>/dev/null | grep -q "idle"; then
-              echo "Compute nodes are ready"
-              break
-            fi
-            echo "Attempt $i/30..."
-            sleep 2
-          done
-          docker exec slurmctl sinfo
-
-      - name: Build and install PySlurm
-        run: |
-          docker exec slurmctl bash -c "
-            python3 -m venv /opt/pyslurm-venv
-            source /opt/pyslurm-venv/bin/activate
-            pip install -r /pyslurm/test_requirements.txt
-            cd /pyslurm
-            python setup.py build -j4
-            python setup.py install
           "
 
       - name: Run integration tests

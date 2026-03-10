@@ -6,20 +6,31 @@ VENV_PATH="/opt/pyslurm-venv"
 BUILD_JOBS="${PYSLURM_BUILD_JOBS:-4}"
 
 usage() {
-    echo "Usage: $0 [-c container_name] [-j build_jobs] [-s]"
+    echo "Usage: $0 [-c container_name] [-j build_jobs] [-s] [-C] [-u | -i]"
     echo "  -c  Container name (default: slurmctl)"
     echo "  -j  Parallel build jobs (default: 4)"
     echo "  -s  Skip build step (reuse existing install)"
+    echo "  -C  Clean build (remove build artifacts before building)"
+    echo "  -u  Run unit tests only"
+    echo "  -i  Run integration tests only"
+    echo ""
+    echo "With no flags, runs both unit and integration tests."
     exit 1
 }
 
 SKIP_BUILD=false
+CLEAN_BUILD=false
+RUN_UNIT=true
+RUN_INTEGRATION=true
 
-while getopts ":c:j:sh" o; do
+while getopts ":c:j:sCuih" o; do
     case "${o}" in
         c) CONTAINER_NAME="${OPTARG}" ;;
         j) BUILD_JOBS="${OPTARG}" ;;
         s) SKIP_BUILD=true ;;
+        C) CLEAN_BUILD=true ;;
+        u) RUN_UNIT=true; RUN_INTEGRATION=false ;;
+        i) RUN_UNIT=false; RUN_INTEGRATION=true ;;
         h) usage ;;
         *) usage ;;
     esac
@@ -63,21 +74,51 @@ for i in $(seq 1 30); do
     sleep 2
 done
 
+# Ensure nodes have enough CPUs to avoid resource contention between tests
+echo "Tuning Slurm config for tests..."
+docker exec "$CONTAINER_NAME" bash -c "
+    sed -i -E 's/CPUs=[0-9]+/CPUs=4/' /etc/slurm/slurm.conf
+    scontrol reconfigure
+"
+
 if [ "$SKIP_BUILD" = false ]; then
+    if [ "$CLEAN_BUILD" = true ]; then
+        echo "Cleaning build artifacts..."
+        docker exec "$CONTAINER_NAME" bash -c "
+            cd /pyslurm
+            rm -rf build/ *.egg-info
+            find pyslurm -name '*.so' -delete
+            find pyslurm -name '*.c' -not -name '__init__.c' -delete 2>/dev/null || true
+        "
+    fi
+
     echo "Building and installing PySlurm..."
+    build_start=$(date +%s)
     docker exec "$CONTAINER_NAME" bash -c "
         python3 -m venv $VENV_PATH 2>/dev/null || true
         source $VENV_PATH/bin/activate
-        pip install -q -r /pyslurm/test_requirements.txt
+        pip install -q --disable-pip-version-check -r /pyslurm/test_requirements.txt
         cd /pyslurm
-        python setup.py build -j$BUILD_JOBS
-        python setup.py install
+        pip install -v --disable-pip-version-check -e . --no-build-isolation --config-settings='--build-option=build_ext -j$BUILD_JOBS'
+    "
+    build_end=$(date +%s)
+    echo "Build completed in $((build_end - build_start))s."
+fi
+
+if [ "$RUN_UNIT" = true ]; then
+    echo "Running unit tests..."
+    docker exec "$CONTAINER_NAME" bash -c "
+        source $VENV_PATH/bin/activate
+        cd /pyslurm
+        pytest tests/unit -v
     "
 fi
 
-echo "Running integration tests..."
-docker exec "$CONTAINER_NAME" bash -c "
-    source $VENV_PATH/bin/activate
-    cd /pyslurm
-    pytest tests/integration -v \"\$@\"
-" -- "$@"
+if [ "$RUN_INTEGRATION" = true ]; then
+    echo "Running integration tests..."
+    docker exec "$CONTAINER_NAME" bash -c "
+        source $VENV_PATH/bin/activate
+        cd /pyslurm
+        pytest tests/integration -v
+    "
+fi

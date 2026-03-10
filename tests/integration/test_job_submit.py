@@ -20,14 +20,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_job_submit.py - Test the job submit api functions."""
 
-import pytest
-import pyslurm
-from util import create_simple_job_desc, create_job_script
+from util import create_job_script
 from pyslurm import (
-    Job,
-    Jobs,
     JobSubmitDescription,
-    RPCError,
 )
 
 def job_desc(**kwargs):

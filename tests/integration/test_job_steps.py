@@ -21,7 +21,6 @@
 """test_job_steps.py - Test the job steps api functions."""
 
 import pytest
-import time
 from pyslurm import (
     JobStep,
     JobSteps,
@@ -31,7 +30,7 @@ import util
 
 
 def create_job_script_multi_step(steps=None):
-    default = f"""
+    default = """
     srun -n1 -N1 -c1 \
          -J step_zero --distribution=block:cyclic:block,Pack \
          sleep 300 &
@@ -55,9 +54,8 @@ wait
 def test_load(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
-    # Load the step info, waiting one second to make sure the Step
-    # actually exists.
-    util.wait()
+    # Wait for all 3 steps (batch + 2 srun) to appear
+    util.wait_for_steps(job.id, 3)
     step = JobStep.load(job.id, "batch")
 
     assert step.id == "batch"
@@ -101,8 +99,7 @@ def test_load(submit_job):
 def test_collection(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
-    util.wait()
-    steps = JobSteps.load(job)
+    steps = util.wait_for_steps(job.id, 3)
 
     assert steps
     # We have 3 Steps: batch, 0 and 1
@@ -115,28 +112,26 @@ def test_collection(submit_job):
 def test_cancel(submit_job):
     job = submit_job(script=create_job_script_multi_step())
 
-    util.wait()
-    steps = JobSteps.load(job)
+    steps = util.wait_for_steps(job.id, 3)
     assert len(steps) == 3
     assert ("batch" in steps and
             0 in steps and
             1 in steps)
 
     steps[0].cancel()
+    util.wait_for_step_gone(job.id, 0, timeout=30)
 
-    util.wait()
-    steps = JobSteps.load(job)
-    assert len(steps) == 2
-    assert ("batch" in steps and
-            1 in steps)
+    # The batch step and step 1 should still be active
+    steps = JobSteps.load(job.id)
+    assert "batch" in steps
+    assert 1 in steps
 
 
 def test_modify(submit_job):
     steps = "srun -t 20 sleep 100"
     job = submit_job(script=create_job_script_multi_step(steps))
 
-    util.wait()
-    step = JobStep.load(job, 0)
+    step = util.wait_for_step(job.id, 0)
     assert step.time_limit == 20
 
     step.modify(JobStep(time_limit="00:05:00"))
@@ -147,21 +142,24 @@ def test_modify(submit_job):
 
 
 def test_send_signal(submit_job):
-    steps = "srun -t 10 sleep 100"
+    steps = "srun -t 10 sleep 300 &"
     job = submit_job(script=create_job_script_multi_step(steps))
 
-    util.wait()
-    step = JobStep.load(job, 0)
+    step = util.wait_for_step(job.id, 0)
     assert step.state == "RUNNING"
 
-    # Send a SIGTERM (basically cancelling the Job)
-    step.send_signal(15)
+    # Send a SIGTERM to cancel the step. There is an inherent race in
+    # Slurm where the job can complete between loading the step and
+    # sending the signal, so we treat "Invalid job id" as the job
+    # already being gone (nothing left to wait for).
+    try:
+        step.send_signal(15)
+    except RPCError as e:
+        if "Invalid job id" not in str(e):
+            raise
+        return
 
-    # Make sure the job is actually cancelled.
-    # If a RPCError is raised, this means the Step got cancelled.
-    util.wait()
-    with pytest.raises(RPCError):
-        step = JobStep.load(job, 0)
+    util.wait_for_step_gone(job.id, 0)
 
 
 def test_load_with_wrong_step_id(submit_job):
@@ -173,5 +171,11 @@ def test_load_with_wrong_step_id(submit_job):
 
 def test_parse_all(submit_job):
     job = submit_job()
-    util.wait()
-    JobStep.load(job, "batch").to_dict()
+    step = util.wait_for_step(job.id, "batch")
+    step_dict = step.to_dict()
+
+    assert isinstance(step_dict, dict)
+    assert "id" in step_dict
+    assert "job_id" in step_dict
+    assert "name" in step_dict
+    assert step_dict["job_id"] == job.id

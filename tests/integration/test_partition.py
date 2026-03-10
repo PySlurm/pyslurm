@@ -22,7 +22,6 @@
 """test_partition.py - Test the Partition api functions."""
 
 import pytest
-import pyslurm
 import json
 import util
 from pyslurm import Partition, Partitions, RPCError
@@ -35,7 +34,7 @@ def test_load():
     assert part.state
 
     with pytest.raises(RPCError,
-                       match=f"Partition 'nonexistent' doesn't exist"):
+                       match="Partition 'nonexistent' doesn't exist"):
         Partition.load("nonexistent")
 
 

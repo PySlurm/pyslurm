@@ -20,7 +20,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_job.py - Integration test job api functionalities."""
 
-import time
 import pytest
 import pyslurm
 import json
@@ -35,8 +34,16 @@ from pyslurm import (
 
 
 def test_parse_all(submit_job):
-    job = submit_job()
-    Job.load(job.id).to_dict()
+    job = submit_job(priority=0)
+    job_dict = Job.load(job.id).to_dict()
+
+    assert isinstance(job_dict, dict)
+    assert "id" in job_dict
+    assert "name" in job_dict
+    assert "state" in job_dict
+    assert "ntasks" in job_dict
+    assert job_dict["id"] == job.id
+    assert job_dict["name"] == "test_job"
 
 
 def test_load(submit_job):
@@ -47,7 +54,7 @@ def test_load(submit_job):
     # on default values.
     assert job.ntasks == 1
     assert job.cpus_per_task == 1
-    assert job.time_limit == None
+    assert job.time_limit is None
 
     # Now load the job info
     job = Job.load(jid)
@@ -56,6 +63,9 @@ def test_load(submit_job):
     assert job.ntasks == 2
     assert job.cpus_per_task == 1
     assert job.time_limit == 1440
+    assert job.name == "test_job"
+    assert job.memory_per_cpu is not None
+    assert job.state in ("PENDING", "RUNNING", "COMPLETING", "COMPLETED")
 
     with pytest.raises(RPCError):
         Job.load(99999)
@@ -64,36 +74,28 @@ def test_load(submit_job):
 def test_cancel(submit_job):
     job = submit_job()
     job.cancel()
-    # make sure the job is actually cancelled
-    util.wait()
-    assert Job.load(job.id).state == "CANCELLED"
+    util.wait_for_job_state(job.id, "CANCELLED")
 
 
 def test_send_signal(submit_job):
     job = submit_job()
-
-    util.wait()
-    assert Job.load(job.id).state == "RUNNING"
+    util.wait_for_job_running(job.id)
 
     # Send a SIGKILL (basically cancelling the Job)
     job.send_signal(9)
 
-    # make sure the job is actually cancelled
-    util.wait()
-    assert Job.load(job.id).state == "CANCELLED"
+    util.wait_for_job_state(job.id, "CANCELLED", timeout=30)
 
 
 def test_suspend_unsuspend(submit_job):
     job = submit_job()
 
-    util.wait()
+    util.wait_for_job_running(job.id)
     job.suspend()
     assert Job.load(job.id).state == "SUSPENDED"
 
     job.unsuspend()
-    # make sure the job is actually running again
-    util.wait()
-    assert Job.load(job.id).state == "RUNNING"
+    util.wait_for_job_state(job.id, "RUNNING")
 
 
 # Don't need to test hold/resume, since it uses just job.modify() to set
@@ -122,7 +124,7 @@ def test_requeue(submit_job):
 
     assert job.requeue_count == 0
 
-    util.wait()
+    util.wait_for_job_running(job.id)
     job.requeue()
     job = Job.load(job.id)
 
@@ -131,7 +133,7 @@ def test_requeue(submit_job):
 
 def test_notify(submit_job):
     job = submit_job()
-    util.wait()
+    util.wait_for_job_running(job.id)
 
     # Could check the logfile, but we just assume for now
     # that when this function raises no Exception, everything worked.
@@ -146,8 +148,8 @@ def test_get_batch_script(submit_job):
 
 
 def test_get_job_queue(submit_job):
-    # Submit 10 jobs, gather the job_ids in a list
-    job_list = [submit_job() for i in range(10)]
+    # Submit 10 held jobs (priority=0) to avoid consuming cluster resources
+    job_list = [submit_job(priority=0) for i in range(10)]
 
     jobs = Jobs.load()
     for job in job_list:
@@ -157,24 +159,21 @@ def test_get_job_queue(submit_job):
 
 
 def test_load_steps(submit_job):
-    job_list = [submit_job() for i in range(2)]
-    util.wait(10)
+    submitted = submit_job()
+    util.wait_for_job_running(submitted.id)
 
     jobs = Jobs.load()
     jobs.load_steps()
 
-    for _job in job_list:
-        job = jobs[_job.id]
-        assert job.state == "RUNNING"
-        assert job.steps
-        assert isinstance(job.steps, pyslurm.JobSteps)
-        assert job.steps.get("batch")
-
+    job = jobs[submitted.id]
+    assert job.state == "RUNNING"
+    assert job.steps
+    assert isinstance(job.steps, pyslurm.JobSteps)
+    assert job.steps.get("batch")
 
 
 def test_to_json(submit_job):
-    job_list = [submit_job() for i in range(3)]
-    util.wait()
+    _ = [submit_job(priority=0) for i in range(3)]
 
     jobs = Jobs.load()
     jobs.load_steps()
@@ -184,8 +183,3 @@ def test_to_json(submit_job):
     assert dict_data
     assert json_data
     assert len(dict_data) >= 3
-
-
-def test_get_resource_layout_per_node(submit_job):
-    # TODO
-    assert True
