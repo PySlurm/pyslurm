@@ -32,10 +32,10 @@ import util
 
 def create_job_script_multi_step(steps=None):
     default = f"""
-    srun -n1 -N1 -c2 \
+    srun -n1 -N1 -c1 \
          -J step_zero --distribution=block:cyclic:block,Pack \
          sleep 300 &
-    srun -n1 -N1 -c3 \
+    srun -n1 -N1 -c1 \
          -t 10 -J step_one --distribution=block:cyclic:block,Pack \
          sleep 300 &"""
 
@@ -87,14 +87,14 @@ def test_load(submit_job):
     assert step.job_id == job.id
     assert step.name == "step_zero"
     assert step.ntasks == 1
-    assert step.cpus == 2
+    assert step.cpus == 1
     assert step.time_limit is None
 
     step = step_one
     assert step.job_id == job.id
     assert step.name == "step_one"
     assert step.ntasks == 1
-    assert step.cpus == 3
+    assert step.cpus == 1
     assert step.time_limit == 10
 
 

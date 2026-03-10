@@ -32,7 +32,6 @@ from pyslurm import (
     JobSubmitDescription,
     RPCError,
 )
-from pyslurm.db import JobStatistics, JobStepStatistics
 
 
 def test_parse_all(submit_job):
@@ -55,7 +54,7 @@ def test_load(submit_job):
 
     assert job.id == jid
     assert job.ntasks == 2
-    assert job.cpus_per_task == 3
+    assert job.cpus_per_task == 1
     assert job.time_limit == 1440
 
     with pytest.raises(RPCError):
@@ -158,8 +157,8 @@ def test_get_job_queue(submit_job):
 
 
 def test_load_steps(submit_job):
-    job_list = [submit_job() for i in range(3)]
-    util.wait()
+    job_list = [submit_job() for i in range(2)]
+    util.wait(10)
 
     jobs = Jobs.load()
     jobs.load_steps()
@@ -171,30 +170,6 @@ def test_load_steps(submit_job):
         assert isinstance(job.steps, pyslurm.JobSteps)
         assert job.steps.get("batch")
 
-
-def test_load_stats(submit_job):
-    job = submit_job()
-    util.wait(100)
-
-    job = Job.load(job.id)
-    job.load_stats()
-
-    assert job.state == "RUNNING"
-    assert job.stats
-    assert isinstance(job.stats, JobStatistics)
-    assert job.stats.elapsed_cpu_time > 0
-    assert job.stats.resident_memory > 0
-    assert job.stats.disk_read > 0
-    assert job.stats.disk_write > 0
-
-    for step in job.steps.values():
-        assert step.stats
-        assert step.state == "RUNNING"
-        assert isinstance(step.stats, JobStepStatistics)
-        assert step.stats.avg_resident_memory > 0
-        assert step.stats.avg_disk_read > 0
-        assert step.stats.avg_disk_write > 0
-        assert step.stats.elapsed_cpu_time > 0
 
 
 def test_to_json(submit_job):

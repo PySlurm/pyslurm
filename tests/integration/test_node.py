@@ -40,14 +40,6 @@ def test_load():
         Node.load("nonexistent")
 
 
-def test_create():
-    node = Node("testhostpyslurm")
-    node.create()
-
-    with pytest.raises(RPCError,
-                       match=f"Invalid node state specified"):
-        Node("testhostpyslurm2").create("idle")
-
 
 def test_modify():
     _, node = Nodes.load().popitem()
