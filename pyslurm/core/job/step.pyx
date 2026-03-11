@@ -100,6 +100,13 @@ cdef class JobSteps(dict):
             msg = f"Failed to load step info for Job {job.id}."
             raise RPCError(msg=msg)
 
+        if job.id not in data:
+            # slurm_get_job_steps returns all running steps for the whole array
+            # job when using the Master Array ID. So we still have data when
+            # other Jobs of the Array-Job are still running, but just not for
+            # Master anymore. Just return empty then, since this Task is already done
+            return steps
+
         steps.update(data[job.id])
         return steps
 
@@ -443,6 +450,7 @@ cdef class JobStep:
     def container_id(self):
         return cstr.to_unicode(self.ptr.container_id)
 
+    @property
     def array_id(self):
         return u32_parse(self.ptr.array_job_id)
 

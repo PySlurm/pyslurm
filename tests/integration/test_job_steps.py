@@ -175,3 +175,13 @@ def test_parse_all(submit_job):
     job = submit_job()
     util.wait()
     JobStep.load(job, "batch").to_dict()
+
+
+def test_ignore_array_master(submit_job):
+    job = submit_job(array="1-3")
+    util.wait()
+
+    assert JobSteps.load(job)
+    job.cancel()
+    util.wait(2)
+    assert not JobSteps.load(job)
