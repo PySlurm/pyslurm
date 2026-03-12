@@ -6,11 +6,10 @@ VENV_PATH="/opt/pyslurm-venv"
 BUILD_JOBS="${PYSLURM_BUILD_JOBS:-4}"
 
 usage() {
-    echo "Usage: $0 [-c container_name] [-j build_jobs] [-s] [-C] [-u | -i]"
+    echo "Usage: $0 [-c container_name] [-j build_jobs] [-s] [-u | -i]"
     echo "  -c  Container name (default: slurmctl)"
     echo "  -j  Parallel build jobs (default: 4)"
     echo "  -s  Skip build step (reuse existing install)"
-    echo "  -C  Clean build (remove build artifacts before building)"
     echo "  -u  Run unit tests only"
     echo "  -i  Run integration tests only"
     echo ""
@@ -19,16 +18,14 @@ usage() {
 }
 
 SKIP_BUILD=false
-CLEAN_BUILD=false
 RUN_UNIT=true
 RUN_INTEGRATION=true
 
-while getopts ":c:j:sCuih" o; do
+while getopts ":c:j:suih" o; do
     case "${o}" in
         c) CONTAINER_NAME="${OPTARG}" ;;
         j) BUILD_JOBS="${OPTARG}" ;;
         s) SKIP_BUILD=true ;;
-        C) CLEAN_BUILD=true ;;
         u) RUN_UNIT=true; RUN_INTEGRATION=false ;;
         i) RUN_UNIT=false; RUN_INTEGRATION=true ;;
         h) usage ;;
@@ -82,16 +79,6 @@ docker exec "$CONTAINER_NAME" bash -c "
 "
 
 if [ "$SKIP_BUILD" = false ]; then
-    if [ "$CLEAN_BUILD" = true ]; then
-        echo "Cleaning build artifacts..."
-        docker exec "$CONTAINER_NAME" bash -c "
-            cd /pyslurm
-            rm -rf build/ *.egg-info
-            find pyslurm -name '*.so' -delete
-            find pyslurm -name '*.c' -not -name '__init__.c' -delete 2>/dev/null || true
-        "
-    fi
-
     echo "Building and installing PySlurm..."
     build_start=$(date +%s)
     docker exec "$CONTAINER_NAME" bash -c "
