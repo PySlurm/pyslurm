@@ -86,7 +86,7 @@ if [ "$SKIP_BUILD" = false ]; then
         source $VENV_PATH/bin/activate
         pip install -q --disable-pip-version-check -r /pyslurm/test_requirements.txt
         cd /pyslurm
-        pip install -v --disable-pip-version-check -e . --no-build-isolation --config-settings='--build-option=build_ext -j$BUILD_JOBS'
+        scripts/build.sh -j $BUILD_JOBS -d
     "
     build_end=$(date +%s)
     echo "Build completed in $((build_end - build_start))s."

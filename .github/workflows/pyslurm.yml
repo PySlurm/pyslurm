@@ -61,8 +61,7 @@ jobs:
             source /opt/pyslurm-venv/bin/activate
             pip install -r /pyslurm/test_requirements.txt
             cd /pyslurm
-            python setup.py build -j4
-            python setup.py install
+            scripts/build.sh -j 4
           "
 
       - name: Run unit tests
