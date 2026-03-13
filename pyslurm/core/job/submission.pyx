@@ -369,7 +369,7 @@ cdef class JobSubmitDescription:
         elif self.memory_per_node:
             self.ptr.pn_min_memory = u64(dehumanize(self.memory_per_node))
         elif self.memory_per_gpu:
-            mem_gpu = u64(dehumanize(val))
+            mem_gpu = u64(dehumanize(self.memory_per_gpu))
             cstr.fmalloc(&self.ptr.mem_per_tres, f"gres:gpu:{mem_gpu}")
 
     def _set_open_mode(self):
