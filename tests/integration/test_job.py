@@ -31,6 +31,7 @@ from pyslurm import (
     JobSubmitDescription,
     RPCError,
 )
+from pyslurm.db import JobStatistics, JobStepStatistics
 
 
 def test_parse_all(submit_job):
@@ -105,9 +106,9 @@ def test_modify(submit_job):
     job = Job(job.id)
 
     changes = JobSubmitDescription(
-        time_limit = "2-00:00:00",
-        ntasks = 5,
-        cpus_per_task = 4,
+        time_limit="2-00:00:00",
+        ntasks=5,
+        cpus_per_task=4,
     )
 
     job.modify(changes)
@@ -170,6 +171,54 @@ def test_load_steps(submit_job):
     assert job.steps
     assert isinstance(job.steps, pyslurm.JobSteps)
     assert job.steps.get("batch")
+
+
+def test_load_stats(submit_job):
+    import time
+
+    # Use a script that generates CPU time and disk I/O so all
+    # stats fields are nonzero when sampled.
+    stats_script = """\
+#!/bin/bash
+for i in $(seq 1 10000); do echo "$i" > /dev/null; done
+dd if=/dev/zero of=/tmp/pyslurm-stats-test bs=1K count=100 2>/dev/null
+cat /tmp/pyslurm-stats-test > /dev/null
+rm -f /tmp/pyslurm-stats-test
+sleep 60
+"""
+    job = submit_job(script=stats_script)
+    util.wait_for_job_running(job.id)
+
+    # Stats are sampled every JobAcctGatherFrequency seconds (5s).
+    # Poll until all stats fields are populated (needs at least two samples).
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        job = Job.load(job.id)
+        job.load_stats()
+        if (
+            job.stats
+            and job.stats.resident_memory > 0
+            and job.stats.elapsed_cpu_time > 0
+        ):
+            break
+        time.sleep(1)
+
+    assert job.state == "RUNNING"
+    assert job.stats
+    assert isinstance(job.stats, JobStatistics)
+    assert job.stats.elapsed_cpu_time > 0
+    assert job.stats.resident_memory > 0
+    assert job.stats.disk_read > 0
+    assert job.stats.disk_write > 0
+
+    for step in job.steps.values():
+        assert step.stats
+        assert step.state == "RUNNING"
+        assert isinstance(step.stats, JobStepStatistics)
+        assert step.stats.avg_resident_memory > 0
+        assert step.stats.avg_disk_read > 0
+        assert step.stats.avg_disk_write > 0
+        assert step.stats.elapsed_cpu_time > 0
 
 
 def test_to_json(submit_job):
