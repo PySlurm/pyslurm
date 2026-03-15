@@ -29,8 +29,8 @@ def test_create_instance():
     resv = pyslurm.Reservation("test")
     assert resv.name == "test"
     assert resv.accounts == []
-    assert resv.start_time == None
-    assert resv.end_time == None
+    assert resv.start_time is None
+    assert resv.end_time is None
     assert resv.duration == 0
     assert resv.is_active is False
     assert resv.cpu_ids_by_node == {}

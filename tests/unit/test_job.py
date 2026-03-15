@@ -20,10 +20,12 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_job.py - Unit test basic job functionalities."""
 
-import pytest
-import pyslurm
 from pyslurm import Job
-from pyslurm.core.job.util import *
+from pyslurm.core.job.util import (
+    acctg_profile_int_to_list,
+    dependency_str_to_dict,
+    mail_type_int_to_list,
+    )
 from pyslurm.utils.helpers import cpu_freq_int_to_str
 
 def test_create_instance():

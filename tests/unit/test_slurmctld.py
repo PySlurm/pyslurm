@@ -20,8 +20,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_slurmctld.py - Unit test basic slurmctld functionalities."""
 
-import pyslurm
-from pyslurm import slurmctld
 from pyslurm.core.slurmctld.stats import _parse_test_data
 
 

@@ -21,9 +21,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_partition.py - Unit Test basic functionality of the Partition class."""
 
-import pytest
-import pyslurm
-from pyslurm import Partition, Partitions
+from pyslurm import Partition
 
 
 def test_create_instance():

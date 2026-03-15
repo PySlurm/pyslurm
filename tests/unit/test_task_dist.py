@@ -20,7 +20,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_task_dist.py - Test task distribution functions."""
 
-import pyslurm
 from pyslurm.core.job.task_dist import TaskDistribution
 
 

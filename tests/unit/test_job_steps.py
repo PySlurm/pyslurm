@@ -20,12 +20,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_job_steps.py - Unit test basic job step functionality."""
 
-import pytest
 from pyslurm import JobStep, Job
-from pyslurm.utils.helpers import (
-    humanize_step_id,
-    dehumanize_step_id,
-)
 
 def test_create_instance():
     step = JobStep(9999, 1)

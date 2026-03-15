@@ -20,8 +20,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_db_slurm_List.py - Unit test basic Slurm list functionalities."""
 
-import pytest
-import pyslurm
 from pyslurm.db.util import SlurmList
 
 

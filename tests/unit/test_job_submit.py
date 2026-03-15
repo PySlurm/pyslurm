@@ -20,20 +20,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_job_submit.py - Test the job submit api functions."""
 
-import sys
-import time
 import pytest
-import pyslurm
 import tempfile
 import os
 from os import environ as pyenviron
-from util import create_simple_job_desc, create_job_script
-from pyslurm.utils.uint import u32
+from util import create_job_script
 from pyslurm import (
-    Job,
-    Jobs,
     JobSubmitDescription,
-    RPCError,
 )
 from pyslurm.core.job.submission import (
     _parse_cpu_freq_str_to_dict,
@@ -48,7 +41,6 @@ from pyslurm.core.job.util import (
     acctg_profile_list_to_int,
     cpu_freq_str_to_int,
     cpu_gov_str_to_int,
-    shared_type_str_to_int,
 )
 
 
@@ -319,7 +311,7 @@ def test_setting_attrs_with_env_vars():
     assert job.wckey == "wckey"
     assert job.clusters == "cluster1,cluster2"
     assert job.comment == "A simple job comment"
-    assert job.requires_contiguous_nodes == True
+    assert job.requires_contiguous_nodes is True
     assert job.working_directory == "/work/user2"
 
     job = job_desc(working_directory="/work/user2", account="account2")
@@ -330,7 +322,7 @@ def test_setting_attrs_with_env_vars():
     assert job.wckey == "wckey"
     assert job.clusters == "cluster1,cluster2"
     assert job.comment == "A simple job comment"
-    assert job.requires_contiguous_nodes == True
+    assert job.requires_contiguous_nodes is True
     assert job.working_directory == "/work/user1"
 
 

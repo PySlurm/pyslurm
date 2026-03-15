@@ -20,7 +20,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_tres.py - Test TRES parsing functionality"""
 
-import pyslurm
 import pytest
 from pyslurm.db import (
     TrackableResource,
@@ -28,7 +27,6 @@ from pyslurm.db import (
     GenericResourceLayout,
     GPU,
 )
-from pyslurm.utils import cstr
 
 
 def test_parse_tres_str():
@@ -47,7 +45,7 @@ def test_parse_tres_str():
     gres = tres.gres["gpu"]
     assert isinstance(gres, GPU)
     assert gres.count == 5
-    assert gres.type == None
+    assert gres.type is None
 
     # Simulating the global TRES-data that is required when translating
     # such strings that only come with IDs, but without names.

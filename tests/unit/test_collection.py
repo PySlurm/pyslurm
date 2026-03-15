@@ -145,10 +145,10 @@ class TestMultiClusterMap:
         assert item1 != item3
 
         with pytest.raises(KeyError):
-            item = col[30]
+            col[30]
 
         with pytest.raises(KeyError):
-            item = col[OTHER_CLUSTER][30]
+            col[OTHER_CLUSTER][30]
 
     def test_setitem(self):
         col = self._create_collection()

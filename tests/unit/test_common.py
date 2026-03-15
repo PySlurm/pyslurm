@@ -23,7 +23,7 @@
 import pyslurm
 import pytest
 from datetime import datetime
-from pyslurm import Job, JobSubmitDescription, Node, Partition
+from pyslurm import Node
 from pyslurm.utils.ctime import (
     timestr_to_mins,
     timestr_to_secs,
@@ -51,16 +51,11 @@ from pyslurm.utils.helpers import (
     humanize,
     dehumanize,
     signal_to_num,
-    cpubind_to_num,
     nodelist_from_range_str,
     nodelist_to_range_str,
-    instance_to_dict,
     gres_from_tres_dict,
 )
 from pyslurm.utils import cstr
-from pyslurm.xcollections import (
-    sum_property,
-)
 
 
 class TestStrings:
@@ -148,8 +143,8 @@ class TestStrings:
         expected_str = "key1=value1,key2=value2"
         assert cstr.dict_to_str(expected_str) == expected_str
 
-        assert cstr.dict_to_str({}) == None
-        assert cstr.dict_to_str("") == None
+        assert cstr.dict_to_str({}) is None
+        assert cstr.dict_to_str("") is None
 
     def test_dict_to_gres_str(self):
         input_dict = {"gpu:tesla": 3}
@@ -214,19 +209,19 @@ class TestUint:
 
     def _uint_impl(self, func_set, func_get, typ):
         val = func_set(2**typ-2)
-        assert func_get(val) == None
+        assert func_get(val) is None
 
         val = func_set(None)
-        assert func_get(val) == None
+        assert func_get(val) is None
 
         val = func_set(str(2**typ-2))
-        assert func_get(val) == None
+        assert func_get(val) is None
 
         val = func_set("UNLIMITED", inf=True)
         assert func_get(val) == "UNLIMITED"
 
         val = func_set(0)
-        assert func_get(val) == None
+        assert func_get(val) is None
 
         val = func_set(0, zero_is_noval=False)
         assert func_get(val, zero_is_noval=False) == 0
@@ -290,8 +285,8 @@ class TestTime:
 
         assert mins_to_timestr(mins) == mins_str
         assert mins_to_timestr(2**32-1) == "UNLIMITED"
-        assert mins_to_timestr(2**32-2) == None
-        assert mins_to_timestr(0) == None
+        assert mins_to_timestr(2**32-2) is None
+        assert mins_to_timestr(0) is None
 
         with pytest.raises(ValueError,
                 match="Invalid Time Specification: invalid_val."):
@@ -307,8 +302,8 @@ class TestTime:
 
         assert secs_to_timestr(secs) == secs_str
         assert secs_to_timestr(2**32-1) == "UNLIMITED"
-        assert secs_to_timestr(2**32-2) == None
-        assert secs_to_timestr(0) == None
+        assert secs_to_timestr(2**32-2) is None
+        assert secs_to_timestr(0) is None
 
         with pytest.raises(ValueError,
                 match="Invalid Time Specification: invalid_val."):
@@ -324,9 +319,9 @@ class TestTime:
         assert date_to_timestamp(datetime_date) == timestamp
 
         assert timestamp_to_date(timestamp) == date
-        assert timestamp_to_date(0) == None
-        assert timestamp_to_date(2**32-1) == None
-        assert timestamp_to_date(2**32-2) == None
+        assert timestamp_to_date(0) is None
+        assert timestamp_to_date(2**32-1) is None
+        assert timestamp_to_date(2**32-2) is None
 
         with pytest.raises(ValueError,
                 match="Invalid Time Specification: 2022-11-08T21"):
@@ -391,7 +386,7 @@ class TestMiscUtil:
         assert val == "UNLIMITED"
 
         val = humanize(None)
-        assert val == None
+        assert val is None
 
         with pytest.raises(ValueError):
             val = humanize("invalid_val")
@@ -436,7 +431,6 @@ class TestMiscUtil:
 
     def test_nodelist_from_range_str(self):
         nodelist = ["node001", "node007", "node008", "node009"]
-        nodelist_str = ",".join(nodelist)
         assert nodelist == nodelist_from_range_str("node[001,007-009]")
         assert nodelist_from_range_str("node[001,007:009]") == []
 
