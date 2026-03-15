@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""The Pyslurm Setup - build options"""
+"""PySlurm Setup - Cython build logic for Slurm extensions."""
 
 import os
 import sys
 from pathlib import Path
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension
 
 try:
     from packaging.version import Version
@@ -12,98 +12,27 @@ except ImportError:
     from setuptools._vendor.packaging.version import Version
 
 TOPDIR = Path(__file__).parent
+CYTHON_VERSION_MIN = "0.29.37"  # Keep in sync with pyproject.toml
+SLURM_LIB = "libslurmfull"
 
 
-def get_version():
+def get_slurm_version():
     with (TOPDIR / "pyslurm/version.py").open() as f:
         for line in f.read().splitlines():
-            if not line.startswith("__version__"):
-                continue
-
-            V = Version(line.split('"')[1])
-            if not hasattr(V, "major") or not hasattr(V, "minor"):
-                (V.major, V.minor) = V._version.release[0:2]
-
-            return V
+            if line.startswith("__version__"):
+                V = Version(line.split('"')[1])
+                if not hasattr(V, "major") or not hasattr(V, "minor"):
+                    (V.major, V.minor) = V._version.release[0:2]
+                return f"{V.major}.{V.minor}"
     raise RuntimeError("Cannot get version string.")
 
 
-CYTHON_VERSION_MIN = "0.29.37" # Keep in sync with pyproject.toml
-SLURM_LIB = "libslurmfull"
-VERSION = get_version()
-SLURM_VERSION = f"{VERSION.major}.{VERSION.minor}"
-DOCUMENTATION_URL = f"https://pyslurm.github.io/{SLURM_VERSION}"
-GITHUB_URL = "https://github.com/PySlurm/pyslurm"
+SLURM_VERSION = get_slurm_version()
 
-
-def homepage(*args):
-    return "/".join([DOCUMENTATION_URL] + list(args))
-
-
-def github(*args):
-    return "/".join([GITHUB_URL] + list(args))
-
-
-metadata = dict(
-    name="pyslurm",
-    version=str(VERSION),
-    license="GPLv2",
-    description="Python Interface for Slurm",
-    long_description=(TOPDIR / "README.md").read_text(encoding="utf-8"),
-    long_description_content_type="text/markdown",
-    author="Mark Roberts, Giovanni Torres, Toni Harzendorf, et al.",
-    maintainer="Toni Harzendorf",
-    maintainer_email="toni.harzendorf@gmail.com",
-    platforms=["Linux"],
-    url=homepage(),
-    keywords=[
-        "HPC",
-        "Batch Scheduler",
-        "Resource Manager",
-        "Slurm",
-        "Cython",
-    ],
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Environment :: Console",
-        "Intended Audience :: Developers",
-        "Intended Audience :: System Administrators",
-        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
-        "Natural Language :: English",
-        "Operating System :: POSIX :: Linux",
-        "Programming Language :: Cython",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Topic :: Software Development :: Libraries",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: System :: Distributed Computing",
-    ],
-    project_urls={
-        "Homepage"      : github(),
-        "Repository"    : github(),
-        "Issues"        : github("issues"),
-        "Discussions"   : github("discussions"),
-        "Documentation" : homepage("reference"),
-        "Changelog"     : homepage("changelog")
-    },
-    python_requires=">=3.6",
-    packages=find_packages(
-        include=['pyslurm*'],
-    ),
-    include_package_data=True,
-)
 
 class SlurmConfig():
 
     def __init__(self):
-        # Assume some defaults here
         self._lib_dir = Path("/usr/lib64")
         self._lib = None
         self._lib_dir_search_paths = []
@@ -236,7 +165,7 @@ def cythongen():
 
     cleanup_build()
     nthreads = os.getenv("PYSLURM_BUILD_JOBS", 1)
-    metadata["ext_modules"] = cythonize(get_extensions(), nthreads=int(nthreads))
+    return cythonize(get_extensions(), nthreads=int(nthreads))
 
 
 def parse_setuppy_commands():
@@ -261,18 +190,19 @@ def parse_setuppy_commands():
 
 def setup_package():
     build_it = parse_setuppy_commands()
+    ext_modules = None
 
     if build_it:
         parse_slurm_args()
         slurm.check_version()
-        cythongen()
+        ext_modules = cythongen()
 
     if "install" in sys.argv:
         parse_slurm_args()
         slurm.check_version()
-        metadata["ext_modules"] = get_extensions()
+        ext_modules = get_extensions()
 
-    setup(**metadata)
+    setup(ext_modules=ext_modules)
 
 
 if __name__ == "__main__":
