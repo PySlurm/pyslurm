@@ -24,7 +24,6 @@ import autopxd
 import click
 from datetime import datetime
 import os
-import re
 import pathlib
 from collections import OrderedDict
 
@@ -32,10 +31,11 @@ UINT8_RANGE = range((2**8))
 UINT16_RANGE = range((2**16))
 UINT32_RANGE = range((2**32))
 UINT64_RANGE = range((2**64))
-INT8_RANGE = range(-128, 127+1)
+INT8_RANGE = range(-128, 127 + 1)
 
 # TODO: also translate slurm enums automatically as variables like:
 # <ENUM-NAME> = slurm.<ENUM_NAME>
+
 
 def get_data_type(val):
     if val in UINT8_RANGE:
@@ -67,14 +67,14 @@ def capture_copyright(hdr_file):
 
 def try_get_macro_value(s):
     if s.startswith("SLURM_BIT"):
-        val = int(s[s.find("(")+1:s.find(")")])
+        val = int(s[s.find("(") + 1 : s.find(")")])
         return 1 << val
 
     if s.startswith("0x"):
         return int(s, 16)
 
     if s.startswith("(0x"):
-        _s = s[s.find("(")+1:s.find(")")]
+        _s = s[s.find("(") + 1 : s.find(")")]
         return int(_s, 16)
 
     try:
@@ -103,7 +103,10 @@ def translate_slurm_header(hdr_dir, hdr):
         macros = "".join(translate_hdr_macros(lines, hdr))
 
         c = click.get_current_context()
-        if c.params["show_unparsed_macros"] or c.params["generate_python_const"]:
+        if (
+            c.params["show_unparsed_macros"]
+            or c.params["generate_python_const"]
+        ):
             return
 
         codegen = autopxd.AutoPxd("slurm/" + hdr)
@@ -204,7 +207,7 @@ def translate_hdr_macros(s, hdr):
     unknown = []
     for line in s:
         if line.startswith("#define"):
-            name, ty = parse_macro(line.rstrip('\n'), hdr)
+            name, ty = parse_macro(line.rstrip("\n"), hdr)
             if ty:
                 vals.update({name: ty})
             elif name and not ty:
@@ -226,12 +229,13 @@ def translate_hdr_macros(s, hdr):
                 print("{} = slurm.{}".format(name, name))
         else:
             hdr_file = "slurm/" + hdr
-            out.append(f"cdef extern from \"{hdr_file}\":\n")
+            out.append(f'cdef extern from "{hdr_file}":\n')
             out.append("\n")
             for name, ty in vals.items():
                 out.append(f"    {ty} {name}\n")
 
     return out
+
 
 def setup_include_path(hdr_dir):
     include_dir = pathlib.Path(hdr_dir).parent.as_posix()
@@ -277,13 +281,18 @@ def setup_include_path(hdr_dir):
     is_flag=True,
     help="Instead of writing everything to files, just print to stdout.",
 )
-def main(slurm_header_dir, show_unparsed_macros,
-         generate_python_const, output_dir, stdout):
+def main(
+    slurm_header_dir,
+    show_unparsed_macros,
+    generate_python_const,
+    output_dir,
+    stdout,
+):
     setup_include_path(slurm_header_dir)
     translate_slurm_header(slurm_header_dir, "slurm_errno.h")
     translate_slurm_header(slurm_header_dir, "slurm.h")
     translate_slurm_header(slurm_header_dir, "slurmdb.h")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
