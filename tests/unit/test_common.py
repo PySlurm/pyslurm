@@ -59,7 +59,6 @@ from pyslurm.utils import cstr
 
 
 class TestStrings:
-
     def test_fmalloc(self):
         n = Node()
 
@@ -97,8 +96,12 @@ class TestStrings:
         assert n.available_features == []
 
     def test_str_to_dict(self):
-        expected_dict = {"cpu": 2, "mem": "11G",
-                         "gres/gpu": 1, "gres/gpu:nvidia-a100": 1}
+        expected_dict = {
+            "cpu": 2,
+            "mem": "11G",
+            "gres/gpu": 1,
+            "gres/gpu:nvidia-a100": 1,
+        }
         input_str = "cpu=2,mem=11G,gres/gpu=1,gres/gpu:nvidia-a100=1"
         assert cstr.to_dict(input_str) == expected_dict
         assert cstr.to_dict("") == {}
@@ -132,12 +135,15 @@ class TestStrings:
         assert cstr.dict_to_str(input_dict) == expected_str
 
         expected_str = "key1-value1:key2-value2"
-        assert cstr.dict_to_str(input_dict, delim1=":", delim2="-") == expected_str
+        assert (
+            cstr.dict_to_str(input_dict, delim1=":", delim2="-") == expected_str
+        )
 
         input_dict = {"key1=": "value1", "key2": "value2"}
         expected_str = "key1=value1,key2=value2"
-        with pytest.raises(ValueError,
-                           match=r"Key or Value cannot contain either*"):
+        with pytest.raises(
+            ValueError, match=r"Key or Value cannot contain either*"
+        ):
             assert cstr.dict_to_str(input_dict) == expected_str
 
         expected_str = "key1=value1,key2=value2"
@@ -199,22 +205,25 @@ class TestStrings:
         assert cstr.to_gres_dict(input_str) == expected
 
     def test_gres_from_tres_dict(self):
-        input_dict = {"cpu": 10, "mem": "5G",
-                      "gres/gpu": 5, "gres/gpu:nvidia": 100}
+        input_dict = {
+            "cpu": 10,
+            "mem": "5G",
+            "gres/gpu": 5,
+            "gres/gpu:nvidia": 100,
+        }
         expected = {"gpu": 5, "gpu:nvidia": 100}
         assert gres_from_tres_dict(input_dict) == expected
 
 
 class TestUint:
-
     def _uint_impl(self, func_set, func_get, typ):
-        val = func_set(2**typ-2)
+        val = func_set(2**typ - 2)
         assert func_get(val) is None
 
         val = func_set(None)
         assert func_get(val) is None
 
-        val = func_set(str(2**typ-2))
+        val = func_set(str(2**typ - 2))
         assert func_get(val) is None
 
         val = func_set("UNLIMITED", inf=True)
@@ -226,17 +235,19 @@ class TestUint:
         val = func_set(0, zero_is_noval=False)
         assert func_get(val, zero_is_noval=False) == 0
 
-        with pytest.raises(TypeError,
-                           match="an integer is required"):
+        with pytest.raises(TypeError, match="an integer is required"):
             val = func_set("UNLIMITED")
 
-        with pytest.raises(OverflowError,
-                           match=r"can't convert negative value to*"):
+        with pytest.raises(
+            OverflowError, match=r"can't convert negative value to*"
+        ):
             val = func_set(-1)
 
-        with pytest.raises(OverflowError,
-                           match=r"value too large to convert to*|"
-                                  "Python int too large*"):
+        with pytest.raises(
+            OverflowError,
+            match=r"value too large to convert to*|"
+            "Python int too large*",
+        ):
             val = func_set(2**typ)
 
     def test_u8(self):
@@ -274,22 +285,22 @@ class TestUint:
 
 
 class TestTime:
-
     def test_parse_minutes(self):
         mins = 60
         mins_str = "01:00:00"
 
         assert timestr_to_mins(mins_str) == mins
-        assert timestr_to_mins("UNLIMITED") == 2**32-1
-        assert timestr_to_mins(None) == 2**32-2
+        assert timestr_to_mins("UNLIMITED") == 2**32 - 1
+        assert timestr_to_mins(None) == 2**32 - 2
 
         assert mins_to_timestr(mins) == mins_str
-        assert mins_to_timestr(2**32-1) == "UNLIMITED"
-        assert mins_to_timestr(2**32-2) is None
+        assert mins_to_timestr(2**32 - 1) == "UNLIMITED"
+        assert mins_to_timestr(2**32 - 2) is None
         assert mins_to_timestr(0) is None
 
-        with pytest.raises(ValueError,
-                match="Invalid Time Specification: invalid_val."):
+        with pytest.raises(
+            ValueError, match="Invalid Time Specification: invalid_val."
+        ):
             timestr_to_mins("invalid_val")
 
     def test_parse_seconds(self):
@@ -297,16 +308,17 @@ class TestTime:
         secs_str = "01:00:00"
 
         assert timestr_to_secs(secs_str) == secs
-        assert timestr_to_secs("UNLIMITED") == 2**32-1
-        assert timestr_to_secs(None) == 2**32-2
+        assert timestr_to_secs("UNLIMITED") == 2**32 - 1
+        assert timestr_to_secs(None) == 2**32 - 2
 
         assert secs_to_timestr(secs) == secs_str
-        assert secs_to_timestr(2**32-1) == "UNLIMITED"
-        assert secs_to_timestr(2**32-2) is None
+        assert secs_to_timestr(2**32 - 1) == "UNLIMITED"
+        assert secs_to_timestr(2**32 - 2) is None
         assert secs_to_timestr(0) is None
 
-        with pytest.raises(ValueError,
-                match="Invalid Time Specification: invalid_val."):
+        with pytest.raises(
+            ValueError, match="Invalid Time Specification: invalid_val."
+        ):
             timestr_to_secs("invalid_val")
 
     def test_parse_date(self):
@@ -320,16 +332,16 @@ class TestTime:
 
         assert timestamp_to_date(timestamp) == date
         assert timestamp_to_date(0) is None
-        assert timestamp_to_date(2**32-1) is None
-        assert timestamp_to_date(2**32-2) is None
+        assert timestamp_to_date(2**32 - 1) is None
+        assert timestamp_to_date(2**32 - 2) is None
 
-        with pytest.raises(ValueError,
-                match="Invalid Time Specification: 2022-11-08T21"):
+        with pytest.raises(
+            ValueError, match="Invalid Time Specification: 2022-11-08T21"
+        ):
             date_to_timestamp("2022-11-08T21")
 
 
 class TestMiscUtil:
-
     def test_parse_uid(self):
         name = uid_to_name(0)
         assert name == "root"
@@ -341,10 +353,10 @@ class TestMiscUtil:
         assert user_to_uid("root") == 0
         assert user_to_uid(0) == 0
         assert user_to_uid("0") == 0
-        assert uid_to_name(2**32-5) == str(2**32-5)
+        assert uid_to_name(2**32 - 5) == str(2**32 - 5)
 
         with pytest.raises(KeyError):
-            name = uid_to_name(2**32-5, err_on_invalid=True)
+            name = uid_to_name(2**32 - 5, err_on_invalid=True)
 
         with pytest.raises(KeyError):
             name = user_to_uid("invalid_user")
@@ -360,10 +372,10 @@ class TestMiscUtil:
         assert group_to_gid("root") == 0
         assert group_to_gid(0) == 0
         assert group_to_gid("0") == 0
-        assert gid_to_name(2**32-5) == str(2**32-5)
+        assert gid_to_name(2**32 - 5) == str(2**32 - 5)
 
         with pytest.raises(KeyError):
-            name = gid_to_name(2**32-5, err_on_invalid=True)
+            name = gid_to_name(2**32 - 5, err_on_invalid=True)
 
         with pytest.raises(KeyError):
             name = group_to_gid("invalid_group")
@@ -403,31 +415,31 @@ class TestMiscUtil:
         assert val == 10240
 
         val = dehumanize("9.6G")
-        assert val == round(1024*9.6)
+        assert val == round(1024 * 9.6)
 
         val = dehumanize("10T")
-        assert val == 10*(2**20)
+        assert val == 10 * (2**20)
 
         val = dehumanize("10T", target="G")
-        assert val == 10*(2**10)
+        assert val == 10 * (2**10)
 
-        with pytest.raises(ValueError,
-                match="Invalid value specified: 10L"):
-           val = dehumanize("10L")
+        with pytest.raises(ValueError, match="Invalid value specified: 10L"):
+            val = dehumanize("10L")
 
-        with pytest.raises(ValueError,
-                match="could not convert string to float: 'invalid_val'"):
-           val = dehumanize("invalid_valM")
+        with pytest.raises(
+            ValueError, match="could not convert string to float: 'invalid_val'"
+        ):
+            val = dehumanize("invalid_valM")
 
     def test_signal_to_num(self):
-       sig = signal_to_num("SIGKILL")
-       assert sig == 9
+        sig = signal_to_num("SIGKILL")
+        assert sig == 9
 
-       sig = signal_to_num(7)
-       assert sig == 7
+        sig = signal_to_num(7)
+        assert sig == 7
 
-       with pytest.raises(ValueError):
-           sig = signal_to_num("invalid_sig")
+        with pytest.raises(ValueError):
+            sig = signal_to_num("invalid_sig")
 
     def test_nodelist_from_range_str(self):
         nodelist = ["node001", "node007", "node008", "node009"]
@@ -439,4 +451,3 @@ class TestMiscUtil:
         nodelist_str = ",".join(nodelist)
         assert "node[001,007-009]" == nodelist_to_range_str(nodelist)
         assert "node[001,007-009]" == nodelist_to_range_str(nodelist_str)
-

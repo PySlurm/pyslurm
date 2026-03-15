@@ -22,6 +22,7 @@
 
 from pyslurm import JobStep, Job
 
+
 def test_create_instance():
     step = JobStep(9999, 1)
     assert step.id == 1

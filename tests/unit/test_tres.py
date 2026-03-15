@@ -124,21 +124,24 @@ def test_set_tres_limits():
         1: TrackableResource("cpu", tres_id=1, name=None, count=0),
         2: TrackableResource("mem", tres_id=2, name=None, count=0),
         6: TrackableResource("fs", tres_id=6, name="disk", count=0),
-        10: TrackableResource("gres", tres_id=10, name="gpu:nvidia-a100", count=0),
-        11: TrackableResource("gres", tres_id=11, name="gpu:nvidia-h100", count=0),
+        10: TrackableResource(
+            "gres", tres_id=10, name="gpu:nvidia-a100", count=0
+        ),
+        11: TrackableResource(
+            "gres", tres_id=11, name="gpu:nvidia-h100", count=0
+        ),
         12: TrackableResource("gres", tres_id=12, name="gpu", count=0),
     }
     tres = TrackableResources(
-        cpu = 10,
-        mem = 10 * 2**10,
-        fs = { "disk": 20 * 2**10 },
-        gres = { "gpu:nvidia-a100": 15,  "gpu:nvidia-h100": 20, "gpu": 35},
+        cpu=10,
+        mem=10 * 2**10,
+        fs={"disk": 20 * 2**10},
+        gres={"gpu:nvidia-a100": 15, "gpu:nvidia-h100": 20, "gpu": 35},
     )
-    expected_tres = { 1: 10, 2: 10240, 10: 15, 11: 20, 12: 35, 6: 20480 }
+    expected_tres = {1: 10, 2: 10240, 10: 15, 11: 20, 12: 35, 6: 20480}
     validated_tres = tres._validate(global_tres_data)
     assert expected_tres == validated_tres
 
-    with pytest.raises(ValueError,
-            match=r"Invalid TRES specified*"):
-        tres = TrackableResources(invalid_tres = 10)
+    with pytest.raises(ValueError, match=r"Invalid TRES specified*"):
+        tres = TrackableResources(invalid_tres=10)
         tres._validate(global_tres_data)

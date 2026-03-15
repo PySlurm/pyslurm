@@ -61,6 +61,8 @@ def test_parse_environment():
 
     # TODO: more test cases
     # Test explicitly set vars as dict
+
+
 #        job.environment = {
 #            "PYSLURM_TEST_VAR_1":   2,
 #            "PYSLURM_TEST_VAR_2":   "test-value",
@@ -94,29 +96,25 @@ def test_parse_cpu_frequency():
     assert freq_dict["governor"] == "Performance"
     _validate_cpu_freq(freq_dict)
 
-    with pytest.raises(ValueError,
-            match=r"Invalid cpu_frequency format*"):
+    with pytest.raises(ValueError, match=r"Invalid cpu_frequency format*"):
         freq = "Performance:3700000"
         freq_dict = _parse_cpu_freq_str_to_dict(freq)
 
-    with pytest.raises(ValueError,
-            match=r"min cpu-freq*"):
+    with pytest.raises(ValueError, match=r"min cpu-freq*"):
         freq = "4000000-3700000"
         freq_dict = _parse_cpu_freq_str_to_dict(freq)
         _validate_cpu_freq(freq_dict)
 
-#    with pytest.raises(ValueError,
-#            match=r"Invalid cpu freq value*"):
-#        freq = "3700000:Performance"
-#        job._create_job_submit_desc()
+    #    with pytest.raises(ValueError,
+    #            match=r"Invalid cpu freq value*"):
+    #        freq = "3700000:Performance"
+    #        job._create_job_submit_desc()
 
-    with pytest.raises(ValueError,
-            match=r"Setting Governor when specifying*"):
+    with pytest.raises(ValueError, match=r"Setting Governor when specifying*"):
         freq = {"max": 3700000, "governor": "Performance"}
         _validate_cpu_freq(freq)
 
-    with pytest.raises(ValueError,
-            match=r"Setting Governor when specifying*"):
+    with pytest.raises(ValueError, match=r"Setting Governor when specifying*"):
         freq = {"min": 3700000, "governor": "Performance"}
         _validate_cpu_freq(freq)
 
@@ -137,8 +135,7 @@ def test_parse_nodes():
     assert nmin == 5
     assert nmax == 10
 
-    with pytest.raises(ValueError,
-            match=r"Max Nodecount cannot be less than*"):
+    with pytest.raises(ValueError, match=r"Max Nodecount cannot be less than*"):
         nodes = {"min": 10, "max": 5}
         nmin, nmax = _parse_nodes(nodes)
 
@@ -149,33 +146,35 @@ def test_parse_script():
     # Try passing in a path to a script.
     fd, path = tempfile.mkstemp()
     try:
-        with os.fdopen(fd, 'w') as tmp:
+        with os.fdopen(fd, "w") as tmp:
             tmp.write(script)
 
         _validate_batch_script(path, "-t 10 input.csv")
     finally:
-            os.remove(path)
+        os.remove(path)
 
-    with pytest.raises(ValueError,
-            match=r"Passing arguments to a script*"):
+    with pytest.raises(ValueError, match=r"Passing arguments to a script*"):
         script = "#!/bin/bash\nsleep 10"
         script_args = "-t 10"
         _validate_batch_script(script, script_args)
 
-    with pytest.raises(ValueError,
-            match=r"The Slurm Controller does not allow*"):
+    with pytest.raises(
+        ValueError, match=r"The Slurm Controller does not allow*"
+    ):
         script = "#!/bin/bash\nsleep 10" + "\0"
         script_args = None
         _validate_batch_script(script, script_args)
 
-    with pytest.raises(ValueError,
-            match="Batch script is empty or none was provided."):
+    with pytest.raises(
+        ValueError, match="Batch script is empty or none was provided."
+    ):
         script = ""
         script_args = None
         _validate_batch_script(script, script_args)
 
-    with pytest.raises(ValueError,
-            match=r"Batch script contains DOS line breaks*"):
+    with pytest.raises(
+        ValueError, match=r"Batch script contains DOS line breaks*"
+    ):
         script = "#!/bin/bash\nsleep 10" + "\r\n"
         script_args = None
         _validate_batch_script(script, script_args)
@@ -211,8 +210,10 @@ def test_validate_cpus():
     job.cpus_per_task = 5
     job._validate_options()
 
-    with pytest.raises(ValueError,
-            match="cpus_per_task and cpus_per_gpu are mutually exclusive."):
+    with pytest.raises(
+        ValueError,
+        match="cpus_per_task and cpus_per_gpu are mutually exclusive.",
+    ):
         job.cpus_per_gpu = 5
         job._validate_options()
 
@@ -220,8 +221,10 @@ def test_validate_cpus():
     job.cpus_per_gpu = 5
     job._validate_options()
 
-    with pytest.raises(ValueError,
-            match="cpus_per_task and cpus_per_gpu are mutually exclusive."):
+    with pytest.raises(
+        ValueError,
+        match="cpus_per_task and cpus_per_gpu are mutually exclusive.",
+    ):
         job.cpus_per_task = 5
         job._validate_options()
 
@@ -329,7 +332,7 @@ def test_setting_attrs_with_env_vars():
 def test_parsing_sbatch_options_from_script():
     fd, path = tempfile.mkstemp()
     try:
-        with os.fdopen(fd, 'w') as tmp:
+        with os.fdopen(fd, "w") as tmp:
             tmp.write(
                 """#!/bin/bash
 
@@ -369,5 +372,4 @@ def test_parsing_sbatch_options_from_script():
         assert job.gres_tasks_per_sharing == "one-task-per-sharing"
         assert job.gres_binding == "enforce-binding"
     finally:
-            os.remove(path)
-
+        os.remove(path)

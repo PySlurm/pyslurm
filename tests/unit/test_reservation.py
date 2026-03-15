@@ -72,7 +72,12 @@ def test_create_instance():
     resv.flags = ReservationFlags.MAINTENANCE | ReservationFlags.FLEX
     assert resv.flags == ReservationFlags.MAINTENANCE | ReservationFlags.FLEX
     resv.flags |= ReservationFlags.MAGNETIC
-    assert resv.flags == ReservationFlags.MAINTENANCE | ReservationFlags.FLEX | ReservationFlags.MAGNETIC
+    assert (
+        resv.flags
+        == ReservationFlags.MAINTENANCE
+        | ReservationFlags.FLEX
+        | ReservationFlags.MAGNETIC
+    )
 
     resv.flags = ["FLEX", "PURGE"]
     assert resv.flags == ReservationFlags.FLEX | ReservationFlags.PURGE
@@ -86,5 +91,4 @@ def test_flags_sched_failed():
     )
     decoded = ReservationFlags(combo.value)
     assert ReservationFlags.SCHED_FAILED in decoded
-
 

@@ -30,7 +30,7 @@ def test_create_and_destroy_list():
     slist2 = SlurmList(["user1", "user2"])
     assert not slist.is_null
     assert slist2.cnt == 2
-    assert slist2.itr_cnt == 0 
+    assert slist2.itr_cnt == 0
     assert slist2.is_itr_null
 
     slist2._dealloc_itr()
@@ -75,7 +75,7 @@ def test_iter():
     for idx, slurm_item in enumerate(slist):
         assert not slist.is_itr_null
         assert slurm_item.has_data
-        assert slist.itr_cnt == idx+1
+        assert slist.itr_cnt == idx + 1
 
     assert slist.itr_cnt == 0
     assert slist.is_itr_null
@@ -95,7 +95,7 @@ def test_iter_and_pop():
     assert slist.itr_cnt == 0
     assert slist.is_itr_null
     assert slist.cnt == 3
-    
+
     for idx, slurm_item in enumerate(SlurmList.iter_and_pop(slist)):
         assert slist.is_itr_null
         assert slurm_item.has_data

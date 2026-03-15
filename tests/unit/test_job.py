@@ -25,8 +25,9 @@ from pyslurm.core.job.util import (
     acctg_profile_int_to_list,
     dependency_str_to_dict,
     mail_type_int_to_list,
-    )
+)
 from pyslurm.utils.helpers import cpu_freq_int_to_str
+
 
 def test_create_instance():
     job = Job(9999)

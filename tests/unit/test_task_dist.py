@@ -48,4 +48,6 @@ def test_from_str():
     assert parsed == expected
     assert parsed.to_str() == "plane"
     assert parsed.plane == 10
+
+
 #     assert parsed.as_int() == pyslurm.SLURM_DIST_PLANE
