@@ -84,8 +84,7 @@ def test_log_level():
     slurmctld.set_log_level("debug2")
     assert slurmctld.get_log_level() == "debug2"
 
-    with pytest.raises(pyslurm.RPCError,
-           match=r"Invalid Log*"):
+    with pytest.raises(pyslurm.RPCError, match=r"Invalid Log*"):
         slurmctld.set_log_level("invalid")
 
 
@@ -100,12 +99,10 @@ def test_fair_share_dampening_factor():
     slurmctld.set_fair_share_dampening_factor(1)
     assert slurmctld.get_fair_share_dampening_factor() == 1
 
-    with pytest.raises(pyslurm.RPCError,
-           match=r"Invalid Dampening*"):
+    with pytest.raises(pyslurm.RPCError, match=r"Invalid Dampening*"):
         slurmctld.set_fair_share_dampening_factor(0)
 
-    with pytest.raises(pyslurm.RPCError,
-           match=r"Invalid Dampening*"):
+    with pytest.raises(pyslurm.RPCError, match=r"Invalid Dampening*"):
         slurmctld.set_fair_share_dampening_factor(99999999)
 
 

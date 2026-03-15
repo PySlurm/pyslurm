@@ -149,8 +149,8 @@ def wait_for_job_done(job_id, timeout=POLL_TIMEOUT):
 
 
 def randstr(strlen=10):
-   chars = string.ascii_lowercase
-   return ''.join(random.choice(chars) for n in range(strlen))
+    chars = string.ascii_lowercase
+    return "".join(random.choice(chars) for n in range(strlen))
 
 
 def create_job_script():
