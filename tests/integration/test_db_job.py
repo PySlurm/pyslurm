@@ -38,18 +38,23 @@ import json
 def test_load_single(submit_job):
     job = submit_job()
     util.wait()
-    db_job = pyslurm.db.Job.load(job.id)
 
-    assert db_job.id == job.id
+    with pyslurm.db.connect() as conn:
+        db_job = pyslurm.db.Job.load(conn, job.id)
 
-    with pytest.raises(pyslurm.RPCError):
-        pyslurm.db.Job.load(0)
+        assert db_job.id == job.id
+
+        with pytest.raises(pyslurm.core.error.NotFoundError):
+            pyslurm.db.Job.load(conn, 0)
 
 
 def test_parse_all(submit_job):
     job = submit_job()
     util.wait()
-    db_job = pyslurm.db.Job.load(job.id)
+
+    with pyslurm.db.connect() as conn:
+        db_job = pyslurm.db.Job.load(conn, job.id)
+
     job_dict = db_job.to_dict()
 
     assert job_dict["stats"]
@@ -60,8 +65,9 @@ def test_to_json(submit_job):
     job = submit_job()
     util.wait()
 
-    jfilter = pyslurm.db.JobFilter(ids=[job.id])
-    jobs = pyslurm.db.Jobs.load(jfilter)
+    with pyslurm.db.connect() as conn:
+        jfilter = pyslurm.db.JobFilter(ids=[job.id])
+        jobs = conn.jobs.load(jfilter)
 
     json_data = jobs.to_json()
     dict_data = json.loads(json_data)
@@ -74,66 +80,101 @@ def test_modify(submit_job):
     job = submit_job()
     util.wait(5)
 
-    jfilter = pyslurm.db.JobFilter(ids=[job.id])
-    changes = pyslurm.db.Job(comment="test comment")
-    pyslurm.db.Jobs.modify(jfilter, changes)
+    # With explicit separate Job object as changes
+    with pyslurm.db.connect() as conn:
+        comment = "comment two"
 
-    job = pyslurm.db.Job.load(job.id)
-    assert job.comment == "test comment"
+        job = pyslurm.db.Job.load(conn, job.id)
+        assert job.comment != comment
+
+        jfilter = pyslurm.db.JobFilter(ids=[job.id])
+        changes = pyslurm.db.Job(comment=comment)
+        conn.jobs.modify(jfilter, changes)
+        job = pyslurm.db.Job.load(conn, job.id)
+        assert job.comment == comment
+
+    # With filter via **kwargs
+    with pyslurm.db.connect(transaction_mode="manual") as conn:
+        comment = "comment two"
+        job = pyslurm.db.Job.load(conn, job.id)
+        assert job.comment != comment
+
+        jfilter = pyslurm.db.JobFilter(ids=[job.id])
+        conn.jobs.modify(jfilter, comment=comment)
+
+        conn.commit()
+        job = pyslurm.db.Job.load(conn, job.id)
+        assert job.comment == comment
+
+        with pytest.raises(pyslurm.core.error.ArgumentError):
+            conn.jobs.modify(jfilter)
+
+    # Without filter, using modify() on the instance
+    # By default, connections are inherited
+    with pyslurm.db.connect() as conn:
+        comment = "comment three"
+        job = pyslurm.db.Job.load(conn, job.id)
+        assert job.comment != comment
+
+        job.modify(comment=comment)
+
+        job = pyslurm.db.Job.load(conn, job.id)
+        assert job.comment == comment
+
+    # Without inherited connection, not supplying a connection will fail
+    with pyslurm.db.connect(reuse_connection=False) as conn:
+        comment = "comment four"
+        job = pyslurm.db.Job.load(conn, job.id)
+        assert job.comment != comment
+
+        job.modify(db_conn=conn, comment=comment)
+
+        job = pyslurm.db.Job.load(conn, job.id)
+        assert job.comment == comment
+
+        with pytest.raises(pyslurm.db.connection.InvalidConnectionError):
+            job.modify(comment=comment)
 
 
-def test_modify_with_existing_conn(submit_job):
-    job = submit_job()
-    util.wait(5)
-
-    conn = pyslurm.db.Connection.open()
-    jfilter = pyslurm.db.JobFilter(ids=[job.id])
-    changes = pyslurm.db.Job(comment="test comment")
-    pyslurm.db.Jobs.modify(jfilter, changes, conn)
-
-    job = pyslurm.db.Job.load(job.id)
-    assert job.comment != "test comment"
-
-    conn.commit()
-    job = pyslurm.db.Job.load(job.id)
-    assert job.comment == "test comment"
+#   def test_if_steps_exist(submit_job):
+#       # TODO
+#       pass
 
 
-def test_if_steps_exist(submit_job):
-    # TODO
-    pass
+#   def test_load_with_filter_node(submit_job):
+#       # TODO
+#       pass
 
 
-def test_load_with_filter_node(submit_job):
-    # TODO
-    pass
+#   def test_load_with_filter_qos(submit_job):
+#       # TODO
+#       pass
 
 
-def test_load_with_filter_qos(submit_job):
-    # TODO
-    pass
+#   def test_load_with_filter_cluster(submit_job):
+#       # TODO
+#       pass
 
 
-def test_load_with_filter_cluster(submit_job):
-    # TODO
-    pass
-
-
-def test_load_with_filter_multiple(submit_job):
-    # TODO
-    pass
+#   def test_load_with_filter_multiple(submit_job):
+#       # TODO
+#       pass
 
 
 def test_load_with_script(submit_job):
     script = util.create_job_script()
     job = submit_job(script=script)
     util.wait(5)
-    db_job = pyslurm.db.Job.load(job.id, with_script=True)
+
+    with pyslurm.db.connect() as conn:
+        db_job = pyslurm.db.Job.load(conn, job.id, with_script=True)
     assert db_job.script == script
 
 
 def test_load_with_env(submit_job):
     job = submit_job()
     util.wait(5)
-    db_job = pyslurm.db.Job.load(job.id, with_env=True)
+
+    with pyslurm.db.connect() as conn:
+        db_job = pyslurm.db.Job.load(conn, job.id, with_env=True)
     assert db_job.environment

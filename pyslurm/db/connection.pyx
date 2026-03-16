@@ -1,7 +1,7 @@
 #########################################################################
 # connection.pyx - pyslurm slurmdbd database connection
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2026 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -22,17 +22,60 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import RPCError
+from pyslurm.core.error import RPCError, PyslurmError
+from contextlib import contextmanager
+from pyslurm.db.user import UserAPI
+from pyslurm.db.account import AccountAPI
+from pyslurm.db.assoc import AssociationAPI
+from pyslurm.db.tres import TrackableResourceAPI
+from pyslurm.db.qos import QualityOfServiceAPI
+from pyslurm.db.job import JobsAPI
+from typing import Any, Optional
+from pyslurm.utils.enums import StrEnum
+from enum import auto
 
 
-def _open_conn_or_error(conn):
-    if not conn:
-        conn = Connection.open()
+class TransactionMode(StrEnum):
+    PER_OPERATION   = auto()
+    MANUAL          = auto()
 
-    if not conn.is_open:
-        raise ValueError("Database connection is not open")
 
-    return conn
+cdef class ConnectionConfig:
+
+    def __init__(
+        self,
+        transaction_mode: TransactionMode = TransactionMode.PER_OPERATION,
+        reuse_connection: bool = True,
+    ):
+        self.transaction_mode = transaction_mode
+        self.reuse_connection = reuse_connection
+
+
+cdef class ConnectionWrapper:
+
+    def __init__(self, db_conn: Connection):
+        self.db_conn = db_conn
+
+
+class InvalidConnectionError(PyslurmError):
+    pass
+
+
+class ConfigError(PyslurmError):
+    pass
+
+
+@contextmanager
+def connect(config: Optional[ConnectionConfig] = None, **kwargs: Any):
+    """A managed Slurm DB Connection"""
+    if config is not None and kwargs:
+        raise ConfigError("Must provide either a config directly, or kwargs, not both")
+
+    connection = Connection.open(config, **kwargs)
+    try:
+        yield connection
+    finally:
+        connection.close()
 
 
 cdef class Connection:
@@ -53,7 +96,36 @@ cdef class Connection:
         return f'pyslurm.db.{self.__class__.__name__} is {state}'
 
     @staticmethod
-    def open():
+    def reuse(
+        reusable_conn: Optional[Connection] = None,
+        explicit_conn: Optional[Connection] = None
+    ):
+        if explicit_conn:
+            return explicit_conn
+        elif reusable_conn:
+            return reusable_conn
+        else:
+            raise InvalidConnectionError("No suitable Connection was provided")
+
+    def apply_reuse(self, obj):
+        if self.config.reuse_connection:
+            obj._db_conn = self
+
+    def validate(self):
+        if not self.is_open:
+            raise InvalidConnectionError("Connection is closed")
+
+    def check_commit(self, rc):
+        if self.config.transaction_mode != TransactionMode.PER_OPERATION:
+            return
+
+        if rc == slurm.SLURM_SUCCESS:
+            self.commit()
+        else:
+            self.rollback()
+
+    @staticmethod
+    def open(config: Optional[ConnectionConfig] = None, **kwargs: Any):
         """Open a new connection to the slurmdbd
 
         Raises:
@@ -68,11 +140,23 @@ cdef class Connection:
             >>> print(connection.is_open)
             True
         """
+        if config is not None and kwargs:
+            raise ConfigError("Must provide either a config directly, or kwargs, not both")
+
         cdef Connection conn = Connection.__new__(Connection)
         conn.ptr = <void*>slurmdb_connection_get(&conn.flags)
         if not conn.ptr:
             raise RPCError(msg="Failed to open onnection to slurmdbd")
 
+        conn.config = config or ConnectionConfig(**kwargs)
+
+        # Initialize all DB APIs
+        conn.users = UserAPI(conn)
+        conn.accounts = AccountAPI(conn)
+        conn.associations = AssociationAPI(conn)
+        conn.tres = TrackableResourceAPI(conn)
+        conn.qos = QualityOfServiceAPI(conn)
+        conn.jobs = JobsAPI(conn)
         return conn
 
     def close(self):
@@ -92,11 +176,17 @@ cdef class Connection:
 
     def commit(self):
         """Commit recent changes."""
+        if not self.is_open:
+            raise InvalidConnectionError("Tried to commit when Connection is already closed.")
+
         if slurmdb_connection_commit(self.ptr, 1) == slurm.SLURM_ERROR:
             raise RPCError("Failed to commit database changes.")
 
     def rollback(self):
         """Rollback recent changes."""
+        if not self.is_open:
+            raise InvalidConnectionError("Tried to rollback when Connection is already closed.")
+
         if slurmdb_connection_commit(self.ptr, 0) == slurm.SLURM_ERROR:
             raise RPCError("Failed to rollback database changes.")
 

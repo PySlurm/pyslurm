@@ -31,6 +31,17 @@ from pyslurm.slurm cimport (
 )
 
 
+cdef class ConnectionConfig:
+    cdef public:
+        transaction_mode
+        reuse_connection
+
+
+cdef class ConnectionWrapper:
+    cdef:
+        Connection db_conn
+
+
 cdef class Connection:
     """A connection to the slurmdbd.
 
@@ -41,3 +52,14 @@ cdef class Connection:
     cdef:
         void *ptr
         uint16_t flags
+
+    cdef public:
+        config
+
+    cdef readonly:
+        users
+        accounts
+        associations
+        tres
+        qos
+        jobs

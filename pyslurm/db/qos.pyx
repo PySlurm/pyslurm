@@ -22,19 +22,24 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import RPCError
+from pyslurm.core.error import (
+    RPCError,
+    slurm_errno,
+    verify_rpc,
+    NotFoundError,
+    _get_modify_arguments_for,
+)
 from pyslurm.utils.helpers import instance_to_dict
-from pyslurm.db.connection import _open_conn_or_error
+from typing import Any, Union, Optional, List, Dict
 
 
-cdef class QualitiesOfService(dict):
+cdef class QualityOfServiceAPI(ConnectionWrapper):
 
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def load(QualityOfServiceFilter db_filter=None,
-             Connection db_connection=None, name_is_key=True):
+    def load(
+        self,
+        db_filter: Optional[QualityOfServiceFilter] = None,
+        name_is_key: bool = True
+    ):
         """Load QoS data from the Database
 
         Args:
@@ -46,21 +51,16 @@ cdef class QualitiesOfService(dict):
         cdef:
             QualitiesOfService out = QualitiesOfService()
             QualityOfService qos
-            QualityOfServiceFilter cond = db_filter
             SlurmList qos_data
             SlurmListItem qos_ptr
-            Connection conn
 
-        # Prepare SQL Filter
+        self.db_conn.validate()
+
         if not db_filter:
-            cond = QualityOfServiceFilter()
-        cond._create()
+            db_filter = QualityOfServiceFilter()
+        db_filter._create()
 
-        # Setup DB Conn
-        conn = _open_conn_or_error(db_connection)
-
-        # Fetch QoS Data
-        qos_data = SlurmList.wrap(slurmdb_qos_get(conn.ptr, cond.ptr))
+        qos_data = SlurmList.wrap(slurmdb_qos_get(self.db_conn.ptr, db_filter.ptr))
 
         if qos_data.is_null:
             raise RPCError(msg="Failed to get QoS data from slurmdbd")
@@ -68,10 +68,36 @@ cdef class QualitiesOfService(dict):
         # Setup QOS objects
         for qos_ptr in SlurmList.iter_and_pop(qos_data):
             qos = QualityOfService.from_ptr(<slurmdb_qos_rec_t*>qos_ptr.data)
+            self.db_conn.apply_reuse(qos)
             _id = qos.name if name_is_key else qos.id
             out[_id] = qos
 
         return out
+
+
+cdef class QualitiesOfService(dict):
+
+    def __init__(self, qos={}, **kwargs: Any):
+        super().__init__()
+        self.update(qos)
+        self.update(kwargs)
+        self._db_conn = None
+
+    @staticmethod
+    def load(
+        db_conn: Connection,
+        db_filter: Optional[Connection] = None,
+        name_is_key: bool = True
+    ):
+        """Load QoS data from the Database
+
+        Args:
+            name_is_key (bool, optional):
+                By default, the keys in this dict are the names of each QoS.
+                If this is set to `False`, then the unique ID of the QoS will
+                be used as dict keys.
+        """
+        return db_conn.qos.load(db_filter=db_filter, name_is_key=name_is_key)
 
 
 cdef class QualityOfServiceFilter:
@@ -79,7 +105,7 @@ cdef class QualityOfServiceFilter:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -133,9 +159,11 @@ cdef class QualityOfService:
     def __cinit__(self):
         self.ptr = NULL
 
-    def __init__(self, name=None):
+    def __init__(self, name: str = None, **kwargs: Any):
         self._alloc_impl()
         self.name = name
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __dealloc__(self):
         self._dealloc_impl()
@@ -160,7 +188,7 @@ cdef class QualityOfService:
     def __repr__(self):
         return f'pyslurm.db.{self.__class__.__name__}({self.name})'
 
-    def to_dict(self, recursive = False):
+    def to_dict(self, recursive: bool = False):
         """Database QualityOfService information formatted as a dictionary.
 
         Returns:
@@ -169,7 +197,7 @@ cdef class QualityOfService:
         return instance_to_dict(self, recursive)
 
     @staticmethod
-    def load(name):
+    def load(db_conn: Connection, name: str):
         """Load the information for a specific Quality of Service.
 
         Args:
@@ -184,10 +212,9 @@ cdef class QualityOfService:
             (pyslurm.RPCError): If requesting the information from the database
                 was not successful.
         """
-        qfilter = QualityOfServiceFilter(names=[name])
-        qos = QualitiesOfService.load(qfilter).get(name)
+        qos = db_conn.qos.load(name_is_key=True).get(name)
         if not qos:
-            raise RPCError(msg=f"QualityOfService {name} does not exist")
+            raise NotFoundError(msg=f"QualityOfService {name} does not exist")
 
         return qos
 

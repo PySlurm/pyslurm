@@ -32,10 +32,10 @@ from pyslurm cimport slurm
 
 
 class SchedulerType(SlurmEnum):
-    SUBMIT = auto(), slurm.SLURMDB_JOB_FLAG_SUBMIT
-    MAIN = auto(), slurm.SLURMDB_JOB_FLAG_SCHED
+    SUBMIT   = auto(), slurm.SLURMDB_JOB_FLAG_SUBMIT
+    MAIN     = auto(), slurm.SLURMDB_JOB_FLAG_SCHED
     BACKFILL = auto(), slurm.SLURMDB_JOB_FLAG_BACKFILL
-    UNKNOWN = auto()
+    UNKNOWN  = auto()
 
 
 SchedulerType.SUBMIT.__doc__ = "Scheduled immediately on submit"
@@ -43,6 +43,14 @@ SchedulerType.MAIN.__doc__ = "Scheduled by the Main Scheduler"
 SchedulerType.SUBMIT.__doc__ = "Scheduled by the Backfill Scheduler"
 
 
+class AdminLevel(SlurmEnum):
+    UNDEFINED     = auto(), slurm.SLURMDB_ADMIN_NOTSET
+    NONE          = auto(), slurm.SLURMDB_ADMIN_NONE
+    OPERATOR      = auto(), slurm.SLURMDB_ADMIN_OPERATOR
+    ADMINISTRATOR = auto(), slurm.SLURMDB_ADMIN_SUPER_USER
+
+
 __all__ = [
     "SchedulerType",
+    "AdminLevel",
 ]

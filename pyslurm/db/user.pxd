@@ -1,7 +1,7 @@
 #########################################################################
-# assoc.pxd - pyslurm slurmdbd association api
+# user.pxd - pyslurm slurmdbd user api
 #########################################################################
-# Copyright (C) 2023 Toni Harzendorf <toni.harzendorf@gmail.com>
+# Copyright (C) 2025 Toni Harzendorf <toni.harzendorf@gmail.com>
 #
 # This file is part of PySlurm
 #
@@ -22,17 +22,19 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
+from libc.string cimport memcpy, memset
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
+    slurmdb_user_rec_t,
     slurmdb_assoc_rec_t,
     slurmdb_assoc_cond_t,
-    slurmdb_destroy_assoc_rec,
-    slurmdb_destroy_assoc_cond,
-    slurmdb_init_assoc_rec,
-    slurmdb_associations_get,
-    slurmdb_associations_modify,
-    slurmdb_associations_add,
-    slurmdb_associations_remove,
+    slurmdb_user_cond_t,
+    slurmdb_users_get,
+    slurmdb_users_add,
+    slurmdb_users_modify,
+    slurmdb_users_remove,
+    slurmdb_destroy_user_rec,
+    slurmdb_destroy_user_cond,
     try_xmalloc,
 )
 from pyslurm.db.util cimport (
@@ -48,71 +50,63 @@ from pyslurm.db.tres cimport (
 )
 from pyslurm.db.connection cimport Connection, ConnectionWrapper
 from pyslurm.utils cimport cstr
-from pyslurm.utils.uint cimport *
 from pyslurm.db.qos cimport QualitiesOfService, _set_qos_list
+from pyslurm.db.assoc cimport Associations, Association, _parse_assoc_ptr, AssociationFilter, AssociationList
 from pyslurm.xcollections cimport MultiClusterMap
-
-cdef _parse_assoc_ptr(Association ass)
-cdef _create_assoc_ptr(Association ass, conn=*)
+from pyslurm.utils.uint cimport u16_set_bool_flag
 
 
-cdef class AssociationAPI(ConnectionWrapper):
+cdef class UserAPI(ConnectionWrapper):
     pass
 
 
-cdef class Associations(MultiClusterMap):
+cdef class Users(dict):
     cdef public:
         Connection _db_conn
 
 
-cdef class AssociationFilter:
-    cdef slurmdb_assoc_cond_t *ptr
+cdef class UserFilter:
+    cdef slurmdb_user_cond_t *ptr
 
     cdef public:
-        users
-        ids
-        accounts
-        parent_accounts
-        clusters
-        partitions
-        qos
+        names
+        with_assocs
+        with_coordinators
+        with_wckeys
+        with_deleted
+        associations
 
 
-cdef class Association:
+cdef class User:
+    """Slurm Database User
+
+    Attributes:
+        name (str):
+            The name of the User.
+        previous_name (str):
+            Previous name of the User, in case it was modified before.
+        user_id (int):
+            UID of the User.
+        default_account (str):
+            Default Account of the User.
+        default_wckey (str):
+            Default WCKey for the User.
+        is_deleted (bool):
+            Whether this User has been deleted or not.
+        admin_level (pyslurm.AdminLevel):
+            Admin Level of the User.
+    """
     cdef:
-        slurmdb_assoc_rec_t *ptr
-        slurmdb_assoc_rec_t *umsg
-        QualitiesOfService qos_data
-        TrackableResources tres_data
-        owned
+        slurmdb_user_rec_t *ptr
 
     cdef public:
+        associations
+        coordinators
+        wckeys
         Connection _db_conn
-        default_qos
 
-        group_tres
-        group_tres_mins
-        group_tres_run_mins
-        max_tres_mins_per_job
-        max_tres_run_mins_per_user
-        max_tres_per_job
-        max_tres_per_node
-        qos
-        group_jobs
-        group_jobs_accrue
-        group_submit_jobs
-        group_wall_time
-        max_jobs
-        max_jobs_accrue
-        max_submit_jobs
-        max_wall_time_per_job
-        min_priority_threshold
-        priority
-        shares
+    cdef readonly:
+        default_association
 
     @staticmethod
-    cdef Association from_ptr(slurmdb_assoc_rec_t *in_ptr)
-
-
-cdef class AssociationList(SlurmList):
-    pass
+    cdef User from_ptr(slurmdb_user_rec_t *in_ptr)
