@@ -22,8 +22,6 @@
 
 import pytest
 import pyslurm
-import time
-import util
 
 
 def test_load_single():

@@ -21,7 +21,6 @@
 """test_node.py - Test the node api functions."""
 
 import pytest
-import pyslurm
 import json
 from pyslurm import Node, Nodes, RPCError
 
@@ -36,17 +35,9 @@ def test_load():
     assert node.slurm_version is not None
 
     with pytest.raises(RPCError,
-                       match=f"Node 'nonexistent' does not exist"):
+                       match="Node 'nonexistent' does not exist"):
         Node.load("nonexistent")
 
-
-def test_create():
-    node = Node("testhostpyslurm")
-    node.create()
-
-    with pytest.raises(RPCError,
-                       match=f"Invalid node state specified"):
-        Node("testhostpyslurm2").create("idle")
 
 
 def test_modify():

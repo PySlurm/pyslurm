@@ -20,25 +20,38 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import pytest
-from pyslurm import (
-    Job,
-    JobSubmitDescription,
-)
-from util import create_simple_job_desc
+from pyslurm import Job
+from util import create_simple_job_desc, wait_for_job_done
+
+
+TEARDOWN_TIMEOUT = 15
 
 
 @pytest.fixture
 def submit_job():
+    """Factory fixture that submits jobs and cleans them up after the test.
 
+    Teardown cancels all submitted jobs and waits for them to reach a
+    terminal state, preventing resource contention between tests.
+    """
     jobs = []
+
     def _job(script=None, **kwargs):
         job_desc = create_simple_job_desc(script, **kwargs)
         job = Job(job_desc.submit())
-
         jobs.append(job)
         return job
 
     yield _job
 
     for j in jobs:
-        j.cancel()
+        try:
+            j.cancel()
+        except Exception:
+            pass
+
+    for j in jobs:
+        try:
+            wait_for_job_done(j.id, timeout=TEARDOWN_TIMEOUT)
+        except (TimeoutError, Exception):
+            pass
