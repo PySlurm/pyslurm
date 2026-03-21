@@ -513,8 +513,6 @@ cdef class Reservation:
         self.info.flags = flag.value
         self.umsg.flags = flag._get_flags_cleared()
 
-    # TODO: RESERVE_FLAG_SKIP ?
-
 
 class ReservationFlags(SlurmFlag):
     """Flags for Reservations that can be set.
@@ -534,6 +532,8 @@ class ReservationFlags(SlurmFlag):
     NO_JOB_HOLD_AFTER_END = slurm.RESERVE_FLAG_NO_HOLD_JOBS
     OVERLAP               = slurm.RESERVE_FLAG_OVERLAP
     ALL_NODES             = slurm.RESERVE_FLAG_ALL_NODES
+    SKIP                  = slurm.RESERVE_FLAG_SKIP
+    SCHED_FAILED          = slurm.RESERVE_FLAG_SCHED_FAILED
 
 
 class ReservationReoccurrence(SlurmEnum):

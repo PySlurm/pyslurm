@@ -78,3 +78,13 @@ def test_create_instance():
     assert resv.flags == ReservationFlags.FLEX | ReservationFlags.PURGE
 
 
+def test_flags_sched_failed():
+    combo = (
+        ReservationFlags.SCHED_FAILED
+        | ReservationFlags.SPECIFIC_NODES
+        | ReservationFlags.IGNORE_RUNNING_JOBS
+    )
+    decoded = ReservationFlags(combo.value)
+    assert ReservationFlags.SCHED_FAILED in decoded
+
+
