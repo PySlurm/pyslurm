@@ -34,7 +34,7 @@ def test_api_calls():
         duration=duration,
         users=["root"],
         node_count=1,
-        reoccurrence="DAILY"
+        reoccurrence="DAILY",
     )
     resv.create()
 

@@ -104,9 +104,7 @@ def test_collection(submit_job):
     assert steps
     # We have 3 Steps: batch, 0 and 1
     assert len(steps) == 3
-    assert ("batch" in steps and
-            0 in steps and
-            1 in steps)
+    assert "batch" in steps and 0 in steps and 1 in steps
 
 
 def test_cancel(submit_job):
@@ -114,9 +112,7 @@ def test_cancel(submit_job):
 
     steps = util.wait_for_steps(job.id, 3)
     assert len(steps) == 3
-    assert ("batch" in steps and
-            0 in steps and
-            1 in steps)
+    assert "batch" in steps and 0 in steps and 1 in steps
 
     steps[0].cancel()
     util.wait_for_step_gone(job.id, 0, timeout=30)

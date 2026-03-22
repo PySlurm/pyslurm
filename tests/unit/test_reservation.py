@@ -29,8 +29,8 @@ def test_create_instance():
     resv = pyslurm.Reservation("test")
     assert resv.name == "test"
     assert resv.accounts == []
-    assert resv.start_time == None
-    assert resv.end_time == None
+    assert resv.start_time is None
+    assert resv.end_time is None
     assert resv.duration == 0
     assert resv.is_active is False
     assert resv.cpu_ids_by_node == {}
@@ -72,7 +72,12 @@ def test_create_instance():
     resv.flags = ReservationFlags.MAINTENANCE | ReservationFlags.FLEX
     assert resv.flags == ReservationFlags.MAINTENANCE | ReservationFlags.FLEX
     resv.flags |= ReservationFlags.MAGNETIC
-    assert resv.flags == ReservationFlags.MAINTENANCE | ReservationFlags.FLEX | ReservationFlags.MAGNETIC
+    assert (
+        resv.flags
+        == ReservationFlags.MAINTENANCE
+        | ReservationFlags.FLEX
+        | ReservationFlags.MAGNETIC
+    )
 
     resv.flags = ["FLEX", "PURGE"]
     assert resv.flags == ReservationFlags.FLEX | ReservationFlags.PURGE
@@ -86,5 +91,4 @@ def test_flags_sched_failed():
     )
     decoded = ReservationFlags(combo.value)
     assert ReservationFlags.SCHED_FAILED in decoded
-
 

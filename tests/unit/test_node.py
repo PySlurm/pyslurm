@@ -20,9 +20,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_node.py - Unit Test basic functionality of the Node class."""
 
-import pytest
-import pyslurm
-from pyslurm import Node, Nodes
+from pyslurm import Node
 from pyslurm.core.node import _node_state_from_str
 
 

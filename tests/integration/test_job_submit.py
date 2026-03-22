@@ -25,6 +25,7 @@ from pyslurm import (
     JobSubmitDescription,
 )
 
+
 def job_desc(**kwargs):
     return JobSubmitDescription(script=create_job_script(), **kwargs)
 

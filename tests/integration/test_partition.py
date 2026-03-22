@@ -33,8 +33,7 @@ def test_load():
     assert part.name
     assert part.state
 
-    with pytest.raises(RPCError,
-                       match="Partition 'nonexistent' doesn't exist"):
+    with pytest.raises(RPCError, match="Partition 'nonexistent' doesn't exist"):
         Partition.load("nonexistent")
 
 
@@ -55,7 +54,7 @@ def test_modify():
     assert Partition.load(part.name).default_time == 120
 
     part.modify(Partition(default_time="1-00:00:00"))
-    assert Partition.load(part.name).default_time == 24*60
+    assert Partition.load(part.name).default_time == 24 * 60
 
     part.modify(Partition(max_time="UNLIMITED"))
     assert Partition.load(part.name).max_time == "UNLIMITED"
@@ -95,6 +94,6 @@ def test_reload():
     assert len(my_parts) == 2
     for part in my_parts.values():
         assert part.state != "UNKNOWN"
-    
+
     for part in _tmp_parts.values():
         part.delete()

@@ -142,7 +142,9 @@ def test_load_with_filter_qos(submit_job):
 
     # PySlurm validates QoS names before querying — a bogus name raises ValueError
     with pytest.raises(ValueError, match="does not exist"):
-        jfilter_bad = pyslurm.db.JobFilter(ids=[job.id], qos=["nonexistent_qos"])
+        jfilter_bad = pyslurm.db.JobFilter(
+            ids=[job.id], qos=["nonexistent_qos"]
+        )
         pyslurm.db.Jobs.load(jfilter_bad)
 
 

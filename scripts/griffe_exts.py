@@ -30,26 +30,29 @@ SLURM_VERSION = ".".join(pyslurm.__version__.split(".")[:-1])
 SLURM_DOCS_URL_BASE = "https://slurm.schedmd.com/archive"
 SLURM_DOCS_URL_VERSIONED = f"{SLURM_DOCS_URL_BASE}/slurm-{SLURM_VERSION}-latest"
 
-config_files = ["acct_gather.conf",
-                "slurm.conf",
-                "cgroup.conf",
-                "mpi.conf",
-                "scontrol"]
+config_files = [
+    "acct_gather.conf",
+    "slurm.conf",
+    "cgroup.conf",
+    "mpi.conf",
+    "scontrol",
+]
 
 
 def replace_with_slurm_docs_url(match):
     first_part = match.group(1)
     second_part = match.group(2)
     ref = f"[{first_part}{second_part}]"
-    return f'{ref}({SLURM_DOCS_URL_VERSIONED}/{first_part}.html{second_part})'
+    return f"{ref}({SLURM_DOCS_URL_VERSIONED}/{first_part}.html{second_part})"
 
 
 pattern = re.compile(
-    r'\{('
-    + '|'.join([re.escape(config) for config in config_files])
-    + r')' # Match the first word before "#"
-    + r'([#][^}]+)\}' # Match "#" and everything after it until }
+    r"\{("
+    + "|".join([re.escape(config) for config in config_files])
+    + r")"  # Match the first word before "#"
+    + r"([#][^}]+)\}"  # Match "#" and everything after it until }
 )
+
 
 # This class is inspired from here, with a few adaptions:
 # https://github.com/mkdocstrings/griffe/blob/97f3613c5f0ae5653e8b91479c716b9ec44baacc/docs/guide/users/extending.md#full-example
@@ -70,8 +73,11 @@ pattern = re.compile(
 #   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 #   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 class DynamicDocstrings(griffe.Extension):
-    def __init__(self, include_paths: list[str] | None = None,
-                 ignore_paths: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        include_paths: list[str] | None = None,
+        ignore_paths: list[str] | None = None,
+    ) -> None:
 
         self.include_paths = include_paths
         self.ignore_paths = ignore_paths
@@ -84,8 +90,9 @@ class DynamicDocstrings(griffe.Extension):
         **kwargs,
     ) -> None:
 
-        if ((self.include_paths and obj.path not in self.include_paths)
-                or (self.ignore_paths and obj.path in self.ignore_paths)):
+        if (self.include_paths and obj.path not in self.include_paths) or (
+            self.ignore_paths and obj.path in self.ignore_paths
+        ):
             return
 
         try:

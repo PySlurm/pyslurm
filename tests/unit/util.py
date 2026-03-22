@@ -19,14 +19,13 @@
 # with PySlurm; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import pytest
 from pyslurm import (
-    Job,
     JobSubmitDescription,
 )
 
 # TODO: Figure out how to share this properly between the unit and integration
 # folders
+
 
 def create_job_script():
     job_script = """\

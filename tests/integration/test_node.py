@@ -34,10 +34,8 @@ def test_load():
     assert node.weight is not None
     assert node.slurm_version is not None
 
-    with pytest.raises(RPCError,
-                       match="Node 'nonexistent' does not exist"):
+    with pytest.raises(RPCError, match="Node 'nonexistent' does not exist"):
         Node.load("nonexistent")
-
 
 
 def test_modify():
