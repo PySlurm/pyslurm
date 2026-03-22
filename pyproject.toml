@@ -10,7 +10,7 @@ requires = [
 [project]
 name = "pyslurm"
 dynamic = ["version"]
-license = "GPL-2.0-only"
+license = {text = "GPL-2.0-only"}
 description = "Python Interface for Slurm"
 readme = "README.md"
 requires-python = ">=3.6"
@@ -70,6 +70,7 @@ version = { attr = "pyslurm.version.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["pyslurm*"]
+exclude = ["pyslurm.pydefines", "pyslurm.slurm"]
 
 [tool.ruff]
 line-length = 80

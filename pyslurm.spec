@@ -1,31 +1,24 @@
-%define python3_pkgversion 3.11
-
 Name:            python-pyslurm
 Version:         25.11.0
 %define rel      1
 Release:         %{rel}%{?dist}
 Summary:         Python interface to Slurm
-License:         GPLv2+
+License:         GPL-2.0-only
 URL:             https://github.com/PySlurm/pyslurm
 Source:          pyslurm-%{version}.tar.gz
 
-BuildRequires:   python%{python3_pkgversion}-devel
-BuildRequires:   python%{python3_pkgversion}-setuptools
-BuildRequires:   python%{python3_pkgversion}-wheel
-BuildRequires:   python%{python3_pkgversion}-Cython
-BuildRequires:   python%{python3_pkgversion}-packaging
-BuildRequires:   python-rpm-macros
+BuildRequires:   python3-devel
+BuildRequires:   pyproject-rpm-macros
 BuildRequires:   slurm-devel >= 25.11.0
-BuildRequires:   slurm >= 25.11.0
-Requires:        python%{python3_pkgversion}
 
 %description
 pyslurm is a Python interface to Slurm
 
-%package -n python%{python3_pkgversion}-pyslurm
+%package -n python3-pyslurm
 Summary:        %{summary}
+Requires:       python3
 
-%description -n python%{python3_pkgversion}-pyslurm
+%description -n python3-pyslurm
 pyslurm is a Python interface to Slurm
 
 %prep
@@ -41,6 +34,10 @@ pyslurm is a Python interface to Slurm
 %pyproject_install
 %pyproject_save_files pyslurm
 
-%files -f %{pyproject_files}
+%files -n python3-pyslurm -f %{pyproject_files}
 %license COPYING.txt
 %doc README.md
+
+%changelog
+* Sun Mar 22 2026 Giovanni Torres <giovtorres@users.noreply.github.com> - 25.11.0-1
+- Initial package
