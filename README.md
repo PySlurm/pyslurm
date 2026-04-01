@@ -4,53 +4,60 @@ pyslurm is the Python client library for the [Slurm Workload Manager](https://sl
 
 ## Requirements
 
-* [Slurm](https://slurm.schedmd.com) - Slurm shared library and header files
-* [Python](https://www.python.org) - >= 3.6
-* [Cython](https://cython.org) - >= 0.29.37
-
-This Version is for Slurm 25.11.x
+* [Slurm](https://slurm.schedmd.com) 25.11.x — shared library and header files
+* [Python](https://www.python.org) >= 3.6
 
 ## Versioning
 
-In pyslurm, the versioning scheme follows the official Slurm versioning. The
-first two numbers (`MAJOR.MINOR`) always correspond to Slurms Major-Release,
-for example `25.11`.
-The last number (`MICRO`) is however not tied in any way to Slurms `MICRO`
-version, but is instead PySlurm's internal Patch-Level. For example, any
-pyslurm 25.11.X version should work with any Slurm 25.11.X release.
+PySlurm uses the format `X.Y.Z` where `X.Y` tracks the Slurm major release
+and `Z` is PySlurm's own patch increment, reset to `0` on each new Slurm
+major release.
+
+| PySlurm | Slurm |
+|---|---|
+| 25.11.x | 25.11.x |
+| 24.05.x | 24.05.x |
+| 23.11.x | 23.11.x |
 
 ## Installation
 
-By default, it is searched inside `/usr/include` for the Header files and in
-`/usr/lib64` for Slurms shared-library (`libslurm.so`) during Installation.
-For Slurm installations in different locations, you will need to provide
-the corresponding paths to the necessary files.
+PySlurm requires the Slurm development headers and shared library at build
+time.
 
-You can specify those with environment variables (recommended), for example:
+### Slurm header and library paths
+
+If you have `slurm-devel` installed in the default paths, skip this section.
+
+By default, PySlurm looks in:
+
+* `/usr/include` — for Slurm header files (`slurm/slurm.h`)
+* `/usr/lib64` — for the Slurm shared library (`libslurmfull.so`)
+
+If your Slurm installation is not in the default paths, set these before
+installing:
 
 ```shell
-export SLURM_INCLUDE_DIR=/opt/slurm/25.11/include
-export SLURM_LIB_DIR=/opt/slurm/25.11/lib
+export SLURM_INCLUDE_DIR=/path/to/slurm/include
+export SLURM_LIB_DIR=/path/to/slurm/lib
 ```
 
-Then you can proceed to install pyslurm, for example by cloning the Repository:
+### From PyPI
+
+```shell
+pip install pyslurm
+```
+
+### From source
 
 ```shell
 git clone https://github.com/PySlurm/pyslurm.git && cd pyslurm
 scripts/build.sh
 ```
 
-Also see `scripts/build.sh -h`. You can specify multiple cores for building
-with the `-j` option (also possible to set via environment variable `PYSLURM_BUILD_JOBS`):
+Use `-j` to build with multiple cores (or set `PYSLURM_BUILD_JOBS`):
 
 ```shell
 scripts/build.sh -j4
-```
-
-Or simply with `pip` directly:
-
-```shell
-pip install .
 ```
 
 ## Contributors
