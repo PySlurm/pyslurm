@@ -16,22 +16,25 @@ CYTHON_VERSION_MIN = "0.29.37"  # Keep in sync with pyproject.toml
 SLURM_LIB = "libslurmfull"
 
 
-def get_slurm_version():
+def get_version_string():
     with (TOPDIR / "pyslurm/version.py").open() as f:
         for line in f.read().splitlines():
             if line.startswith("__version__"):
-                V = Version(line.split('"')[1])
-                if not hasattr(V, "major") or not hasattr(V, "minor"):
-                    (V.major, V.minor) = V._version.release[0:2]
-                return f"{V.major}.{V.minor}"
+                return line.split('"')[1]
     raise RuntimeError("Cannot get version string.")
+
+
+def get_slurm_version():
+    V = Version(get_version_string())
+    if not hasattr(V, "major") or not hasattr(V, "minor"):
+        (V.major, V.minor) = V._version.release[0:2]
+    return f"{V.major}.{V.minor}"
 
 
 SLURM_VERSION = get_slurm_version()
 
 
-class SlurmConfig():
-
+class SlurmConfig:
     def __init__(self):
         self._lib_dir = Path("/usr/lib64")
         self._lib = None
@@ -69,8 +72,9 @@ class SlurmConfig():
 
         if not self._lib:
             searched = "\n- ".join(self._lib_dir_search_paths)
-            raise RuntimeError("Cannot locate Slurm library. Searched paths: "
-                               f"\n- {searched}")
+            raise RuntimeError(
+                f"Cannot locate Slurm library. Searched paths: \n- {searched}"
+            )
 
     @property
     def inc_full_dir(self):
@@ -96,7 +100,7 @@ class SlurmConfig():
             for line in f:
                 if line.find("#define SLURM_VERSION_NUMBER") == 0:
                     self._version = line.split(" ")[2].strip()
-                    print("Detected Slurm version - "f"{self.version}")
+                    print(f"Detected Slurm version - {self.version}")
 
         if not self._version:
             raise RuntimeError("Unable to detect Slurm version")
@@ -112,9 +116,7 @@ slurm = SlurmConfig()
 
 
 def find_files_with_extension(path, extensions):
-    files = [p
-             for p in Path(path).glob("**/*")
-             if p.suffix in extensions]
+    files = [p for p in Path(path).glob("**/*") if p.suffix in extensions]
     return files
 
 
@@ -152,7 +154,6 @@ def parse_slurm_args():
 def cythongen():
     print("Cythonizing sources...")
     try:
-        from Cython.Distutils import build_ext
         from Cython.Build import cythonize
         from Cython.Compiler.Version import version as cython_version
     except ImportError as e:
@@ -177,9 +178,18 @@ def parse_setuppy_commands():
         cleanup_build()
         return False
 
-    build_cmd = ('build', 'build_ext', 'build_py', 'build_clib',
-                 'build_scripts', 'bdist_wheel', 'build_src', 'bdist_egg',
-                 'develop', 'editable_wheel')
+    build_cmd = (
+        "build",
+        "build_ext",
+        "build_py",
+        "build_clib",
+        "build_scripts",
+        "bdist_wheel",
+        "build_src",
+        "bdist_egg",
+        "develop",
+        "editable_wheel",
+    )
 
     for cmd in build_cmd:
         if cmd == args[0]:
@@ -202,7 +212,7 @@ def setup_package():
         slurm.check_version()
         ext_modules = get_extensions()
 
-    setup(ext_modules=ext_modules)
+    setup(name="pyslurm", version=get_version_string(), ext_modules=ext_modules)
 
 
 if __name__ == "__main__":
