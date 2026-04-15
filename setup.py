@@ -4,7 +4,7 @@
 import os
 import sys
 from pathlib import Path
-from setuptools import setup, Extension
+from setuptools import find_packages, setup, Extension
 
 try:
     from packaging.version import Version
@@ -212,7 +212,15 @@ def setup_package():
         slurm.check_version()
         ext_modules = get_extensions()
 
-    setup(name="pyslurm", version=get_version_string(), ext_modules=ext_modules)
+    setup(
+        name="pyslurm",
+        version=get_version_string(),
+        packages=find_packages(
+            include=["pyslurm*"],
+            exclude=["pyslurm.pydefines", "pyslurm.slurm"],
+        ),
+        ext_modules=ext_modules,
+    )
 
 
 if __name__ == "__main__":
