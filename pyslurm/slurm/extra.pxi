@@ -103,7 +103,7 @@ cdef extern from *:
     ctypedef struct conmgr_fd_t
 
 
-# https://github.com/SchedMD/slurm/blob/slurm-24-11-0-1/src/common/slurm_protocol_defs.h#L286
+# https://github.com/SchedMD/slurm/blob/slurm-25-11-4-1/src/common/slurm_protocol_defs.h
 ctypedef struct slurm_msg_t:
     slurm_addr_t address
     void *auth_cred
@@ -115,13 +115,14 @@ ctypedef struct slurm_msg_t:
     bool restrict_uid_set
     uint32_t body_offset
     buf_t *buffer
-    persist_conn_t *conn
-    conmgr_fd_t *conmgr_fd
+    void *pcon
+    void *conmgr_con
     void *data
     uint16_t flags
     uint8_t hash_index
     char *tls_cert
-    void *tls_conn
+    void *conn
+    bool conn_is_mtls
     uint16_t msg_type
     uint16_t protocol_version
     forward_t forward
