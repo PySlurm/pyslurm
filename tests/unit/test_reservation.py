@@ -50,7 +50,7 @@ def test_create_instance():
     assert resv.duration == 2 * 60 * 24
     assert resv.end_time == resv.start_time + (2 * 60 * 60 * 24)
 
-    start = datetime.fromisoformat("2022-04-03T06:00:00")
+    start = datetime(2022, 4, 3, 6, 0, 0)
     end = resv.end_time
     resv.start_time = int(start.timestamp())
 

@@ -711,7 +711,11 @@ def _validate_cpu_freq(freq):
 
 
 def _validate_batch_script(script, args=None):
-    if Path(script).is_file():
+    try:
+        _is_file = Path(script).is_file()
+    except (ValueError, OSError):
+        _is_file = False
+    if _is_file:
         # First assume the caller is passing a path to a script and we try
         # to load it.
         script = Path(script).read_text()

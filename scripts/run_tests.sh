@@ -84,6 +84,7 @@ if [ "$SKIP_BUILD" = false ]; then
     docker exec "$CONTAINER_NAME" bash -c "
         python3 -m venv $VENV_PATH 2>/dev/null || true
         source $VENV_PATH/bin/activate
+        python3 -m pip install -q --upgrade pip
         pip install -q --disable-pip-version-check -r /pyslurm/test_requirements.txt
         cd /pyslurm
         scripts/build.sh -j $BUILD_JOBS -d

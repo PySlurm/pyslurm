@@ -1,7 +1,7 @@
 name: PySlurm
 
 env:
-  SLURM_DOCKER_IMAGE: giovtorres/slurm-docker:25.11.2
+  SLURM_DOCKER_IMAGE: giovtorres/slurm-docker:25.11.4-rl10
 
 on:
   push:
@@ -17,15 +17,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version:
-          - "3.12"
+        include:
+          - slurm-image: giovtorres/slurm-docker:25.11.4-rl10
+            python-version: "3.12"
+          - slurm-image: giovtorres/slurm-docker:25.11.4-rl9
+            python-version: "3.9"
+          - slurm-image: giovtorres/slurm-docker:25.11.4-rl8
+            python-version: "3.6"
       fail-fast: false
+    env:
+      SLURM_DOCKER_IMAGE: ${{ matrix.slurm-image }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
       - name: Pull Slurm container
-        run: docker pull ${{ env.SLURM_DOCKER_IMAGE }}
+        run: docker pull ${{ matrix.slurm-image }}
 
       - name: Start Slurm container
         run: docker compose up -d

@@ -1,5 +1,5 @@
 Name:            python-pyslurm
-Version:         25.11.0
+Version:         25.11.2
 %define rel      1
 Release:         %{rel}%{?dist}
 Summary:         Python interface to Slurm
@@ -39,5 +39,8 @@ pyslurm is a Python interface to Slurm
 %doc README.md
 
 %changelog
+* Sat Apr 12 2026 Giovanni Torres <giovtorres@users.noreply.github.com> - 25.11.2-1                                                                                                                                    
+- Fix Python 3.6 package metadata (UNKNOWN-0.0.0) by reading version from setup.py
+
 * Sun Mar 22 2026 Giovanni Torres <giovtorres@users.noreply.github.com> - 25.11.0-1
 - Initial package
