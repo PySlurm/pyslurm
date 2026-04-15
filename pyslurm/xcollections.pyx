@@ -342,7 +342,7 @@ cdef class MultiClusterMap:
         elif isinstance(other, dict):
             out = self.copy()
             for cluster, data in self._iter_clusters_dict(other):
-                out.data[cluster] = self.data[cluster] | data
+                out.data[cluster] = {**self.data[cluster], **data}
             return out
         return NotImplemented
 
@@ -354,7 +354,7 @@ cdef class MultiClusterMap:
         elif isinstance(other, dict):
             out = self.copy()
             for cluster, data in self._iter_clusters_dict(other):
-                out.data[cluster] = data | self.data[cluster]
+                out.data[cluster] = {**data, **self.data[cluster]}
             return out
         return NotImplemented
 
@@ -363,10 +363,10 @@ cdef class MultiClusterMap:
             for cluster in other.clusters():
                 if not cluster in self.data:
                     self.data[cluster] = {}
-                self.data[cluster] |= other.data[cluster]
+                self.data[cluster].update(other.data[cluster])
         else:
             for cluster, data in self._iter_clusters_dict(other):
-                self.data[cluster] |= data
+                self.data[cluster].update(data)
         return self
 
     def copy(self):
