@@ -1,13 +1,17 @@
 #!/bin/bash
 
-usage() { echo "Usage: $0 [-j jobs]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-j jobs] [-s]" 1>&2; exit 1; }
 
 OPT_JOBS=${PYSLURM_BUILD_JOBS:-1}
+OPT_STRICT=""
 
-while getopts ":j:" o; do
+while getopts ":j:s" o; do
     case "${o}" in
         j)
             OPT_JOBS=${OPTARG}
+            ;;
+        s)
+            OPT_STRICT="--strict"
             ;;
         *)
             usage
@@ -19,4 +23,4 @@ shift $((OPTIND-1))
 
 pip install -r doc_requirements.txt
 scripts/build.sh -j${OPT_JOBS} -d
-mkdocs build
+mkdocs build ${OPT_STRICT}

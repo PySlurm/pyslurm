@@ -1,0 +1,90 @@
+name: Docs
+
+env:
+  SLURM_DOCKER_IMAGE: giovtorres/slurm-docker:25.11.4-rl10
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  docs-build:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Pull Slurm container
+        run: docker pull ${{ env.SLURM_DOCKER_IMAGE }}
+
+      - name: Start Slurm container
+        run: docker compose up -d
+
+      - name: Build docs
+        run: docker exec slurmctl bash -ec "cd /pyslurm && scripts/builddocs.sh -j4 -s"
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-site
+          path: site/
+          retention-days: 7
+          if-no-files-found: error
+
+  docs-deploy-dev:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull Slurm container
+        run: docker pull ${{ env.SLURM_DOCKER_IMAGE }}
+
+      - name: Start Slurm container
+        run: docker compose up -d
+
+      - name: Deploy dev docs
+        run: docker exec slurmctl bash -ec "cd /pyslurm && pip install -q -r doc_requirements.txt && scripts/build.sh -j4 -d && mike deploy dev --push --update-aliases"
+
+  docs-deploy-release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull Slurm container
+        run: docker pull ${{ env.SLURM_DOCKER_IMAGE }}
+
+      - name: Start Slurm container
+        run: docker compose up -d
+
+      - name: Deploy versioned docs
+        run: docker exec slurmctl bash -ec "cd /pyslurm && pip install -q -r doc_requirements.txt && scripts/build.sh -j4 -d && mike deploy ${{ github.ref_name }} latest --update-aliases --push"
