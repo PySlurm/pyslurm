@@ -534,6 +534,7 @@ class ReservationFlags(SlurmFlag):
     ALL_NODES             = slurm.RESERVE_FLAG_ALL_NODES
     SKIP                  = slurm.RESERVE_FLAG_SKIP
     SCHED_FAILED          = slurm.RESERVE_FLAG_SCHED_FAILED
+    REPLACE_DOWN          = slurm.RESERVE_FLAG_REPLACE_DOWN
 
 
 class ReservationReoccurrence(SlurmEnum):
