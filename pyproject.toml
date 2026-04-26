@@ -90,7 +90,7 @@ extend-ignore = ["E203", "E225", "E226", "E227"]
 [tool.cython-lint]
 max-line-length = 80
 ignore = ['E503', 'E504']
-exclude = 'deprecated.pyx'
+exclude = 'deprecated.pyx|slurm_enums.pxi|slurmdb_enums.pxi|extra.pxi'
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg,*.lock,*.css'
