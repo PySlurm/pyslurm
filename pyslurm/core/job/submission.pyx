@@ -524,7 +524,7 @@ cdef class JobSubmitDescription:
         if not isinstance(vals, dict):
             vals = _parse_switches_str_to_dict(vals)
 
-        self.ptr.req_switch  = u32(kwargs.get("count"))
+        self.ptr.req_switch = u32(kwargs.get("count"))
         self.ptr.wait4switch = timestr_to_secs(kwargs.get("max_wait_time"))
 
     def _set_signal(self):

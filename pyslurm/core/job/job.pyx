@@ -1472,8 +1472,8 @@ cdef class Job:
             slurm.slurm_bit_free(&cpu_bitmap)
 
             nodename = cstr.to_unicode(host)
-            cpu_ids  = cstr.to_unicode(cpu_bitmap_str)
-            mem      = None
+            cpu_ids = cstr.to_unicode(cpu_bitmap_str)
+            mem = None
 
             if rel_node_inx < self.ptr.gres_detail_cnt:
                 gres = self.ptr.gres_detail_str[rel_node_inx]
@@ -1484,8 +1484,8 @@ cdef class Job:
             if nodename:
                 output[nodename] = {
                     "cpu_ids": cpu_ids,
-                    "gres":    cstr.to_gres_dict(gres),
-                    "memory":  mem,
+                    "gres": cstr.to_gres_dict(gres),
+                    "memory": mem,
                 }
 
             free(host)

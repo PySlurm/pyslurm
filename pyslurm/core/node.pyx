@@ -303,7 +303,7 @@ cdef class Node:
             >>> node = pyslurm.Node.load("localhost")
         """
         cdef:
-            node_info_msg_t      *node_info = NULL
+            node_info_msg_t *node_info = NULL
             partition_info_msg_t *part_info = NULL
             Node wrap = None
 

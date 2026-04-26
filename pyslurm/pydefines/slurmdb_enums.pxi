@@ -98,17 +98,3 @@ CLUSTER_FED_STATE_ACTIVE                = slurm.CLUSTER_FED_STATE_ACTIVE
 CLUSTER_FED_STATE_INACTIVE              = slurm.CLUSTER_FED_STATE_INACTIVE
 
 # end enum cluster_fed_states
-
-
-
-
-
-
-
-
-
-
-
-
-
-

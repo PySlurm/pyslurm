@@ -519,22 +519,22 @@ class ReservationFlags(SlurmFlag):
 
     See {scontrol#OPT_Flags} for more info.
     """
-    MAINTENANCE           = slurm.RESERVE_FLAG_MAINT,      slurm.RESERVE_FLAG_NO_MAINT
-    MAGNETIC              = slurm.RESERVE_FLAG_MAGNETIC,   slurm.RESERVE_FLAG_NO_MAGNETIC
-    FLEX                  = slurm.RESERVE_FLAG_FLEX,       slurm.RESERVE_FLAG_NO_FLEX
-    IGNORE_RUNNING_JOBS   = slurm.RESERVE_FLAG_IGN_JOBS,   slurm.RESERVE_FLAG_NO_IGN_JOB
-    ANY_NODES             = slurm.RESERVE_FLAG_ANY_NODES,  slurm.RESERVE_FLAG_NO_ANY_NODES
-    STATIC_NODES          = slurm.RESERVE_FLAG_STATIC,     slurm.RESERVE_FLAG_NO_STATIC
-    PARTITION_NODES_ONLY  = slurm.RESERVE_FLAG_PART_NODES, slurm.RESERVE_FLAG_NO_PART_NODES
-    USER_DELETION         = slurm.RESERVE_FLAG_USER_DEL,   slurm.RESERVE_FLAG_NO_USER_DEL
-    PURGE                 = slurm.RESERVE_FLAG_PURGE_COMP, slurm.RESERVE_FLAG_NO_PURGE_COMP
-    SPECIFIC_NODES        = slurm.RESERVE_FLAG_SPEC_NODES
-    NO_JOB_HOLD_AFTER_END = slurm.RESERVE_FLAG_NO_HOLD_JOBS
-    OVERLAP               = slurm.RESERVE_FLAG_OVERLAP
-    ALL_NODES             = slurm.RESERVE_FLAG_ALL_NODES
-    SKIP                  = slurm.RESERVE_FLAG_SKIP
-    SCHED_FAILED          = slurm.RESERVE_FLAG_SCHED_FAILED
-    REPLACE_DOWN          = slurm.RESERVE_FLAG_REPLACE_DOWN
+    MAINTENANCE           = slurm.RESERVE_FLAG_MAINT,      slurm.RESERVE_FLAG_NO_MAINT       # no-cython-lint
+    MAGNETIC              = slurm.RESERVE_FLAG_MAGNETIC,   slurm.RESERVE_FLAG_NO_MAGNETIC    # no-cython-lint
+    FLEX                  = slurm.RESERVE_FLAG_FLEX,       slurm.RESERVE_FLAG_NO_FLEX        # no-cython-lint
+    IGNORE_RUNNING_JOBS   = slurm.RESERVE_FLAG_IGN_JOBS,   slurm.RESERVE_FLAG_NO_IGN_JOB     # no-cython-lint
+    ANY_NODES             = slurm.RESERVE_FLAG_ANY_NODES,  slurm.RESERVE_FLAG_NO_ANY_NODES   # no-cython-lint
+    STATIC_NODES          = slurm.RESERVE_FLAG_STATIC,     slurm.RESERVE_FLAG_NO_STATIC      # no-cython-lint
+    PARTITION_NODES_ONLY  = slurm.RESERVE_FLAG_PART_NODES, slurm.RESERVE_FLAG_NO_PART_NODES  # no-cython-lint
+    USER_DELETION         = slurm.RESERVE_FLAG_USER_DEL,   slurm.RESERVE_FLAG_NO_USER_DEL    # no-cython-lint
+    PURGE                 = slurm.RESERVE_FLAG_PURGE_COMP, slurm.RESERVE_FLAG_NO_PURGE_COMP  # no-cython-lint
+    SPECIFIC_NODES        = slurm.RESERVE_FLAG_SPEC_NODES    # no-cython-lint
+    NO_JOB_HOLD_AFTER_END = slurm.RESERVE_FLAG_NO_HOLD_JOBS  # no-cython-lint
+    OVERLAP               = slurm.RESERVE_FLAG_OVERLAP       # no-cython-lint
+    ALL_NODES             = slurm.RESERVE_FLAG_ALL_NODES     # no-cython-lint
+    SKIP                  = slurm.RESERVE_FLAG_SKIP          # no-cython-lint
+    SCHED_FAILED          = slurm.RESERVE_FLAG_SCHED_FAILED  # no-cython-lint
+    REPLACE_DOWN          = slurm.RESERVE_FLAG_REPLACE_DOWN  # no-cython-lint
 
 
 class ReservationReoccurrence(SlurmEnum):
@@ -542,9 +542,9 @@ class ReservationReoccurrence(SlurmEnum):
 
     See {scontrol#OPT_Flags} for more info.
     """
-    NO      = "NO"
-    DAILY   = "DAILY",   slurm.RESERVE_FLAG_DAILY,   slurm.RESERVE_FLAG_NO_DAILY
-    HOURLY  = "HOURLY",  slurm.RESERVE_FLAG_HOURLY,  slurm.RESERVE_FLAG_NO_HOURLY
-    WEEKLY  = "WEEKLY",  slurm.RESERVE_FLAG_WEEKLY,  slurm.RESERVE_FLAG_NO_WEEKLY
+    NO = "NO"
+    DAILY = "DAILY", slurm.RESERVE_FLAG_DAILY, slurm.RESERVE_FLAG_NO_DAILY
+    HOURLY = "HOURLY", slurm.RESERVE_FLAG_HOURLY, slurm.RESERVE_FLAG_NO_HOURLY
+    WEEKLY = "WEEKLY", slurm.RESERVE_FLAG_WEEKLY, slurm.RESERVE_FLAG_NO_WEEKLY
     WEEKDAY = "WEEKDAY", slurm.RESERVE_FLAG_WEEKDAY, slurm.RESERVE_FLAG_NO_WEEKDAY
     WEEKEND = "WEEKEND", slurm.RESERVE_FLAG_WEEKEND, slurm.RESERVE_FLAG_NO_WEEKEND
