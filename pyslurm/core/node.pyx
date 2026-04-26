@@ -674,7 +674,7 @@ cdef class Node:
         state = self._node_state
         if ((self.info.next_state != slurm.NO_VAL)
                 and (state & slurm.NODE_STATE_REBOOT_REQUESTED
-                or   state & slurm.NODE_STATE_REBOOT_ISSUED)):
+                     or state & slurm.NODE_STATE_REBOOT_ISSUED)):
             return cstr.to_unicode(
                     slurm_node_state_string(self.info.next_state))
         else:

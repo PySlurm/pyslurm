@@ -135,8 +135,8 @@ cdef extern void slurm_free_return_code_msg(return_code_msg_t *msg)
 
 # https://github.com/SchedMD/slurm/blob/2354049372e503af3217f94d65753abc440fa178/src/common/slurm_protocol_api.h#L440
 cdef extern int slurm_send_recv_controller_msg(slurm_msg_t *request_msg,
-                                        slurm_msg_t *response_msg,
-                                        slurmdb_cluster_rec_t *comm_cluster_rec)
+                                               slurm_msg_t *response_msg,
+                                               slurmdb_cluster_rec_t *comm_cluster_rec)
 
 # https://github.com/SchedMD/slurm/blob/fe82218def7b57f5ecda9222e80662ebbb6415f8/src/common/slurm_protocol_defs.c#L168
 cdef extern void slurm_msg_t_init(slurm_msg_t *msg)

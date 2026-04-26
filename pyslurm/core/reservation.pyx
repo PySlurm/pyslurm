@@ -166,7 +166,7 @@ cdef class Reservation:
         wrap.cluster = settings.LOCAL_CLUSTER
         memcpy(wrap.info, in_ptr, sizeof(reserve_info_t))
         wrap._reoccurrence = ReservationReoccurrence.from_flag(wrap.info.flags,
-                                                    default=ReservationReoccurrence.NO)
+                                                               default=ReservationReoccurrence.NO)
         wrap.info.flags &= ~wrap.reoccurrence._flag
         return wrap
 

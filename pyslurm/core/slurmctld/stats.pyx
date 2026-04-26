@@ -160,7 +160,7 @@ cdef class RPCTypeStatistics(dict):
 
     @staticmethod
     cdef RPCTypeStatistics from_ptr(stats_info_response_msg_t *ptr,
-                                   rpc_queue_enabled):
+                                    rpc_queue_enabled):
         out = RPCTypeStatistics()
 
         for i in range(ptr.rpc_type_size):

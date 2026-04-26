@@ -228,7 +228,7 @@ cdef class Config:
     def cgroup_config(self):
         # TODO: should these be none if there is actually no config?
         if not self._cgroup_config:
-            self._cgroup_config =  CgroupConfig.from_ptr(self.ptr.cgroup_conf)
+            self._cgroup_config = CgroupConfig.from_ptr(self.ptr.cgroup_conf)
         return self._cgroup_config
 
     @property

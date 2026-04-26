@@ -238,7 +238,7 @@ cdef class TrackableResources:
 
     def _validate(self, tres_data):
         id_dict = _tres_names_to_ids(self.to_dict(flatten_limits=True),
-                                    tres_data)
+                                     tres_data)
         return id_dict
 
     def _unflatten_tres(self, type_and_name):

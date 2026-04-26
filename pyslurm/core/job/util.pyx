@@ -66,11 +66,13 @@ def mail_type_list_to_int(types):
         elif "time_limit_50" == typ:
             flags |= slurm.MAIL_JOB_TIME50
         elif "all" == typ:
-            flags |= (slurm.MAIL_JOB_BEGIN
-                  |   slurm.MAIL_JOB_END
-                  |   slurm.MAIL_JOB_FAIL
-                  |   slurm.MAIL_JOB_REQUEUE
-                  |   slurm.MAIL_JOB_STAGE_OUT)
+            flags |= (
+                slurm.MAIL_JOB_BEGIN
+                | slurm.MAIL_JOB_END
+                | slurm.MAIL_JOB_FAIL
+                | slurm.MAIL_JOB_REQUEUE
+                | slurm.MAIL_JOB_STAGE_OUT
+            )
         else:
             raise ValueError("Invalid Mail type: {typ}.")
 

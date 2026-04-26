@@ -408,17 +408,17 @@ cdef _create_assoc_ptr(Association ass, conn=None):
     ass.tres_data = TrackableResources.load(db_connection=conn)
     _set_tres_limits(&ass.ptr.grp_tres, ass.group_tres, ass.tres_data)
     _set_tres_limits(&ass.ptr.grp_tres_mins, ass.group_tres_mins,
-                    ass.tres_data)
+                     ass.tres_data)
     _set_tres_limits(&ass.ptr.grp_tres_run_mins, ass.group_tres_run_mins,
-                    ass.tres_data)
+                     ass.tres_data)
     _set_tres_limits(&ass.ptr.max_tres_mins_pj, ass.max_tres_mins_per_job,
-                    ass.tres_data)
+                     ass.tres_data)
     _set_tres_limits(&ass.ptr.max_tres_run_mins, ass.max_tres_run_mins_per_user,
-                    ass.tres_data)
+                     ass.tres_data)
     _set_tres_limits(&ass.ptr.max_tres_pj, ass.max_tres_per_job,
-                    ass.tres_data)
+                     ass.tres_data)
     _set_tres_limits(&ass.ptr.max_tres_pn, ass.max_tres_per_node,
-                    ass.tres_data)
+                     ass.tres_data)
 
     # _set_qos_list will also check if specified QoS are valid and translate
     # them to its ID, which is why we need to load the current QOS available

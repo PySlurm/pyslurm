@@ -325,12 +325,15 @@ cdef class JobSubmitDescription:
                              "memory_per_gpu can be set.")
 
         if (self.ntasks_per_gpu and
-                (self.ptr.min_nodes != u32(None) or self.nodes
-                or self.gpus_per_task or self.gpus_per_socket
-                or self.ntasks_per_node)):
+                (
+                    self.ptr.min_nodes != u32(None) or self.nodes
+                    or self.gpus_per_task or self.gpus_per_socket
+                    or self.ntasks_per_node
+                )
+            ):
             raise ValueError("ntasks_per_gpu is mutually exclusive with "
-                    "nodes, gpus_per_task, gpus_per_socket and "
-                    "ntasks_per_node.")
+                             "nodes, gpus_per_task, gpus_per_socket and "
+                             "ntasks_per_node.")
 
         if self.cpus_per_gpu and self.cpus_per_task:
             raise ValueError("cpus_per_task and cpus_per_gpu "
@@ -339,7 +342,7 @@ cdef class JobSubmitDescription:
         if (self.cores_reserved_for_system
                 and self.threads_reserved_for_system):
             raise ValueError("cores_reserved_for_system is mutually "
-                    " exclusive with threads_reserved_for_system.")
+                             " exclusive with threads_reserved_for_system.")
 
     def _set_core_spec(self):
         if self.cores_reserved_for_system:
@@ -535,7 +538,7 @@ cdef class JobSubmitDescription:
         self.ptr.warn_signal = u16(vals.get("signal"))
         self.ptr.warn_time = u16(vals.get("time"), on_noval=60)
         u16_set_bool_flag(&self.ptr.warn_flags,
-                bool(vals.get("batch_only")), slurm.KILL_JOB_BATCH)
+                          bool(vals.get("batch_only")), slurm.KILL_JOB_BATCH)
         u16_set_bool_flag(
                 &self.ptr.warn_flags,
                 bool(vals.get("allow_reservation_overlap")),
