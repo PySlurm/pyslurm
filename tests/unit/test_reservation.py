@@ -91,4 +91,3 @@ def test_flags_sched_failed():
     )
     decoded = ReservationFlags(combo.value)
     assert ReservationFlags.SCHED_FAILED in decoded
-

@@ -1,8 +1,8 @@
 from .config import (
-   Config,
-   MPIConfig,
-   AccountingGatherConfig,
-   CgroupConfig,
+    Config,
+    MPIConfig,
+    AccountingGatherConfig,
+    CgroupConfig,
 )
 from .enums import ShutdownMode
 from .stats import (

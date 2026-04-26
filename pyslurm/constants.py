@@ -24,7 +24,6 @@
 # cython: language_level=3
 """pyslurm common Constants"""
 
-
 UNLIMITED = "UNLIMITED"
 """
 Represents an infinite/unlimited value. This is sometimes returned for
