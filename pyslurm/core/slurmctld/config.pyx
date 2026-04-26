@@ -22,7 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from pyslurm.core.error import verify_rpc, RPCError
+from pyslurm.core.error import verify_rpc
 from pyslurm.utils.uint import (
     u16_parse,
     u32_parse,
@@ -35,7 +35,6 @@ from pyslurm.utils.helpers import (
     instance_to_dict,
 )
 from pyslurm.utils import cstr
-from typing import Union
 import re
 
 

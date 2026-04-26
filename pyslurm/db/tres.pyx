@@ -22,7 +22,6 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from typing import Union
 from pyslurm.utils.uint import *
 from pyslurm.constants import UNLIMITED
 from pyslurm.core.error import RPCError
@@ -30,7 +29,6 @@ from pyslurm.utils.helpers import instance_to_dict, dehumanize
 from pyslurm.utils import cstr
 from pyslurm.db.connection import _open_conn_or_error
 from pyslurm import xcollections
-import json
 import re
 
 

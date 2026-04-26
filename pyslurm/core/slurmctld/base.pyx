@@ -28,7 +28,6 @@ from pyslurm.utils import cstr
 from pyslurm.utils.uint import u16_parse
 from typing import Union
 import time
-from enum import IntEnum
 from .config import Config
 from .enums import ShutdownMode
 

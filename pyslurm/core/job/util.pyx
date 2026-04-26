@@ -22,7 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
+from libc.stdint cimport uint16_t, uint32_t
 from pyslurm cimport slurm
 from pyslurm.utils.uint import *
 from pyslurm.utils.uint cimport *

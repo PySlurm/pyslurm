@@ -22,14 +22,10 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
-from pyslurm.core.error import RPCError
-from typing import Union
 from pyslurm.utils.uint import *
 from pyslurm.utils.ctime import _raw_time
 from pyslurm import xcollections
 from pyslurm.utils.helpers import (
-    gid_to_name,
     uid_to_name,
     instance_to_dict,
     _get_exit_code,

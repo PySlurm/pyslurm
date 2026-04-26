@@ -35,7 +35,6 @@
 # cython: language_level=3
 
 from pyslurm.core.error import verify_rpc
-from pyslurm.utils.helpers import nodelist_to_range_str
 
 
 cdef load_single(JobStep step):

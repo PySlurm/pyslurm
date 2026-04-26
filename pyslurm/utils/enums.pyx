@@ -23,7 +23,6 @@
 # cython: language_level=3
 
 from enum import Enum, Flag
-import inspect
 
 try:
     from enum import EnumMeta as EnumType

@@ -22,8 +22,7 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from typing import Union
-from pyslurm.utils import cstr, ctime
+from pyslurm.utils import cstr
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
 from pyslurm import settings
@@ -37,10 +36,7 @@ from pyslurm.utils.helpers import (
     cpu_freq_int_to_str,
 )
 from pyslurm.utils.ctime import (
-    secs_to_timestr,
-    mins_to_timestr,
     timestr_to_mins,
-    timestamp_to_date,
     _raw_time,
 )
 

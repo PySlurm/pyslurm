@@ -25,7 +25,6 @@
 
 from pyslurm import settings
 import json
-from typing import Union, Any
 
 
 class BaseView:

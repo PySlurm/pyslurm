@@ -25,30 +25,23 @@
 from os import getcwd
 from os import environ as pyenviron
 import re
-from typing import Union, Any
 import shlex
 from pathlib import Path
 from pyslurm.utils import cstr
 from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *
-from pyslurm.core.error import RPCError, verify_rpc
+from pyslurm.core.error import verify_rpc
 from pyslurm.core.job.sbatch_opts import _parse_opts_from_batch_script
 from pyslurm.utils.ctime import (
-    secs_to_timestr,
     timestr_to_secs,
-    mins_to_timestr,
     timestr_to_mins,
-    timestamp_to_date,
     date_to_timestamp,
 )
 from pyslurm.utils.helpers import (
-    humanize,
     dehumanize,
     signal_to_num,
     user_to_uid,
     group_to_gid,
-    uid_to_name,
-    gid_to_name,
 )
 
 

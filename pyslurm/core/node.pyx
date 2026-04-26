@@ -22,23 +22,18 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from typing import Union
 from pyslurm.utils import cstr
-from pyslurm.utils import ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.error import RPCError, verify_rpc
-from pyslurm.utils.ctime import timestamp_to_date, _raw_time
+from pyslurm.utils.ctime import _raw_time
 from pyslurm import settings
 from pyslurm import xcollections
 from pyslurm.utils.helpers import (
     uid_to_name,
-    gid_to_name,
-    humanize,
     _getgrall_to_dict,
     _getpwall_to_dict,
     cpubind_to_num,
     instance_to_dict,
-    nodelist_from_range_str,
     nodelist_to_range_str,
     gres_from_tres_dict,
 )

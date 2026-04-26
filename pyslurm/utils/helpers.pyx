@@ -26,7 +26,6 @@ from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
 from grp import getgrgid, getgrnam, getgrall
 from pwd import getpwuid, getpwnam, getpwall
 from os import getuid, getgid
-from itertools import chain
 import re
 import signal
 from pyslurm.constants import UNLIMITED

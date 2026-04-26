@@ -36,12 +36,10 @@
 # cython: language_level=3
 
 from pyslurm.core.error import verify_rpc, RPCError
-from pyslurm.utils.ctime import _raw_time
 from pyslurm.utils.helpers import (
     instance_to_dict,
     uid_to_name,
 )
-from pyslurm.utils import cstr
 from pyslurm import xcollections
 
 

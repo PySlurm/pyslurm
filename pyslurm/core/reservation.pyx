@@ -22,17 +22,13 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from typing import Union, Any
 from pyslurm.utils import cstr
 from pyslurm.utils import ctime
 from pyslurm.utils.uint import u32_parse
 from pyslurm import settings
-from pyslurm.core.slurmctld.config import _get_memory
 from datetime import datetime
-from pyslurm import xcollections
 from pyslurm.utils.helpers import instance_to_dict
 from pyslurm.utils.enums import SlurmEnum, SlurmFlag
-from enum import auto
 from pyslurm.utils.ctime import (
     _raw_time,
     timestr_to_mins,

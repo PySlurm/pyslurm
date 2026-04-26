@@ -22,11 +22,9 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from typing import Union, Any
-from pyslurm.core.error import RPCError, PyslurmError
+from pyslurm.core.error import RPCError
 from pyslurm.utils.uint import *
 from pyslurm import settings
-from pyslurm import xcollections
 from pyslurm.utils.ctime import (
     date_to_timestamp,
     timestr_to_mins,
@@ -40,7 +38,6 @@ from pyslurm.utils.helpers import (
     nodelist_to_range_str,
     instance_to_dict,
     _get_exit_code,
-    gres_from_tres_dict,
 )
 from pyslurm.db.connection import _open_conn_or_error
 from pyslurm.enums import SchedulerType

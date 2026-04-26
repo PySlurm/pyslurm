@@ -28,9 +28,6 @@
 # cython: c_string_type=unicode, c_string_encoding=default
 # cython: language_level=3
 
-from os import WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS
-import re
-from typing import Union
 from pyslurm.utils import cstr, ctime
 from pyslurm.utils.uint import *
 from pyslurm.core.job.util import *

@@ -30,7 +30,6 @@ from pyslurm.utils.helpers import (
 from pyslurm.utils.uint import *
 from pyslurm.db.connection import _open_conn_or_error
 from pyslurm import settings
-from pyslurm import xcollections
 
 
 cdef class Associations(MultiClusterMap):
