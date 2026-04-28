@@ -1,7 +1,7 @@
 cython>=3.0.11,<3.1
 wheel
 setuptools
-mkdocstrings[python]
+mkdocstrings[python]<2.0
 mike
 mkdocs-material
 mkdocs-awesome-pages-plugin

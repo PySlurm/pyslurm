@@ -22,7 +22,7 @@ done
 
 shift $((OPTIND-1))
 
-PY_VER=$(python -c "import sys; v=sys.version_info; print(f'{v.major}.{v.minor}')")
+PY_VER=$(python3 -c "import sys; v=sys.version_info; print(f'{v.major}.{v.minor}')")
 echo "Building with ${OPT_JOBS} cores"
 export PYSLURM_BUILD_JOBS="$OPT_JOBS"
 
