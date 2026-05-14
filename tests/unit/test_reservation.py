@@ -92,3 +92,19 @@ def test_flags_sched_failed():
     decoded = ReservationFlags(combo.value)
     assert ReservationFlags.SCHED_FAILED in decoded
 
+
+def test_flags_gres_tres():
+    # Regression: reservations with GRES/TRES (e.g. TRES=cpu=2,gres/gpu=2)
+    # cause Slurm to set GRES_REQ and TRES_PER_NODE internally, which
+    # previously raised ValueError due to unrecognised bits.
+    combo = (
+        ReservationFlags.SPECIFIC_NODES   # SLURM_BIT(15) = 32768
+        | ReservationFlags.GRES_REQUIRED  # SLURM_BIT(37) = 137438953472
+        | ReservationFlags.TRES_PER_NODE  # SLURM_BIT(38) = 274877906944
+    )
+    assert combo.value == 412316893184
+    decoded = ReservationFlags(412316893184)
+    assert ReservationFlags.GRES_REQUIRED in decoded
+    assert ReservationFlags.TRES_PER_NODE in decoded
+    assert ReservationFlags.SPECIFIC_NODES in decoded
+
