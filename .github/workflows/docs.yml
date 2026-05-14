@@ -62,7 +62,7 @@ jobs:
         run: docker compose up -d
 
       - name: Deploy dev docs
-        run: docker exec slurmctl bash -ec "cd /pyslurm && pip install -q -r doc_requirements.txt && scripts/build.sh -j4 -d && mike deploy dev --push --update-aliases"
+        run: docker exec slurmctl bash -ec "cd /pyslurm && pip install -q ".[docs]" && scripts/build.sh -j4 -d && mike deploy dev --push --update-aliases"
 
   docs-deploy-release:
     runs-on: ubuntu-latest
@@ -87,4 +87,4 @@ jobs:
         run: docker compose up -d
 
       - name: Deploy versioned docs
-        run: docker exec slurmctl bash -ec "cd /pyslurm && pip install -q -r doc_requirements.txt && scripts/build.sh -j4 -d && mike deploy ${{ github.ref_name }} latest --update-aliases --push"
+        run: docker exec slurmctl bash -ec "cd /pyslurm && pip install -q ".[docs]" && scripts/build.sh -j4 -d && mike deploy ${{ github.ref_name }} latest --update-aliases --push"

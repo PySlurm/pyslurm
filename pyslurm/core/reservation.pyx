@@ -47,6 +47,17 @@ from pyslurm.core.error import (
 
 
 cdef class Reservations(MultiClusterMap):
+    """A collection of Slurm advance reservations, keyed by name.
+
+    Behaves like a dict. Use `Reservations.load()` to fetch all reservations
+    from the Slurm controller.
+
+    Examples:
+        >>> import pyslurm
+        >>> reservations = pyslurm.Reservations.load()
+        >>> for name, resv in reservations.items():
+        ...     print(name, resv.nodes, resv.is_active)
+    """
 
     def __dealloc__(self):
         slurm_free_reservation_info_msg(self.info)
@@ -103,6 +114,50 @@ cdef class Reservations(MultiClusterMap):
 
 
 cdef class Reservation:
+    """A Slurm advance reservation.
+
+    Advance reservations pre-allocate Slurm resources (nodes, CPUs, licenses)
+    for a specific time window, preventing regular jobs from using them. Used
+    for maintenance windows, dedicated allocations, or guaranteed access for
+    specific users or accounts.
+
+    Attributes:
+        name (str): Reservation name.
+        nodes (str): Nodelist expression of reserved nodes.
+        start_time (int): Unix timestamp when the reservation begins.
+        end_time (int): Unix timestamp when the reservation ends.
+        duration (int): Duration of the reservation in minutes.
+        is_active (bool): True if the reservation is currently active.
+        users (list): List of usernames allowed to use the reservation.
+        accounts (list): List of account names allowed to use the reservation.
+        groups (list): List of Unix groups allowed to use the reservation.
+        node_count (int): Number of nodes reserved.
+        cpus (int): Number of cores/CPUs reserved.
+        flags (pyslurm.ReservationFlags): Flags controlling reservation
+            behaviour (e.g. ``MAINT``, ``OVERLAP``, ``IGNORE_JOBS``).
+        partition (str): Partition the reservation is associated with.
+        licenses (list): List of licenses reserved.
+        features (list): Node feature constraints for the reservation.
+
+    Examples:
+        Load a reservation:
+
+        >>> import pyslurm
+        >>> resv = pyslurm.Reservation.load("maintenance")
+        >>> print(resv.nodes, resv.start_time, resv.end_time)
+
+        Create a reservation:
+
+        >>> from pyslurm import ReservationFlags, ReservationReoccurrence
+        >>> resv = pyslurm.Reservation(
+        ...     name="debug",
+        ...     users=["root"],
+        ...     nodes="node001",
+        ...     duration="1-00:00:00",
+        ...     flags=ReservationFlags.MAINTENANCE,
+        ... )
+        >>> resv.create()
+    """
 
     def __cinit__(self):
         self.info = NULL
@@ -311,6 +366,7 @@ cdef class Reservation:
 
     @property
     def accounts(self):
+        """List of account names allowed to use this reservation."""
         return cstr.to_list(self.info.accounts)
 
     @accounts.setter
@@ -319,6 +375,7 @@ cdef class Reservation:
 
     @property
     def burst_buffer(self):
+        """Burst buffer resources reserved."""
         return cstr.to_unicode(self.info.burst_buffer)
 
     @burst_buffer.setter
@@ -327,6 +384,7 @@ cdef class Reservation:
 
     @property
     def comment(self):
+        """Administrative comment on the reservation."""
         return cstr.to_unicode(self.info.comment)
 
     @comment.setter
@@ -335,6 +393,7 @@ cdef class Reservation:
 
     @property
     def cpus(self):
+        """Number of cores/CPUs reserved."""
         return u32_parse(self.info.core_cnt, zero_is_noval=False)
 
     @cpus.setter
@@ -343,6 +402,7 @@ cdef class Reservation:
 
     @property
     def cpu_ids_by_node(self):
+        """Dict mapping node names to core ID ranges reserved on each node."""
         out = {}
         for i in range(self.info.core_spec_cnt):
             node = cstr.to_unicode(self.info.core_spec[i].node_name)
@@ -353,6 +413,7 @@ cdef class Reservation:
 
     @property
     def end_time(self):
+        """Unix timestamp when the reservation ends."""
         return _raw_time(self.info.end_time)
 
     @end_time.setter
@@ -365,6 +426,7 @@ cdef class Reservation:
 
     @property
     def features(self):
+        """List of node feature constraints for the reservation."""
         return cstr.to_list(self.info.features)
 
     @features.setter
@@ -373,6 +435,7 @@ cdef class Reservation:
 
     @property
     def groups(self):
+        """List of Unix groups allowed to use this reservation."""
         return cstr.to_list(self.info.groups)
 
     @groups.setter
@@ -381,6 +444,7 @@ cdef class Reservation:
 
     @property
     def licenses(self):
+        """List of licenses reserved."""
         return cstr.to_list(self.info.licenses)
 
     @licenses.setter
@@ -389,6 +453,7 @@ cdef class Reservation:
 
     @property
     def max_start_delay(self):
+        """Maximum seconds a job may delay the reservation start; 0 means no delay allowed."""
         return u32_parse(self.info.max_start_delay)
 
     @max_start_delay.setter
@@ -397,6 +462,7 @@ cdef class Reservation:
 
     @property
     def name(self):
+        """Reservation name."""
         return cstr.to_unicode(self.info.name)
 
     @name.setter
@@ -405,6 +471,7 @@ cdef class Reservation:
 
     @property
     def node_count(self):
+        """Number of nodes in the reservation."""
         return u32_parse(self.info.node_cnt, zero_is_noval=False)
 
     @node_count.setter
@@ -413,6 +480,7 @@ cdef class Reservation:
 
     @property
     def nodes(self):
+        """Nodelist expression of reserved nodes."""
         return cstr.to_unicode(self.info.node_list)
 
     @nodes.setter
@@ -421,6 +489,7 @@ cdef class Reservation:
 
     @property
     def partition(self):
+        """Partition associated with the reservation."""
         return cstr.to_unicode(self.info.partition)
 
     @partition.setter
@@ -429,6 +498,7 @@ cdef class Reservation:
 
     @property
     def purge_time(self):
+        """Seconds after the reservation ends before it is purged; requires PURGE flag."""
         return u32_parse(self.info.purge_comp_time)
 
     @purge_time.setter
@@ -439,6 +509,7 @@ cdef class Reservation:
 
     @property
     def start_time(self):
+        """Unix timestamp when the reservation begins."""
         return _raw_time(self.info.start_time)
 
     @start_time.setter
@@ -447,6 +518,7 @@ cdef class Reservation:
 
     @property
     def duration(self):
+        """Duration of the reservation in minutes (derived from start_time and end_time)."""
         cdef time_t duration = 0
 
         if self.start_time and self.info.end_time >= self.info.start_time:
@@ -464,6 +536,7 @@ cdef class Reservation:
 
     @property
     def is_active(self):
+        """True if the current time is within the reservation's start and end window."""
         cdef time_t now = ctime.time(NULL)
         if self.info.start_time <= now and self.info.end_time >= now:
             return True
@@ -471,6 +544,7 @@ cdef class Reservation:
 
     @property
     def tres(self):
+        """Dict of TRES reserved, e.g. {"cpu": 16, "mem": "64G"}."""
         return cstr.to_dict(self.info.tres_str)
 
     @tres.setter
@@ -480,6 +554,7 @@ cdef class Reservation:
 
     @property
     def users(self):
+        """List of usernames allowed to use this reservation."""
         return cstr.to_list(self.info.users)
 
     @users.setter

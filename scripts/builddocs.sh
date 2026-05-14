@@ -21,6 +21,6 @@ done
 
 shift $((OPTIND-1))
 
-pip install -r doc_requirements.txt
+pip install ".[docs]"
 scripts/build.sh -j${OPT_JOBS} -d
 mkdocs build ${OPT_STRICT}

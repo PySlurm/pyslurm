@@ -64,6 +64,12 @@ dev = [
     "pytest",
     "pytest-sugar",
 ]
+docs = [
+    "mkdocstrings-python<2.0",
+    "mike",
+    "mkdocs-material",
+    "mkdocs-awesome-pages-plugin",
+]
 
 [tool.setuptools.dynamic]
 version = { attr = "pyslurm.version.__version__" }
@@ -71,6 +77,9 @@ version = { attr = "pyslurm.version.__version__" }
 [tool.setuptools.packages.find]
 include = ["pyslurm*"]
 exclude = ["pyslurm.pydefines", "pyslurm.slurm"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 80
