@@ -391,7 +391,7 @@ cdef class GPU:
     @staticmethod
     def from_tres(tres):
         if ":" in tres.name:
-            _, typ = tres.name.split(":")
+            _, typ = tres.name.split(":", 1)
         else:
             typ = None
 

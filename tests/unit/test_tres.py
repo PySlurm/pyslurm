@@ -68,6 +68,17 @@ def test_parse_tres_str():
     assert tres.billing.type == "billing"
 
 
+def test_parse_tres_str_gpu_type_with_multiple_colons():
+    input_str = "gres/gpu:nvidia-a100:1g.5gb=3"
+    tres = TrackableResources.from_str(input_str)
+
+    assert len(tres.gres) == 1
+    gres = tres.gres["gpu:nvidia-a100:1g.5gb"]
+    assert isinstance(gres, GPU)
+    assert gres.count == 3
+    assert gres.type == "nvidia-a100:1g.5gb"
+
+
 def test_parse_gres_layout_str():
     input_str = "gpu:nvidia-a100:5"
     gres_dict = GenericResourceLayout.from_str(input_str)
