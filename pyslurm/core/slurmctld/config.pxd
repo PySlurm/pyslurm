@@ -29,7 +29,7 @@ from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     slurm_conf_t,
     slurm_load_ctl_conf,
-    slurm_free_ctl_conf,
+    slurm_free_conf,
     slurm_preempt_mode_string,
     slurm_accounting_enforce_string,
     slurm_sprint_cpu_bind_type,

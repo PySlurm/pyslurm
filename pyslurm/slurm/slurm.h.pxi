@@ -2632,7 +2632,7 @@ cdef extern from "slurm/slurm.h":
         kill_jobs_resp_job_t* job_responses
         uint32_t jobs_cnt
 
-    int slurm_kill_job(uint32_t job_id, uint16_t signal, uint16_t flags)
+    int slurm_kill_job(slurm_step_id_t job_id, uint16_t signal, uint16_t flags)
 
     int slurm_kill_job_step(slurm_step_id_t* step_id, uint16_t signal, uint16_t flags)
 
@@ -2666,15 +2666,15 @@ cdef extern from "slurm/slurm.h":
 
     long slurm_api_version()
 
-    int slurm_load_ctl_conf(time_t update_time, slurm_conf_t** slurm_ctl_conf_ptr)
+    int slurm_load_ctl_conf(time_t update_time, slurm_conf_t** slurm_conf_ptr)
 
-    void slurm_free_ctl_conf(slurm_conf_t* slurm_ctl_conf_ptr)
+    void slurm_free_conf(slurm_conf_t* slurm_conf_ptr)
 
-    void slurm_print_ctl_conf(FILE* out, slurm_conf_t* slurm_ctl_conf_ptr)
+    void slurm_print_ctl_conf(FILE* out, slurm_conf_t* slurm_conf_ptr)
 
-    void slurm_write_ctl_conf(slurm_conf_t* slurm_ctl_conf_ptr, node_info_msg_t* node_info_ptr, partition_info_msg_t* part_info_ptr)
+    void slurm_write_ctl_conf(slurm_conf_t* slurm_conf_ptr, node_info_msg_t* node_info_ptr, partition_info_msg_t* part_info_ptr)
 
-    void* slurm_ctl_conf_2_key_pairs(slurm_conf_t* slurm_ctl_conf_ptr)
+    void* slurm_ctl_conf_2_key_pairs(slurm_conf_t* slurm_conf_ptr)
 
     void slurm_print_key_pairs(FILE* out, void* key_pairs, char* title)
 
@@ -2698,7 +2698,7 @@ cdef extern from "slurm/slurm.h":
 
     void slurm_free_priority_factors_response_msg(priority_factors_response_msg_t* factors_resp)
 
-    int slurm_get_end_time(uint32_t jobid, time_t* end_time_ptr)
+    int slurm_get_end_time(slurm_step_id_t jobid, time_t* end_time_ptr)
 
     void slurm_get_job_stderr(char* buf, int buf_size, job_info_t* job_ptr)
 
@@ -2710,11 +2710,11 @@ cdef extern from "slurm/slurm.h":
 
     char* slurm_expand_job_stdio_fields(char* path, job_info_t* job)
 
-    long slurm_get_rem_time(uint32_t jobid)
+    long slurm_get_rem_time(slurm_step_id_t jobid)
 
-    int slurm_job_node_ready(uint32_t job_id)
+    int slurm_job_node_ready(slurm_step_id_t job_id)
 
-    int slurm_load_job(job_info_msg_t** resp, uint32_t job_id, uint16_t show_flags)
+    int slurm_load_job(job_info_msg_t** resp, slurm_step_id_t job_id, uint16_t show_flags)
 
     int slurm_load_job_sluid(job_info_msg_t** resp, sluid_t sluid, uint16_t show_flags)
 
@@ -2726,9 +2726,9 @@ cdef extern from "slurm/slurm.h":
 
     int slurm_load_job_state(int job_id_count, slurm_selected_step_t* job_ids, job_state_response_msg_t** jsr_pptr)
 
-    int slurm_notify_job(uint32_t job_id, char* message)
+    int slurm_notify_job(slurm_step_id_t job_id, char* message)
 
-    int slurm_pid2jobid(pid_t job_pid, uint32_t* job_id_ptr)
+    int slurm_pid2jobid(pid_t job_pid, slurm_step_id_t* job_id_ptr)
 
     int slurm_update_job(job_desc_msg_t* job_msg)
 
@@ -2880,17 +2880,17 @@ cdef extern from "slurm/slurm.h":
 
     int slurm_update_suspend_exc_states(char* states, update_mode_t mode)
 
-    int slurm_suspend(uint32_t job_id)
+    int slurm_suspend(slurm_step_id_t job_id)
 
     int slurm_suspend2(char* job_id, job_array_resp_msg_t** resp)
 
-    int slurm_resume(uint32_t job_id)
+    int slurm_resume(slurm_step_id_t job_id)
 
     int slurm_resume2(char* job_id, job_array_resp_msg_t** resp)
 
     void slurm_free_job_array_resp(job_array_resp_msg_t* resp)
 
-    int slurm_requeue(uint32_t job_id, uint32_t flags)
+    int slurm_requeue(slurm_step_id_t job_id, uint32_t flags)
 
     int slurm_requeue2(char* job_id, uint32_t flags, job_array_resp_msg_t** resp)
 

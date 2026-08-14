@@ -52,6 +52,8 @@ from pyslurm.utils.helpers import (
     _get_exit_code,
     cpu_freq_int_to_str,
 )
+from pyslurm.utils.helpers cimport init_step_id
+from pyslurm.slurm cimport slurm_step_id_t
 
 
 cdef class Jobs(MultiClusterMap):
@@ -287,8 +289,10 @@ cdef class Job:
             job_info_msg_t *info = NULL
             Job wrap = None
 
+        cdef slurm_step_id_t step_id = init_step_id()
+        step_id.job_id = JobID
         try:
-            verify_rpc(slurm_load_job(&info, job_id, slurm.SHOW_DETAIL))
+            verify_rpc(slurm_load_job(&info, step_id, slurm.SHOW_DETAIL))
 
             if info and info.record_count:
                 wrap = Job.from_ptr(&info.job_array[0])
@@ -384,7 +388,10 @@ cdef class Job:
             flags |= slurm.KILL_HURRY
 
         sig = signal_to_num(signal)
-        slurm_kill_job(self.id, sig, flags)
+
+        cdef slurm_step_id_t step_id = init_step_id()
+        step_id.job_id = self.id
+        slurm_kill_job(step_id, sig, flags)
 
         # Ignore errors when the Job is already done or when SIGKILL was
         # specified and the job id is already purged from slurmctlds memory.
@@ -426,7 +433,9 @@ cdef class Job:
         # _slurm_rpc_suspend it should return ESLURM_INVALID_JOB_ID, but
         # returns -1
         # https://github.com/SchedMD/slurm/blob/master/src/slurmctld/proc_req.c#L4693
-        verify_rpc(slurm_suspend(self.id))
+        cdef slurm_step_id_t step_id = init_step_id()
+        step_id.job_id = self.id
+        verify_rpc(slurm_suspend(step_id))
 
     def unsuspend(self):
         """Unsuspend a currently suspended Job.
@@ -441,7 +450,9 @@ cdef class Job:
             >>> pyslurm.Job(9999).unsuspend()
         """
         # Same problem as described in suspend()
-        verify_rpc(slurm_resume(self.id))
+        cdef slurm_step_id_t step_id = init_step_id()
+        step_id.job_id = self.id
+        verify_rpc(slurm_resume(step_id))
 
     def modify(self, JobSubmitDescription changes):
         """Modify a Job.
@@ -537,7 +548,9 @@ cdef class Job:
         if hold:
             flags |= slurm.JOB_REQUEUE_HOLD
 
-        verify_rpc(slurm_requeue(self.id, flags))
+        cdef slurm_step_id_t step_id = init_step_id()
+        step_id.job_id = self.id
+        verify_rpc(slurm_requeue(step_id, flags))
 
     def notify(self, msg):
         """Sends a message to the Jobs stdout.
@@ -556,7 +569,9 @@ cdef class Job:
             >>> import pyslurm
             >>> pyslurm.Job(9999).notify("Hello Friends!")
         """
-        verify_rpc(slurm_notify_job(self.id, msg))
+        cdef slurm_step_id_t step_id = init_step_id()
+        step_id.job_id = self.id
+        verify_rpc(slurm_notify_job(step_id, msg))
 
     def load_stats(self):
         """Load realtime statistics for a Job and its steps.

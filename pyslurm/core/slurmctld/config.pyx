@@ -193,7 +193,7 @@ cdef class Config:
                            "Use slurmctld.Config.load() to get an instance.")
 
     def __dealloc__(self):
-        slurm_free_ctl_conf(self.ptr)
+        slurm_free_conf(self.ptr)
         self.ptr = NULL
 
     @staticmethod
