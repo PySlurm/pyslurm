@@ -602,6 +602,10 @@ cdef class Node:
     def reason_time(self):
         return _raw_time(self.info.reason_time)
 
+    @property
+    def suspend_time(self):
+        return u32_parse(self.info.suspend_time)
+
 #   @property
 #   def tres_configured(self):
 #       """dict: TRES that are configured on the node."""

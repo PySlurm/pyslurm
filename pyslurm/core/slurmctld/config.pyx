@@ -193,7 +193,7 @@ cdef class Config:
                            "Use slurmctld.Config.load() to get an instance.")
 
     def __dealloc__(self):
-        slurm_free_ctl_conf(self.ptr)
+        slurm_free_conf(self.ptr)
         self.ptr = NULL
 
     @staticmethod
@@ -517,6 +517,10 @@ cdef class Config:
         return cstr.to_unicode(self.ptr.health_check_program)
 
     @property
+    def health_check_timeout(self):
+        return u16_parse(self.ptr.health_check_timeout)
+
+    @property
     def inactive_limit(self):
         return u16_parse(self.ptr.inactive_limit)
 
@@ -595,6 +599,10 @@ cdef class Config:
     @property
     def launch_parameters(self):
         return cstr.to_list(self.ptr.launch_params)
+
+    @property
+    def license_parameters(self):
+        return cstr.to_list(self.ptr.license_params)
 
     @property
     def licenses(self):
@@ -678,6 +686,18 @@ cdef class Config:
     @property
     def mcs_parameters(self):
         return cstr.to_list(self.ptr.mcs_plugin_params)
+
+    @property
+    def metrics_auth(self):
+        return u8_parse_bool(self.ptr.metrics_auth)
+
+    @property
+    def metrics_auth_users(self):
+        return cstr.to_list(self.ptr.metrics_auth_users)
+
+    @property
+    def metrics_parameters(self):
+        return cstr.to_list(self.ptr.metrics_params)
 
     @property
     def metrics_type(self):
@@ -981,6 +1001,10 @@ cdef class Config:
         return cstr.to_unicode(self.ptr.slurmd_user_name)
 
     @property
+    def slurmctld_http_auth_parameters(self):
+        return cstr.to_list(self.ptr.slurmctld_http_auth_params)
+
+    @property
     def slurmctld_log_level(self):
         return _log_level_int_to_str(self.ptr.slurmctld_debug)
 
@@ -1023,6 +1047,10 @@ cdef class Config:
     def slurmctld_parameters(self):
         return cstr.to_dict(self.ptr.slurmctld_params, delim1=",",
                             delim2="=", def_value=True)
+
+    @property
+    def slurmd_http_auth_parameters(self):
+        return cstr.to_list(self.ptr.slurmd_http_auth_params)
 
     @property
     def slurmd_log_level(self):

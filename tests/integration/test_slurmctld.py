@@ -117,3 +117,16 @@ def test_statistics():
     assert new_stats.to_dict()
     # Check that resetting it was actually successful.
     assert data_since < new_stats.data_since
+
+
+def test_new_26_05_config_members():
+    config = slurmctld.Config.load()
+
+    assert config.health_check_timeout is None or \
+        config.health_check_timeout > 0
+    assert isinstance(config.metrics_auth, bool)
+    assert isinstance(config.license_parameters, list)
+    assert isinstance(config.metrics_auth_users, list)
+    assert isinstance(config.metrics_parameters, list)
+    assert isinstance(config.slurmctld_http_auth_parameters, list)
+    assert isinstance(config.slurmd_http_auth_parameters, list)

@@ -451,3 +451,14 @@ class TestMiscUtil:
         nodelist_str = ",".join(nodelist)
         assert "node[001,007-009]" == nodelist_to_range_str(nodelist)
         assert "node[001,007-009]" == nodelist_to_range_str(nodelist_str)
+
+
+def test_renamed_errno_constant():
+    # ESLURM_ERROR_ON_DESC_TO_RECORD_COPY was replaced by ESLURM_MAX_JOB_COUNT
+    # in Slurm 26.05. Make sure it resolves to its own distinct value and not
+    # to a neighbouring errno.
+    assert not hasattr(pyslurm, "ESLURM_ERROR_ON_DESC_TO_RECORD_COPY")
+    assert pyslurm.ESLURM_MAX_JOB_COUNT != pyslurm.ESLURM_INVALID_NODE_COUNT
+    assert pyslurm.ESLURM_MAX_JOB_COUNT != pyslurm.ESLURM_TOO_MANY_REQUESTED_CPUS
+    assert (pyslurm.ESLURM_MAX_JOB_COUNT
+            == pyslurm.ESLURM_INVALID_NODE_COUNT + 1)

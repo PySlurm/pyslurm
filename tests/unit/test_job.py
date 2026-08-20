@@ -20,7 +20,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_job.py - Unit test basic job functionalities."""
 
-from pyslurm import Job
+from pyslurm import Job, JobExclusive, JobOversubscribe
 from pyslurm.core.job.util import (
     acctg_profile_int_to_list,
     dependency_str_to_dict,
@@ -69,3 +69,28 @@ def test_acctg_profile_int_to_list():
 def test_cpu_freq_int_to_str():
     expected = None
     assert cpu_freq_int_to_str(0) == expected
+
+
+def test_job_exclusive_from_value():
+    assert JobExclusive.from_value(0, default=JobExclusive.NONE) == "NONE"
+    assert JobExclusive.from_value(1, default=JobExclusive.NONE) == "NODE"
+    assert JobExclusive.from_value(2, default=JobExclusive.NONE) == "USER"
+    assert JobExclusive.from_value(3, default=JobExclusive.NONE) == "MCS"
+    assert JobExclusive.from_value(4, default=JobExclusive.NONE) == "TOPO"
+
+
+def test_job_exclusive_unknown_value_falls_back_to_default():
+    # A value from a newer Slurm must not raise, and must not be misdecoded
+    # as some unrelated member.
+    assert JobExclusive.from_value(99, default=JobExclusive.NONE) == "NONE"
+
+
+def test_job_oversubscribe_from_value():
+    assert JobOversubscribe.from_value(0, default=JobOversubscribe.NO) == "NO"
+    assert JobOversubscribe.from_value(1, default=JobOversubscribe.NO) == "YES"
+    assert JobOversubscribe.from_value(2, default=JobOversubscribe.NO) == "OK"
+
+
+def test_job_exclusive_is_str_comparable():
+    assert JobExclusive.MCS == "MCS"
+    assert str(JobExclusive.MCS) == "MCS"

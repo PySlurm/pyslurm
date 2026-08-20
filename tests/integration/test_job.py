@@ -27,6 +27,8 @@ import util
 from util import create_simple_job_desc
 from pyslurm import (
     Job,
+    JobExclusive,
+    JobOversubscribe,
     Jobs,
     JobSubmitDescription,
     RPCError,
@@ -232,3 +234,68 @@ def test_to_json(submit_job):
     assert dict_data
     assert json_data
     assert len(dict_data) >= 3
+
+
+def test_new_26_05_members(submit_job):
+    job = Job.load(submit_job().id)
+
+    # Not configured in the test cluster, but must decode without error
+    # rather than returning a raw integer.
+    assert isinstance(job.exclusive, JobExclusive)
+    assert isinstance(job.oversubscribe, JobOversubscribe)
+    assert job.memory_update_delay is None
+    assert job.memory_update_margin is None
+
+    job_dict = job.to_dict()
+    for key in ("exclusive", "oversubscribe", "container_type",
+                "memory_update_delay", "memory_update_margin"):
+        assert key in job_dict
+
+    # Enums must survive JSON serialization as their string name.
+    data = json.loads(Jobs.load().to_json())[str(job.id)]
+    assert data["exclusive"] == str(job.exclusive)
+    assert data["oversubscribe"] == str(job.oversubscribe)
+
+
+def test_exclusive_job(submit_job):
+    job = Job.load(submit_job(resource_sharing="no").id)
+    assert job.exclusive == JobExclusive.NODE
+
+
+def test_step_container_type(submit_job):
+    job = submit_job()
+    util.wait_for_job_running(job.id)
+    job = Job.load(job.id)
+
+    for step in job.steps.values():
+        assert step.container_type is None
+        assert "container_type" in step.to_dict()
+
+
+def test_container_type_roundtrip(submit_job):
+    # Asserting only "is None" cannot tell container_type apart from any other
+    # unset string member, so round-trip a real value through slurmctld.
+    job = Job.load(submit_job(container_type="docker").id)
+
+    assert job.container_type == "docker"
+    assert job.container_id is None
+    assert job.container is None
+
+
+def test_get_resource_layout_per_node(submit_job):
+    # This walks job_resources, a struct pyslurm declares by hand in
+    # extra.pxi. A missing or reordered member there shifts every following
+    # field, so assert the decoded values are actually coherent.
+    job = submit_job()
+    util.wait_for_job_running(job.id)
+    job = Job.load(job.id)
+
+    layout = job.get_resource_layout_per_node()
+    assert layout
+    assert set(layout) <= set(job.allocated_nodes.split(","))
+
+    for node_name, info in layout.items():
+        assert node_name
+        assert info["cpu_ids"]
+        assert isinstance(info["memory"], int)
+        assert info["memory"] > 0

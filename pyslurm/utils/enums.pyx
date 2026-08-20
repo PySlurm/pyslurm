@@ -83,6 +83,16 @@ class SlurmEnum(str, Enum, metaclass=DocstringSupport):
                 return item
         return out
 
+    @classmethod
+    def from_value(cls, value, default):
+        # Unlike from_flag, this matches on the exact value. Use it for Slurm
+        # members that hold one of a set of consecutive constants rather than
+        # a bitmask.
+        for item in cls:
+            if item._flag == value:
+                return item
+        return cls(default)
+
 
 class SlurmFlag(Flag, metaclass=DocstringSupport):
 
