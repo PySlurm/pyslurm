@@ -81,6 +81,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `reserved_ports`
     - `extra`
 
+### Fixed
+
+- `pyslurm.Reservations.to_json()` raised `TypeError: Object of type ReservationFlags is not JSON serializable`.
+  Calling `to_dict(recursive=True)` now converts Flags to a `list` of `str` and Enums to their plain value.
+- Setting `flags` on `pyslurm.Reservation` from a `list` of `pyslurm.ReservationFlags` members silently set no
+  Flag at all. Members and (case-insensitive) names are now both accepted, and an unknown name raises a
+  `ValueError` instead of being ignored.
+- Loading a Reservation with a Flag that pyslurm does not have a member for no longer raises a `ValueError`.
+  Unknown bits are now ignored.
+
 ### Deprecated
 
 - The `gres_per_node` attribute of `pyslurm.Job` will soon be removed. Use `gres` instead.
@@ -89,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `pyslurm.db.TrackableResources` no longer inherits from `dict`, and now has properly all possible TRES in Slurm defined.
 - Type for `tres_per_task` in `pyslurm.Job` has been changed to `pyslurm.db.TrackableResources`
+- New Flags added to `pyslurm.ReservationFlags`: `REPLACE`, `TIME_FLOAT` and `FORCE_START`
 
 ## [25.11.0](https://github.com/PySlurm/pyslurm/releases/tag/v25.11.0) - 2026-02-13
 

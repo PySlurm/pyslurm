@@ -20,6 +20,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_reservation.py - integration test reservation functionalities."""
 
+import json
+
 import pyslurm
 from pyslurm import ReservationFlags, ReservationReoccurrence
 from datetime import datetime
@@ -93,3 +95,26 @@ def test_api_calls():
     resv.delete()
     reservations = pyslurm.Reservations.load()
     assert len(reservations) == 0
+
+
+def test_to_json():
+    resv = pyslurm.Reservation(
+        name="testing_json",
+        start_time=datetime.now(),
+        duration="1-00:00:00",
+        users=["root"],
+        node_count=1,
+        flags=[ReservationFlags.MAINTENANCE],
+    )
+    resv.create()
+
+    try:
+        reservations = pyslurm.Reservations.load()
+        json_data = reservations.to_json()
+        dict_data = json.loads(json_data)
+
+        assert dict_data
+        assert dict_data["testing_json"]["flags"] == ["MAINTENANCE"]
+        assert dict_data["testing_json"]["reoccurrence"] == "NO"
+    finally:
+        resv.delete()
