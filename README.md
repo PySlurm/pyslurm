@@ -4,7 +4,7 @@ pyslurm is the Python client library for the [Slurm Workload Manager](https://sl
 
 ## Requirements
 
-* [Slurm](https://slurm.schedmd.com) 25.11.x — shared library and header files
+* [Slurm](https://slurm.schedmd.com) 26.05.x — shared library and header files
 * [Python](https://www.python.org) >= 3.6
 
 ## Versioning
@@ -15,6 +15,7 @@ major release.
 
 | PySlurm | Slurm |
 |---|---|
+| 26.05.x | 26.05.x |
 | 25.11.x | 25.11.x |
 | 24.05.x | 24.05.x |
 | 23.11.x | 23.11.x |

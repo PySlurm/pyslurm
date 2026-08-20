@@ -439,3 +439,11 @@ cdef slurm_step_id_t init_step_id():
     _s.step_het_comp = slurm.NO_VAL
     _s.step_id = slurm.NO_VAL
     return _s
+
+
+cdef slurm_step_id_t init_job_step_id(uint32_t job_id):
+    # Since 26.05, RPCs that used to take a plain job_id now take a
+    # slurm_step_id_t. Leaving step_id as NO_VAL addresses the Job itself.
+    cdef slurm_step_id_t _s = init_step_id()
+    _s.job_id = job_id
+    return _s

@@ -32,6 +32,7 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 from libc.stdlib cimport free
 from pyslurm.core.job.submission cimport JobSubmitDescription
 from pyslurm.core.job.step cimport JobSteps, JobStep
+from pyslurm.utils.helpers cimport init_job_step_id
 from pyslurm.xcollections cimport MultiClusterMap
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
@@ -62,6 +63,7 @@ from pyslurm.slurm cimport (
     slurm_update_job,
     slurm_notify_job,
     slurm_requeue,
+    slurm_step_id_t,
     xfree,
     try_xmalloc,
 )
@@ -287,6 +289,10 @@ cdef class Job:
             Name of the reservation this Job uses.
         resource_sharing (str):
             Mode controlling how a job shares resources with others.
+        exclusive (pyslurm.JobExclusive):
+            Exclusive resource allocation mode of the Job.
+        oversubscribe (pyslurm.JobOversubscribe):
+            Whether the Job is willing to oversubscribe resources.
         requires_contiguous_nodes (bool):
             Whether the Job has allocated a set of contiguous nodes.
         licenses (list):
@@ -307,6 +313,12 @@ cdef class Job:
             The container this Job uses.
         container_id (str):
             The OCI ID of the Container this Job uses.
+        container_type (str):
+            Container plugin type the Job uses.
+        memory_update_delay (int):
+            Delay in minutes before memory is auto-reduced.
+        memory_update_margin (int):
+            Margin in percent applied when memory is auto-reduced.
         comment (str):
             An arbitrary comment set for the Job.
         standard_input (str):

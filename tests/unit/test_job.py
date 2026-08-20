@@ -20,7 +20,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """test_job.py - Unit test basic job functionalities."""
 
-from pyslurm import Job
+from pyslurm import Job, JobExclusive, JobOversubscribe
 from pyslurm.core.job.util import (
     acctg_profile_int_to_list,
     dependency_str_to_dict,

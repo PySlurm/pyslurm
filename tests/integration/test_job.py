@@ -27,6 +27,7 @@ import util
 from util import create_simple_job_desc
 from pyslurm import (
     Job,
+    JobExclusive,
     Jobs,
     JobSubmitDescription,
     RPCError,
@@ -232,3 +233,8 @@ def test_to_json(submit_job):
     assert dict_data
     assert json_data
     assert len(dict_data) >= 3
+
+
+def test_exclusive_job(submit_job):
+    job = Job.load(submit_job(resource_sharing="no").id)
+    assert job.exclusive == JobExclusive.NODE

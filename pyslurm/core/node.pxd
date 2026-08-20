@@ -201,6 +201,8 @@ cdef class Node:
             Time this node was last busy, as unix timestamp.
         reason_time (int):
             Time the reason was set for the node, as unix timestamp.
+        suspend_time (int):
+            Time in seconds the node must be idle before power save kicks in.
         allocated_tres (dict):
             Currently allocated Trackable Resources
         allocated_cpus (int):

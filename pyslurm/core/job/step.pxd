@@ -126,6 +126,8 @@ cdef class JobStep:
             Path to the container OCI.
         container_id (str):
             The ID of the OCI Container.
+        container_type (str):
+            Container plugin type the Step uses.
         allocated_nodes (str):
             Nodes the Job is using.
         start_time (int):

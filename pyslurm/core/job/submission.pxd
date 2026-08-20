@@ -331,6 +331,9 @@ cdef class JobSubmitDescription:
         container_id (str):
             Unique name for the Container
             This is the same as --container-id from sbatch.
+        container_type (str):
+            Container plugin type to use.
+            This is the same as --container-type from sbatch.
         cpus_per_task (int):
             The amount of cpus required for each task.
 
@@ -624,6 +627,7 @@ cdef class JobSubmitDescription:
         time_limit_min
         container
         container_id
+        container_type
         cpus_per_task
         cpus_per_gpu
         sockets_per_node
