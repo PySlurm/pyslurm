@@ -101,13 +101,36 @@ class SlurmFlag(Flag, metaclass=DocstringSupport):
         return obj
 
     @classmethod
+    def from_int(cls, value):
+        # Any bit that has no member here is silently dropped, so that Flags
+        # a newer Slurm version may set do not break decoding.
+        known = 0
+        for flag in cls:
+            known |= flag.value
+
+        return cls(int(value) & known)
+
+    @classmethod
     def from_list(cls, inp):
         out = cls(0)
-        for flag in cls:
-            if flag.name in inp:
-                out |= flag
+        for item in inp:
+            if isinstance(item, cls):
+                out |= item
+                continue
+
+            try:
+                out |= cls[str(item).upper()]
+            except KeyError:
+                raise ValueError(
+                    f"Invalid {cls.__name__}: {item}. Possible values are: "
+                    f"{[flag.name for flag in cls]}"
+                ) from None
 
         return out
+
+    def to_list(self):
+        """Names of all the Flags that are set, as a list of strings."""
+        return [flag.name for flag in self.__class__ if flag in self]
 
     def _get_flags_cleared(self):
         val = self.value

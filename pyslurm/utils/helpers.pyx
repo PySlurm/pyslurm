@@ -27,6 +27,7 @@ from grp import getgrgid, getgrnam, getgrall
 from pwd import getpwuid, getpwnam, getpwall
 from os import getuid, getgid
 from itertools import chain
+from enum import Enum, Flag
 import re
 import signal
 from pyslurm.constants import UNLIMITED
@@ -333,12 +334,19 @@ def instance_to_dict(inst, recursive=False):
     cdef dict out = {}
     for attr in dir(inst):
         val = getattr(inst, attr)
-        private_attr = attr.startswith("_")
 
-        if not private_attr and recursive and hasattr(val, "to_dict"):
-            val = val.to_dict(recursive=recursive)
-        elif private_attr or callable(val):
+        if attr.startswith("_") or callable(val):
             continue
+
+        if recursive:
+            # Convert everything into plain, JSON-serializable data.
+            if hasattr(val, "to_dict"):
+                val = val.to_dict(recursive=recursive)
+            elif isinstance(val, Flag):
+                # Flag must be checked before Enum, since it is a subclass.
+                val = val.to_list()
+            elif isinstance(val, Enum):
+                val = val.value
 
         out[attr] = val
     return out
