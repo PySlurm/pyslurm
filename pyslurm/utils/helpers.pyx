@@ -146,6 +146,13 @@ def expand_range_str(range_str):
 
     Returns:
         (list): List of unique values
+
+    Examples:
+        >>> from pyslurm.utils.helpers import expand_range_str
+        >>> expand_range_str("1-5,6,7,10-11")
+        [1, 2, 3, 4, 5, 6, 7, 10, 11]
+        >>> expand_range_str("3")
+        [3]
     """
     ret = []
     for mrange in range_str.split(","):
@@ -237,6 +244,15 @@ def humanize(num, decimals=1):
 
     Returns:
         (str): Humanized number with appropriate suffix.
+
+    Examples:
+        >>> from pyslurm.utils.helpers import humanize
+        >>> humanize(1024)
+        '1.0G'
+        >>> humanize(800)
+        '800.0M'
+        >>> humanize(None) is None
+        True
     """
     if num is None or num == "unlimited" or num == UNLIMITED:
         return num

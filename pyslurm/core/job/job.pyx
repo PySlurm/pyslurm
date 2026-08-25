@@ -55,6 +55,17 @@ from pyslurm.utils.helpers import (
 
 
 cdef class Jobs(MultiClusterMap):
+    """A collection of Slurm Jobs, keyed by job ID.
+
+    Behaves like a dict. In a multi-cluster setup, jobs are nested by cluster
+    name; on a single cluster all jobs are under the local cluster key.
+
+    Examples:
+        >>> import pyslurm
+        >>> jobs = pyslurm.Jobs.load()
+        >>> for job_id, job in jobs.items():
+        ...     print(job_id, job.state)
+    """
 
     def __cinit__(self):
         self.info = NULL
@@ -227,6 +238,50 @@ cdef class Jobs(MultiClusterMap):
 
 
 cdef class Job:
+    """A Slurm Job.
+
+    Represents a single job in the Slurm workload manager. Provides read
+    access to all job attributes and write operations (cancel, hold, modify,
+    signal, suspend).
+
+    Attributes:
+        id (int): Numeric job ID assigned by Slurm.
+        name (str): Job name specified at submission.
+        state (str): Current job state, e.g. ``RUNNING``, ``PENDING``,
+            ``COMPLETED``, ``FAILED``.
+        state_reason (str): Human-readable reason for the current state. For
+            pending jobs this explains why scheduling was blocked.
+        user_name (str): Username of the job owner.
+        group_name (str): Group name of the job owner.
+        account (str): Slurm account charged for the job.
+        partition (str): Partition the job is running in (or queued for).
+        qos (str): Quality of Service assigned to the job.
+        priority (int): Scheduling priority. Higher values are scheduled first.
+        time_limit (int): Wall-clock time limit in minutes, or ``None`` for
+            unlimited.
+        submit_time (int): Unix timestamp when the job was submitted.
+        start_time (int): Unix timestamp when the job started running.
+        allocated_nodes (str): Nodelist expression of allocated nodes, e.g.
+            ``node[001-004]``. ``None`` if the job has not started.
+        num_nodes (int): Number of nodes allocated to the job.
+        cpus (int): Total number of CPUs allocated.
+        ntasks (int): Total number of tasks.
+        exit_code (int): Exit code of the job's main process.
+        steps (pyslurm.JobSteps): Job steps associated with this job.
+        working_directory (str): Working directory at time of submission.
+        command (str): The command that was submitted.
+
+    Examples:
+        Load a specific job:
+
+        >>> import pyslurm
+        >>> job = pyslurm.Job.load(12345)
+        >>> print(job.state, job.user_name, job.partition)
+
+        Cancel a job:
+
+        >>> pyslurm.Job(12345).cancel()
+    """
 
     def __cinit__(self):
         self.ptr = NULL
@@ -671,42 +726,52 @@ cdef class Job:
 
     @property
     def name(self):
+        """Job name as specified at submission."""
         return cstr.to_unicode(self.ptr.name)
 
     @property
     def id(self):
+        """Numeric job ID assigned by Slurm."""
         return self.ptr.job_id
 
     @property
     def association_id(self):
+        """Numeric ID of the Slurm association this job runs under."""
         return u32_parse(self.ptr.assoc_id)
 
     @property
     def account(self):
+        """Slurm account charged for this job."""
         return cstr.to_unicode(self.ptr.account)
 
     @property
     def user_id(self):
+        """Numeric UID of the job owner."""
         return u32_parse(self.ptr.user_id, zero_is_noval=False)
 
     @property
     def user_name(self):
+        """Username of the job owner."""
         return uid_to_name(self.ptr.user_id, lookup=self.passwd)
 
     @property
     def group_id(self):
+        """Numeric GID of the job owner."""
         return u32_parse(self.ptr.group_id, zero_is_noval=False)
 
     @property
     def group_name(self):
+        """Group name of the job owner."""
         return gid_to_name(self.ptr.group_id, lookup=self.groups)
 
     @property
     def priority(self):
+        """Scheduling priority; higher values are scheduled first."""
         return u32_parse(self.ptr.priority, zero_is_noval=False)
 
     @property
     def nice(self):
+        """Nice value adjustment to the job's priority."""
         if self.ptr.nice == slurm.NO_VAL:
             return None
 
@@ -714,10 +779,12 @@ cdef class Job:
 
     @property
     def qos(self):
+        """Quality of Service (QOS) assigned to this job."""
         return cstr.to_unicode(self.ptr.qos)
 
     @property
     def min_cpus_per_node(self):
+        """Minimum CPUs per node requested."""
         return u32_parse(self.ptr.pn_min_cpus)
 
     # I don't think this is used anymore - there is no way in sbatch to ask
@@ -729,10 +796,12 @@ cdef class Job:
 
     @property
     def state(self):
+        """Current job state string, e.g. RUNNING, PENDING, COMPLETED, FAILED."""
         return cstr.to_unicode(slurm_job_state_string(self.ptr.job_state))
 
     @property
     def state_reason(self):
+        """Reason the job is in its current state; for pending jobs explains why scheduling was blocked."""
         if self.ptr.state_desc:
             return cstr.to_unicode(self.ptr.state_desc)
 
@@ -740,162 +809,201 @@ cdef class Job:
 
     @property
     def is_requeueable(self):
+        """True if the job can be requeued after a node failure."""
         return u16_parse_bool(self.ptr.requeue)
 
     @property
     def requeue_count(self):
+        """Number of times the job has been requeued."""
         return u16_parse(self.ptr.restart_cnt, on_noval=0)
 
     @property
     def is_batch_job(self):
+        """True if the job was submitted as a batch script."""
         return u16_parse_bool(self.ptr.batch_flag)
 
     @property
     def requires_node_reboot(self):
+        """True if a node reboot is required before the job can run."""
         return u8_parse_bool(self.ptr.reboot)
 
     @property
     def dependencies(self):
+        """Dict of job dependencies, e.g. {afterok: [1234, 5678]}."""
         return dependency_str_to_dict(cstr.to_unicode(self.ptr.dependency))
 
     @property
     def time_limit(self):
+        """Wall-clock time limit in minutes, or None if unlimited."""
         return _raw_time(self.ptr.time_limit)
 
     @property
     def time_limit_min(self):
+        """Minimum accepted time limit in minutes (for flexible time requests)."""
         return _raw_time(self.ptr.time_min)
 
     @property
     def submit_time(self):
+        """Unix timestamp when the job was submitted."""
         return _raw_time(self.ptr.submit_time)
 
     @property
     def eligible_time(self):
+        """Unix timestamp when the job became eligible for scheduling."""
         return _raw_time(self.ptr.eligible_time)
 
     @property
     def accrue_time(self):
+        """Unix timestamp when the job started accruing priority."""
         return _raw_time(self.ptr.accrue_time)
 
     @property
     def start_time(self):
+        """Unix timestamp when the job started running."""
         return _raw_time(self.ptr.start_time)
 
     @property
     def resize_time(self):
+        """Unix timestamp of the last resource resize for this job."""
         return _raw_time(self.ptr.resize_time)
 
     @property
     def deadline(self):
+        """Unix timestamp of the job's scheduling deadline, or None."""
         return _raw_time(self.ptr.deadline)
 
     @property
     def preempt_eligible_time(self):
+        """Unix timestamp when the job became eligible for preemption."""
         return _raw_time(self.ptr.preemptable_time)
 
     @property
     def preempt_time(self):
+        """Unix timestamp when the job was last preempted."""
         return _raw_time(self.ptr.preempt_time)
 
     @property
     def suspend_time(self):
+        """Unix timestamp of the last suspension, or None."""
         return _raw_time(self.ptr.suspend_time)
 
     @property
     def last_sched_evaluation_time(self):
+        """Unix timestamp of the last scheduling evaluation for this job."""
         return _raw_time(self.ptr.last_sched_eval)
 
     @property
     def pre_suspension_time(self):
+        """Time the job had been running before its last suspension, in seconds."""
         return _raw_time(self.ptr.pre_sus_time)
 
     @property
     def mcs_label(self):
+        """Multi-Category Security (MCS) label of the job, or None."""
         return cstr.to_unicode(self.ptr.mcs_label)
 
     @property
     def partition(self):
+        """Partition (queue) the job is running in or queued for."""
         return cstr.to_unicode(self.ptr.partition)
 
     @property
     def submit_host(self):
+        """Name of the node from which the job was submitted."""
         return cstr.to_unicode(self.ptr.alloc_node)
 
     @property
     def submit_session_id(self):
+        """Session ID of the process that submitted the job."""
         return u32_parse(self.ptr.alloc_sid)
 
     @property
     def batch_host(self):
+        """Name of the node where the batch script is running."""
         return cstr.to_unicode(self.ptr.batch_host)
 
     @property
     def num_nodes(self):
+        """Number of nodes allocated to this job."""
         return u32_parse(self.ptr.num_nodes)
 
     @property
     def max_nodes(self):
+        """Maximum number of nodes requested, or None."""
         return u32_parse(self.ptr.max_nodes)
 
     @property
     def allocated_nodes(self):
+        """Nodelist expression of allocated nodes, e.g. node[001-004]. None if not running."""
         return cstr.to_unicode(self.ptr.nodes)
 
     @property
     def required_nodes(self):
+        """Nodelist expression of specifically requested nodes."""
         return cstr.to_unicode(self.ptr.req_nodes)
 
     @property
     def excluded_nodes(self):
+        """Nodelist expression of nodes explicitly excluded from allocation."""
         return cstr.to_unicode(self.ptr.exc_nodes)
 
     @property
     def scheduled_nodes(self):
+        """Nodes tentatively scheduled for this pending job, or None."""
         return cstr.to_unicode(self.ptr.sched_nodes)
 
     @property
     def derived_exit_code(self):
+        """Highest exit code returned by any task in the job."""
         ec, _ = _get_exit_code(self.ptr.derived_ec)
         return ec
 
     @property
     def derived_exit_code_signal(self):
+        """Signal that caused the highest exit code, if applicable."""
         _, sig = _get_exit_code(self.ptr.derived_ec)
         return sig
 
     @property
     def exit_code(self):
+        """Exit code of the job's main process."""
         ec, _ = _get_exit_code(self.ptr.exit_code)
         return ec
 
     @property
     def exit_code_signal(self):
+        """Signal number that caused the job to exit, if killed by a signal."""
         _, sig = _get_exit_code(self.ptr.exit_code)
         return sig
 
     @property
     def batch_constraints(self):
+        """List of features required specifically on the batch host node."""
         return cstr.to_list(self.ptr.batch_features)
 
     @property
     def federation_origin(self):
+        """Name of the origin cluster in a federation, or None."""
         return cstr.to_unicode(self.ptr.fed_origin_str)
 
     @property
     def federation_siblings_active(self):
+        """List of sibling clusters with active copies of this job."""
         return cstr.to_list(self.ptr.fed_siblings_active_str)
 
     @property
     def federation_siblings_viable(self):
+        """List of sibling clusters where this job could run."""
         return cstr.to_list(self.ptr.fed_siblings_viable_str)
 
     @property
     def cpus(self):
+        """Total number of CPUs allocated to this job."""
         return u32_parse(self.ptr.num_cpus, on_noval=1)
 
     @property
     def cpus_per_task(self):
+        """Number of CPUs requested per task."""
         if self.ptr.cpus_per_tres:
             return None
 
@@ -903,6 +1011,7 @@ cdef class Job:
 
     @property
     def cpus_per_gpu(self):
+        """Number of CPUs allocated per GPU, or None if not GPU-based."""
         if (not self.ptr.cpus_per_tres
                 or self.ptr.cpus_per_task != slurm.NO_VAL16):
             return None
@@ -914,98 +1023,122 @@ cdef class Job:
 
     @property
     def boards_per_node(self):
+        """Number of boards per node requested."""
         return u16_parse(self.ptr.boards_per_node)
 
     @property
     def sockets_per_board(self):
+        """Number of sockets per board requested."""
         return u16_parse(self.ptr.sockets_per_board)
 
     @property
     def sockets_per_node(self):
+        """Number of sockets per node requested."""
         return u16_parse(self.ptr.sockets_per_node)
 
     @property
     def cores_per_socket(self):
+        """Number of cores per socket requested."""
         return u16_parse(self.ptr.cores_per_socket)
 
     @property
     def threads_per_core(self):
+        """Number of threads per core requested."""
         return u16_parse(self.ptr.threads_per_core)
 
     @property
     def ntasks(self):
+        """Total number of tasks requested."""
         return u32_parse(self.ptr.num_tasks, on_noval=1)
 
     @property
     def ntasks_per_node(self):
+        """Number of tasks per node."""
         return u16_parse(self.ptr.ntasks_per_node)
 
     @property
     def ntasks_per_board(self):
+        """Number of tasks per board."""
         return u16_parse(self.ptr.ntasks_per_board)
 
     @property
     def ntasks_per_socket(self):
+        """Number of tasks per socket."""
         return u16_parse(self.ptr.ntasks_per_socket)
 
     @property
     def ntasks_per_core(self):
+        """Number of tasks per core."""
         return u16_parse(self.ptr.ntasks_per_core)
 
     @property
     def ntasks_per_gpu(self):
+        """Number of tasks per GPU."""
         return u16_parse(self.ptr.ntasks_per_tres)
 
     @property
     def delay_boot_time(self):
+        """Seconds to delay node boot before starting the job."""
         return _raw_time(self.ptr.delay_boot)
 
     @property
     def constraints(self):
+        """List of node feature constraints requested."""
         return cstr.to_list(self.ptr.features)
 
     @property
     def preferred_features(self):
+        """List of preferred (soft) node feature constraints."""
         return cstr.to_list(self.ptr.prefer)
 
     @property
     def cluster(self):
+        """Cluster name this job belongs to."""
         return cstr.to_unicode(self.ptr.cluster)
 
     @property
     def cluster_constraints(self):
+        """List of cluster feature constraints requested."""
         return cstr.to_list(self.ptr.cluster_features)
 
     @property
     def reservation(self):
+        """Name of the advance reservation the job is running in, or None."""
         return cstr.to_unicode(self.ptr.resv_name)
 
     @property
     def resource_sharing(self):
+        """Resource sharing mode: EXCLUSIVE, SHARED, or OVERSUBSCRIBE."""
         return cstr.to_unicode(slurm_job_share_string(self.ptr.shared))
 
     @property
     def requires_contiguous_nodes(self):
+        """True if the job requires nodes to be contiguous in the network topology."""
         return u16_parse_bool(self.ptr.contiguous)
 
     @property
     def licenses(self):
+        """List of licenses requested by the job."""
         return cstr.to_list(self.ptr.licenses)
 
     @property
     def allocated_licenses(self):
+        """List of licenses currently allocated to the job."""
         return cstr.to_list(self.ptr.licenses_allocated)
 
     @property
     def network(self):
+        """Network specification string for the job."""
         return cstr.to_unicode(self.ptr.network)
 
     @property
     def command(self):
+        """The command or script path that was submitted."""
         return cstr.to_unicode(self.ptr.command)
 
     @property
     def working_directory(self):
+        """Working directory at time of submission."""
         return cstr.to_unicode(self.ptr.work_dir)
 
     @property

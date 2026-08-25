@@ -45,6 +45,16 @@ from pyslurm.utils.helpers import (
 
 
 cdef class Nodes(MultiClusterMap):
+    """A collection of Slurm compute nodes, keyed by node name.
+
+    Behaves like a dict. Also exposes aggregated properties such as
+    `total_cpus`, `free_memory`, and `allocated_memory` across all nodes.
+
+    Examples:
+        >>> import pyslurm
+        >>> nodes = pyslurm.Nodes.load()
+        >>> print(f"Total CPUs: {nodes.total_cpus}, Free: {nodes.idle_cpus}")
+    """
 
     def __dealloc__(self):
         slurm_free_node_info_msg(self.info)
@@ -214,6 +224,24 @@ cdef class Nodes(MultiClusterMap):
 
 
 cdef class Node:
+    """A Slurm compute node.
+
+    Represents a single compute node registered with the Slurm controller.
+    Provides read access to node properties and write operations (create,
+    modify, delete).
+
+    Examples:
+        Load a node and check its state:
+
+        >>> import pyslurm
+        >>> node = pyslurm.Node.load("compute-01")
+        >>> print(node.state, node.total_cpus, node.real_memory)
+
+        Drain a node for maintenance:
+
+        >>> changes = pyslurm.Node(state="DRAIN", reason="scheduled maintenance")
+        >>> node.modify(changes)
+    """
 
     def __cinit__(self):
         self.info = NULL
@@ -417,7 +445,8 @@ cdef class Node:
         return instance_to_dict(self, recursive)
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """Node name as configured in slurm.conf."""
         return cstr.to_unicode(self.info.name)
 
     @name.setter
@@ -425,11 +454,13 @@ cdef class Node:
         cstr.fmalloc2(&self.info.name, &self.umsg.node_names, val)
 
     @property
-    def architecture(self):
+    def architecture(self) -> str:
+        """CPU architecture string, e.g. x86_64."""
         return cstr.to_unicode(self.info.arch)
 
     @property
-    def configured_gres(self):
+    def configured_gres(self) -> dict:
+        """Dict of GRES configured on the node, e.g. {"gpu": 4}."""
         return cstr.to_gres_dict(self.info.gres)
 
     @configured_gres.setter
@@ -438,11 +469,13 @@ cdef class Node:
                       cstr.from_gres_dict(val))
 
     @property
-    def owner(self):
+    def owner(self) -> str:
+        """Username of the node owner, or None if unowned."""
         return uid_to_name(self.info.owner, lookup=self.passwd)
 
     @property
-    def address(self):
+    def address(self) -> str:
+        """Network address used for Slurm communication."""
         return cstr.to_unicode(self.info.node_addr)
 
     @address.setter
@@ -450,7 +483,8 @@ cdef class Node:
         cstr.fmalloc2(&self.info.node_addr, &self.umsg.node_addr, val)
 
     @property
-    def hostname(self):
+    def hostname(self) -> str:
+        """Hostname of the node."""
         return cstr.to_unicode(self.info.node_hostname)
 
     @hostname.setter
@@ -458,7 +492,8 @@ cdef class Node:
         cstr.fmalloc2(&self.info.node_hostname, &self.umsg.node_hostname, val)
 
     @property
-    def extra(self):
+    def extra(self) -> str:
+        """Extra arbitrary string attached to the node."""
         return cstr.to_unicode(self.info.extra)
 
     @extra.setter
@@ -466,7 +501,8 @@ cdef class Node:
         cstr.fmalloc2(&self.info.extra, &self.umsg.extra, val)
 
     @property
-    def reason(self):
+    def reason(self) -> str:
+        """Reason string set on the node (for DRAIN or DOWN state)."""
         return cstr.to_unicode(self.info.reason)
 
     @reason.setter
@@ -474,11 +510,13 @@ cdef class Node:
         cstr.fmalloc2(&self.info.reason, &self.umsg.reason, val)
 
     @property
-    def reason_user(self):
+    def reason_user(self) -> str:
+        """Username of who set the node reason."""
         return uid_to_name(self.info.reason_uid, lookup=self.passwd)
 
     @property
-    def comment(self):
+    def comment(self) -> str:
+        """Administrative comment on the node."""
         return cstr.to_unicode(self.info.comment)
 
     @comment.setter
@@ -486,52 +524,64 @@ cdef class Node:
         cstr.fmalloc2(&self.info.comment, &self.umsg.comment, val)
 
     @property
-    def bcast_address(self):
+    def bcast_address(self) -> str:
+        """Address used for broadcast communication."""
         return cstr.to_unicode(self.info.bcast_address)
 
     @property
-    def slurm_version(self):
+    def slurm_version(self) -> str:
+        """Version of slurmd running on the node."""
         return cstr.to_unicode(self.info.version)
 
     @property
-    def operating_system(self):
+    def operating_system(self) -> str:
+        """Operating system string reported by slurmd."""
         return cstr.to_unicode(self.info.os)
 
     @property
-    def allocated_gres(self):
+    def allocated_gres(self) -> dict:
+        """Dict of GRES currently allocated on the node."""
         return gres_from_tres_dict(self.allocated_tres)
 
     @property
-    def mcs_label(self):
+    def mcs_label(self) -> str:
+        """Multi-Category Security (MCS) label, or None."""
         return cstr.to_unicode(self.info.mcs_label)
 
     @property
-    def allocated_memory(self):
+    def allocated_memory(self) -> int:
+        """Memory currently allocated to running jobs, in MiB."""
         return u64_parse(self.info.alloc_memory, on_noval=0)
 
     @property
-    def real_memory(self):
+    def real_memory(self) -> int:
+        """Total memory configured on the node, in MiB."""
         return u64_parse(self.info.real_memory)
 
     @property
-    def free_memory(self):
+    def free_memory(self) -> int:
+        """Currently free memory as reported by slurmd, in MiB."""
         return u64_parse(self.info.free_mem)
 
     @property
-    def idle_memory(self):
+    def idle_memory(self) -> int:
+        """Memory not allocated to any job (real_memory minus allocated_memory), in MiB."""
         real = self.real_memory
         return 0 if not real else real - self.allocated_memory
 
     @property
-    def memory_reserved_for_system(self):
+    def memory_reserved_for_system(self) -> int:
+        """Memory reserved for system use and unavailable to jobs, in MiB."""
         return u64_parse(self.info.mem_spec_limit)
 
     @property
-    def temporary_disk(self):
+    def temporary_disk(self) -> int:
+        """Temporary disk space available in MiB."""
         return u32_parse(self.info.tmp_disk)
 
     @property
-    def weight(self):
+    def weight(self) -> int:
+        """Scheduling weight; lower values are preferred by the scheduler."""
         return u32_parse(self.info.weight)
 
     @weight.setter
@@ -539,35 +589,43 @@ cdef class Node:
         self.info.weight=self.umsg.weight = u32(val)
 
     @property
-    def effective_cpus(self):
+    def effective_cpus(self) -> int:
+        """CPUs available for allocation after CPU specialisation is applied."""
         return u16_parse(self.info.cpus_efctv, on_noval=0)
 
     @property
-    def total_cpus(self):
+    def total_cpus(self) -> int:
+        """Total CPUs configured on the node."""
         return u16_parse(self.info.cpus, on_noval=0)
 
     @property
-    def sockets(self):
+    def sockets(self) -> int:
+        """Number of sockets on the node."""
         return u16_parse(self.info.sockets, on_noval=0)
 
     @property
-    def cores_reserved_for_system(self):
+    def cores_reserved_for_system(self) -> int:
+        """Number of cores reserved for system use (core specialisation)."""
         return u16_parse(self.info.core_spec_cnt)
 
     @property
-    def boards(self):
+    def boards(self) -> int:
+        """Number of motherboards on the node."""
         return u16_parse(self.info.boards)
 
     @property
-    def cores_per_socket(self):
+    def cores_per_socket(self) -> int:
+        """Number of cores per socket."""
         return u16_parse(self.info.cores)
 
     @property
-    def threads_per_core(self):
+    def threads_per_core(self) -> int:
+        """Number of hardware threads per core."""
         return u16_parse(self.info.threads)
 
     @property
-    def available_features(self):
+    def available_features(self) -> list:
+        """List of features available on the node (from slurm.conf)."""
         return cstr.to_list(self.info.features)
 
     @available_features.setter
@@ -575,7 +633,8 @@ cdef class Node:
         cstr.from_list2(&self.info.features, &self.umsg.features, val)
 
     @property
-    def active_features(self):
+    def active_features(self) -> list:
+        """List of features currently active on the node."""
         return cstr.to_list(self.info.features_act)
 
     @active_features.setter
@@ -583,23 +642,28 @@ cdef class Node:
         cstr.from_list2(&self.info.features_act, &self.umsg.features_act, val)
 
     @property
-    def partitions(self):
+    def partitions(self) -> list:
+        """List of partition names this node is a member of."""
         return cstr.to_list(self.info.partitions)
 
     @property
-    def boot_time(self):
+    def boot_time(self) -> int:
+        """Unix timestamp when the node last booted."""
         return _raw_time(self.info.boot_time)
 
     @property
-    def slurmd_start_time(self):
+    def slurmd_start_time(self) -> int:
+        """Unix timestamp when slurmd last started on this node."""
         return _raw_time(self.info.slurmd_start_time)
 
     @property
-    def last_busy_time(self):
+    def last_busy_time(self) -> int:
+        """Unix timestamp when the node last transitioned from ALLOCATED to IDLE."""
         return _raw_time(self.info.last_busy)
 
     @property
-    def reason_time(self):
+    def reason_time(self) -> int:
+        """Unix timestamp when the node reason was set."""
         return _raw_time(self.info.reason_time)
 
 #   @property
@@ -608,19 +672,23 @@ cdef class Node:
 #       return cstr.to_dict(self.info.tres_fmt_str)
 
     @property
-    def allocated_tres(self):
+    def allocated_tres(self) -> dict:
+        """Dict of TRES (Trackable RESources) currently allocated on the node."""
         return cstr.to_dict(self.info.alloc_tres_fmt_str)
 
     @property
-    def allocated_cpus(self):
+    def allocated_cpus(self) -> int:
+        """CPUs currently allocated to running jobs."""
         return u16_parse(self.info.alloc_cpus, on_noval=0)
 
     @property
-    def idle_cpus(self):
+    def idle_cpus(self) -> int:
+        """CPUs not allocated to any job (effective_cpus minus allocated_cpus)."""
         return self.effective_cpus - self.allocated_cpus
 
     @property
-    def cpu_binding(self):
+    def cpu_binding(self) -> str:
+        """Default CPU binding type for jobs on this node."""
         cdef char cpu_bind[128]
         slurm_sprint_cpu_bind_type(cpu_bind,
                                    <cpu_bind_type_t>self.info.cpu_bind)
@@ -634,13 +702,15 @@ cdef class Node:
         self.info.cpu_bind=self.umsg.cpu_bind = cpubind_to_num(val)
 
     @property
-    def current_watts(self):
+    def current_watts(self) -> int:
+        """Current power consumption in watts, or 0 if not monitored."""
         if not self.info.energy:
             return 0
         return u32_parse(self.info.energy.current_watts, on_noval=0)
 
     @property
-    def avg_watts(self):
+    def avg_watts(self) -> int:
+        """Average power consumption in watts, or 0 if not monitored."""
         if not self.info.energy:
             return 0
         return u32_parse(self.info.energy.ave_watts, on_noval=0)
@@ -659,7 +729,8 @@ cdef class Node:
         return state
 
     @property
-    def state(self):
+    def state(self) -> str:
+        """Current node state string, e.g. IDLE, ALLOCATED, DRAIN, DOWN."""
         cdef char* state = slurm_node_state_string_complete(self._node_state)
         state_str = cstr.to_unicode(state)
         xfree(state)
@@ -670,7 +741,8 @@ cdef class Node:
         self.umsg.node_state=self.info.node_state = _node_state_from_str(val)
 
     @property
-    def next_state(self):
+    def next_state(self) -> str:
+        """State the node will transition to after a pending reboot, or None."""
         state = self._node_state
         if ((self.info.next_state != slurm.NO_VAL)
                 and (state & slurm.NODE_STATE_REBOOT_REQUESTED
@@ -681,12 +753,14 @@ cdef class Node:
             return None
 
     @property
-    def cpu_load(self):
+    def cpu_load(self) -> float:
+        """CPU load average on the node, or 0.0 if unavailable."""
         load = u32_parse(self.info.cpu_load)
         return load / 100.0 if load is not None else 0.0
 
     @property
-    def slurmd_port(self):
+    def slurmd_port(self) -> int:
+        """TCP port slurmd is listening on."""
         return u16_parse(self.info.port)
 
 
