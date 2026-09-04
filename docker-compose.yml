@@ -1,6 +1,6 @@
 services:
   slurm:
-    image: ${SLURM_DOCKER_IMAGE:-giovtorres/slurm-docker:25.11.2}
+    image: ${SLURM_DOCKER_IMAGE:-giovtorres/slurm-docker:26.05.3}
     hostname: slurmctl
     container_name: slurmctl
     privileged: true

@@ -259,7 +259,9 @@ cdef class Reservation:
 
         self.name = self._error_or_name()
         new_name = slurm_create_reservation(self.umsg)
-        free(new_name)
+        # Since 26.05, the returned name is allocated with xmalloc, so it must
+        # be released with xfree instead of free.
+        xfree(new_name)
         verify_rpc(slurm_errno())
         return self
 

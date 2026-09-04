@@ -443,6 +443,10 @@ cdef class JobStep:
     def container_id(self):
         return cstr.to_unicode(self.ptr.container_id)
 
+    @property
+    def container_type(self):
+        return cstr.to_unicode(self.ptr.container_type)
+
     def array_id(self):
         return u32_parse(self.ptr.array_job_id)
 

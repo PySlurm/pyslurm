@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased on the [26.05.x](https://github.com/PySlurm/pyslurm/tree/26.05.x) branch
+
+### Added
+
+- Support for Slurm 26.05.x
+- New Enums, both available directly as `pyslurm.<name>`:
+    - `JobExclusive`
+    - `JobOversubscribe`
+- New members added for the `pyslurm.Job` class:
+    - `container_type`
+    - `exclusive`
+    - `oversubscribe`
+    - `memory_update_delay`
+    - `memory_update_margin`
+- New member added for the `pyslurm.JobStep` class:
+    - `container_type`
+- New member added for the `pyslurm.JobSubmitDescription` class:
+    - `container_type` (also recognized as `--container-type` in batch scripts)
+- New member added for the `pyslurm.Node` class:
+    - `suspend_time`
+- New members added for the `pyslurm.slurmctld.Config` class:
+    - `health_check_timeout`
+    - `license_parameters`
+    - `metrics_auth`
+    - `metrics_auth_users`
+    - `metrics_parameters`
+    - `slurmctld_http_auth_parameters`
+    - `slurmd_http_auth_parameters`
+
+### Fixed
+
+- Fixed heap corruption in `pyslurm.Reservation.create()`. Slurm 26.05 changed
+  `slurm_create_reservation` to return an `xmalloc`-allocated name, which must
+  be released with `xfree` rather than `free`.
+- Added the `node_ranks` member to the internal `job_resources` struct
+  definition. Its absence shifted every following member, corrupting
+  `pyslurm.Job.cpus`.
+
+### Changed
+
+- Slurm 26.05 changed a number of RPCs to take a `slurm_step_id_t` instead of a
+  plain `uint32_t` job id. This is handled internally and the PySlurm API is
+  unchanged.
+- `ESLURM_ERROR_ON_DESC_TO_RECORD_COPY` was removed in Slurm 26.05 and is
+  replaced by `ESLURM_MAX_JOB_COUNT`.
+
 ## Unreleased on the [25.11.x](https://github.com/PySlurm/pyslurm/tree/25.11.x) branch
 
 ### Added
