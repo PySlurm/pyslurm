@@ -55,7 +55,8 @@ cdef extern from "alps_cray.h" nogil:
 import builtins as __builtin__
 
 from pyslurm cimport slurm
-from pyslurm.slurm cimport xmalloc
+from pyslurm.slurm cimport slurm_step_id_t, xmalloc
+from pyslurm.utils.helpers cimport init_job_step_id, init_step_id
 import pyslurm.core.job
 
 include "pydefines/slurm_errno_defines.pxi"
@@ -362,7 +363,7 @@ def get_controllers():
                 primary = stringOrNone(slurm_ctl_conf_ptr.control_machine[index], '')
                 control_machs.append(primary)
 
-        slurm.slurm_free_ctl_conf(slurm_ctl_conf_ptr)
+        slurm.slurm_free_conf(slurm_ctl_conf_ptr)
 
     return control_machs
 
@@ -447,8 +448,9 @@ cpdef long slurm_get_rem_time(uint32_t JobID=0) except? -1:
     Returns:
         int: Remaining time in seconds or -1 on error
     """
+    cdef slurm_step_id_t step_id = init_job_step_id(JobID)
     cdef int apiError = 0
-    cdef long errCode = slurm.slurm_get_rem_time(JobID)
+    cdef long errCode = slurm.slurm_get_rem_time(step_id)
 
     if errCode != 0:
         apiError = slurm_get_errno()
@@ -466,9 +468,10 @@ cpdef time_t slurm_get_end_time(uint32_t JobID=0) except? -1:
     Returns:
         int: Remaining time in seconds or -1 on error
     """
+    cdef slurm_step_id_t step_id = init_job_step_id(JobID)
     cdef time_t EndTime = -1
     cdef int apiError = 0
-    cdef int errCode = slurm.slurm_get_end_time(JobID, &EndTime)
+    cdef int errCode = slurm.slurm_get_end_time(step_id, &EndTime)
 
     if errCode != 0:
         apiError = slurm_get_errno()
@@ -486,8 +489,9 @@ cpdef int slurm_job_node_ready(uint32_t JobID=0) except? -1:
     Returns:
         int: Node ready code.
     """
+    cdef slurm_step_id_t step_id = init_job_step_id(JobID)
     cdef int apiError = 0
-    cdef int errCode = slurm.slurm_job_node_ready(JobID)
+    cdef int errCode = slurm.slurm_job_node_ready(step_id)
 
     return errCode
 
@@ -502,15 +506,15 @@ def slurm_pid2jobid(uint32_t JobPID=0):
         int: 0 for success or a slurm error code
     """
     cdef:
-        uint32_t JobID = 0
+        slurm_step_id_t step_id = init_step_id()
         int apiError = 0
-        int errCode = slurm.slurm_pid2jobid(JobPID, &JobID)
+        int errCode = slurm.slurm_pid2jobid(JobPID, &step_id)
 
     if errCode != 0:
         apiError = slurm_get_errno()
         raise ValueError(stringOrNone(slurm.slurm_strerror(apiError), ''), apiError)
 
-    return errCode, JobID
+    return errCode, step_id.job_id
 
 
 #

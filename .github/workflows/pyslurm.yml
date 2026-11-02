@@ -1,7 +1,7 @@
 name: PySlurm
 
 env:
-  SLURM_DOCKER_IMAGE: giovtorres/slurm-docker:25.11.4-rl10
+  SLURM_DOCKER_IMAGE: giovtorres/slurm-docker:26.05.3-rl10
 
 on:
   push:
@@ -18,11 +18,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - slurm-image: giovtorres/slurm-docker:25.11.4-rl10
+          - slurm-image: giovtorres/slurm-docker:26.05.3-rl10
             python-version: "3.12"
-          - slurm-image: giovtorres/slurm-docker:25.11.4-rl9
+          - slurm-image: giovtorres/slurm-docker:26.05.3-rl9
             python-version: "3.9"
-          - slurm-image: giovtorres/slurm-docker:25.11.4-rl8
+          - slurm-image: giovtorres/slurm-docker:26.05.3-rl8
             python-version: "3.6"
       fail-fast: false
     env:

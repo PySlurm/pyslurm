@@ -41,6 +41,7 @@ from pyslurm.core.error import (
     verify_rpc,
     slurm_errno,
 )
+from pyslurm.enums import JobExclusive, JobOversubscribe
 from pyslurm.utils.ctime import _raw_time
 from pyslurm.utils.helpers import (
     uid_to_name,
@@ -286,9 +287,10 @@ cdef class Job:
         cdef:
             job_info_msg_t *info = NULL
             Job wrap = None
+            slurm_step_id_t step_id = init_job_step_id(job_id)
 
         try:
-            verify_rpc(slurm_load_job(&info, job_id, slurm.SHOW_DETAIL))
+            verify_rpc(slurm_load_job(&info, step_id, slurm.SHOW_DETAIL))
 
             if info and info.record_count:
                 wrap = Job.from_ptr(&info.job_array[0])
@@ -373,7 +375,9 @@ cdef class Job:
 
             >>> Job(9999).send_signal(9)
         """
-        cdef uint16_t flags = 0
+        cdef:
+            uint16_t flags = 0
+            slurm_step_id_t step_id = init_job_step_id(self.id)
 
         if steps.casefold() == "all":
             flags |= slurm.KILL_FULL_JOB
@@ -384,7 +388,7 @@ cdef class Job:
             flags |= slurm.KILL_HURRY
 
         sig = signal_to_num(signal)
-        slurm_kill_job(self.id, sig, flags)
+        slurm_kill_job(step_id, sig, flags)
 
         # Ignore errors when the Job is already done or when SIGKILL was
         # specified and the job id is already purged from slurmctlds memory.
@@ -426,7 +430,8 @@ cdef class Job:
         # _slurm_rpc_suspend it should return ESLURM_INVALID_JOB_ID, but
         # returns -1
         # https://github.com/SchedMD/slurm/blob/master/src/slurmctld/proc_req.c#L4693
-        verify_rpc(slurm_suspend(self.id))
+        cdef slurm_step_id_t step_id = init_job_step_id(self.id)
+        verify_rpc(slurm_suspend(step_id))
 
     def unsuspend(self):
         """Unsuspend a currently suspended Job.
@@ -441,7 +446,8 @@ cdef class Job:
             >>> pyslurm.Job(9999).unsuspend()
         """
         # Same problem as described in suspend()
-        verify_rpc(slurm_resume(self.id))
+        cdef slurm_step_id_t step_id = init_job_step_id(self.id)
+        verify_rpc(slurm_resume(step_id))
 
     def modify(self, JobSubmitDescription changes):
         """Modify a Job.
@@ -532,12 +538,14 @@ cdef class Job:
             >>> # Requeing a Job while putting it in a held state
             >>> pyslurm.Job(9999).requeue(hold=True)
         """
-        cdef uint32_t flags = 0
+        cdef:
+            uint32_t flags = 0
+            slurm_step_id_t step_id = init_job_step_id(self.id)
 
         if hold:
             flags |= slurm.JOB_REQUEUE_HOLD
 
-        verify_rpc(slurm_requeue(self.id, flags))
+        verify_rpc(slurm_requeue(step_id, flags))
 
     def notify(self, msg):
         """Sends a message to the Jobs stdout.
@@ -556,7 +564,8 @@ cdef class Job:
             >>> import pyslurm
             >>> pyslurm.Job(9999).notify("Hello Friends!")
         """
-        verify_rpc(slurm_notify_job(self.id, msg))
+        cdef slurm_step_id_t step_id = init_job_step_id(self.id)
+        verify_rpc(slurm_notify_job(step_id, msg))
 
     def load_stats(self):
         """Load realtime statistics for a Job and its steps.
@@ -985,6 +994,16 @@ cdef class Job:
         return cstr.to_unicode(slurm_job_share_string(self.ptr.shared))
 
     @property
+    def exclusive(self):
+        return JobExclusive.from_value(self.ptr.exclusive,
+                                       default=JobExclusive.NONE)
+
+    @property
+    def oversubscribe(self):
+        return JobOversubscribe.from_value(self.ptr.oversubscribe,
+                                           default=JobOversubscribe.NO)
+
+    @property
     def requires_contiguous_nodes(self):
         return u16_parse_bool(self.ptr.contiguous)
 
@@ -1023,6 +1042,18 @@ cdef class Job:
     @property
     def container_id(self):
         return cstr.to_unicode(self.ptr.container_id)
+
+    @property
+    def container_type(self):
+        return cstr.to_unicode(self.ptr.container_type)
+
+    @property
+    def memory_update_delay(self):
+        return u16_parse(self.ptr.mem_update_delay)
+
+    @property
+    def memory_update_margin(self):
+        return u16_parse(self.ptr.mem_update_margin)
 
     @property
     def comment(self):

@@ -216,6 +216,7 @@ cdef class JobSubmitDescription:
         cstr.fmalloc(&ptr.qos, self.qos)
         cstr.fmalloc(&ptr.container, self.container)
         cstr.fmalloc(&ptr.container_id, self.container_id)
+        cstr.fmalloc(&ptr.container_type, self.container_type)
         cstr.fmalloc(&ptr.std_in, self.standard_in)
         cstr.fmalloc(&ptr.std_out, self.standard_output)
         cstr.fmalloc(&ptr.std_err, self.standard_error)

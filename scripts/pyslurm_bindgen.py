@@ -21,11 +21,46 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import autopxd
+import autopxd.writer
 import click
 from datetime import datetime
 import os
 import pathlib
 from collections import OrderedDict
+from pycparser import c_ast
+
+
+def _strip_casts(node):
+    """Recursively remove Cast nodes from an expression."""
+    while isinstance(node, c_ast.Cast):
+        node = node.expr
+
+    for attr in ("left", "right", "expr"):
+        child = getattr(node, attr, None)
+        if isinstance(child, c_ast.Node):
+            setattr(node, attr, _strip_casts(child))
+
+    return node
+
+
+def _patch_autopxd_enum_casts():
+    """Teach autopxd2 to handle cast expressions in enum values.
+
+    Slurm defines SLURM_BIT(offset) as ((uint64_t)1 << offset) and uses it
+    for enum values, which the preprocessor expands into a Cast node that
+    autopxd2 refuses to parse. The values are only used internally by
+    autopxd2 to resolve array dimensions and never end up in the generated
+    output, so dropping the cast is safe here.
+    """
+    original = autopxd.writer.parse_enum_value
+
+    def parse_enum_value(node, constants):
+        return original(_strip_casts(node), constants)
+
+    autopxd.writer.parse_enum_value = parse_enum_value
+
+
+_patch_autopxd_enum_casts()
 
 UINT8_RANGE = range((2**8))
 UINT16_RANGE = range((2**16))

@@ -1,5 +1,5 @@
 Name:            python-pyslurm
-Version:         25.11.2
+Version:         26.5.0
 %define rel      1
 Release:         %{rel}%{?dist}
 Summary:         Python interface to Slurm
@@ -9,7 +9,7 @@ Source:          pyslurm-%{version}.tar.gz
 
 BuildRequires:   python3-devel
 BuildRequires:   pyproject-rpm-macros
-BuildRequires:   slurm-devel >= 25.11.0
+BuildRequires:   slurm-devel >= 26.05.0
 
 %description
 pyslurm is a Python interface to Slurm
@@ -39,7 +39,10 @@ pyslurm is a Python interface to Slurm
 %doc README.md
 
 %changelog
-* Sat Apr 12 2026 Giovanni Torres <giovtorres@users.noreply.github.com> - 25.11.2-1                                                                                                                                    
+* Thu Aug 20 2026 Giovanni Torres <giovtorres@users.noreply.github.com> - 26.5.0-1
+- Support for Slurm 26.05.x
+
+* Sat Apr 12 2026 Giovanni Torres <giovtorres@users.noreply.github.com> - 25.11.2-1
 - Fix Python 3.6 package metadata (UNKNOWN-0.0.0) by reading version from setup.py
 
 * Sun Mar 22 2026 Giovanni Torres <giovtorres@users.noreply.github.com> - 25.11.0-1

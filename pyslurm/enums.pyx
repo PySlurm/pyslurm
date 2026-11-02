@@ -43,6 +43,36 @@ SchedulerType.MAIN.__doc__ = "Scheduled by the Main Scheduler"
 SchedulerType.SUBMIT.__doc__ = "Scheduled by the Backfill Scheduler"
 
 
+class JobExclusive(SlurmEnum):
+    """Exclusive resource allocation mode of a Job."""
+    NONE = "NONE", slurm.JOB_EXCLUSIVE_NONE
+    NODE = "NODE", slurm.JOB_EXCLUSIVE_NODE
+    USER = "USER", slurm.JOB_EXCLUSIVE_USER
+    MCS  = "MCS",  slurm.JOB_EXCLUSIVE_MCS
+    TOPO = "TOPO", slurm.JOB_EXCLUSIVE_TOPO
+
+
+JobExclusive.NONE.__doc__ = "Nodes may be shared with other Jobs"
+JobExclusive.NODE.__doc__ = "Nodes are allocated exclusively to this Job"
+JobExclusive.USER.__doc__ = "Nodes are shared only with Jobs of the same User"
+JobExclusive.MCS.__doc__ = "Nodes are shared only within the same MCS label"
+JobExclusive.TOPO.__doc__ = "Topology segment is allocated exclusively"
+
+
+class JobOversubscribe(SlurmEnum):
+    """Whether a Job is willing to oversubscribe resources."""
+    NO  = "NO",  slurm.JOB_OVERSUBSCRIBE_NO
+    YES = "YES", slurm.JOB_OVERSUBSCRIBE_YES
+    OK  = "OK",  slurm.JOB_OVERSUBSCRIBE_OK
+
+
+JobOversubscribe.NO.__doc__ = "Resources are not oversubscribed"
+JobOversubscribe.YES.__doc__ = "Job wants to oversubscribe resources"
+JobOversubscribe.OK.__doc__ = "Job accepts oversubscribed resources"
+
+
 __all__ = [
     "SchedulerType",
+    "JobExclusive",
+    "JobOversubscribe",
 ]

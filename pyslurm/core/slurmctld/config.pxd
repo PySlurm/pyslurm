@@ -29,7 +29,7 @@ from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     slurm_conf_t,
     slurm_load_ctl_conf,
-    slurm_free_ctl_conf,
+    slurm_free_conf,
     slurm_preempt_mode_string,
     slurm_accounting_enforce_string,
     slurm_sprint_cpu_bind_type,
@@ -41,6 +41,7 @@ from pyslurm.slurm cimport (
 from pyslurm.utils cimport cstr
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 from pyslurm.utils.uint cimport (
+    u8_parse_bool,
     u16_parse,
     u32_parse,
     u64_parse,
@@ -355,6 +356,8 @@ cdef class Config:
         health_check_program (str):
             Pathname of a script that is periodally executed as root user on
             all compute nodes.
+        health_check_timeout (int):
+            Time limit in seconds for the health check program.
 
             {slurm.conf#OPT_HealthCheckProgram}
         inactive_limit (int):
@@ -446,6 +449,8 @@ cdef class Config:
             Options for the job launch plugin.
 
             {slurm.conf#OPT_LaunchParameters}
+        license_parameters (list[str]):
+            Options for the license management.
         licenses (dict[str, int]):
             Licenses that can be allocated to jobs.
 
@@ -516,6 +521,12 @@ cdef class Config:
             Parameters for the MCS Plugin.
 
             {slurm.conf#OPT_MCSParameters}
+        metrics_auth (bool):
+            Whether authentication is required for the metrics endpoints.
+        metrics_auth_users (list[str]):
+            Users allowed to query the metrics plugins.
+        metrics_parameters (list[str]):
+            Options for the Metrics plugin.
         metrics_type (str):
             Name of the Metrics plugin used.
 
@@ -824,6 +835,8 @@ cdef class Config:
             UID of the `slurmd_user_name`
         slurmd_user_name (str):
             Name of the User slurmd runs as.
+        slurmctld_http_auth_parameters (list[str]):
+            Options for `slurmctld` HTTP authentication.
         slurmctld_log_level (str):
             The level of detail to provide `slurmctld` daemon's logs.
 
@@ -870,6 +883,8 @@ cdef class Config:
             option.
 
             {slurm.conf#OPT_SlurmctldParameters}
+        slurmd_http_auth_parameters (list[str]):
+            Options for `slurmd` HTTP authentication.
         slurmd_log_level (str):
             Level of detail `slurmd` is logging.
 

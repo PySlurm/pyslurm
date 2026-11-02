@@ -24,7 +24,6 @@
 
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
-from libc.stdlib cimport free
 from pyslurm cimport slurm
 from pyslurm.slurm cimport (
     reserve_info_t,

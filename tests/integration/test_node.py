@@ -64,3 +64,12 @@ def test_to_json():
     assert dict_data
     assert len(dict_data) >= 1
     assert json_data
+
+
+def test_suspend_time():
+    name, _ = Nodes.load().popitem()
+    node = Node.load(name)
+
+    assert node.suspend_time in (None, "UNLIMITED")
+    assert node.suspend_time != node.boot_time
+    assert "suspend_time" in node.to_dict()

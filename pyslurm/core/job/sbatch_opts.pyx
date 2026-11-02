@@ -80,6 +80,7 @@ SBATCH_OPTIONS = [
     SbatchOpt(None, "comment","comment"),
     SbatchOpt("C", "constraint", "constraints"),
     SbatchOpt(None, "container", "container"),
+    SbatchOpt(None, "container-type", "container_type"),
     SbatchOpt(None, "contiguous", "requires_contiguous_nodes"),
     SbatchOpt("S", "core-spec", "cores_reserved_for_system"),
     SbatchOpt(None, "cores-per-socket", "cores_per_socket"),
