@@ -50,6 +50,17 @@ from pyslurm.utils.ctime import (
 
 
 cdef class Partitions(MultiClusterMap):
+    """A collection of Slurm partitions, keyed by partition name.
+
+    Behaves like a dict. Use `Partitions.load()` to fetch all partitions
+    from the Slurm controller.
+
+    Examples:
+        >>> import pyslurm
+        >>> partitions = pyslurm.Partitions.load()
+        >>> for name, part in partitions.items():
+        ...     print(name, part.state, part.total_nodes)
+    """
 
     def __dealloc__(self):
         slurm_free_partition_info_msg(self.info)
@@ -161,6 +172,40 @@ cdef class Partitions(MultiClusterMap):
 
 
 cdef class Partition:
+    """A Slurm partition (queue).
+
+    Partitions are logical groupings of nodes with shared scheduling policies,
+    resource limits, and access controls. Jobs are submitted to a partition.
+
+    Attributes:
+        name (str): Partition name.
+        state (str): Partition state: ``UP``, ``DOWN``, ``INACTIVE``, or
+            ``DRAIN``.
+        nodes (str): Nodelist expression of all nodes in this partition.
+        total_nodes (int): Total number of nodes.
+        total_cpus (int): Total number of CPUs across all nodes.
+        is_default (bool): True if this is the default partition for
+            submissions that do not specify a partition.
+        max_time (int): Maximum job time limit in minutes, or
+            ``None`` if unlimited.
+        default_time (int): Default time limit in minutes assigned to jobs
+            that do not request one, or ``None``.
+        max_nodes (int): Maximum nodes a single job may request, or ``None``.
+        min_nodes (int): Minimum nodes a job must request.
+        allowed_accounts (list): Accounts permitted to submit, or ``None``
+            if all are allowed.
+        allowed_groups (list): Unix groups permitted to submit.
+        allowed_qos (list): QOS values permitted in this partition.
+        denied_accounts (list): Accounts explicitly blocked from submitting.
+        denied_qos (list): QOS values blocked in this partition.
+        priority_tier (int): Tier used to order this partition relative to
+            others when a job could run in multiple partitions.
+
+    Examples:
+        >>> import pyslurm
+        >>> part = pyslurm.Partitions.load()["debug"]
+        >>> print(part.state, part.total_nodes, part.max_time)
+    """
 
     def __cinit__(self):
         self.ptr = NULL
@@ -319,6 +364,7 @@ cdef class Partition:
 
     @property
     def name(self):
+        """Partition name."""
         return cstr.to_unicode(self.ptr.name)
 
     @property
@@ -331,6 +377,7 @@ cdef class Partition:
 
     @property
     def allowed_submit_nodes(self):
+        """List of nodes from which jobs may be submitted to this partition."""
         return cstr.to_list(self.ptr.allow_alloc_nodes, ["ALL"])
 
     @allowed_submit_nodes.setter
@@ -339,6 +386,7 @@ cdef class Partition:
 
     @property
     def allowed_accounts(self):
+        """List of accounts permitted to submit jobs; None means all accounts allowed."""
         return cstr.to_list(self.ptr.allow_accounts, ["ALL"])
 
     @allowed_accounts.setter
@@ -347,6 +395,7 @@ cdef class Partition:
 
     @property
     def allowed_groups(self):
+        """List of Unix groups permitted to submit jobs."""
         return cstr.to_list(self.ptr.allow_groups, ["ALL"])
 
     @allowed_groups.setter
@@ -355,6 +404,7 @@ cdef class Partition:
 
     @property
     def allowed_qos(self):
+        """List of QOS values permitted in this partition."""
         return cstr.to_list(self.ptr.allow_qos, ["ALL"])
 
     @allowed_qos.setter
@@ -363,6 +413,7 @@ cdef class Partition:
 
     @property
     def alternate(self):
+        """Alternate partition to use if this partition is unavailable."""
         return cstr.to_unicode(self.ptr.alternate)
 
     @alternate.setter
@@ -371,10 +422,12 @@ cdef class Partition:
 
     @property
     def select_type_parameters(self):
+        """List of select plugin parameters active on this partition."""
         return _select_type_int_to_list(self.ptr.cr_type)
 
     @property
     def cpu_binding(self):
+        """Default CPU binding type applied to jobs in this partition."""
         cdef char cpu_bind[128]
         slurm_sprint_cpu_bind_type(cpu_bind,
                                    <cpu_bind_type_t>self.ptr.cpu_bind)
@@ -389,6 +442,7 @@ cdef class Partition:
 
     @property
     def default_memory_per_cpu(self):
+        """Default memory per CPU in MiB for jobs that do not specify memory."""
         return _get_memory(self.ptr.def_mem_per_cpu, per_cpu=True)
 
     @default_memory_per_cpu.setter
@@ -398,6 +452,7 @@ cdef class Partition:
 
     @property
     def default_memory_per_node(self):
+        """Default memory per node in MiB for jobs that do not specify memory."""
         return _get_memory(self.ptr.def_mem_per_cpu, per_cpu=False)
 
     @default_memory_per_node.setter
@@ -406,6 +461,7 @@ cdef class Partition:
 
     @property
     def max_memory_per_cpu(self):
+        """Maximum memory per CPU in MiB a job may request."""
         return _get_memory(self.ptr.max_mem_per_cpu, per_cpu=True)
 
     @max_memory_per_cpu.setter
@@ -415,6 +471,7 @@ cdef class Partition:
 
     @property
     def max_memory_per_node(self):
+        """Maximum memory per node in MiB a job may request."""
         return _get_memory(self.ptr.max_mem_per_cpu, per_cpu=False)
 
     @max_memory_per_node.setter
@@ -423,6 +480,7 @@ cdef class Partition:
 
     @property
     def default_time(self):
+        """Default time limit in minutes assigned to jobs that request none; None if not set."""
         return _raw_time(self.ptr.default_time, on_inf=UNLIMITED)
 
     @default_time.setter
@@ -431,6 +489,7 @@ cdef class Partition:
 
     @property
     def denied_qos(self):
+        """List of QOS values that are blocked in this partition."""
         return cstr.to_list(self.ptr.deny_qos, ["ALL"])
 
     @denied_qos.setter
@@ -439,6 +498,7 @@ cdef class Partition:
 
     @property
     def denied_accounts(self):
+        """List of accounts blocked from submitting to this partition."""
         return cstr.to_list(self.ptr.deny_accounts, ["ALL"])
 
     @denied_accounts.setter
@@ -447,6 +507,7 @@ cdef class Partition:
 
     @property
     def preemption_grace_time(self):
+        """Grace period in seconds before a preempted job is killed."""
         return _raw_time(self.ptr.grace_time)
 
     @preemption_grace_time.setter
@@ -455,6 +516,7 @@ cdef class Partition:
 
     @property
     def default_cpus_per_gpu(self):
+        """Default number of CPUs allocated per GPU for jobs in this partition."""
         def_dict = cstr.to_dict(self.ptr.job_defaults_str)
         if def_dict and "DefCpuPerGpu" in def_dict:
             return int(def_dict["DefCpuPerGpu"])
@@ -469,6 +531,7 @@ cdef class Partition:
 
     @property
     def default_memory_per_gpu(self):
+        """Default memory in MiB allocated per GPU for jobs in this partition."""
         def_dict = cstr.to_dict(self.ptr.job_defaults_str)
         if def_dict and "DefMemPerGpu" in def_dict:
             return int(def_dict["DefMemPerGpu"])
@@ -483,6 +546,7 @@ cdef class Partition:
 
     @property
     def max_cpus_per_node(self):
+        """Maximum CPUs a job may request per node in this partition."""
         return u32_parse(self.ptr.max_cpus_per_node)
 
     @max_cpus_per_node.setter
@@ -491,6 +555,7 @@ cdef class Partition:
 
     @property
     def max_cpus_per_socket(self):
+        """Maximum CPUs a job may request per socket in this partition."""
         return u32_parse(self.ptr.max_cpus_per_socket)
 
     @max_cpus_per_socket.setter
@@ -499,6 +564,7 @@ cdef class Partition:
 
     @property
     def max_nodes(self):
+        """Maximum number of nodes a single job may request; None if unlimited."""
         return u32_parse(self.ptr.max_nodes)
 
     @max_nodes.setter
@@ -507,6 +573,7 @@ cdef class Partition:
 
     @property
     def min_nodes(self):
+        """Minimum number of nodes a job must request."""
         return u32_parse(self.ptr.min_nodes, zero_is_noval=False)
 
     @min_nodes.setter
@@ -515,6 +582,7 @@ cdef class Partition:
 
     @property
     def max_time(self):
+        """Maximum job time limit in minutes; None if unlimited."""
         return _raw_time(self.ptr.max_time, on_inf=UNLIMITED)
 
     @max_time.setter
@@ -523,6 +591,7 @@ cdef class Partition:
 
     @property
     def oversubscribe(self):
+        """Oversubscribe setting for this partition, e.g. NO, EXCLUSIVE, YES:N, or FORCE:N."""
         return _oversubscribe_int_to_str(self.ptr.max_share)
 
     @oversubscribe.setter
@@ -531,6 +600,7 @@ cdef class Partition:
 
     @property
     def nodes(self):
+        """Nodelist expression of all nodes in this partition."""
         return cstr.to_unicode(self.ptr.nodes)
 
     @nodes.setter
@@ -539,6 +609,7 @@ cdef class Partition:
 
     @property
     def nodesets(self):
+        """List of node set names in this partition."""
         return cstr.to_list(self.ptr.nodesets)
 
     @nodesets.setter
@@ -547,6 +618,7 @@ cdef class Partition:
 
     @property
     def over_time_limit(self):
+        """Minutes jobs may exceed their time limit before being killed; None if not set."""
         return u16_parse(self.ptr.over_time_limit)
 
     @over_time_limit.setter
@@ -555,6 +627,7 @@ cdef class Partition:
 
     @property
     def preempt_mode(self):
+        """Preemption mode for this partition, e.g. REQUEUE, SUSPEND, OFF."""
         return _preempt_mode_int_to_str(self.ptr.preempt_mode, self.slurm_conf)
 
     @preempt_mode.setter
@@ -563,6 +636,7 @@ cdef class Partition:
 
     @property
     def priority_job_factor(self):
+        """Job priority weighting factor for this partition."""
         return u16_parse(self.ptr.priority_job_factor)
 
     @priority_job_factor.setter
@@ -571,6 +645,7 @@ cdef class Partition:
 
     @property
     def priority_tier(self):
+        """Tier used to rank this partition when a job could run in multiple partitions."""
         return u16_parse(self.ptr.priority_tier)
 
     @priority_tier.setter
@@ -579,6 +654,7 @@ cdef class Partition:
 
     @property
     def qos(self):
+        """QOS associated with this partition."""
         return cstr.to_unicode(self.ptr.qos_char)
 
     @qos.setter
@@ -587,14 +663,17 @@ cdef class Partition:
 
     @property
     def total_cpus(self):
+        """Total number of CPUs across all nodes in this partition."""
         return u32_parse(self.ptr.total_cpus, on_noval=0)
 
     @property
     def total_nodes(self):
+        """Total number of nodes in this partition."""
         return u32_parse(self.ptr.total_nodes, on_noval=0)
 
     @property
     def state(self):
+        """Partition state: UP, DOWN, INACTIVE, or DRAIN."""
         return _partition_state_int_to_str(self.ptr.state_up)
 
     @state.setter
@@ -603,6 +682,7 @@ cdef class Partition:
 
     @property
     def is_default(self):
+        """True if this is the default partition for jobs that do not specify one."""
         return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_DEFAULT)
 
     @is_default.setter
@@ -612,6 +692,7 @@ cdef class Partition:
 
     @property
     def allow_root_jobs(self):
+        """True if root is allowed to submit jobs to this partition."""
         return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_NO_ROOT)
 
     @allow_root_jobs.setter
@@ -621,6 +702,7 @@ cdef class Partition:
 
     @property
     def is_user_exclusive(self):
+        """True if nodes are reserved exclusively per user."""
         return u32_parse_bool_flag(self.ptr.flags,
                                    slurm.PART_FLAG_EXCLUSIVE_USER)
 
@@ -631,6 +713,7 @@ cdef class Partition:
 
     @property
     def is_hidden(self):
+        """True if this partition is hidden from normal user view."""
         return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_HIDDEN)
 
     @is_hidden.setter
@@ -640,6 +723,7 @@ cdef class Partition:
 
     @property
     def least_loaded_nodes_scheduling(self):
+        """True if jobs in this partition prefer least-loaded nodes."""
         return u16_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_LLN)
 
     @least_loaded_nodes_scheduling.setter
@@ -649,6 +733,7 @@ cdef class Partition:
 
     @property
     def is_root_only(self):
+        """True if only root may submit jobs to this partition."""
         return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_ROOT_ONLY)
 
     @is_root_only.setter
@@ -658,6 +743,7 @@ cdef class Partition:
 
     @property
     def requires_reservation(self):
+        """True if jobs must have a reservation to run in this partition."""
         return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_REQ_RESV)
 
     @requires_reservation.setter
@@ -667,6 +753,7 @@ cdef class Partition:
 
     @property
     def power_down_on_idle(self):
+        """True if nodes in this partition are powered down when idle."""
         return u32_parse_bool_flag(self.ptr.flags, slurm.PART_FLAG_PDOI)
 
     @power_down_on_idle.setter

@@ -21,9 +21,10 @@
 
 import ast
 import inspect
+import pathlib
+import re
 import griffe
 import pyslurm
-import re
 
 logger = griffe.get_logger(__name__)
 SLURM_VERSION = ".".join(pyslurm.__version__.split(".")[:-1])
@@ -38,6 +39,18 @@ config_files = [
     "scontrol",
 ]
 
+slurm_url_pattern = re.compile(
+    r"\{("
+    + "|".join([re.escape(c) for c in config_files])
+    + r")"
+    + r"([#][^}]+)\}"
+)
+
+# Matches: def <name>(self) -> <type>:
+_property_annotation_re = re.compile(
+    r"\bdef\s+{name}\s*\(\s*self\s*\)\s*->\s*([\w\[\], |.]+?)\s*:"
+)
+
 
 def replace_with_slurm_docs_url(match):
     first_part = match.group(1)
@@ -46,12 +59,28 @@ def replace_with_slurm_docs_url(match):
     return f"{ref}({SLURM_DOCS_URL_VERSIONED}/{first_part}.html{second_part})"
 
 
-pattern = re.compile(
-    r"\{("
-    + "|".join([re.escape(config) for config in config_files])
-    + r")"  # Match the first word before "#"
-    + r"([#][^}]+)\}"  # Match "#" and everything after it until }
-)
+def _find_pyx_file(obj: griffe.Object) -> pathlib.Path | None:
+    """Derive the .pyx source path from an object's dotted path."""
+    parts = obj.path.split(".")
+    for i in range(len(parts), 0, -1):
+        candidate = pathlib.Path(*parts[:i]).with_suffix(".pyx")
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _read_pyx_annotation(obj: griffe.Object) -> str | None:
+    """Return the -> annotation for a property from the .pyx source, or None."""
+    pyx = _find_pyx_file(obj)
+    if pyx is None:
+        return None
+    try:
+        source = pyx.read_text()
+        pat = _property_annotation_re.pattern.format(name=re.escape(obj.name))
+        m = re.search(pat, source)
+        return m.group(1) if m else None
+    except Exception:
+        return None
 
 
 # This class is inspired from here, with a few adaptions:
@@ -78,9 +107,24 @@ class DynamicDocstrings(griffe.Extension):
         include_paths: list[str] | None = None,
         ignore_paths: list[str] | None = None,
     ) -> None:
-
         self.include_paths = include_paths
         self.ignore_paths = ignore_paths
+
+    def _is_filtered(self, obj: griffe.Object) -> bool:
+        if self.include_paths and obj.path not in self.include_paths:
+            return True
+        if self.ignore_paths and obj.path in self.ignore_paths:
+            return True
+        return False
+
+    def _apply_slurm_url_substitution(self, obj: griffe.Object) -> None:
+        if not obj.docstring:
+            return
+        original = obj.docstring.value
+        if not slurm_url_pattern.search(original):
+            return
+        updated = slurm_url_pattern.sub(replace_with_slurm_docs_url, original)
+        obj.docstring.value = inspect.cleandoc(updated)
 
     def on_instance(
         self,
@@ -89,23 +133,11 @@ class DynamicDocstrings(griffe.Extension):
         agent: griffe.Visitor | griffe.Inspector,
         **kwargs,
     ) -> None:
-
-        if (self.include_paths and obj.path not in self.include_paths) or (
-            self.ignore_paths and obj.path in self.ignore_paths
-        ):
+        if self._is_filtered(obj):
             return
 
-        try:
-            runtime_obj = griffe.dynamic_import(obj.path)
-            docstring = runtime_obj.__doc__
-        except ImportError:
-            logger.debug(f"Could not get dynamic docstring for {obj.path}")
-            return
-        except AttributeError:
-            logger.debug(f"Object {obj.path} does not have a __doc__ attribute")
-            return
-
-        # Hack to improve generated docs for Enums.
+        # Fix up Enum member display: strip class prefix from value and
+        # remove labels so they render cleanly in the docs.
         if hasattr(obj.parent, "bases"):
             for base in obj.parent.bases:
                 b = base.lower()
@@ -113,17 +145,30 @@ class DynamicDocstrings(griffe.Extension):
                     v = obj.value[:-1].split(" ")[-1]
                     obj.value = v
                     obj.labels = {}
-
                     if "slurmflag" in b:
                         obj.value = None
 
-        if not docstring or not obj.docstring:
+        self._apply_slurm_url_substitution(obj)
+
+    def on_attribute_instance(
+        self,
+        node: ast.AST | griffe.ObjectNode,
+        attr: griffe.Attribute,
+        agent: griffe.Visitor | griffe.Inspector,
+        **kwargs,
+    ) -> None:
+        if self._is_filtered(attr):
             return
 
-        fmt_docstring = pattern.sub(replace_with_slurm_docs_url, docstring)
-        if fmt_docstring == docstring:
-            # No need to update the docstring if nothing has changed
+        # Cython cdef class properties appear as Attribute objects with a
+        # "property" label but no annotation, because the C-level descriptor
+        # has no fget and griffe cannot extract the -> type at runtime.
+        # Read the annotation directly from the .pyx source instead.
+        if attr.annotation is not None:
+            return
+        if "property" not in attr.labels:
             return
 
-        docstring = inspect.cleandoc(fmt_docstring)
-        obj.docstring.value = docstring
+        ann = _read_pyx_annotation(attr)
+        if ann:
+            attr.annotation = griffe.ExprName(ann)

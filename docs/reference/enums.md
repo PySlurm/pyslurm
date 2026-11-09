@@ -1,0 +1,5 @@
+---
+title: Enums
+---
+
+::: pyslurm.SchedulerType

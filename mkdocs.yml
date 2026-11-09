@@ -8,7 +8,9 @@ copyright: Copyright &copy; 2024 PySlurm Developers
 nav:
   - Home:
     - Home: index.md
+    - Getting Started: getting-started.md
     - Changelog: changelog.md
+    - Migration Guide: migration.md
   - ...
 
 theme:
@@ -44,7 +46,8 @@ theme:
 plugins:
   - search
   - awesome-pages
-  - autorefs
+  - autorefs:
+      warn_on_unresolved: false
   - mike
   - mkdocstrings:
       handlers:
@@ -54,6 +57,8 @@ plugins:
           options:
             filters: ["!^_"]
             docstring_style: google
+            docstring_options:
+              warn_unknown_params: false
             allow_inspection: true
             inherited_members: false
             show_signature: true
