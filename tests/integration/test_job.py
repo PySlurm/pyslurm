@@ -73,6 +73,35 @@ def test_load(submit_job):
         Job.load(99999)
 
 
+@pytest.mark.parametrize("task_id", [0, 7])
+def test_running_array_task_id(submit_job, task_id):
+    submitted = submit_job(array=f"{task_id}%1")
+    running = util.wait_for_job_running(submitted.id)
+
+    assert running.array_id == submitted.id
+    assert running.array_task_id == task_id
+    assert running.array_tasks_waiting is None
+    assert running.to_dict()["array_task_id"] == task_id
+    assert Jobs.load()[submitted.id].array_task_id == task_id
+
+
+def test_non_array_job_has_no_array_task_id(submit_job):
+    submitted = submit_job(priority=0)
+    job = Job.load(submitted.id)
+
+    assert job.array_id is None
+    assert job.array_task_id is None
+
+
+def test_compact_array_has_no_individual_task_id(submit_job):
+    submitted = submit_job(array="0-2%1", priority=0)
+    job = Job.load(submitted.id)
+
+    assert job.array_id == submitted.id
+    assert job.array_task_id is None
+    assert job.array_tasks_waiting == "0-2"
+
+
 def test_cancel(submit_job):
     job = submit_job()
     job.cancel()

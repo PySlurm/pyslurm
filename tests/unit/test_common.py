@@ -259,6 +259,12 @@ class TestUint:
     def test_u32(self):
         self._uint_impl(u32, u32_parse, 32)
 
+    @pytest.mark.parametrize(
+        "value, expected", [(0, 0), (7, 7), (0xfffffffe, None)]
+    )
+    def test_u32_parse_preserving_zero(self, value, expected):
+        assert u32_parse(value, zero_is_noval=False) == expected
+
     def test_u64(self):
         self._uint_impl(u64, u64_parse, 64)
 

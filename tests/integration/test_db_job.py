@@ -41,6 +41,26 @@ def test_load_single(submit_job):
         pyslurm.db.Job.load(0)
 
 
+@pytest.mark.parametrize("task_id", [0, 7])
+def test_running_array_task_id(submit_job, task_id):
+    submitted = submit_job(array=f"{task_id}%1")
+    util.wait_for_job_running(submitted.id)
+    job = util.wait_for_db_job_with_steps(submitted.id)
+
+    assert job.array_id == submitted.id
+    assert job.array_task_id == task_id
+    assert job.to_dict()["array_task_id"] == task_id
+
+
+def test_non_array_job_has_no_array_task_id(submit_job):
+    submitted = submit_job()
+    util.wait_for_job_running(submitted.id)
+    job = util.wait_for_db_job_with_steps(submitted.id)
+
+    assert job.array_id is None
+    assert job.array_task_id is None
+
+
 def test_parse_all(submit_job):
     job = submit_job()
     util.wait_for_job_running(job.id)

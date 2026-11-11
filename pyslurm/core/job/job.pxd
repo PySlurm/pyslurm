@@ -360,7 +360,7 @@ cdef class Job:
         array_tasks_parallel (int):
             Max number of array tasks allowed to run simultaneously.
         array_task_id (int):
-            Array Task ID of this Job if it is an Array-Job.
+            Array task index, including zero, or None if unset.
         array_tasks_waiting (str):
             Array Tasks that are still waiting.
         end_time (int):

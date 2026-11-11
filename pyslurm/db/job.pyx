@@ -607,7 +607,9 @@ cdef class Job:
 
     @property
     def array_task_id(self):
-        return u32_parse(self.ptr.array_task_id)
+        if self.array_id is None:
+            return None
+        return u32_parse(self.ptr.array_task_id, zero_is_noval=False)
 
     @property
     def array_tasks_waiting(self):

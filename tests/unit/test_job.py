@@ -34,6 +34,10 @@ def test_create_instance():
     assert job.id == 9999
 
 
+def test_non_array_job_has_no_array_task_id():
+    assert Job(9999).array_task_id is None
+
+
 def test_parse_all():
     assert Job(9999).to_dict()
 
