@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve array task index zero in `pyslurm.Job.array_task_id` and
+  `pyslurm.db.Job.array_task_id`, while retaining `None` for unset IDs.
 - Fixed heap corruption in `pyslurm.Reservation.create()`. Slurm 26.05 changed
   `slurm_create_reservation` to return an `xmalloc`-allocated name, which must
   be released with `xfree` rather than `free`.
