@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased on the [26.05.x](https://github.com/PySlurm/pyslurm/tree/26.05.x) branch
+## [26.05.x](https://github.com/PySlurm/pyslurm/tree/26.05.x) - 2026-11-13
 
 ### Added
 
@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ESLURM_ERROR_ON_DESC_TO_RECORD_COPY` was removed in Slurm 26.05 and is
   replaced by `ESLURM_MAX_JOB_COUNT`.
 
-## Unreleased on the [25.11.x](https://github.com/PySlurm/pyslurm/tree/25.11.x) branch
+## [25.11.x](https://github.com/PySlurm/pyslurm/tree/25.11.x) - 2026-02-20
 
 ### Added
 
